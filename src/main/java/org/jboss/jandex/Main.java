@@ -223,7 +223,7 @@ public class Main {
     }
 
     private static void printUsage() {
-        System.out.println("Usage: jandex [-v] [-m] [-o file-name] <diretory> | <jar>");
+        System.out.println("Usage: jandex [-v] [-m] [-o file-name] <directory> | <jar>");
         System.out.println("        -or-");
         System.out.println("       jandex [-d] <index-file-name>");
         System.out.println("Options:");

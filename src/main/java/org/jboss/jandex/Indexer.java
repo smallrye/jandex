@@ -557,6 +557,7 @@ public class Indexer {
      * @return the master index for all scanned class streams
      */
     public Index complete() {
+        initIndexMaps();
         try {
             return new Index(masterAnnotations, subclasses, classes);
         } finally {

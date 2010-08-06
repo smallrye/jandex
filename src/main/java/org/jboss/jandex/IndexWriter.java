@@ -52,7 +52,7 @@ import java.util.TreeMap;
  * @author Jason T. Greene 
  * 
  */
-public class IndexWriter {
+public final class IndexWriter {
     // babelfish (no h)
     private static final int MAGIC = 0xBABE1F15;
     private static final byte VERSION = 1;

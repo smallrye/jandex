@@ -62,7 +62,7 @@ import java.util.Map;
  * @author Jason T. Greene
  * 
  */
-public class Indexer {
+public final class Indexer {
     
     private final static int CONSTANT_CLASS = 7;
     private final static int CONSTANT_FIELDREF = 9;

@@ -39,7 +39,7 @@ import java.util.Map;
  * @author Jason T. Greene
  *
  */
-public class Index {
+public final class Index {
     final Map<DotName, List<AnnotationTarget>> annotations;
     final Map<DotName, List<ClassInfo>> subclasses;
     final Map<DotName, ClassInfo> classes;

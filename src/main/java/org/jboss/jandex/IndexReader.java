@@ -46,7 +46,7 @@ import java.util.Map;
  * 
  * @author Jason T. Greene
  */
-public class IndexReader {
+public final class IndexReader {
     private static final int MAGIC = 0xBABE1F15;
     private static final byte VERSION = 1;
     private static final byte FIELD_TAG = 1;

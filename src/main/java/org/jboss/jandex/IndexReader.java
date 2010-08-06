@@ -32,18 +32,18 @@ import java.util.Map;
 /**
  * Reads a Jandex index file and returns the saved index. See {@link Indexer}
  * for a thorough description of how the Index data is produced.
- * 
+ *
  * <p>
  * An IndexReader loads the stream passed to it's constructor and applies the
  * appropriate buffering. The Jandex index format is designed for efficient
  * reading and low final memory storage.
- * 
+ *
  * <p>
  * <b>Thread-Safety</b>
  * </p>
  * IndexReader is not thread-safe and can not be shared between concurrent
  * threads. The resulting index, however, is.
- * 
+ *
  * @author Jason T. Greene
  */
 public final class IndexReader {
@@ -53,17 +53,17 @@ public final class IndexReader {
     private static final byte METHOD_TAG = 2;
     private static final byte METHOD_PARAMATER_TAG = 3;
     private static final byte CLASS_TAG = 4;
-    
+
     private InputStream input;
     private DotName[] classTable;
     private String[] stringTable;
     private HashMap<DotName, List<AnnotationTarget>> masterAnnotations;
 
-   
+
     /**
      * Constructs a new IndedReader using the passed stream. The stream is not
      * read from until the read method is called.
-     * 
+     *
      * @param input a stream which points to a jandex index file
      */
     public IndexReader(InputStream input) {
@@ -71,9 +71,9 @@ public final class IndexReader {
     }
 
     /**
-     * Read the index at the associated stream of this reader. This method can be called multiple 
+     * Read the index at the associated stream of this reader. This method can be called multiple
      * times if the stream contains multiple index files.
-     * 
+     *
      * @return the Index contained in the stream
      * @throws IOException if an I/O error occurs
      * @throws IllegalArgumentException if the stream does not point to Jandex index data
@@ -84,7 +84,7 @@ public final class IndexReader {
         if (stream.readInt() != MAGIC)
             throw new IllegalArgumentException("Not a jandex index");
         byte version = stream.readByte();
-        
+
         if (version != VERSION)
             throw new UnsupportedVersion("Version: " + version);
 
@@ -106,7 +106,7 @@ public final class IndexReader {
         HashMap<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>();
         HashMap<DotName, ClassInfo> classes = new HashMap<DotName, ClassInfo>();
         masterAnnotations = new HashMap<DotName, List<AnnotationTarget>>();
-        
+
         for (int i = 0; i < entries; i++) {
             DotName name = classTable[stream.readPackedU32()];
             DotName superName = classTable[stream.readPackedU32()];
@@ -116,14 +116,14 @@ public final class IndexReader {
             for (int j = 0; j < numIntfs; j++) {
                 interfaces[j] = classTable[stream.readPackedU32()];
             }
-            
+
             Map<DotName, List<AnnotationTarget>> annotations = new HashMap<DotName, List<AnnotationTarget>>();
             ClassInfo clazz = new ClassInfo(name, superName, flags, interfaces, annotations);
             classes.put(name, clazz);
             addSubclass(subclasses, superName, clazz);
-            readAnnotations(stream, annotations, clazz); 
+            readAnnotations(stream, annotations, clazz);
         }
-        
+
         return new Index(masterAnnotations, subclasses, classes);
     }
 
@@ -133,11 +133,11 @@ public final class IndexReader {
         int numAnnotations = stream.readPackedU32();
         for (int j = 0; j < numAnnotations; j++) {
             DotName annotation = classTable[stream.readPackedU32()];
-            
+
             int numTargets = stream.readPackedU32();
             for (int k = 0; k < numTargets; k++) {
                 int tag = stream.readPackedU32();
-                
+
                 AnnotationTarget target;
                 switch (tag) {
                     case FIELD_TAG: {
@@ -163,10 +163,10 @@ public final class IndexReader {
                     default:
                         throw new UnsupportedOperationException();
                 }
-                
+
                 recordAnnotation(masterAnnotations, annotation, target);
                 recordAnnotation(annotations, annotation, target);
-                
+
             }
         }
     }
@@ -183,24 +183,24 @@ public final class IndexReader {
         short flags = stream.readShort();
         return  new MethodInfo(clazz, name, args, returnType, flags);
     }
-    
+
     private void recordAnnotation(Map<DotName, List<AnnotationTarget>> annotations, DotName annotation, AnnotationTarget target) {
         List<AnnotationTarget> list = annotations.get(annotation);
         if (list == null) {
-            list = new ArrayList<AnnotationTarget>(); 
+            list = new ArrayList<AnnotationTarget>();
             annotations.put(annotation, list);
         }
-        
+
         list.add(target);
     }
-    
+
     private void addSubclass(HashMap<DotName, List<ClassInfo>> subclasses, DotName superName, ClassInfo currentClass) {
         List<ClassInfo> list = subclasses.get(superName);
         if (list == null) {
             list = new ArrayList<ClassInfo>();
             subclasses.put(superName, list);
         }
-        
+
         list.add(currentClass);
     }
 
@@ -215,7 +215,7 @@ public final class IndexReader {
     private void readStringTable(PackedDataInputStream stream) throws IOException {
         int entries = stream.readPackedU32();
         stringTable = new String[entries];
-        
+
         for (int i = 0; i < entries; i++) {
             stringTable[i] = stream.readUTF();
         }
@@ -226,18 +226,18 @@ public final class IndexReader {
         int entries = stream.readPackedU32();
         int lastDepth = -1;
         DotName curr = null;
-        
+
         // Null is the implicit first entry
         classTable = new DotName[++entries];
         for (int i = 1; i < entries; i++) {
             int depth = stream.readPackedU32();
             String local = stream.readUTF();
-            
+
             if (depth <= lastDepth) {
-                while (lastDepth-- >= depth) 
+                while (lastDepth-- >= depth)
                     curr = curr.prefix();
             }
-            
+
             classTable[i] = curr = new DotName(curr, local, true);
             lastDepth = depth;
         }

@@ -23,7 +23,7 @@ package org.jboss.jandex;
 
 /**
  * The version encountered is not supported.
- * 
+ *
  * @author Jason T. Greene
  *
  */
@@ -32,5 +32,5 @@ public class UnsupportedVersion extends RuntimeException {
 
     public UnsupportedVersion(String message) {
         super(message);
-    }    
+    }
 }

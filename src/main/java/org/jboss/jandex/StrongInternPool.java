@@ -32,12 +32,12 @@ import java.util.NoSuchElementException;
  * This can be used to conserve memory by eliminating duplicate objects (those that are equal
  * but have different identity). It however holds strong references to every item in the pool,
  * so it must be cleared to allow for GC.
- * 
+ *
  * Note: It is very important to use a smaller load factor than you normally
  * would for HashSet, since the implementation is open-addressed with linear
  * probing. With a 50% load-factor a get is expected to return in only 2 probes.
  * However, a 90% load-factor is expected to return in around 50 probes.
- * 
+ *
  * @author Jason T. Greene
  */
 class StrongInternPool<E> implements Cloneable, Serializable {
@@ -119,7 +119,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
 
         this.table = new Object[c];
     }
-    
+
     private static boolean eq(Object o1, Object o2) {
         return o1 == o2 || (o1 != null && o1.equals(o2));
     }
@@ -164,7 +164,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
     public boolean isEmpty() {
         return size == 0;
     }
-    
+
     public boolean contains(Object entry) {
         entry = maskNull(entry);
 
@@ -185,7 +185,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
                 return false;
         }
     }
-    
+
     private int offset(Object entry) {
         entry = maskNull(entry);
 
@@ -208,10 +208,10 @@ class StrongInternPool<E> implements Cloneable, Serializable {
     }
 
     /***
-     * Internalizes the specified object by always returning the first ever stored. 
-     * Equivalent objects (via .equals) but with different identity (aka duplicates) 
+     * Internalizes the specified object by always returning the first ever stored.
+     * Equivalent objects (via .equals) but with different identity (aka duplicates)
      * can be eliminated with this method.
-     * 
+     *
      * @param entry the object to internalize
      * @return the one true unique (and equivalent) object
      */
@@ -341,20 +341,20 @@ class StrongInternPool<E> implements Cloneable, Serializable {
             throw new IllegalStateException(e);
         }
     }
-    
+
     /**
      * Advanced method that returns the internal table. The resulting
      * array will contain nulls at random places that must be skipped. In
      * addition, it will not operate correctly if a null was inserted into the
      * set. Use at your own risk....
-     * 
+     *
      * @return an array containing elements in this set along with randomly
      *         placed nulls,
      */
     public Object[] toInternalArray() {
         return table;
     }
-    
+
     public void printDebugStats() {
         int optimal = 0;
         int total = 0;
@@ -431,11 +431,11 @@ class StrongInternPool<E> implements Cloneable, Serializable {
     public Iterator<E> iterator() {
         return new IdentityHashSetIterator();
     }
-    
+
     public Index index() {
         return new Index();
     }
-    
+
     public String toString() {
         Iterator<E> i = iterator();
         if (! i.hasNext())
@@ -451,10 +451,10 @@ class StrongInternPool<E> implements Cloneable, Serializable {
             sb.append(", ");
         }
     }
-    
+
     public class Index {
         private int[] offsets;
-        
+
         Index() {
             offsets = new int[table.length];
             for (int i = 0, c = 0; i < offsets.length; i++) {
@@ -462,11 +462,11 @@ class StrongInternPool<E> implements Cloneable, Serializable {
                     offsets[i] = c++;
             }
         }
-        
+
         public int positionOf(E e)
         {
             return offsets[offset(e)];
-        }        
+        }
     }
 
     private class IdentityHashSetIterator implements Iterator<E> {

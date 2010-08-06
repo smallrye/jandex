@@ -41,24 +41,24 @@ public class Main {
     private boolean dump;
     private File outputFile;
     private File source;
-  
+
 
     public static void main(String[] args) {
         if (args.length == 0) {
             printUsage();
             return;
         }
-        
+
         Main main = new Main();
         main.execute(args);
     }
-    
+
     private static class Result {
         private int annotations;
         private int classes;
         private int bytes;
         private String name;
-        
+
         private Result(Index index, String name, int bytes) {
             annotations = index.annotations.size();
             classes = index.classes.size();
@@ -70,12 +70,12 @@ public class Main {
     private void execute(String[] args) {
         try {
             parseOptions(args);
-            
+
             if (dump) {
                 dumpIndex(source);
                 return;
             }
-            
+
             long start = System.currentTimeMillis();
             Indexer indexer = new Indexer();
             Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : indexJar(source, indexer);
@@ -87,7 +87,7 @@ public class Main {
             } else {
                 e.printStackTrace(System.err);
             }
-            
+
             System.out.println();
             printUsage();
         }
@@ -96,13 +96,13 @@ public class Main {
     private void dumpIndex(File source) throws IOException {
         FileInputStream input = new FileInputStream(source);
         IndexReader reader = new IndexReader(input);
-        
+
         long start = System.currentTimeMillis();
         Index index = reader.read();
         long end = System.currentTimeMillis() - start;
         index.printAnnotations();
         index.printSubclasses();
-        
+
         System.out.printf("\nRead %s in %.04f seconds\n", source.getName(), end / 1000.0);
     }
 
@@ -120,7 +120,7 @@ public class Main {
 
         FileOutputStream out = new FileOutputStream(outputFile);
         IndexWriter writer = new IndexWriter(out);
-        
+
         try {
             Index index = indexer.complete();
             int bytes = writer.write(index);
@@ -143,7 +143,7 @@ public class Main {
         if (modify) {
             tmpCopy = File.createTempFile(source.getName().substring(0, source.getName().lastIndexOf('.')), "jmp");
             out = zo = new ZipOutputStream(new FileOutputStream(tmpCopy));
-        } else { 
+        } else {
             if (outputFile == null) {
                 outputFile = new File(source.getName().replace('.', '-') + ".idx");
             }
@@ -173,7 +173,7 @@ public class Main {
             IndexWriter writer = new IndexWriter(out);
             Index index = indexer.complete();
             int bytes = writer.write(index);
-           
+
 
             if (modify) {
                 source.delete();
@@ -218,7 +218,7 @@ public class Main {
         ClassInfo info = indexer.index(input);
         if (verbose)
             printIndexEntryInfo(info);
-        
+
         return;
     }
 
@@ -236,7 +236,7 @@ public class Main {
 
     private void parseOptions(String[] args) {
         int optionCount = 0;
-        
+
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (arg.length() < 2 || arg.charAt(0) != '-') {
@@ -246,11 +246,11 @@ public class Main {
                 source = new File(arg);
                 if (!source.exists())
                     throw new IllegalArgumentException("Source directory/jar not found: " + source.getName());
-                
+
                 continue;
             }
 
-           
+
             switch (arg.charAt(1)) {
                 case 'm':
                     modify = true;
@@ -279,16 +279,16 @@ public class Main {
                     throw new IllegalArgumentException("Option not understood: " + arg);
             }
         }
-        
+
         if (source == null)
             throw new IllegalArgumentException("Source location not specified");
-        
+
         if (outputFile != null && modify)
             throw new IllegalArgumentException("-o and -m are mutually exclusive");
-        
+
         if (dump && optionCount != 1)
             throw new IllegalArgumentException("-d can not be specified with other options");
-       
+
     }
 
 }

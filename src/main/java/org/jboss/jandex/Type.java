@@ -25,7 +25,7 @@ package org.jboss.jandex;
  * Represents a Java type declaration that is specified on methods or fields. A
  * type can be any class based type (interface, class, annotation), any
  * primitive, any array, or void.
- * 
+ *
  * @author Jason T. Greene
  */
 public final class Type {
@@ -34,9 +34,9 @@ public final class Type {
 
     /**
      * Represents a "kind" of Type.
-     * 
+     *
      * @author Jason T. Greene
-     * 
+     *
      */
     public enum Kind {
         /** A Java class, interface, or annotation */
@@ -87,7 +87,7 @@ public final class Type {
      * Java reserved word (void, boolean, byte, short, char, int, long, float,
      * double). Arrays are returned using the internal JVM array syntax (see JVM
      * specification). Classes are returned as a normal DotName.
-     * 
+     *
      * @return
      */
     public DotName name() {
@@ -96,7 +96,7 @@ public final class Type {
 
     /**
      * Returns the kind of Type this is.
-     * 
+     *
      * @return the kind
      */
     public Kind kind() {

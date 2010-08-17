@@ -32,7 +32,7 @@ import java.util.Map;
  * <p>It contains the following information:
  * <ol>
  * <li>All annotations and a collection of targets they refer to </li>
- * <li>All classes (including interfaces) scanned during the indexing process (typicall all classess in a jar)</li>
+ * <li>All classes (including interfaces) scanned during the indexing process (typical all classes in a jar)</li>
  * <li>All subclasses indexed by super class known to this index</li>
  < </ol>
  *
@@ -40,6 +40,9 @@ import java.util.Map;
  *
  */
 public final class Index {
+    private static final List<AnnotationTarget> EMPTY_ANNOTATION_LIST = Collections.emptyList();
+    private static final List<ClassInfo> EMPTY_CLASSINFO_LIST = Collections.emptyList();
+
     final Map<DotName, List<AnnotationTarget>> annotations;
     final Map<DotName, List<ClassInfo>> subclasses;
     final Map<DotName, ClassInfo> classes;
@@ -56,10 +59,11 @@ public final class Index {
      * field, method, parameter, and class.
      *
      * @param annotationName the name of the annotation to look for
-     * @return a list of annotation targets
+     * @return a non-null list of annotation targets
      */
     public List<AnnotationTarget> getAnnotationTargets(DotName annotationName) {
-        return Collections.unmodifiableList(annotations.get(annotationName));
+        List<AnnotationTarget> list = annotations.get(annotationName);
+        return list == null ? EMPTY_ANNOTATION_LIST: Collections.unmodifiableList(list);
     }
 
     /**
@@ -71,10 +75,11 @@ public final class Index {
      * environment (like an EE application server).
      *
      * @param className the super class of the desired subclasses
-     * @return all known subclasses of className
+     * @return a non-null list of all known subclasses of className
      */
     public List<ClassInfo> getKnownSubclasses(DotName className) {
-        return Collections.unmodifiableList(subclasses.get(className));
+        List<ClassInfo> list = subclasses.get(className);
+        return list == null ? EMPTY_CLASSINFO_LIST : Collections.unmodifiableList(list);
     }
 
     /**
@@ -82,7 +87,7 @@ public final class Index {
      * indexing phase.
      *
      * @param className the name of the class
-     * @return information about the class
+     * @return information about the class or null if it is not known
      */
     public ClassInfo getClassByName(DotName className) {
         return classes.get(className);
@@ -94,7 +99,7 @@ public final class Index {
      * @return a collection of known classes
      */
     public Collection<ClassInfo> getKnownClasses() {
-        return Collections.unmodifiableCollection(classes.values());
+        return classes.values();
     }
 
     /**

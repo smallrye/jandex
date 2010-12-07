@@ -26,15 +26,23 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Represents a specific usage of an annotation on a target
+ * An annotation instance represents a specific usage of an annotation on a
+ * target. It contains a set of values, as well as a reference to the target
+ * itself (e.g. class, field, method, etc).
+ *
+ * <p>
+ * <b>Thread-Safety</b>
+ * </p>
+ * This class is immutable and can be shared between threads without safe
+ * publication.
  *
  * @author Jason T. Greene
  *
  */
 public final class AnnotationInstance {
-    private DotName name;
-    private AnnotationTarget target;
-    private AnnotationValue[] values;
+    private final DotName name;
+    private final AnnotationTarget target;
+    private final AnnotationValue[] values;
 
     AnnotationInstance(DotName name, AnnotationTarget target, AnnotationValue[] values) {
         this.name = name;
@@ -42,23 +50,56 @@ public final class AnnotationInstance {
         this.values = values;
     }
 
+    /**
+     * The name of this annotation in DotName form.
+     *
+     * @return the name of this annotation
+     */
     public DotName name() {
         return name;
     }
 
+    /**
+     * The Java element that this annotation was declared on. This can be
+     * a class, a field, a method, or a method parameter. In addition it may
+     * be null if this instance is a nested annotation, in which case there is
+     * no target.
+     *
+     * @return the target this annotation instance refers to
+     */
     public AnnotationTarget target() {
         return target;
     }
 
+    /**
+     * Returns a value that corresponds with the specified parameter name.
+     *
+     * @param name the parameter name
+     * @return the value of the specified parameter
+     */
     public AnnotationValue value(String name) {
         int result = Arrays.binarySearch(values, name);
         return result >= 0 ? values[result] : null;
     }
 
+    /**
+     * Returns the value that is associated with the special default "value"
+     * parameter.
+     *
+     * @return the "value" value
+     */
     public AnnotationValue value() {
         return value("value");
     }
 
+    /**
+     * Returns a list of all parameter values on this annotation instance.
+     * While random access is allowed, the ordering algorithm
+     * of the list should not be relied upon. Although it will
+     * be consistent for the life of this instance.
+     *
+     * @return the parameter values of this annotation
+     */
     public List<AnnotationValue> values() {
         return Collections.unmodifiableList(Arrays.asList(values));
     }

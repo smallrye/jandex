@@ -21,7 +21,49 @@
  */
 package org.jboss.jandex;
 
-
+/**
+ * An annotation value represents a specific name and value combination in the
+ * parameter list of an annotation instance.
+ *
+ * <p>
+ * An annotation value can be any Java primitive:
+ * <ul>
+ * <li>byte</li>
+ * <li>short</li>
+ * <li>int</li>
+ * <li>char</li>
+ * <li>float</li>
+ * <li>double</li>
+ * <li>long</li>
+ * <li>boolean</li>
+ * </ul>
+ *
+ * <p>
+ * As well as any the following specialty types:
+ * <li>String</li>
+ * <li>Class</li>
+ * <li>Enum</li>
+ * <li>Nested annotation</li> </ul>
+ *
+ * <p>
+ * In addition a value can be a single-dimension array of any of the above types
+ *
+ * <p>
+ * To access a value, the proper typed method must be used that matches the
+ * expected type of the annotation parameter. In addition, some methods will
+ * allow conversion of different types. For example, a byte can be returned as
+ * an integer using @link {@link #asInt()}. Also all value types support a
+ * String representation.
+ *
+ * <p>
+ * <b>Thread-Safety</b>
+ * </p>
+ * This class is immutable and can be shared between threads without safe
+ * publication.
+ *
+ * @author Jason T. Greene
+ *
+ */
 public abstract class AnnotationValue implements Comparable<AnnotationValue> {
     private final String name;
 
@@ -29,64 +71,177 @@ public abstract class AnnotationValue implements Comparable<AnnotationValue> {
         this.name = name;
     }
 
+    /**
+     * Returns the name of this value, which is typically the parameter name in the annotation
+     * declaration. The value may not represent a parameter (e.g an array element member), in
+     * which case name will simply return an empty string ("")
+     *
+     * @return the name of this value
+     */
     public final String name() {
         return name;
     }
 
+    /**
+     * Compares an annotation value with another annotation value. The result
+     * is ordered by parameter name.
+     */
     public int compareTo(AnnotationValue other) {
         return name.compareTo(other.name);
     }
 
+    /**
+     * Returns a detyped value that represents the underlying annotation value.
+     * It is recommended that the type specific methods be used instead.
+     *
+     * @return the underly value
+     */
     public abstract Object value();
 
+    /**
+     * Converts the underlying numerical type to an integer as if it was
+     * casted in Java.
+     *
+     * @return an integer representing the numerical parameter
+     * @throws IllegalArgumentException if the value is not numerical
+     */
     public int asInt() {
         throw new IllegalArgumentException("Not a number");
     }
 
+
+    /**
+     * Converts the underlying numerical type to an long as if it was
+     * casted in Java.
+     *
+     * @return a long representing the numerical parameter
+     * @throws IllegalArgumentException if the value is not numerical
+     */
     public long asLong() {
         throw new IllegalArgumentException("Not a number");
     }
 
+    /**
+     * Converts the underlying numerical type to a short as if it was
+     * casted in Java.
+     *
+     * @return a short representing the numerical parameter
+     * @throws IllegalArgumentException if the value is not numerical
+     */
     public short asShort() {
         throw new IllegalArgumentException("not a number");
     }
 
+    /**
+     * Converts the underlying numerical type to a byte as if it was
+     * casted in Java.
+     *
+     * @return a byte representing the numerical parameter
+     * @throws IllegalArgumentException if the value is not numerical
+     */
     public byte asByte() {
         throw new IllegalArgumentException("not a number");
     }
 
+    /**
+     * Converts the underlying numerical type to a float as if it was
+     * casted in Java.
+     *
+     * @return a float representing the numerical parameter
+     * @throws IllegalArgumentException if the value is not numerical
+     */
     public float asFloat() {
         throw new IllegalArgumentException("not a number");
     }
 
+    /**
+     * Converts the underlying numerical type to a double as if it was
+     * casted in Java.
+     *
+     * @return a double representing the numerical parameter
+     * @throws IllegalArgumentException if the value is not numerical
+     */
     public double asDouble() {
         throw new IllegalArgumentException("not a number");
     }
 
+    /**
+     * Returns the underlying character value as Java primitive char.
+     *
+     * @return a char representing the character parameter
+     * @throws IllegalArgumentException if the value is not a character
+     */
     public char asChar() {
         throw new IllegalArgumentException("not a character");
     }
 
+    /**
+     * Returns the underlying boolean value as Java primitive boolean.
+     *
+     * @return a boolean representing the character parameter
+     * @throws IllegalArgumentException if the value is not a boolean
+     */
     public boolean asBoolean() {
         throw new IllegalArgumentException("not a boolean");
     }
 
+    /**
+     * Returns the string representation of the underlying value type.
+     * The representation may or may not be convertible to the type
+     * it represents. This is best used on String types, but can also
+     * provide a useful way to quickly convert a value to a String.
+     *
+     * @return a string representing the value parameter
+     */
     public String asString() {
         return value().toString();
     }
 
+    /**
+     * Returns the constant name, in string form, that represents the
+     * Java enumeration of this value. The value is the same as the
+     * one returned by {@link Enum#name()}.
+     *
+     * @return the string name of a Java enumeration
+     * @throws IllegalArgumentException if the value is not an enum
+     */
     public String asEnum() {
        throw new IllegalArgumentException("not an enum");
     }
 
+    /**
+     * Returns the type name, in DotName form, that represents the
+     * Java enumeration of this value. The value is the same
+     * as the one returned by {@link Enum#getClass()}.
+     *
+     * @return the type name of a Java enumeration
+     * @throws IllegalArgumentException if the value is not an enum
+     */
     public DotName asEnumType() {
         throw new IllegalArgumentException("not an enum");
      }
 
+    /**
+     * Returns the class name, in {@link Type} form, that represents a Java
+     * Class used by this value. In addition to standard class name, it can also
+     * refer to specialty types, such as {@link Void} and primitive types (e.g.
+     * int.class). More specifically, any erased type that a method can return
+     * is a valid annotation Class type.
+     *
+     * @return the Java type of this value
+     * @throws IllegalArgumentException if the value is not a Class
+     */
     public Type asClass() {
         throw new IllegalArgumentException("not a class");
-     }
+    }
 
+    /**
+     * Returns a nested annotation represented by this value. The nested annotation
+     * will have a null target, but may contain an arbitrary amount of nested values
+     *
+     * @return the underlying nested annotation instance
+     * @throws IllegalArgumentException if the value is not a nested annotation
+      */
     public AnnotationInstance asNested() {
         throw new IllegalArgumentException("not a nested annotation");
     }
@@ -95,54 +250,145 @@ public abstract class AnnotationValue implements Comparable<AnnotationValue> {
         throw new IllegalArgumentException("Not an array");
     }
 
+    /**
+     * Converts an underlying numerical array to a Java primitive
+     * integer array.
+     *
+     * @return an int array that represents this value
+     * @throws IllegalArgumentException if this value is not a numerical array.
+     */
     public int[] asIntArray() {
-        throw new IllegalArgumentException("Not a number array");
+        throw new IllegalArgumentException("Not a numerical array");
     }
 
+    /**
+     * Converts an underlying numerical array to a Java primitive
+     * long array.
+     *
+     * @return a long array that represents this value
+     * @throws IllegalArgumentException if this value is not a numerical array.
+     */
     public long[] asLongArray() {
-        throw new IllegalArgumentException("Not a number array");
+        throw new IllegalArgumentException("Not a numerical array");
     }
 
+    /**
+     * Converts an underlying numerical array to a Java primitive short array.
+     *
+     * @return a short array that represents this value
+     * @throws IllegalArgumentException if this value is not a numerical array.
+     */
     public short[] asShortArray() {
-        throw new IllegalArgumentException("not a number array");
+        throw new IllegalArgumentException("not a numerical array");
     }
 
+    /**
+     * Converts an underlying numerical array to a Java primitive byte array.
+     *
+     * @return a byte array that represents this value
+     * @throws IllegalArgumentException if this value is not a numerical array.
+     */
     public byte[] asByteArray() {
-        throw new IllegalArgumentException("not a number array");
+        throw new IllegalArgumentException("not a numerical array");
     }
 
+    /**
+     * Converts an underlying numerical array to a Java primitive float array.
+     *
+     * @return a float array that represents this value
+     * @throws IllegalArgumentException if this value is not a numerical array.
+     */
     public float[] asFloatArray() {
-        throw new IllegalArgumentException("not a number array");
+        throw new IllegalArgumentException("not a numerical array");
     }
+
+    /**
+     * Converts an underlying numerical array to a Java primitive double array.
+     *
+     * @return a double array that represents this value
+     * @throws IllegalArgumentException if this value is not a numerical array.
+     */
 
     public double[] asDoubleArray() {
-        throw new IllegalArgumentException("not a number array");
+        throw new IllegalArgumentException("not a numerical array");
     }
 
+    /**
+     * Returns the underlying character array.
+     *
+     * @return a character array that represents this value
+     * @throws IllegalArgumentException if this value is not a character array.
+     */
     public char[] asCharArray() {
         throw new IllegalArgumentException("not a character array");
     }
 
+    /**
+     * Returns the underlying boolean array.
+     *
+     * @return a boolean array that represents this value
+     * @throws IllegalArgumentException if this value is not a boolean array.
+     */
     public boolean[] asBooleanArray() {
         throw new IllegalArgumentException("not a boolean array");
     }
 
+    /**
+     * Returns a string array representation of the underlying array value.
+     * The behavior is identical to {@link #asString()} as if it were applied
+     * to every array element.
+     *
+     * @return a string array representing the underlying array value
+     * @throws IllegalArgumentException if this value is not an array
+     */
     public String[] asStringArray() {
         throw new IllegalArgumentException("not a string array");
     }
 
+    /**
+     * Returns an array of the constant name, in string form, that represents the
+     * Java enumeration of each array element The individual element values are
+     * the same as the one returned by {@link Enum#name()}.
+     *
+     * @return an array of string names of a Java enums
+     * @throws IllegalArgumentException if the value is not an enum array
+     */
     public String[] asEnumArray() {
        throw new IllegalArgumentException("not an enum array");
     }
 
+    /**
+     * Returns an array of the type name, in DotName form, that represents the
+     * Java enumeration of each array element. The individual element values are
+     * the same as the one returned by {@link Enum#getClass()}. Note that JLS
+     * restricts an enum array parameter to the same type. Also, when an empty
+     * array is specified in a value, it's types can not be determined.
+     *
+     * @return an array of string type names of Java enum array elements
+     * @throws IllegalArgumentException if the value is not an enum array
+     */
     public DotName[] asEnumTypeArray() {
         throw new IllegalArgumentException("not an enum array");
     }
 
+    /**
+     * Returns an array of class types representing the underlying class array value.
+     * Each element has the same behavior as @{link {@link #asClass()}
+     *
+     * @return a class array representing this class array value
+     * @throws IllegalArgumentException if the value is not a class array
+     */
     public Type[] asClassArray() {
         throw new IllegalArgumentException("not a class array");
      }
 
+    /**
+     * Returns an array of nested annotations representing the underlying annotation array value.
+     * Each element has the same behavior as @{link {@link #asNested()}
+     *
+     * @return an annotation array representing this annotation array value
+     * @throws IllegalArgumentException if the value is not an annotation array
+     */
     public AnnotationInstance[] asNestedArray() {
         throw new IllegalArgumentException("not a nested annotation array");
     }

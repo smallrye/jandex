@@ -40,14 +40,14 @@ import java.util.Map;
  *
  */
 public final class Index {
-    private static final List<AnnotationTarget> EMPTY_ANNOTATION_LIST = Collections.emptyList();
+    private static final List<AnnotationInstance> EMPTY_ANNOTATION_LIST = Collections.emptyList();
     private static final List<ClassInfo> EMPTY_CLASSINFO_LIST = Collections.emptyList();
 
-    final Map<DotName, List<AnnotationTarget>> annotations;
+    final Map<DotName, List<AnnotationInstance>> annotations;
     final Map<DotName, List<ClassInfo>> subclasses;
     final Map<DotName, ClassInfo> classes;
 
-    Index (Map<DotName, List<AnnotationTarget>> annotations,  Map<DotName, List<ClassInfo>> subclasses,  Map<DotName, ClassInfo> classes) {
+    Index (Map<DotName, List<AnnotationInstance>> annotations,  Map<DotName, List<ClassInfo>> subclasses,  Map<DotName, ClassInfo> classes) {
         this.annotations = Collections.unmodifiableMap(annotations);
         this.classes = Collections.unmodifiableMap(classes);
         this.subclasses = Collections.unmodifiableMap(subclasses);
@@ -61,8 +61,8 @@ public final class Index {
      * @param annotationName the name of the annotation to look for
      * @return a non-null list of annotation targets
      */
-    public List<AnnotationTarget> getAnnotationTargets(DotName annotationName) {
-        List<AnnotationTarget> list = annotations.get(annotationName);
+    public List<AnnotationInstance> getAnnotationTargets(DotName annotationName) {
+        List<AnnotationInstance> list = annotations.get(annotationName);
         return list == null ? EMPTY_ANNOTATION_LIST: Collections.unmodifiableList(list);
     }
 
@@ -108,9 +108,12 @@ public final class Index {
     public void printAnnotations()
     {
         System.out.println("Annotations:");
-        for (Map.Entry<DotName, List<AnnotationTarget>> e : annotations.entrySet()) {
+        for (Map.Entry<DotName, List<AnnotationInstance>> e : annotations.entrySet()) {
             System.out.println(e.getKey() + ":");
-            for (AnnotationTarget target : e.getValue()) {
+            for (AnnotationInstance instance : e.getValue()) {
+                AnnotationTarget target = instance.target();
+
+
                 if (target instanceof ClassInfo) {
                     System.out.println("    Class: " + target);
                 } else if (target instanceof FieldInfo) {
@@ -120,6 +123,20 @@ public final class Index {
                 } else if (target instanceof MethodParameterInfo) {
                     System.out.println("    Parameter: " + target);
                 }
+
+                List<AnnotationValue> values = instance.values();
+                if (values.size() < 1)
+                    continue;
+
+                StringBuilder builder = new StringBuilder("        (");
+
+                for (int i =  0; i < values.size(); i ++) {
+                    builder.append(values.get(i));
+                    if (i < values.size() - 1)
+                        builder.append(", ");
+                }
+                builder.append(')');
+                System.out.println(builder.toString());
             }
         }
     }

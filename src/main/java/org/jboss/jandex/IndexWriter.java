@@ -55,11 +55,25 @@ import java.util.TreeMap;
 public final class IndexWriter {
     // babelfish (no h)
     private static final int MAGIC = 0xBABE1F15;
-    private static final byte VERSION = 1;
+    private static final byte VERSION = 2;
     private static final byte FIELD_TAG = 1;
     private static final byte METHOD_TAG = 2;
     private static final byte METHOD_PARAMATER_TAG = 3;
     private static final byte CLASS_TAG = 4;
+
+    private static final int AVALUE_BYTE = 1;
+    private static final int AVALUE_SHORT = 2;
+    private static final int AVALUE_INT = 3;
+    private static final int AVALUE_CHAR = 4;
+    private static final int AVALUE_FLOAT = 5;
+    private static final int AVALUE_DOUBLE = 6;
+    private static final int AVALUE_LONG = 7;
+    private static final int AVALUE_BOOLEAN = 8;
+    private static final int AVALUE_STRING = 9;
+    private static final int AVALUE_CLASS = 10;
+    private static final int AVALUE_ENUM = 11;
+    private static final int AVALUE_ARRAY = 12;
+    private static final int AVALUE_NESTED = 13;
 
     private final OutputStream out;
     private StrongInternPool<String> pool;
@@ -153,14 +167,15 @@ public final class IndexWriter {
             for (DotName intf: interfaces)
                 stream.writePackedU32(positionOf(intf));
 
-            Set<Entry<DotName, List<AnnotationTarget>>> entrySet = clazz.annotations().entrySet();
+            Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotations().entrySet();
             stream.writePackedU32(entrySet.size());
-            for (Entry<DotName, List<AnnotationTarget>> entry :  entrySet) {
+            for (Entry<DotName, List<AnnotationInstance>> entry :  entrySet) {
                 stream.writePackedU32(positionOf(entry.getKey()));
 
-                List<AnnotationTarget> targets = entry.getValue();
-                stream.writePackedU32(targets.size());
-                for (AnnotationTarget target: targets) {
+                List<AnnotationInstance> instances = entry.getValue();
+                stream.writePackedU32(instances.size());
+                for (AnnotationInstance instance : instances) {
+                    AnnotationTarget target = instance.target();
                     if (target instanceof FieldInfo) {
                         FieldInfo field = (FieldInfo) target;
                         stream.writeByte(FIELD_TAG);
@@ -192,8 +207,73 @@ public final class IndexWriter {
                     } else if (target instanceof ClassInfo) {
                         stream.writeByte(CLASS_TAG);
                     } else throw new IllegalStateException("Unknown target");
+
+                    Collection<AnnotationValue> values = instance.values();
+                    writeAnnotationValues(stream, values);
                 }
             }
+        }
+    }
+
+    private void writeAnnotationValues(PackedDataOutputStream stream, Collection<AnnotationValue> values) throws IOException {
+        stream.writePackedU32(values.size());
+        for (AnnotationValue value : values) {
+            writeAnnotationValue(stream, value);
+        }
+    }
+
+    private void writeAnnotationValue(PackedDataOutputStream stream, AnnotationValue value) throws IOException {
+        stream.writePackedU32(positionOf(value.name()));
+        if (value instanceof AnnotationValue.ByteValue) {
+            stream.writeByte(AVALUE_BYTE);
+            stream.writeByte(value.asByte() & 0xFF);
+        } else if  (value instanceof AnnotationValue.ShortValue) {
+            stream.writeByte(AVALUE_SHORT);
+            stream.writePackedU32(value.asShort() & 0xFFFF);
+        } else if (value instanceof AnnotationValue.IntegerValue) {
+            stream.writeByte(AVALUE_INT);
+            stream.writePackedU32(value.asInt());
+        } else if (value instanceof AnnotationValue.CharacterValue) {
+            stream.writeByte(AVALUE_CHAR);
+            stream.writePackedU32(value.asChar());
+        } else if (value instanceof AnnotationValue.FloatValue) {
+            stream.writeByte(AVALUE_FLOAT);
+            stream.writeFloat(value.asFloat());
+        } else if (value instanceof AnnotationValue.DoubleValue) {
+            stream.writeByte(AVALUE_DOUBLE);
+            stream.writeDouble(value.asDouble());
+        } else if (value instanceof AnnotationValue.LongValue) {
+            stream.writeByte(AVALUE_LONG);
+            stream.writeLong(value.asLong());
+        } else if (value instanceof AnnotationValue.BooleanValue) {
+            stream.writeByte(AVALUE_BOOLEAN);
+            stream.writeBoolean(value.asBoolean());
+        } else if (value instanceof AnnotationValue.StringValue) {
+            stream.writeByte(AVALUE_STRING);
+            stream.writePackedU32(positionOf(value.asString()));
+        } else if (value instanceof AnnotationValue.ClassValue) {
+            stream.writeByte(AVALUE_CLASS);
+            writeType(stream, value.asClass());
+        } else if (value instanceof AnnotationValue.EnumValue) {
+            stream.writeByte(AVALUE_ENUM);
+            stream.writePackedU32(positionOf(value.asEnumType()));
+            stream.writePackedU32(positionOf(value.asEnum()));
+        } else if (value instanceof AnnotationValue.ArrayValue) {
+            AnnotationValue[] array = value.asArray();
+            int length = array.length;
+            stream.writeByte(AVALUE_ARRAY);
+            stream.writePackedU32(length);
+
+            for (int i = 0; i < length; i++) {
+                writeAnnotationValue(stream, array[i]);
+            }
+        } else if (value instanceof AnnotationValue.NestedAnnotation) {
+            AnnotationInstance instance = value.asNested();
+            Collection<AnnotationValue> values = instance.values();
+
+            stream.writeByte(AVALUE_NESTED);
+            stream.writePackedU32(positionOf(instance.name()));
+            writeAnnotationValues(stream, values);
         }
     }
 
@@ -215,10 +295,11 @@ public final class IndexWriter {
             for (DotName intf: clazz.interfaces())
                 addClassName(intf);
 
-            for (Entry<DotName, List<AnnotationTarget>> entry :  clazz.annotations().entrySet()) {
+            for (Entry<DotName, List<AnnotationInstance>> entry :  clazz.annotations().entrySet()) {
                 addClassName(entry.getKey());
 
-                for (AnnotationTarget target: entry.getValue()) {
+                for (AnnotationInstance instance: entry.getValue()) {
+                    AnnotationTarget target = instance.target();
                     if (target instanceof FieldInfo) {
                         FieldInfo field = (FieldInfo) target;
                         intern(field.name());
@@ -240,17 +321,43 @@ public final class IndexWriter {
 
                         addClassName(param.method().returnType().name());
                     }
+
+                    for (AnnotationValue value : instance.values())
+                        buildAValueEntries(index, value);
                 }
+
+
             }
         }
 
         poolIndex = pool.index();
     }
 
-    private String intern(String name) {
-        if (name == null)
-            throw new IllegalArgumentException();
+    private void buildAValueEntries(Index index, AnnotationValue value) {
+        intern(value.name());
 
+        if (value instanceof AnnotationValue.StringValue) {
+            intern(value.asString());
+        } else if (value instanceof AnnotationValue.ClassValue) {
+            addClassName(value.asClass().name());
+        } else if (value instanceof AnnotationValue.EnumValue) {
+            addClassName(value.asEnumType());
+            intern(value.asEnum());
+        } else if (value instanceof AnnotationValue.ArrayValue) {
+            for (AnnotationValue entry : value.asArray())
+                buildAValueEntries(index, entry);
+        } else if (value instanceof AnnotationValue.NestedAnnotation) {
+            AnnotationInstance instance = value.asNested();
+            Collection<AnnotationValue> values = instance.values();
+
+            addClassName(instance.name());
+            for (AnnotationValue entry : values) {
+                buildAValueEntries(index, entry);
+            }
+        }
+    }
+
+    private String intern(String name) {
         return pool.intern(name);
     }
 

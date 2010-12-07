@@ -50,9 +50,9 @@ public final class ClassInfo implements AnnotationTarget {
     private short flags;
     private final DotName superName;
     private final DotName[] interfaces;
-    private final Map<DotName, List<AnnotationTarget>> annotations;
+    private final Map<DotName, List<AnnotationInstance>> annotations;
 
-    ClassInfo(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationTarget>> annotations) {
+    ClassInfo(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations) {
         this.name = name;;
         this.superName = superName;
         this.flags = flags;
@@ -80,9 +80,7 @@ public final class ClassInfo implements AnnotationTarget {
         return interfaces;
     }
 
-    public final Map<DotName, List<AnnotationTarget>> annotations() {
+    public final Map<DotName, List<AnnotationInstance>> annotations() {
         return annotations;
     }
-
-
 }

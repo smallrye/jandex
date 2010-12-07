@@ -242,7 +242,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
         if (++size >= threshold)
             resize(length);
 
-        return entry;
+        return unmaskNull(entry);
     }
 
     private void resize(int from) {

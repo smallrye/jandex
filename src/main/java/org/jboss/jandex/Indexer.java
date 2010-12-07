@@ -132,18 +132,18 @@ public final class Indexer {
     private byte[] constantPoolAnnoAttrributes;
     private ClassInfo currentClass;
     private volatile ClassInfo publishClass;
-    private HashMap<DotName, List<AnnotationTarget>> classAnnotations;
+    private HashMap<DotName, List<AnnotationInstance>> classAnnotations;
     private StrongInternPool<String> internPool;
 
     // Index lifespan fields
-    private Map<DotName, List<AnnotationTarget>> masterAnnotations;
+    private Map<DotName, List<AnnotationInstance>> masterAnnotations;
     private Map<DotName, List<ClassInfo>> subclasses;
     private Map<DotName, ClassInfo> classes;
     private Map<String, DotName> names;
 
     private void initIndexMaps() {
         if (masterAnnotations == null)
-            masterAnnotations = new HashMap<DotName, List<AnnotationTarget>>();
+            masterAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
 
         if (subclasses == null)
             subclasses = new HashMap<DotName, List<ClassInfo>>();
@@ -232,67 +232,91 @@ public final class Indexer {
         }
     }
 
-    private void processAnnotation(DataInputStream data, AnnotationTarget target) throws IOException {
+    private AnnotationInstance processAnnotation(DataInputStream data, AnnotationTarget target) throws IOException {
         String annotation = convertClassFieldDescriptor(decodeUtf8Entry(data.readUnsignedShort()));
         int valuePairs = data.readUnsignedShort();
+
+        AnnotationValue[] values = new AnnotationValue[valuePairs];
         for (int v = 0; v < valuePairs; v++) {
-            data.skipBytes(2); // Name
-            processAnnotationElementValue(data);
+            String name = intern(decodeUtf8Entry(data.readUnsignedShort()));
+            values[v] = processAnnotationElementValue(name, data);
         }
 
-        // Don't record nested annotations
-        if (target == null)
-            return;
+        // Sort entries so they can be binary searched
+        Arrays.sort(values);
 
         DotName annotationName = convertToName(annotation);
+        AnnotationInstance instance = new AnnotationInstance(annotationName, target, values);
 
-        recordAnnotation(classAnnotations, annotationName, target);
-        recordAnnotation(masterAnnotations, annotationName, target);
+        // Don't record nested annotations in index
+        if (target != null) {
+            recordAnnotation(classAnnotations, annotationName, instance);
+            recordAnnotation(masterAnnotations, annotationName, instance);
+        }
+
+        return instance;
 
     }
 
-    private void recordAnnotation(Map<DotName, List<AnnotationTarget>> classAnnotations2, DotName annotation, AnnotationTarget target) {
-        List<AnnotationTarget> list = classAnnotations2.get(annotation);
+    private void recordAnnotation(Map<DotName, List<AnnotationInstance>> classAnnotations, DotName annotation, AnnotationInstance instance) {
+        List<AnnotationInstance> list = classAnnotations.get(annotation);
         if (list == null) {
-            list = new ArrayList<AnnotationTarget>();
-            classAnnotations2.put(annotation, list);
+            list = new ArrayList<AnnotationInstance>();
+            classAnnotations.put(annotation, list);
         }
 
-        list.add(target);
+        list.add(instance);
     }
 
     private String intern(String string) {
         return internPool.intern(string);
     }
 
-    private void processAnnotationElementValue(DataInputStream data) throws IOException {
+    private AnnotationValue processAnnotationElementValue(String name, DataInputStream data) throws IOException {
         int tag = data.readUnsignedByte();
         switch (tag) {
             case 'B':
+                return new AnnotationValue.ByteValue(name, (byte)decodeIntegerEntry(data.readUnsignedShort()));
             case 'C':
-            case 'D':
-            case 'F':
+                return new AnnotationValue.CharacterValue(name, (char)decodeIntegerEntry(data.readUnsignedShort()));
             case 'I':
-            case 'J':
+                return new AnnotationValue.IntegerValue(name, decodeIntegerEntry(data.readUnsignedShort()));
             case 'S':
-            case 'Z':
-            case 's':
-            case 'c':
-                data.skipBytes(2);
-                break;
-            case 'e':
-                data.skipBytes(4);
-                break;
-            case '@':
-                processAnnotation(data, null);
-                break;
-            case '[':
-                int numValues = data.readUnsignedShort();
-                for (int i = 0; i < numValues; i++)
-                    processAnnotationElementValue(data);
-                break;
+                return new AnnotationValue.ShortValue(name, (short)decodeIntegerEntry(data.readUnsignedShort()));
 
+            case 'Z':
+                return new AnnotationValue.BooleanValue(name, decodeIntegerEntry(data.readUnsignedShort()) > 0);
+
+            case 'F':
+                return new AnnotationValue.FloatValue(name, decodeFloatEntry(data.readUnsignedShort()));
+
+            case 'D':
+                return new AnnotationValue.DoubleValue(name, decodeDoubleEntry(data.readUnsignedShort()));
+            case 'J':
+                return new AnnotationValue.LongValue(name, decodeLongEntry(data.readUnsignedShort()));
+
+            case 's':
+                return new AnnotationValue.StringValue(name, decodeUtf8Entry(data.readUnsignedShort()));
+            case 'c':
+                return new AnnotationValue.ClassValue(name, parseType(decodeUtf8Entry(data.readUnsignedShort())));
+            case 'e': {
+                DotName type = parseType(decodeUtf8Entry(data.readUnsignedShort())).name();
+                String value = decodeUtf8Entry(data.readUnsignedShort());
+                return new AnnotationValue.EnumValue(name, type, value);
+            }
+            case '@':
+                return new AnnotationValue.NestedAnnotation(name, processAnnotation(data, null));
+            case '[': {
+                int numValues = data.readUnsignedShort();
+                AnnotationValue values[] = new AnnotationValue[numValues];
+                for (int i = 0; i < numValues; i++)
+                    values[i] = processAnnotationElementValue("", data);
+                return new AnnotationValue.ArrayValue(name, values);
+            }
+            default:
+                throw new IllegalStateException("Invalid tag value: " + tag);
         }
+
     }
 
 
@@ -309,7 +333,7 @@ public final class Indexer {
             interfaces[i] = decodeClassEntry(data.readUnsignedShort());
         }
 
-        this.classAnnotations = new HashMap<DotName, List<AnnotationTarget>>();
+        this.classAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
         this.currentClass = new ClassInfo(thisName, superName, flags, interfaces, classAnnotations);
 
         if (superName != null)
@@ -366,6 +390,67 @@ public final class Indexer {
 
         int len = (pool[++pos] & 0xFF) << 8 | (pool[++pos] & 0xFF);
         return new String(pool, ++pos, len, Charset.forName("UTF-8"));
+    }
+
+    private int bitsToInt(byte[] pool, int pos) {
+        return (pool[++pos] & 0xFF) << 24 | (pool[++pos] & 0xFF) << 16 | (pool[++pos] & 0xFF) << 8  | (pool[++pos] & 0xFF);
+    }
+
+    private long bitsToLong(byte[] pool, int pos) {
+        return ((long)pool[++pos] & 0xFF) << 56 |
+               ((long)pool[++pos] & 0xFF) << 48 |
+               ((long)pool[++pos] & 0xFF) << 40 |
+               ((long)pool[++pos] & 0xFF) << 32 |
+                     (pool[++pos] & 0xFF) << 24 |
+                     (pool[++pos] & 0xFF) << 16 |
+                     (pool[++pos] & 0xFF) << 8  |
+                     (pool[++pos] & 0xFF);
+    }
+
+    private int decodeIntegerEntry(int index) {
+        byte[] pool = constantPool;
+        int[] offsets = constantPoolOffsets;
+
+        int pos = offsets[index - 1];
+        if (pool[pos] != CONSTANT_INTEGER)
+            throw new IllegalStateException("Constant pool entry is not an integer info type: " + index + ":" + pos);
+
+        return bitsToInt(pool, pos);
+    }
+
+
+    private long decodeLongEntry(int index) {
+        byte[] pool = constantPool;
+        int[] offsets = constantPoolOffsets;
+
+        int pos = offsets[index - 1];
+        if (pool[pos] != CONSTANT_INTEGER)
+            throw new IllegalStateException("Constant pool entry is not an integer info type: " + index + ":" + pos);
+
+        return bitsToLong(pool, pos);
+    }
+
+
+    private float decodeFloatEntry(int index) {
+        byte[] pool = constantPool;
+        int[] offsets = constantPoolOffsets;
+
+        int pos = offsets[index - 1];
+        if (pool[pos] != CONSTANT_FLOAT)
+            throw new IllegalStateException("Constant pool entry is not an float info type: " + index + ":" + pos);
+
+        return Float.intBitsToFloat(bitsToInt(pool, pos));
+    }
+
+    private double decodeDoubleEntry(int index) {
+        byte[] pool = constantPool;
+        int[] offsets = constantPoolOffsets;
+
+        int pos = offsets[index - 1];
+        if (pool[pos] != CONSTANT_DOUBLE)
+            throw new IllegalStateException("Constant pool entry is not an double info type: " + index + ":" + pos);
+
+        return Double.longBitsToDouble(bitsToLong(pool, pos));
     }
 
     private static String convertClassFieldDescriptor(String descriptor) {

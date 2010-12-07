@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -55,15 +56,25 @@ public class Main {
 
     private static class Result {
         private int annotations;
+        private int instances;
         private int classes;
         private int bytes;
         private String name;
 
         private Result(Index index, String name, int bytes) {
             annotations = index.annotations.size();
+            instances = countInstances(index);
             classes = index.classes.size();
             this.bytes = bytes;
             this.name = name;
+        }
+
+        private int countInstances(Index index) {
+            int c = 0;
+            for (List<AnnotationInstance> list : index.annotations.values())
+                c += list.size();
+
+            return c;
         }
     }
 
@@ -80,9 +91,9 @@ public class Main {
             Indexer indexer = new Indexer();
             Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : indexJar(source, indexer);
             double time = (System.currentTimeMillis() - start) / 1000.00;
-            System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d bytes)\n", result.name, time, result.classes, result.annotations, result.bytes);
+            System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d bytes)\n", result.name, time, result.classes, result.annotations, result.instances, result.bytes);
         } catch (Exception e) {
-            if (e instanceof IllegalArgumentException || e instanceof FileNotFoundException) {
+            if (!verbose && (e instanceof IllegalArgumentException || e instanceof FileNotFoundException)) {
                 System.err.println(e.getMessage() == null ? e.getClass().getSimpleName() : "ERROR: " + e.getMessage());
             } else {
                 e.printStackTrace(System.err);

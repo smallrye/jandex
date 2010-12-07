@@ -23,7 +23,8 @@ package org.jboss.jandex;
 
 /**
  * An annotation value represents a specific name and value combination in the
- * parameter list of an annotation instance.
+ * parameter list of an annotation instance. It also can represent a nested
+ * array element in the case of an array value.
  *
  * <p>
  * An annotation value can be any Java primitive:
@@ -52,7 +53,7 @@ package org.jboss.jandex;
  * To access a value, the proper typed method must be used that matches the
  * expected type of the annotation parameter. In addition, some methods will
  * allow conversion of different types. For example, a byte can be returned as
- * an integer using @link {@link #asInt()}. Also all value types support a
+ * an integer using {@link #asInt()}. Also all value types support a
  * String representation.
  *
  * <p>

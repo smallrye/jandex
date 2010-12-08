@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -243,7 +244,11 @@ public final class Indexer {
         }
 
         // Sort entries so they can be binary searched
-        Arrays.sort(values);
+        Arrays.sort(values, new Comparator<AnnotationValue>() {
+            public int compare(AnnotationValue o1, AnnotationValue o2) {
+                return o1.name().compareTo(o2.name());
+            }
+        });
 
         DotName annotationName = convertToName(annotation);
         AnnotationInstance instance = new AnnotationInstance(annotationName, target, values);

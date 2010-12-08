@@ -65,7 +65,7 @@ package org.jboss.jandex;
  * @author Jason T. Greene
  *
  */
-public abstract class AnnotationValue implements Comparable<AnnotationValue> {
+public abstract class AnnotationValue {
     private final String name;
 
     AnnotationValue(String name) {
@@ -81,14 +81,6 @@ public abstract class AnnotationValue implements Comparable<AnnotationValue> {
      */
     public final String name() {
         return name;
-    }
-
-    /**
-     * Compares an annotation value with another annotation value. The result
-     * is ordered by parameter name.
-     */
-    public int compareTo(AnnotationValue other) {
-        return name.compareTo(other.name);
     }
 
     /**

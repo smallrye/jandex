@@ -23,6 +23,7 @@ package org.jboss.jandex;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -73,12 +74,19 @@ public final class AnnotationInstance {
 
     /**
      * Returns a value that corresponds with the specified parameter name.
+     * If the parameter was not specified by this instance then null is
+     * returned. Note that this also applies to a defaulted parameter,
+     * which is not recorded in the target class.
      *
      * @param name the parameter name
-     * @return the value of the specified parameter
+     * @return the value of the specified parameter, or null if not provided
      */
-    public AnnotationValue value(String name) {
-        int result = Arrays.binarySearch(values, name);
+    public AnnotationValue value(final String name) {
+        int result = Arrays.binarySearch(values, name, new Comparator<Object>() {
+            public int compare(Object o1, Object o2) {
+                return ((AnnotationValue)o1).name().compareTo(name);
+            }
+        });
         return result >= 0 ? values[result] : null;
     }
 

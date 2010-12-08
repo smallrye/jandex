@@ -66,6 +66,8 @@ package org.jboss.jandex;
  *
  */
 public abstract class AnnotationValue {
+    static final AnnotationValue[] EMPTY_VALUE_ARRAY = new AnnotationValue[0];
+
     private final String name;
 
     AnnotationValue(String name) {
@@ -737,7 +739,7 @@ public abstract class AnnotationValue {
 
         ArrayValue(String name, AnnotationValue value[]) {
             super(name);
-            this.value = value;
+            this.value = value.length > 0 ? value : EMPTY_VALUE_ARRAY;
         }
 
         public AnnotationValue[] value() {

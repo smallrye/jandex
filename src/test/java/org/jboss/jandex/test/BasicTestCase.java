@@ -67,7 +67,6 @@ public class BasicTestCase {
         InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName().replace('.', '/') + ".class");
         indexer.index(stream);
         Index index = indexer.complete();
-        AnnotationInstance instance = index.getAnnotationTargets(DotName.createSimple(TestAnnotation.class.getName())).get(0);
 
         verifyDummy(index);
     }
@@ -88,7 +87,7 @@ public class BasicTestCase {
     }
 
     private void verifyDummy(Index index) {
-        AnnotationInstance instance = index.getAnnotationTargets(DotName.createSimple(TestAnnotation.class.getName())).get(0);
+        AnnotationInstance instance = index.getAnnotations(DotName.createSimple(TestAnnotation.class.getName())).get(0);
 
         // Verify values
         assertEquals("Test", instance.value("name").asString());

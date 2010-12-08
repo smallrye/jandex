@@ -48,7 +48,7 @@ public final class AnnotationInstance {
     AnnotationInstance(DotName name, AnnotationTarget target, AnnotationValue[] values) {
         this.name = name;
         this.target = target;
-        this.values = values;
+        this.values = values.length > 0 ? values : AnnotationValue.EMPTY_VALUE_ARRAY;
     }
 
     /**

@@ -54,14 +54,14 @@ public final class Index {
     }
 
     /**
-     * Obtains a list of targets for the specified annotation.
-     * This is done using an O(1) lookup. Valid targets include
+     * Obtains a list of instances for the specified annotation.
+     * This is done using an O(1) lookup. Valid instance targets include
      * field, method, parameter, and class.
      *
      * @param annotationName the name of the annotation to look for
-     * @return a non-null list of annotation targets
+     * @return a non-null list of annotation instances
      */
-    public List<AnnotationInstance> getAnnotationTargets(DotName annotationName) {
+    public List<AnnotationInstance> getAnnotations(DotName annotationName) {
         List<AnnotationInstance> list = annotations.get(annotationName);
         return list == null ? EMPTY_ANNOTATION_LIST: Collections.unmodifiableList(list);
     }

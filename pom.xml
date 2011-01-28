@@ -8,7 +8,7 @@
     </parent>
     <groupId>org.jboss</groupId>
     <artifactId>jandex</artifactId>
-    <version>1.0.0.Beta4-SNAPSHOT</version>
+    <version>1.0.0.Beta4</version>
     <name>Java Annotation Indexer</name>
     <build>
         <plugins>

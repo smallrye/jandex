@@ -429,8 +429,8 @@ public final class Indexer {
         int[] offsets = constantPoolOffsets;
 
         int pos = offsets[index - 1];
-        if (pool[pos] != CONSTANT_INTEGER)
-            throw new IllegalStateException("Constant pool entry is not an integer info type: " + index + ":" + pos);
+        if (pool[pos] != CONSTANT_LONG)
+            throw new IllegalStateException("Constant pool entry is not an long info type: " + index + ":" + pos);
 
         return bitsToLong(pool, pos);
     }

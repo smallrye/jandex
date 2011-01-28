@@ -46,6 +46,8 @@ public class BasicTestCase {
     public @interface TestAnnotation {
         String name();
         int[] ints();
+
+        long longValue();
         Class<?> klass();
         NestedAnnotation nested();
         ElementType[] enums();
@@ -57,7 +59,7 @@ public class BasicTestCase {
     }
 
     @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f), nestedArray = {
-            @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) }, enums = { ElementType.TYPE, ElementType.PACKAGE })
+            @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) }, enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
     public class DummyClass {
     }
 
@@ -98,6 +100,7 @@ public class BasicTestCase {
         assertTrue(2.27f == instance.value("nestedArray").asNestedArray()[1].value().asFloat());
         assertEquals(ElementType.TYPE.name(), instance.value("enums").asEnumArray()[0]);
         assertEquals(ElementType.PACKAGE.name(), instance.value("enums").asEnumArray()[1]);
+        assertEquals(10, instance.value("longValue").asLong());
 
         // Verify target
         assertEquals(DummyClass.class.getName(), instance.target().toString());

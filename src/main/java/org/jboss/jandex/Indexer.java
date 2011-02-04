@@ -357,11 +357,10 @@ public final class Indexer {
         list.add(currentClass);
     }
 
-    private boolean isJDK5OrNewer(DataInputStream stream) throws IOException {
-        byte[] buf = new byte[4];
-
-        stream.readFully(buf);
-        return (buf[2] > 0 || buf[3] > (byte)48);
+    private boolean isJDK11OrNewer(DataInputStream stream) throws IOException {
+        int minor = stream.readUnsignedShort();
+        int major = stream.readUnsignedShort();
+        return major > 45 || (major == 45 && minor >= 3);
     }
 
     private void verifyMagic(DataInputStream stream) throws IOException {
@@ -609,7 +608,10 @@ public final class Indexer {
         {
             DataInputStream data = new DataInputStream(new BufferedInputStream(stream));
             verifyMagic(data);
-            if (!isJDK5OrNewer(data))
+
+            // Retroweaved classes may contain annotations
+            // Also, hierarchy info is needed regardless
+            if (!isJDK11OrNewer(data))
                 return null;
 
             initIndexMaps();

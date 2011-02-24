@@ -28,12 +28,15 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
+import java.util.List;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexReader;
@@ -60,7 +63,7 @@ public class BasicTestCase {
 
     @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f), nestedArray = {
             @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) }, enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
-    public class DummyClass {
+    public class DummyClass implements Serializable {
     }
 
     @Test
@@ -104,6 +107,12 @@ public class BasicTestCase {
 
         // Verify target
         assertEquals(DummyClass.class.getName(), instance.target().toString());
+        List<ClassInfo> implementors = index.getKnownImplementors(DotName.createSimple(Serializable.class.getName()));
+        assertEquals(1, implementors.size());
+        assertEquals(implementors.get(0).name(), DotName.createSimple(DummyClass.class.getName()));
+
+        implementors = index.getKnownImplementors(DotName.createSimple(InputStream.class.getName()));
+        assertEquals(0, implementors.size());
     }
 
 }

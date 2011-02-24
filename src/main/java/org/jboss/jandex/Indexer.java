@@ -139,6 +139,7 @@ public final class Indexer {
     // Index lifespan fields
     private Map<DotName, List<AnnotationInstance>> masterAnnotations;
     private Map<DotName, List<ClassInfo>> subclasses;
+    private Map<DotName, List<ClassInfo>> implementors;
     private Map<DotName, ClassInfo> classes;
     private Map<String, DotName> names;
 
@@ -148,6 +149,9 @@ public final class Indexer {
 
         if (subclasses == null)
             subclasses = new HashMap<DotName, List<ClassInfo>>();
+
+        if (implementors == null)
+            implementors = new HashMap<DotName, List<ClassInfo>>();
 
         if (classes == null)
             classes = new HashMap<DotName, ClassInfo>();
@@ -344,6 +348,10 @@ public final class Indexer {
         if (superName != null)
             addSubclass(superName, currentClass);
 
+        for (int i = 0; i < numInterfaces; i++) {
+            addImplementor(interfaces[i], currentClass);
+        }
+
         classes.put(currentClass.name(), currentClass);
     }
 
@@ -352,6 +360,16 @@ public final class Indexer {
         if (list == null) {
             list = new ArrayList<ClassInfo>();
             subclasses.put(superName, list);
+        }
+
+        list.add(currentClass);
+    }
+
+    private void addImplementor(DotName interfaceName, ClassInfo currentClass) {
+        List<ClassInfo> list = implementors.get(interfaceName);
+        if (list == null) {
+            list = new ArrayList<ClassInfo>();
+            implementors.put(interfaceName, list);
         }
 
         list.add(currentClass);
@@ -651,7 +669,7 @@ public final class Indexer {
     public Index complete() {
         initIndexMaps();
         try {
-            return new Index(masterAnnotations, subclasses, classes);
+            return new Index(masterAnnotations, subclasses, implementors, classes);
         } finally {
             masterAnnotations = null;
             subclasses = null;

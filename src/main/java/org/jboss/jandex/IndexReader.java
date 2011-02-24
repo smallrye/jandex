@@ -118,6 +118,7 @@ public final class IndexReader {
     private Index readClasses(PackedDataInputStream stream) throws IOException {
         int entries = stream.readPackedU32();
         HashMap<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>();
+        HashMap<DotName, List<ClassInfo>> implementors = new HashMap<DotName, List<ClassInfo>>();
         HashMap<DotName, ClassInfo> classes = new HashMap<DotName, ClassInfo>();
         masterAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
 
@@ -134,11 +135,14 @@ public final class IndexReader {
             Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
             ClassInfo clazz = new ClassInfo(name, superName, flags, interfaces, annotations);
             classes.put(name, clazz);
-            addSubclass(subclasses, superName, clazz);
+            addClassToMap(subclasses, superName, clazz);
+            for (DotName interfaceName : interfaces) {
+                addClassToMap(implementors, interfaceName, clazz);
+            }
             readAnnotations(stream, annotations, clazz);
         }
 
-        return new Index(masterAnnotations, subclasses, classes);
+        return new Index(masterAnnotations, subclasses, implementors, classes);
     }
 
 
@@ -273,16 +277,15 @@ public final class IndexReader {
         list.add(instance);
     }
 
-    private void addSubclass(HashMap<DotName, List<ClassInfo>> subclasses, DotName superName, ClassInfo currentClass) {
-        List<ClassInfo> list = subclasses.get(superName);
+    private void addClassToMap(HashMap<DotName, List<ClassInfo>> map, DotName name, ClassInfo currentClass) {
+        List<ClassInfo> list = map.get(name);
         if (list == null) {
             list = new ArrayList<ClassInfo>();
-            subclasses.put(superName, list);
+            map.put(name, list);
         }
 
         list.add(currentClass);
     }
-
 
     private Type readType(PackedDataInputStream stream) throws IOException {
         Type.Kind kind = Type.Kind.fromOrdinal(stream.readByte());

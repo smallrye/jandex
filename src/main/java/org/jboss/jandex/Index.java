@@ -45,12 +45,14 @@ public final class Index {
 
     final Map<DotName, List<AnnotationInstance>> annotations;
     final Map<DotName, List<ClassInfo>> subclasses;
+    final Map<DotName, List<ClassInfo>> implementors;
     final Map<DotName, ClassInfo> classes;
 
-    Index (Map<DotName, List<AnnotationInstance>> annotations,  Map<DotName, List<ClassInfo>> subclasses,  Map<DotName, ClassInfo> classes) {
+    Index (Map<DotName, List<AnnotationInstance>> annotations,  Map<DotName, List<ClassInfo>> subclasses, Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
         this.annotations = Collections.unmodifiableMap(annotations);
         this.classes = Collections.unmodifiableMap(classes);
         this.subclasses = Collections.unmodifiableMap(subclasses);
+        this.implementors = Collections.unmodifiableMap(implementors);
     }
 
     /**
@@ -79,6 +81,26 @@ public final class Index {
      */
     public List<ClassInfo> getKnownSubclasses(DotName className) {
         List<ClassInfo> list = subclasses.get(className);
+        return list == null ? EMPTY_CLASSINFO_LIST : Collections.unmodifiableList(list);
+    }
+    /**
+     * Gets all known direct implementors of the specified interface name. A known
+     * direct implementor is one which was found during the scanning process; however,
+     * this is often not the complete universe of implementors, since typically indexes
+     * are constructed per jar. It is expected that several indexes will need to
+     * be searched when analyzing a jar that is a part of a complex
+     * multi-module/classloader environment (like an EE application server).
+     * <p/>
+     * The list of implementors may also include other interfaces, in order to get a complete
+     * list of all classes that are assignable to a given interface it is necessary to
+     * recursively call {@link #getKnownImplementors(DotName)} for every implementing
+     * interface found.
+     *
+     * @param className the super class of the desired subclasses
+     * @return a non-null list of all known subclasses of className
+     */
+    public List<ClassInfo> getKnownImplementors(DotName className) {
+        List<ClassInfo> list = implementors.get(className);
         return list == null ? EMPTY_CLASSINFO_LIST : Collections.unmodifiableList(list);
     }
 

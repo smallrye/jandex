@@ -122,6 +122,11 @@ public final class DotName implements Comparable<DotName> {
         return !componentized;
     }
 
+    /**
+     * Returns the regular fully qualifier class name.
+     * 
+     * @return The fully qualified class name
+     */
     public String toString() {
         StringBuilder string = new StringBuilder();
         if (prefix != null)

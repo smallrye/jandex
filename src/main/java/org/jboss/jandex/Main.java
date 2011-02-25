@@ -54,29 +54,6 @@ public class Main {
         main.execute(args);
     }
 
-    private static class Result {
-        private int annotations;
-        private int instances;
-        private int classes;
-        private int bytes;
-        private String name;
-
-        private Result(Index index, String name, int bytes) {
-            annotations = index.annotations.size();
-            instances = countInstances(index);
-            classes = index.classes.size();
-            this.bytes = bytes;
-            this.name = name;
-        }
-
-        private int countInstances(Index index) {
-            int c = 0;
-            for (List<AnnotationInstance> list : index.annotations.values())
-                c += list.size();
-
-            return c;
-        }
-    }
 
     private void execute(String[] args) {
         try {
@@ -89,9 +66,9 @@ public class Main {
 
             long start = System.currentTimeMillis();
             Indexer indexer = new Indexer();
-            Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : indexJar(source, indexer);
+            Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : JarIndexer.createJarIndex(source, indexer,modify,verbose);
             double time = (System.currentTimeMillis() - start) / 1000.00;
-            System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d bytes)\n", result.name, time, result.classes, result.annotations, result.instances, result.bytes);
+            System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d bytes)\n", result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(), result.getBytes());
         } catch (Exception e) {
             if (!verbose && (e instanceof IllegalArgumentException || e instanceof FileNotFoundException)) {
                 System.err.println(e.getMessage() == null ? e.getClass().getSimpleName() : "ERROR: " + e.getMessage());
@@ -142,75 +119,8 @@ public class Main {
         }
     }
 
-    private Result indexJar(File source, Indexer indexer) throws IOException {
-        boolean modify = this.modify;
-        boolean verbose = this.verbose;
-        File tmpCopy = null;
-        ZipOutputStream zo = null;
-        OutputStream out = null;
-
-        JarFile jar = new JarFile(source);
-
-        if (modify) {
-            tmpCopy = File.createTempFile(source.getName().substring(0, source.getName().lastIndexOf('.')), "jmp");
-            out = zo = new ZipOutputStream(new FileOutputStream(tmpCopy));
-        } else {
-            if (outputFile == null) {
-                outputFile = new File(source.getName().replace('.', '-') + ".idx");
-            }
-            out = new FileOutputStream(outputFile);
-        }
-
-        try {
-            Enumeration<JarEntry> entries = jar.entries();
-            while (entries.hasMoreElements()) {
-                JarEntry entry = entries.nextElement();
-                if (modify) {
-                    zo.putNextEntry(entry);
-                    copy(jar.getInputStream(entry), zo);
-                }
-
-                if (entry.getName().endsWith(".class")) {
-                    ClassInfo info = indexer.index(jar.getInputStream(entry));
-                    if (verbose && info != null)
-                        printIndexEntryInfo(info);
-                }
-            }
-
-            if (modify) {
-                zo.putNextEntry(new ZipEntry("META-INF/jandex.idx"));
-            }
-
-            IndexWriter writer = new IndexWriter(out);
-            Index index = indexer.complete();
-            int bytes = writer.write(index);
-
-
-            if (modify) {
-                source.delete();
-                tmpCopy.renameTo(source);
-                tmpCopy = null;
-            }
-            return new Result(index, modify ? "META-INF/jandex.idx" : outputFile.getPath(),  bytes);
-        } finally {
-            out.flush();
-            out.close();
-            if (tmpCopy != null)
-                tmpCopy.delete();
-        }
-    }
-
     private void printIndexEntryInfo(ClassInfo info) {
         System.out.println("Indexed " + info.name() + " (" + info.annotations().size() + " annotations)");
-    }
-
-    private void copy(InputStream in, OutputStream out) throws IOException {
-        byte[] buf = new byte[8192];
-        int len;
-        while ((len = in.read(buf)) > 0) {
-            out.write(buf, 0, len);
-        }
-        out.flush();
     }
 
     private void scanFile(File source, Indexer indexer) throws FileNotFoundException, IOException {

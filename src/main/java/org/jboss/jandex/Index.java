@@ -69,17 +69,19 @@ public final class Index {
     }
 
     /**
-     * Gets all known subclasses of the specified class name. A known subclass is
-     * one which was found during the scanning process; however, this is often not
-     * the complete universe of subclasses, since typically indexes are constructed
-     * per jar. It is expected that several indexes will need to be searched when
-     * analyzing a jar that is a part of a complex multi-module/classloader
+     * Gets all known direct subclasses of the specified class name. A known direct
+     * subclass is one which was found during the scanning process; however, this is
+     * often not the complete universe of subclasses, since typically indexes are
+     * constructed per jar. It is expected that several indexes will need to be searched
+     * when analyzing a jar that is a part of a complex multi-module/classloader
      * environment (like an EE application server).
-     *
+     * <p/>
+     * Note that this will only pick up direct subclasses of the class. It will not
+     * pick up subclasses of subclasses.
      * @param className the super class of the desired subclasses
      * @return a non-null list of all known subclasses of className
      */
-    public List<ClassInfo> getKnownSubclasses(DotName className) {
+    public List<ClassInfo> getKnownDirectSubclasses(DotName className) {
         List<ClassInfo> list = subclasses.get(className);
         return list == null ? EMPTY_CLASSINFO_LIST : Collections.unmodifiableList(list);
     }
@@ -93,13 +95,13 @@ public final class Index {
      * <p/>
      * The list of implementors may also include other interfaces, in order to get a complete
      * list of all classes that are assignable to a given interface it is necessary to
-     * recursively call {@link #getKnownImplementors(DotName)} for every implementing
+     * recursively call {@link #getKnownDirectImplementors(DotName)} for every implementing
      * interface found.
      *
      * @param className the super class of the desired subclasses
      * @return a non-null list of all known subclasses of className
      */
-    public List<ClassInfo> getKnownImplementors(DotName className) {
+    public List<ClassInfo> getKnownDirectImplementors(DotName className) {
         List<ClassInfo> list = implementors.get(className);
         return list == null ? EMPTY_CLASSINFO_LIST : Collections.unmodifiableList(list);
     }

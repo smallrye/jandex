@@ -107,11 +107,11 @@ public class BasicTestCase {
 
         // Verify target
         assertEquals(DummyClass.class.getName(), instance.target().toString());
-        List<ClassInfo> implementors = index.getKnownImplementors(DotName.createSimple(Serializable.class.getName()));
+        List<ClassInfo> implementors = index.getKnownDirectImplementors(DotName.createSimple(Serializable.class.getName()));
         assertEquals(1, implementors.size());
         assertEquals(implementors.get(0).name(), DotName.createSimple(DummyClass.class.getName()));
 
-        implementors = index.getKnownImplementors(DotName.createSimple(InputStream.class.getName()));
+        implementors = index.getKnownDirectImplementors(DotName.createSimple(InputStream.class.getName()));
         assertEquals(0, implementors.size());
     }
 

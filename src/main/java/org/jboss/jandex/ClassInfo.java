@@ -53,11 +53,26 @@ public final class ClassInfo implements AnnotationTarget {
     private final Map<DotName, List<AnnotationInstance>> annotations;
 
     ClassInfo(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations) {
-        this.name = name;;
+        this.name = name;
         this.superName = superName;
         this.flags = flags;
         this.interfaces = interfaces;
         this.annotations = Collections.unmodifiableMap(annotations);
+    }
+
+    /**
+     * Constructs a "mock" ClassInfo using the passed values. All passed values MUST NOT BE MODIFIED AFTER THIS CALL.
+     * Otherwise the resulting object would not conform to the contract outlined above.
+     *
+     * @param name the name of this class
+     * @param superName the name of the parent class
+     * @param flags the class attributes
+     * @param interfaces the interfaces this class implements
+     * @param annotations the annotations on this class
+     * @return a new mock class representation
+     */
+    public static final ClassInfo create(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations) {
+        return new ClassInfo(name, superName, flags, interfaces, annotations);
     }
 
     public String toString() {

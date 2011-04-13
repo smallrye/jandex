@@ -33,10 +33,22 @@ public final class MethodParameterInfo implements AnnotationTarget {
     private final MethodInfo method;
     private final short parameter;
 
-    MethodParameterInfo(MethodInfo method,short parameter)
+    MethodParameterInfo(MethodInfo method, short parameter)
     {
         this.method = method;
         this.parameter = parameter;
+    }
+
+    /**
+     * Constructs a new mock method parameter info
+     *
+     * @param method the method containing this parameter.
+     * @param parameter the zero based index of this parameter
+     * @return the new mock parameter info
+     */
+    public static final MethodParameterInfo create(MethodInfo method, short parameter)
+    {
+        return new MethodParameterInfo(method, parameter);
     }
 
     /**

@@ -82,6 +82,16 @@ public final class Type {
         this.kind = kind;
     }
 
+    public static final Type create(DotName name, Kind kind) {
+        if (name == null)
+            throw new IllegalArgumentException("name can not be null!");
+
+        if (kind == null)
+            throw new IllegalArgumentException("kind can not be null!");
+
+        return new Type(name, kind);
+    }
+
     /**
      * Returns the name of this type. Primitives and void are returned as the
      * Java reserved word (void, boolean, byte, short, char, int, long, float,

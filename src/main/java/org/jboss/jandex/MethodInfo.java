@@ -47,6 +47,33 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     /**
+      * Construct a new mock Method instance.
+      *
+      * @param clazz the class declaring the field
+      * @param name the name of the field
+      * @param args a read only array containing the types of each parameter in parameter order
+     *  @param returnType the return value type
+      * @param flags the method attributes
+      * @return a mock field
+      */
+     public static final MethodInfo create(ClassInfo clazz, String name, Type[] args, Type returnType, short flags) {
+         if (clazz == null)
+             throw new IllegalArgumentException("Clazz can't be null");
+
+         if (name == null)
+             throw new IllegalArgumentException("Name can't be null");
+
+         if (args == null)
+            throw new IllegalArgumentException("Values can't be null");
+
+         if (returnType == null)
+            throw new IllegalArgumentException("returnType can't be null");
+
+         return new MethodInfo(clazz, name, args, returnType, flags);
+     }
+
+
+    /**
      * Returns the name of this method
      *
      * @return the name of the method

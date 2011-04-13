@@ -52,6 +52,24 @@ public final class AnnotationInstance {
     }
 
     /**
+     * Construct a new mock annotation instance.The passed values array must be immutable.
+     *
+     * @param name the name of the annotation instance
+     * @param target the thing the annotation is declared on
+     * @param values the values of this annotation instance
+     * @return the new mock Annotation Instance
+     */
+    public static final AnnotationInstance create(DotName name, AnnotationTarget target, AnnotationValue[] values) {
+        if (name == null)
+            throw new IllegalArgumentException("Name can't be null");
+
+        if (values == null)
+            throw new IllegalArgumentException("Values can't be null");
+
+        return new AnnotationInstance(name, target, values);
+    }
+
+    /**
      * The name of this annotation in DotName form.
      *
      * @return the name of this annotation

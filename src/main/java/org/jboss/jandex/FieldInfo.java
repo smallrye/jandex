@@ -45,6 +45,25 @@ public final class FieldInfo implements AnnotationTarget {
         this.flags = flags;
     }
 
+    /**
+     * Construct a new mock Field instance.
+     *
+     * @param clazz the class declaring the field
+     * @param name the name of the field
+     * @param type the Java field type
+     * @param flags the field attributes
+     * @return a mock field
+     */
+    public static final FieldInfo create(ClassInfo clazz, String name, Type type, short flags) {
+         if (clazz == null)
+             throw new IllegalArgumentException("Clazz can't be null");
+
+         if (name == null)
+             throw new IllegalArgumentException("Name can't be null");
+
+        return new FieldInfo(clazz, name, type, flags);
+    }
+
 
     /**
      * Returns the local name of the field

@@ -41,6 +41,8 @@ import java.util.List;
  *
  */
 public final class AnnotationInstance {
+    private static final AnnotationValue[] ANNOTATION_VALUES_TYPE = new AnnotationValue[0];
+
     private final DotName name;
     private final AnnotationTarget target;
     private final AnnotationValue[] values;
@@ -52,7 +54,7 @@ public final class AnnotationInstance {
     }
 
     /**
-     * Construct a new mock annotation instance.The passed values array must be immutable.
+     * Construct a new mock annotation instance. The passed values array will be defensively copied.
      *
      * @param name the name of the annotation instance
      * @param target the thing the annotation is declared on
@@ -66,7 +68,34 @@ public final class AnnotationInstance {
         if (values == null)
             throw new IllegalArgumentException("Values can't be null");
 
+        values = values.clone();
+
+        // Sort entries so they can be binary searched
+        Arrays.sort(values, new Comparator<AnnotationValue>() {
+            public int compare(AnnotationValue o1, AnnotationValue o2) {
+                return o1.name().compareTo(o2.name());
+            }
+        });
+
         return new AnnotationInstance(name, target, values);
+    }
+
+    /**
+     * Construct a new mock annotation instance. The passed values list will be defensively copied.
+     *
+     * @param name the name of the annotation instance
+     * @param target the thing the annotation is declared on
+     * @param values the values of this annotation instance
+     * @return the new mock Annotation Instance
+     */
+    public static final AnnotationInstance create(DotName name, AnnotationTarget target, List<AnnotationValue> values) {
+        if (name == null)
+            throw new IllegalArgumentException("Name can't be null");
+
+        if (values == null)
+            throw new IllegalArgumentException("Values can't be null");
+
+        return create(name, target, values.toArray(ANNOTATION_VALUES_TYPE));
     }
 
     /**

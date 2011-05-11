@@ -669,7 +669,7 @@ public final class Indexer {
     public Index complete() {
         initIndexMaps();
         try {
-            return new Index(masterAnnotations, subclasses, implementors, classes);
+            return Index.create(masterAnnotations, subclasses, implementors, classes);
         } finally {
             masterAnnotations = null;
             subclasses = null;

@@ -27,7 +27,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * An index useful for quickly processing annotations.
+ * An index useful for quickly processing annotations. The index is read-only and supports
+ * concurrent access. Also the index is optimized for memory efficiency by using componentized
+ * DotName values.
  *
  * <p>It contains the following information:
  * <ol>
@@ -48,12 +50,30 @@ public final class Index {
     final Map<DotName, List<ClassInfo>> implementors;
     final Map<DotName, ClassInfo> classes;
 
-    Index (Map<DotName, List<AnnotationInstance>> annotations,  Map<DotName, List<ClassInfo>> subclasses, Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
+    Index(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses, Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
         this.annotations = Collections.unmodifiableMap(annotations);
         this.classes = Collections.unmodifiableMap(classes);
         this.subclasses = Collections.unmodifiableMap(subclasses);
         this.implementors = Collections.unmodifiableMap(implementors);
     }
+
+
+    /**
+     * Constructs a "mock" Index using the passed values. All passed values MUST NOT BE MODIFIED AFTER THIS CALL.
+     * Otherwise the resulting object would not conform to the contract outlined above. Also, to conform to the
+     * memory efficiency contract this method should be passed componentized DotNames, which all share common root
+     * instances. Of course for testing code this doesn't really matter.
+     *
+     * @param annotations A map to lookup annotation instances by class name
+     * @param subclasses A map to lookup subclasses by super class name
+     * @param implementors A map to lookup implementing classes by interface name
+     * @param classes A map to lookup classes by class name
+     * @return the index
+     */
+    public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses, Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
+        return new Index(annotations, subclasses, implementors, classes);
+    }
+
 
     /**
      * Obtains a list of instances for the specified annotation.

@@ -142,7 +142,7 @@ public final class IndexReader {
             readAnnotations(stream, annotations, clazz);
         }
 
-        return new Index(masterAnnotations, subclasses, implementors, classes);
+        return Index.create(masterAnnotations, subclasses, implementors, classes);
     }
 
 

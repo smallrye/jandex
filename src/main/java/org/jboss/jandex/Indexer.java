@@ -386,7 +386,7 @@ public final class Indexer {
 
         stream.readFully(buf);
         if (buf[0] != (byte)0xCA || buf[1] != (byte)0xFE || buf[2] != (byte)0xBA || buf[3] != (byte)0xBE)
-            throw new RuntimeException("Invalid Magic");
+            throw new IOException("Invalid Magic");
 
     }
 

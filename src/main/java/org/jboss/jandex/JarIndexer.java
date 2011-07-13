@@ -12,6 +12,7 @@ import java.util.zip.ZipOutputStream;
  * Class which contains utility methods to create an index for a jar file
  *
  * @author Stuart Douglas
+ * @author Jason T. Greene
  *
  */
 public class JarIndexer {
@@ -35,7 +36,7 @@ public class JarIndexer {
         JarFile jar = new JarFile(jarFile);
 
         if (modify) {
-            tmpCopy = File.createTempFile(jarFile.getName().substring(0, jarFile.getName().lastIndexOf('.')), "jmp");
+            tmpCopy = File.createTempFile(jarFile.getName().substring(0, jarFile.getName().lastIndexOf('.')) + "00", "jmp");
             out = zo = new ZipOutputStream(new FileOutputStream(tmpCopy));
         } else if (newJar) {
             outputFile = new File(jarFile.getAbsolutePath().replace(".jar", "-jandex.jar"));
@@ -43,7 +44,7 @@ public class JarIndexer {
         } else
         {
             outputFile = new File(jarFile.getAbsolutePath().replace(".jar", "-jar") + ".idx");
-            out = new FileOutputStream(  outputFile);
+            out = new FileOutputStream(outputFile);
         }
 
         try {
@@ -70,8 +71,8 @@ public class JarIndexer {
             Index index = indexer.complete();
             int bytes = writer.write(index);
 
+            out.flush();
             out.close();
-            zo.close();
             jar.close();
 
             if (modify) {
@@ -81,8 +82,8 @@ public class JarIndexer {
             }
             return new Result(index, modify ? "META-INF/jandex.idx" : outputFile.getPath(),  bytes);
         } finally {
-            out.flush();
-            out.close();
+            safeClose(out);
+            safeClose(jar);
             if (tmpCopy != null)
                 tmpCopy.delete();
         }
@@ -99,7 +100,21 @@ public class JarIndexer {
         }
         out.flush();
     }
-    private JarIndexer() {
 
+    private static void safeClose(JarFile close) {
+        try {
+            close.close();
+        } catch (Exception ignore) {
+        }
+    }
+
+    private static void safeClose(Closeable close) {
+        try {
+            close.close();
+        } catch (Exception ignore) {
+        }
+    }
+
+    private JarIndexer() {
     }
 }

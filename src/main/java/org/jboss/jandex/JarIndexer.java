@@ -57,9 +57,15 @@ public class JarIndexer {
                 }
 
                 if (entry.getName().endsWith(".class")) {
-                    ClassInfo info = indexer.index(jar.getInputStream(entry));
-                    if (verbose && info != null)
-                        printIndexEntryInfo(info);
+                    try {
+                        ClassInfo info = indexer.index(jar.getInputStream(entry));
+                        if (verbose && info != null)
+                            printIndexEntryInfo(info);
+                    } catch (Exception e) {
+                        String message = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+                        System.err.println("ERROR: Could not index " + entry.getName() + ": " + message); if (verbose)
+                        e.printStackTrace(System.err);
+                    }
                 }
             }
 

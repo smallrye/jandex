@@ -56,9 +56,11 @@ public class Main {
 
 
     private void execute(String[] args) {
+        boolean printUsage = true;
         try {
             parseOptions(args);
 
+            printUsage = false;
             if (dump) {
                 dumpIndex(source);
                 return;
@@ -76,8 +78,10 @@ public class Main {
                 e.printStackTrace(System.err);
             }
 
-            System.out.println();
-            printUsage();
+            if (printUsage) {
+                System.out.println();
+                printUsage();
+            }
         }
     }
 
@@ -136,9 +140,17 @@ public class Main {
         }
 
         FileInputStream input = new FileInputStream(source);
-        ClassInfo info = indexer.index(input);
-        if (verbose)
-            printIndexEntryInfo(info);
+
+        try {
+            ClassInfo info = indexer.index(input);
+            if (verbose && info != null)
+                printIndexEntryInfo(info);
+        } catch (Exception e) {
+            String message = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            System.err.println("ERROR: Could not index " + source.getName() + ": " + message);
+            if (verbose)
+                e.printStackTrace(System.err);
+        }
 
         return;
     }

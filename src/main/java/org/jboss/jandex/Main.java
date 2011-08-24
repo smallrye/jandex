@@ -139,6 +139,9 @@ public class Main {
             return;
         }
 
+        if (! source.getName().endsWith(".class"))
+            return;
+
         FileInputStream input = new FileInputStream(source);
 
         try {

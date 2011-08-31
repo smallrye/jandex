@@ -535,7 +535,9 @@ public final class Indexer {
                     while (descriptor.charAt(++end) != ';');
                 }
 
-                name = new DotName(null, descriptor.substring(start, end + 1), true);
+                //we replace the / characters with a .
+                //so it matches the name format returned by the reflection API
+                name = new DotName(null, descriptor.substring(start, end + 1).replace('/','.'), true);
                 kind = Type.Kind.ARRAY;
                 pos.i = end;
                 break;

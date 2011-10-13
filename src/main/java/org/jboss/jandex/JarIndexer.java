@@ -52,7 +52,10 @@ public class JarIndexer {
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
                 if (modify) {
-                    zo.putNextEntry(entry);
+                    JarEntry clone = (JarEntry) entry.clone();
+                    // Compression level and format can vary across implementations
+                    clone.setCompressedSize(-1);
+                    zo.putNextEntry(clone);
                     copy(jar.getInputStream(entry), zo);
                 }
 

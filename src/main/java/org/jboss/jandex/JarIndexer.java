@@ -54,7 +54,8 @@ public class JarIndexer {
                 if (modify) {
                     JarEntry clone = (JarEntry) entry.clone();
                     // Compression level and format can vary across implementations
-                    clone.setCompressedSize(-1);
+                    if (clone.getMethod() != ZipEntry.STORED)
+                        clone.setCompressedSize(-1);
                     zo.putNextEntry(clone);
                     copy(jar.getInputStream(entry), zo);
                 }

@@ -14,6 +14,12 @@
   <packaging>maven-plugin</packaging>
 
   <name>Jandex wrapper for Maven</name>
+  
+  <scm>
+    <connection>scm:git:http://github.com/jdcasey/jandex-maven-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jdcasey/jandex-maven-plugin.git</developerConnection>
+    <url>http://github.com/jdcasey/jandex-maven-plugin</url>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

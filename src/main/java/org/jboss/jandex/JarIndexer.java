@@ -13,24 +13,52 @@ import java.util.zip.ZipOutputStream;
  *
  * @author Stuart Douglas
  * @author Jason T. Greene
- *
+ * @author Ales Justin
  */
 public class JarIndexer {
 
     /**
-     * Indexes a jar file and saves the result. If the modify flag is try it is saved META-INF/jandex.idx.
-     * Otherwies an external file is created with a similar name to the original file, however the
-     * <code>.jar</code> extension is replaced with <code>-jar.idx</code>
+     * Get index file.
+     *
+     * It is a new jar file, if the newJar flag is true.
+     * Otherwise it's a standalone index file.
+     *
+     * @param jarFile The file to index
+     * @param newJar If the new jar should be created
+     * @return location of the index
+     */
+    public static File getIndexFile(File jarFile, boolean newJar) {
+        final String name = jarFile.getName();
+        final int p = name.lastIndexOf(".");
+        if (p < 0)
+            throw new IllegalArgumentException("File has no extension / ext: " + jarFile);
+
+        // this method is here so we keep the naming details here, as impl detail
+        final String ext = name.substring(p);
+        if (newJar)
+            return new File(jarFile.getAbsolutePath().replace(ext, "-jandex" + ext));
+        else
+            return new File(jarFile.getAbsolutePath().replace(ext, "-" + ext.substring(1)) + ".idx");
+    }
+    
+    /**
+     * Indexes a jar file and saves the result. If the modify flag is set, index is saved to META-INF/jandex.idx.
+     * Otherwise an external file is created with a similar name to the original file, 
+     * concatinating <code>.idx</code> suffix.
      *
      * @param jarFile The file to index
      * @param indexer The indexer to use
      * @param modify If the original jar should be modified
+     * @param newJar If the new jar should be created
      * @param verbose If we should print what we are doing to standard out
+     * @return indexing result
+     * @throws IOException for any I/o error
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static Result createJarIndex(File jarFile, Indexer indexer, boolean modify, boolean newJar, boolean verbose) throws IOException {
         File tmpCopy = null;
         ZipOutputStream zo = null;
-        OutputStream out = null;
+        OutputStream out;
         File outputFile = null;
 
         JarFile jar = new JarFile(jarFile);
@@ -39,11 +67,10 @@ public class JarIndexer {
             tmpCopy = File.createTempFile(jarFile.getName().substring(0, jarFile.getName().lastIndexOf('.')) + "00", "jmp");
             out = zo = new ZipOutputStream(new FileOutputStream(tmpCopy));
         } else if (newJar) {
-            outputFile = new File(jarFile.getAbsolutePath().replace(".jar", "-jandex.jar"));
+            outputFile = getIndexFile(jarFile, newJar);
             out = zo = new ZipOutputStream(new FileOutputStream(outputFile));
-        } else
-        {
-            outputFile = new File(jarFile.getAbsolutePath().replace(".jar", "-jar") + ".idx");
+        } else {
+            outputFile = getIndexFile(jarFile, newJar);
             out = new FileOutputStream(outputFile);
         }
 
@@ -102,6 +129,7 @@ public class JarIndexer {
     private static void printIndexEntryInfo(ClassInfo info) {
         System.out.println("Indexed " + info.name() + " (" + info.annotations().size() + " annotations)");
     }
+    
     private static void copy(InputStream in, OutputStream out) throws IOException {
         byte[] buf = new byte[8192];
         int len;

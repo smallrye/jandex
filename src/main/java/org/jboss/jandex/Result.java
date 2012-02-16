@@ -25,8 +25,10 @@ import java.util.List;
 
 /**
  * @author Stuart Douglas
+ * @author Ales Justin
  */
-class Result {
+public class Result {
+    private Index index;
     private int annotations;
     private int instances;
     private int classes;
@@ -34,6 +36,7 @@ class Result {
     private String name;
 
     Result(Index index, String name, int bytes) {
+        this.index = index;
         annotations = index.annotations.size();
         instances = countInstances(index);
         classes = index.classes.size();
@@ -47,6 +50,10 @@ class Result {
             c += list.size();
 
         return c;
+    }
+
+    public Index getIndex() {
+        return index;
     }
 
     public int getAnnotations() {

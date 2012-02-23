@@ -109,8 +109,6 @@ public class JarIndexer {
             int bytes = writer.write(index);
 
             out.flush();
-            out.close();
-            jar.close();
 
             if (modify) {
                 jarFile.delete();

@@ -84,12 +84,23 @@ public class JarIndexer {
                     if (clone.getMethod() != ZipEntry.STORED)
                         clone.setCompressedSize(-1);
                     zo.putNextEntry(clone);
-                    copy(jar.getInputStream(entry), zo);
+                    final InputStream stream = jar.getInputStream(entry);
+                    try {
+                        copy(stream, zo);
+                    } finally {
+                        safeClose(stream);
+                    }
                 }
 
                 if (entry.getName().endsWith(".class")) {
                     try {
-                        ClassInfo info = indexer.index(jar.getInputStream(entry));
+                        final InputStream stream = jar.getInputStream(entry);
+                        ClassInfo info;
+                        try {
+                            info = indexer.index(stream);
+                        } finally {
+                            safeClose(stream);
+                        }
                         if (verbose && info != null)
                             printIndexEntryInfo(info);
                     } catch (Exception e) {

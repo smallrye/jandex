@@ -40,6 +40,7 @@ public class Main {
     private boolean modify;
     private boolean verbose;
     private boolean dump;
+    private boolean jarFile;
     private File outputFile;
     private File source;
 
@@ -68,7 +69,7 @@ public class Main {
 
             long start = System.currentTimeMillis();
             Indexer indexer = new Indexer();
-            Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : JarIndexer.createJarIndex(source, indexer,modify,false,verbose);
+            Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : JarIndexer.createJarIndex(source, indexer,modify,jarFile,verbose);
             double time = (System.currentTimeMillis() - start) / 1000.00;
             System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d bytes)\n", result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(), result.getBytes());
         } catch (Exception e) {
@@ -166,6 +167,7 @@ public class Main {
         System.out.println("  -v  verbose output");
         System.out.println("  -m  modify directory or jar instead of creating an external index file");
         System.out.println("  -o  name the external index file file-name");
+        System.out.println("  -j  export the index file to a jar file");
         System.out.println("  -d  dump the index file index-file-name");
         System.out.println("\nThe default behavior, with no options specified, is to autogenerate an external index file");
     }
@@ -198,6 +200,10 @@ public class Main {
                     break;
                 case 'v':
                     verbose = true;
+                    optionCount++;
+                    break;
+                case 'j':
+                    jarFile = true;
                     optionCount++;
                     break;
                 case 'o':

@@ -1,8 +1,3 @@
-Jandex Plugin for Apache Maven
-==============================
-
-Full documentation can be found at: [http://jdcasey.github.com/jandex-maven-plugin](http://jdcasey.github.com/jandex-maven-plugin)
-
 Basic Usage
 -----------
 
@@ -11,7 +6,7 @@ Basic Usage
         <plugin>
           <groupId>org.jboss.jandex</groupId>
           <artifactId>jandex-maven-plugin</artifactId>
-          <version>1.0-SNAPSHOT</version>
+          <version>${project.version}</version>
           <executions>
             <execution>
               <id>make-index</id>
@@ -40,7 +35,7 @@ If you need to process more than one directory of classes, you can specify multi
         <plugin>
           <groupId>org.jboss.jandex</groupId>
           <artifactId>jandex-maven-plugin</artifactId>
-          <version>1.0-SNAPSHOT</version>
+          <version>${project.version}</version>
           <executions>
             <execution>
               <id>make-index</id>

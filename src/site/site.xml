@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="Jandex plugin for Apache Maven">
+  <body>
+    <links>
+      <item name="Github Project" href="http://github.com/jdcasey/jandex-maven-plugin/" />
+      <item name="Apache" href="http://www.apache.org/" />
+      <item name="Maven" href="http://maven.apache.org/"/>
+      <item name="Jandex" href="http://github.com/jbossas/jandex/" />
+    </links>
+
+    <menu name="Documentation">
+      <item name="Introduction" href="index.html"/>
+      <item name="Usage" href="usage.html"/>
+    </menu>
+
+    <menu ref="reports"/>
+  </body>
+</project>

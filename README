@@ -1,2 +1,0 @@
-mvn install
-java -jar target/jandex*.jar 

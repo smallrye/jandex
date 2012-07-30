@@ -74,6 +74,7 @@ public class BasicTestCase {
         Index index = indexer.complete();
 
         verifyDummy(index);
+        index.printSubclasses();
     }
 
     @Test

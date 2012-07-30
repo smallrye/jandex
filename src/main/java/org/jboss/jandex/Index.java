@@ -21,10 +21,14 @@
  */
 package org.jboss.jandex;
 
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * An index useful for quickly processing annotations. The index is read-only and supports
@@ -41,7 +45,7 @@ import java.util.Map;
  * @author Jason T. Greene
  *
  */
-public final class Index {
+public final class Index implements IndexView {
     private static final List<AnnotationInstance> EMPTY_ANNOTATION_LIST = Collections.emptyList();
     private static final List<ClassInfo> EMPTY_CLASSINFO_LIST = Collections.emptyList();
 
@@ -76,12 +80,7 @@ public final class Index {
 
 
     /**
-     * Obtains a list of instances for the specified annotation.
-     * This is done using an O(1) lookup. Valid instance targets include
-     * field, method, parameter, and class.
-     *
-     * @param annotationName the name of the annotation to look for
-     * @return a non-null list of annotation instances
+     * {@inheritDoc}
      */
     public List<AnnotationInstance> getAnnotations(DotName annotationName) {
         List<AnnotationInstance> list = annotations.get(annotationName);
@@ -89,58 +88,101 @@ public final class Index {
     }
 
     /**
-     * Gets all known direct subclasses of the specified class name. A known direct
-     * subclass is one which was found during the scanning process; however, this is
-     * often not the complete universe of subclasses, since typically indexes are
-     * constructed per jar. It is expected that several indexes will need to be searched
-     * when analyzing a jar that is a part of a complex multi-module/classloader
-     * environment (like an EE application server).
-     * <p/>
-     * Note that this will only pick up direct subclasses of the class. It will not
-     * pick up subclasses of subclasses.
-     * @param className the super class of the desired subclasses
-     * @return a non-null list of all known subclasses of className
+     * {@inheritDoc}
      */
     public List<ClassInfo> getKnownDirectSubclasses(DotName className) {
         List<ClassInfo> list = subclasses.get(className);
         return list == null ? EMPTY_CLASSINFO_LIST : Collections.unmodifiableList(list);
     }
+
+    @Override
+    public Collection<ClassInfo> getAllKnownSubclasses(DotName className) {
+        final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
+        final Set<DotName> processedClasses = new HashSet<DotName>();
+        getAllKnownSubClasses(className, allKnown, processedClasses);
+        return allKnown;
+    }
+
+     private void getAllKnownSubClasses(DotName className, Set<ClassInfo> allKnown, Set<DotName> processedClasses) {
+        final Set<DotName> subClassesToProcess = new HashSet<DotName>();
+        subClassesToProcess.add(className);
+        while (!subClassesToProcess.isEmpty()) {
+            final Iterator<DotName> toProcess = subClassesToProcess.iterator();
+            DotName name = toProcess.next();
+            toProcess.remove();
+            processedClasses.add(name);
+            getAllKnownSubClasses(name, allKnown, subClassesToProcess, processedClasses);
+        }
+    }
+
+    private void getAllKnownSubClasses(DotName name, Set<ClassInfo> allKnown, Set<DotName> subClassesToProcess,
+                                       Set<DotName> processedClasses) {
+        final List<ClassInfo> list = getKnownDirectSubclasses(name);
+        if (list != null) {
+            for (final ClassInfo clazz : list) {
+                final DotName className = clazz.name();
+                if (!processedClasses.contains(className)) {
+                    allKnown.add(clazz);
+                    subClassesToProcess.add(className);
+                }
+            }
+        }
+    }
+
     /**
-     * Gets all known direct implementors of the specified interface name. A known
-     * direct implementor is one which was found during the scanning process; however,
-     * this is often not the complete universe of implementors, since typically indexes
-     * are constructed per jar. It is expected that several indexes will need to
-     * be searched when analyzing a jar that is a part of a complex
-     * multi-module/classloader environment (like an EE application server).
-     * <p/>
-     * The list of implementors may also include other interfaces, in order to get a complete
-     * list of all classes that are assignable to a given interface it is necessary to
-     * recursively call {@link #getKnownDirectImplementors(DotName)} for every implementing
-     * interface found.
-     *
-     * @param className the super class of the desired subclasses
-     * @return a non-null list of all known subclasses of className
+     * {@inheritDoc}
      */
     public List<ClassInfo> getKnownDirectImplementors(DotName className) {
         List<ClassInfo> list = implementors.get(className);
         return list == null ? EMPTY_CLASSINFO_LIST : Collections.unmodifiableList(list);
     }
 
+    @Override
+    public Set<ClassInfo> getAllKnownImplementors(final DotName interfaceName) {
+        final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
+        final Set<DotName> subInterfacesToProcess = new HashSet<DotName>();
+        final Set<DotName> processedClasses = new HashSet<DotName>();
+        subInterfacesToProcess.add(interfaceName);
+        while (!subInterfacesToProcess.isEmpty()) {
+            final Iterator<DotName> toProcess = subInterfacesToProcess.iterator();
+            DotName name = toProcess.next();
+            toProcess.remove();
+            processedClasses.add(name);
+            getKnownImplementors(name, allKnown, subInterfacesToProcess, processedClasses);
+        }
+        return allKnown;
+    }
+
+    private void getKnownImplementors(DotName name, Set<ClassInfo> allKnown, Set<DotName> subInterfacesToProcess,
+                                      Set<DotName> processedClasses) {
+        final List<ClassInfo> list = getKnownDirectImplementors(name);
+        if (list != null) {
+            for (final ClassInfo clazz : list) {
+                final DotName className = clazz.name();
+                if (!processedClasses.contains(className)) {
+                    if (Modifier.isInterface(clazz.flags())) {
+                        subInterfacesToProcess.add(className);
+                    } else {
+                        if (!allKnown.contains(clazz)) {
+                            allKnown.add(clazz);
+                            processedClasses.add(className);
+                            getAllKnownSubClasses(className, allKnown, processedClasses);
+                        }
+                    }
+                }
+            }
+        }
+    }
     /**
-     * Gets the class (or interface, or annotation) that was scanned during the
-     * indexing phase.
-     *
-     * @param className the name of the class
-     * @return information about the class or null if it is not known
+     * {@inheritDoc}
      */
+    @Override
     public ClassInfo getClassByName(DotName className) {
         return classes.get(className);
     }
 
     /**
-     * Gets all known classes by this index (those which were scanned).
-     *
-     * @return a collection of known classes
+     * {@inheritDoc}
      */
     public Collection<ClassInfo> getKnownClasses() {
         return classes.values();

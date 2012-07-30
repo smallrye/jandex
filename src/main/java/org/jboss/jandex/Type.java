@@ -98,7 +98,7 @@ public final class Type {
      * double). Arrays are returned using the internal JVM array syntax (see JVM
      * specification). Classes are returned as a normal DotName.
      *
-     * @return
+     * @return the name of this type
      */
     public DotName name() {
         return name;

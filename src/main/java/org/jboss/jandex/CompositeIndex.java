@@ -186,7 +186,7 @@ public class CompositeIndex implements IndexView {
     }
 
     /**
-     * @see {@link Index#getClassByName(org.jboss.jandex.DotName)}
+     * {@inheritDoc}
      */
     public ClassInfo getClassByName(final DotName className) {
         for (IndexView index : indexes) {

@@ -87,7 +87,20 @@ public class JarIndexer {
 
             if (modify) {
                 jarFile.delete();
-                tmpCopy.renameTo(jarFile);
+                if (!tmpCopy.renameTo(jarFile)) {
+                    FileInputStream fis = new FileInputStream(tmpCopy);
+                    FileOutputStream fos = new FileOutputStream(new File(jarFile.getAbsolutePath()));
+                    try {
+                        byte[] b = new byte[1024];
+                        for (int count=0; (count = fis.read(b, 0, 1024)) >= 1024;  ) {
+                            fos.write(b, 0, count);
+                        }
+                    } finally {
+                        fis.close();
+                        fos.close();
+                    }
+                    tmpCopy.delete();
+                }
                 tmpCopy = null;
             }
             return new Result(index, modify ? "META-INF/jandex.idx" : outputFile.getPath(),  bytes);

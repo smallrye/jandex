@@ -128,7 +128,7 @@ public class JarIndexer {
                     FileOutputStream fos = new FileOutputStream(new File(jarFile.getAbsolutePath()));
                     try {
                         byte[] b = new byte[1024];
-                        for (int count=0; (count = fis.read(b, 0, 1024)) >= 1024;  ) {
+                        for (int count=0; (count = fis.read(b, 0, 1024)) >= 0;  ) {
                             fos.write(b, 0, count);
                         }
                     } finally {

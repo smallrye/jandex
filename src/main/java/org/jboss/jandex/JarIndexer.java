@@ -36,7 +36,7 @@ public class JarIndexer {
         JarFile jar = new JarFile(jarFile);
 
         if (modify) {
-            tmpCopy = File.createTempFile(jarFile.getName().substring(0, jarFile.getName().lastIndexOf('.')) + "00", "jmp");
+            tmpCopy = File.createTempFile(jarFile.getName().substring(0, jarFile.getName().lastIndexOf('.')) + "00", "jmp", jarFile.getParentFile());
             out = zo = new ZipOutputStream(new FileOutputStream(tmpCopy));
         } else if (newJar) {
             outputFile = new File(jarFile.getAbsolutePath().replace(".jar", "-jandex.jar"));
@@ -87,7 +87,9 @@ public class JarIndexer {
 
             if (modify) {
                 jarFile.delete();
-                tmpCopy.renameTo(jarFile);
+                if (!tmpCopy.renameTo(jarFile)) {
+                    throw new IOException("Unable to rename " + tmpCopy.getAbsolutePath() + " to " + jarFile.getAbsolutePath());
+                }
                 tmpCopy = null;
             }
             return new Result(index, modify ? "META-INF/jandex.idx" : outputFile.getPath(),  bytes);

@@ -87,7 +87,9 @@ public class JarIndexer {
 
             if (modify) {
                 jarFile.delete();
-                tmpCopy.renameTo(jarFile);
+                if (!tmpCopy.renameTo(jarFile)) {
+                    throw new IOException("Unable to rename " + tmpCopy.getAbsolutePath() + " to " + jarFile.getAbsolutePath());
+                }
                 tmpCopy = null;
             }
             return new Result(index, modify ? "META-INF/jandex.idx" : outputFile.getPath(),  bytes);

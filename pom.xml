@@ -31,6 +31,7 @@
   <name>Jandex wrapper for Maven</name>
   
   <description>This is a Maven plugin used to generate Jandex index files</description>
+  
   <licenses>
     <license>
       <name>GNU General Public License, v3</name>
@@ -38,6 +39,29 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
+  
+	<issueManagement>
+    <url>https://github.com/jdcasey/jandex-maven-plugin/issues</url>
+    <system>GitHub Issues</system>
+  </issueManagement>
+  
+  <developers>
+    <developer>
+      <id>jdcasey</id>
+      <name>John Casey</name>
+      <url>http://github.com/jdcasey/</url>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+  </developers>
+  
+  <contributors>
+    <contributor>
+      <name>Philippe Marschall</name>
+      <url>http://github.com/marschall/</url>
+    </contributor>
+  </contributors>
   
   <scm>
     <connection>scm:git:http://github.com/jdcasey/jandex-maven-plugin.git</connection>

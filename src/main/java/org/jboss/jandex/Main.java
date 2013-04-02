@@ -21,19 +21,14 @@
  */
 package org.jboss.jandex;
 
+import java.io.BufferedInputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 public class Main {
 
@@ -42,7 +37,6 @@ public class Main {
     private boolean dump;
     private File outputFile;
     private File source;
-
 
     public static void main(String[] args) {
         if (args.length == 0) {
@@ -53,7 +47,6 @@ public class Main {
         Main main = new Main();
         main.execute(args);
     }
-
 
     private void execute(String[] args) {
         boolean printUsage = true;
@@ -68,9 +61,12 @@ public class Main {
 
             long start = System.currentTimeMillis();
             Indexer indexer = new Indexer();
-            Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : JarIndexer.createJarIndex(source, indexer,modify,false,verbose);
+            Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : JarIndexer.createJarIndex(
+                source, indexer, modify, false, verbose);
             double time = (System.currentTimeMillis() - start) / 1000.00;
-            System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d bytes)\n", result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(), result.getBytes());
+            System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d bytes)\n",
+                result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(),
+                result.getBytes());
         } catch (Exception e) {
             if (!verbose && (e instanceof IllegalArgumentException || e instanceof FileNotFoundException)) {
                 System.err.println(e.getMessage() == null ? e.getClass().getSimpleName() : "ERROR: " + e.getMessage());
@@ -85,9 +81,16 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("resource")
     private void dumpIndex(File source) throws IOException {
-        FileInputStream input = new FileInputStream(source);
-        IndexReader reader = new IndexReader(input);
+        IndexReader reader;
+        InputStream input = null;
+        try {
+            input = new BufferedInputStream(new FileInputStream(source));
+            reader = new IndexReader(input);
+        } finally {
+            closeQuietly(input);
+        }
 
         long start = System.currentTimeMillis();
         Index index = reader.read();
@@ -127,6 +130,7 @@ public class Main {
         System.out.println("Indexed " + info.name() + " (" + info.annotations().size() + " annotations)");
     }
 
+    @SuppressWarnings("resource")
     private void scanFile(File source, Indexer indexer) throws FileNotFoundException, IOException {
         if (source.isDirectory()) {
             File[] children = source.listFiles();
@@ -139,12 +143,12 @@ public class Main {
             return;
         }
 
-        if (! source.getName().endsWith(".class"))
+        if (!source.getName().endsWith(".class"))
             return;
 
-        FileInputStream input = new FileInputStream(source);
-
+        InputStream input = null;
         try {
+            input = new BufferedInputStream(new FileInputStream(source));
             ClassInfo info = indexer.index(input);
             if (verbose && info != null)
                 printIndexEntryInfo(info);
@@ -153,8 +157,9 @@ public class Main {
             System.err.println("ERROR: Could not index " + source.getName() + ": " + message);
             if (verbose)
                 e.printStackTrace(System.err);
+        } finally {
+            closeQuietly(input);
         }
-
         return;
     }
 
@@ -167,7 +172,8 @@ public class Main {
         System.out.println("  -m  modify directory or jar instead of creating an external index file");
         System.out.println("  -o  name the external index file file-name");
         System.out.println("  -d  dump the index file index-file-name");
-        System.out.println("\nThe default behavior, with no options specified, is to autogenerate an external index file");
+        System.out
+            .println("\nThe default behavior, with no options specified, is to autogenerate an external index file");
     }
 
     private void parseOptions(String[] args) {
@@ -185,7 +191,6 @@ public class Main {
 
                 continue;
             }
-
 
             switch (arg.charAt(1)) {
                 case 'm':
@@ -225,6 +230,14 @@ public class Main {
         if (dump && optionCount != 1)
             throw new IllegalArgumentException("-d can not be specified with other options");
 
+    }
+
+    private void closeQuietly(Closeable closeable) {
+        if (closeable != null)
+            try {
+                closeable.close();
+            } catch (IOException ignored) {
+            }
     }
 
 }

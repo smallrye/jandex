@@ -4,9 +4,8 @@
     <parent>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-parent</artifactId>
-        <version>5</version>
+        <version>10</version>
     </parent>
-    <groupId>org.jboss</groupId>
     <artifactId>jandex</artifactId>
     <version>1.1.0.Alpha2-SNAPSHOT</version>
     <name>Java Annotation Indexer</name>
@@ -15,7 +14,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.1</version>
                 <configuration>
                     <debug>true</debug>
                     <source>1.6</source>
@@ -27,7 +25,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.1</version>
                 <configuration>
                 <archive>
                     <index>true</index>

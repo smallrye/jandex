@@ -21,27 +21,33 @@
  */
 package org.jboss.jandex;
 
+import java.io.File;
 import java.util.List;
 
 /**
+ * The result from a jar indexing operation.
+ *
+ * @author Jason T. Greene
  * @author Stuart Douglas
  * @author Ales Justin
  */
-public class Result {
-    private Index index;
-    private int annotations;
-    private int instances;
-    private int classes;
-    private int bytes;
-    private String name;
+public final class Result {
+    private final Index index;
+    private final int annotations;
+    private final int instances;
+    private final int classes;
+    private final int bytes;
+    private final String name;
+    private final File outputFile;
 
-    Result(Index index, String name, int bytes) {
+    Result(Index index, String name, int bytes, File outputFile) {
         this.index = index;
         annotations = index.annotations.size();
         instances = countInstances(index);
         classes = index.classes.size();
         this.bytes = bytes;
         this.name = name;
+        this.outputFile = outputFile;
     }
 
     private int countInstances(Index index) {
@@ -60,39 +66,23 @@ public class Result {
         return annotations;
     }
 
-    public void setAnnotations(int annotations) {
-        this.annotations = annotations;
-    }
-
     public int getBytes() {
         return bytes;
-    }
-
-    public void setBytes(int bytes) {
-        this.bytes = bytes;
     }
 
     public int getClasses() {
         return classes;
     }
 
-    public void setClasses(int classes) {
-        this.classes = classes;
-    }
-
     public int getInstances() {
         return instances;
-    }
-
-    public void setInstances(int instances) {
-        this.instances = instances;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public File getOutputFile() {
+        return outputFile;
     }
 }

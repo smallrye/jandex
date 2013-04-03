@@ -17,17 +17,7 @@ import java.util.zip.ZipOutputStream;
  */
 public class JarIndexer {
 
-    /**
-     * Get index file.
-     *
-     * It is a new jar file, if the newJar flag is true.
-     * Otherwise it's a standalone index file.
-     *
-     * @param jarFile The file to index
-     * @param newJar If the new jar should be created
-     * @return location of the index
-     */
-    public static File getIndexFile(File jarFile, boolean newJar) {
+    private static File getIndexFile(File jarFile, boolean newJar) {
         final String name = jarFile.getName();
         final int p = name.lastIndexOf(".");
         if (p < 0)
@@ -44,7 +34,7 @@ public class JarIndexer {
     /**
      * Indexes a jar file and saves the result. If the modify flag is set, index is saved to META-INF/jandex.idx.
      * Otherwise an external file is created with a similar name to the original file, 
-     * concatinating <code>.idx</code> suffix.
+     * concatenating <code>.idx</code> suffix.
      *
      * @param jarFile The file to index
      * @param indexer The indexer to use
@@ -54,8 +44,27 @@ public class JarIndexer {
      * @return indexing result
      * @throws IOException for any I/o error
      */
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static Result createJarIndex(File jarFile, Indexer indexer, boolean modify, boolean newJar, boolean verbose) throws IOException {
+        return createJarIndex(jarFile, indexer, modify, newJar, verbose, System.out, System.err);
+    }
+
+    /**
+     * Indexes a jar file and saves the result. If the modify flag is set, index is saved to META-INF/jandex.idx.
+     * Otherwise an external file is created with a similar name to the original file,
+     * concatenating <code>.idx</code> suffix.
+     *
+     * @param jarFile The file to index
+     * @param indexer The indexer to use
+     * @param modify If the original jar should be modified
+     * @param newJar If the new jar should be created
+     * @param verbose If we should print what we are doing to the specified info stream
+     * @param infoStream A print stream which will record verbose info, may be null
+     * @param errStream A print stream to print errors, must not be null
+     *
+     * @return indexing result
+     * @throws IOException for any I/o error
+     */
+    public static Result createJarIndex(File jarFile, Indexer indexer, boolean modify, boolean newJar, boolean verbose, PrintStream infoStream, PrintStream errStream) throws IOException {
         File tmpCopy = null;
         ZipOutputStream zo = null;
         OutputStream out;
@@ -66,6 +75,7 @@ public class JarIndexer {
         if (modify) {
             tmpCopy = File.createTempFile(jarFile.getName().substring(0, jarFile.getName().lastIndexOf('.')) + "00", "jmp");
             out = zo = new ZipOutputStream(new FileOutputStream(tmpCopy));
+            outputFile = jarFile;
         } else if (newJar) {
             outputFile = getIndexFile(jarFile, newJar);
             out = zo = new ZipOutputStream(new FileOutputStream(outputFile));
@@ -101,12 +111,12 @@ public class JarIndexer {
                         } finally {
                             safeClose(stream);
                         }
-                        if (verbose && info != null)
-                            printIndexEntryInfo(info);
+                        if (verbose && info != null && infoStream != null)
+                            printIndexEntryInfo(info, infoStream);
                     } catch (Exception e) {
                         String message = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
-                        System.err.println("ERROR: Could not index " + entry.getName() + ": " + message); if (verbose)
-                        e.printStackTrace(System.err);
+                        errStream.println("ERROR: Could not index " + entry.getName() + ": " + message); if (verbose)
+                        e.printStackTrace(errStream);
                     }
                 }
             }
@@ -124,22 +134,12 @@ public class JarIndexer {
             if (modify) {
                 jarFile.delete();
                 if (!tmpCopy.renameTo(jarFile)) {
-                    FileInputStream fis = new FileInputStream(tmpCopy);
-                    FileOutputStream fos = new FileOutputStream(new File(jarFile.getAbsolutePath()));
-                    try {
-                        byte[] b = new byte[1024];
-                        for (int count=0; (count = fis.read(b, 0, 1024)) >= 0;  ) {
-                            fos.write(b, 0, count);
-                        }
-                    } finally {
-                        fis.close();
-                        fos.close();
-                    }
+                    copy(jarFile, tmpCopy);
                     tmpCopy.delete();
                 }
                 tmpCopy = null;
             }
-            return new Result(index, modify ? "META-INF/jandex.idx" : outputFile.getPath(),  bytes);
+            return new Result(index, modify ? "META-INF/jandex.idx" : outputFile.getPath(), bytes, outputFile);
         } finally {
             safeClose(out);
             safeClose(jar);
@@ -148,8 +148,22 @@ public class JarIndexer {
         }
     }
 
-    private static void printIndexEntryInfo(ClassInfo info) {
-        System.out.println("Indexed " + info.name() + " (" + info.annotations().size() + " annotations)");
+    private static void copy(File dest, File source) throws IOException {
+        FileInputStream fis = new FileInputStream(source);
+        FileOutputStream fos = new FileOutputStream(new File(dest.getAbsolutePath()));
+        try {
+            byte[] b = new byte[8196];
+            for (int count=0; (count = fis.read(b, 0, 8196)) >= 0;  ) {
+                fos.write(b, 0, count);
+            }
+        } finally {
+            fis.close();
+            fos.close();
+        }
+    }
+
+    private static void printIndexEntryInfo(ClassInfo info, PrintStream infoStream) {
+        infoStream.println("Indexed " + info.name() + " (" + info.annotations().size() + " annotations)");
     }
     
     private static void copy(InputStream in, OutputStream out) throws IOException {

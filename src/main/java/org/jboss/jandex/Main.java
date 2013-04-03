@@ -117,7 +117,7 @@ public class Main {
         try {
             Index index = indexer.complete();
             int bytes = writer.write(index);
-            return new Result(index, outputFile.getPath(), bytes);
+            return new Result(index, outputFile.getPath(), bytes, outputFile);
         } finally {
             out.flush();
             out.close();

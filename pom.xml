@@ -10,6 +10,15 @@
     <artifactId>jandex</artifactId>
     <version>1.1.0.Alpha2-SNAPSHOT</version>
     <name>Java Annotation Indexer</name>
+
+    <licenses>
+        <license>
+            <name>AL 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <build>
         <plugins>
             <plugin>

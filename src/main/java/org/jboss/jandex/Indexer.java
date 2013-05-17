@@ -76,7 +76,10 @@ public final class Indexer {
     private final static int CONSTANT_DOUBLE = 6;
     private final static int CONSTANT_NAMEANDTYPE = 12;
     private final static int CONSTANT_UTF8 = 1;
-
+    private final static int CONSTANT_INVOKEDYNAMIC = 18;
+    private final static int CONSTANT_METHODHANDLE = 15;
+    private final static int CONSTANT_METHODTYPE = 16;
+    
     // "RuntimeVisibleAnnotations"
     private final static byte[] RUNTIME_ANNOTATIONS = new byte[] {
         0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x56, 0x69, 0x73, 0x69, 0x62,
@@ -584,6 +587,24 @@ public final class Indexer {
                     stream.readFully(buf, offset, 8);
                     offset += 8;
                     pos++; // 8 byte constant pool entries take two "virtual" slots for some reason
+                    break;
+                case CONSTANT_INVOKEDYNAMIC:
+                    buf = sizeToFit(buf, 5, offset, poolCount - pos);
+                    buf[offset++] = (byte) tag;
+                    stream.readFully(buf, offset, 4);
+                    offset += 4;
+                    break;
+                case CONSTANT_METHODHANDLE:
+                    buf = sizeToFit(buf, 4, offset, poolCount - pos);
+                    buf[offset++] = (byte) tag;
+                    stream.readFully(buf, offset, 3);
+                    offset += 3;
+                    break;
+                case CONSTANT_METHODTYPE:
+                    buf = sizeToFit(buf, 3, offset, poolCount - pos);
+                    buf[offset++] = (byte) tag;
+                    stream.readFully(buf, offset, 2);
+                    offset += 2;
                     break;
                 case CONSTANT_UTF8:
                     int len = stream.readUnsignedShort();

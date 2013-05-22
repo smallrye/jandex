@@ -570,6 +570,7 @@ public final class Indexer {
                 case CONSTANT_METHODREF:
                 case CONSTANT_INTERFACEMETHODREF:
                 case CONSTANT_INTEGER:
+                case CONSTANT_INVOKEDYNAMIC:
                 case CONSTANT_FLOAT:
                 case CONSTANT_NAMEANDTYPE:
                     buf = sizeToFit(buf, 5, offset, poolCount - pos);
@@ -584,12 +585,6 @@ public final class Indexer {
                     stream.readFully(buf, offset, 8);
                     offset += 8;
                     pos++; // 8 byte constant pool entries take two "virtual" slots for some reason
-                    break;
-                case CONSTANT_INVOKEDYNAMIC:
-                    buf = sizeToFit(buf, 5, offset, poolCount - pos);
-                    buf[offset++] = (byte) tag;
-                    stream.readFully(buf, offset, 4);
-                    offset += 4;
                     break;
                 case CONSTANT_METHODHANDLE:
                     buf = sizeToFit(buf, 4, offset, poolCount - pos);

@@ -1,4 +1,4 @@
-# jandex - Java Annotation Indexer
+# Jandex - Java Annotation Indexer
 
 This project reduces classpath scanning time by pre-indexing annotated classes.
 

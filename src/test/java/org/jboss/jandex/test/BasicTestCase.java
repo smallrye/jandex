@@ -19,6 +19,9 @@
 package org.jboss.jandex.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -63,6 +66,22 @@ public class BasicTestCase {
     public class DummyClass implements Serializable {
     }
 
+    @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f), nestedArray = {
+        @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) }, enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
+    public static class NestedA implements Serializable {
+    }
+
+    @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f), nestedArray = {
+        @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) }, enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
+    public static class NestedB implements Serializable {
+
+        NestedB(Integer foo) {
+        }
+    }
+
+    public static class NestedC implements Serializable {
+    }
+
     @Test
     public void testIndexer() throws IOException {
         Indexer indexer = new Indexer();
@@ -89,6 +108,30 @@ public class BasicTestCase {
         verifyDummy(index);
     }
 
+    @Test
+    public void testWriteReadPreviousVersion() throws IOException {
+        Indexer indexer = new Indexer();
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName().replace('.', '/') + ".class");
+        indexer.index(stream);
+        Index index = indexer.complete();
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        new IndexWriter(baos).write(index, (byte)1);
+
+        index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
+        assertNull(index.getClassByName(DotName.createSimple(DummyClass.class.getName())).hasNoArgsConstructor());
+    }
+
+    @Test
+    public void testHasNoArgsConstructor() throws IOException {
+        assertHasNoArgsConstructor(DummyClass.class, false);
+        assertHasNoArgsConstructor(NestedA.class, true);
+        assertHasNoArgsConstructor(NestedB.class, false);
+        assertHasNoArgsConstructor(NestedC.class, true);
+        assertHasNoArgsConstructor(DummyTopLevel.class, true);
+        assertHasNoArgsConstructor(DummyTopLevelWithoutNoArgsConstructor.class, false);
+    }
+
     private void verifyDummy(Index index) {
         AnnotationInstance instance = index.getAnnotations(DotName.createSimple(TestAnnotation.class.getName())).get(0);
 
@@ -111,6 +154,26 @@ public class BasicTestCase {
 
         implementors = index.getKnownDirectImplementors(DotName.createSimple(InputStream.class.getName()));
         assertEquals(0, implementors.size());
+
+        // Verify hasNoArgsConstructor
+        assertFalse(index.getClassByName(DotName.createSimple(DummyClass.class.getName())).hasNoArgsConstructor());
+    }
+
+    private void assertHasNoArgsConstructor(Class<?> clazz, boolean result) throws IOException {
+        ClassInfo classInfo = getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
+        assertNotNull(classInfo);
+        if(result) {
+            assertTrue(classInfo.hasNoArgsConstructor());
+        } else {
+            assertFalse(classInfo.hasNoArgsConstructor());
+        }
+    }
+
+    private Index getIndexForClass(Class<?> clazz) throws IOException {
+        Indexer indexer = new Indexer();
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(clazz.getName().replace('.', '/') + ".class");
+        indexer.index(stream);
+        return indexer.complete();
     }
 
 }

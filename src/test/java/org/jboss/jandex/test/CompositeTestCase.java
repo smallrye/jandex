@@ -29,6 +29,7 @@ import java.util.Map;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.ClassInfo.ValueHolder;
 import org.jboss.jandex.CompositeIndex;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
@@ -38,7 +39,7 @@ public class CompositeTestCase {
 
     private static final DotName BASE_NAME = DotName.createSimple("foo.Base");
     private static final DotName OBJECT_NAME = DotName.createSimple("java.lang.Object");
-    private static ClassInfo BASE_INFO = ClassInfo.create(BASE_NAME, OBJECT_NAME, (short) 0, new DotName[0], Collections.<DotName, List<AnnotationInstance>>emptyMap());
+    private static ClassInfo BASE_INFO = ClassInfo.create(BASE_NAME, OBJECT_NAME, (short) 0, new DotName[0], Collections.<DotName, List<AnnotationInstance>>emptyMap(), new ValueHolder<Boolean>(false));
     private static final DotName BAR_NAME = DotName.createSimple("foo.Bar");
     private static final DotName FOO_NAME = DotName.createSimple("foo.Foo");
 
@@ -83,7 +84,7 @@ public class CompositeTestCase {
     private Index createIndex(DotName name) {
         Map<DotName,List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
         DotName baseName = BASE_NAME;
-        ClassInfo classInfo = ClassInfo.create(name, baseName, (short) 0, new DotName[0], annotations);
+        ClassInfo classInfo = ClassInfo.create(name, baseName, (short) 0, new DotName[0], annotations, new ValueHolder<Boolean>(false));
         ClassInfo baseInfo = BASE_INFO;
 
         AnnotationValue[] values = new AnnotationValue[] {AnnotationValue.createStringValue("blah", "blah")};

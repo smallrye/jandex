@@ -88,21 +88,39 @@ public final class IndexWriter {
 
     /**
      * Writes the specified index to the associated output stream. This may be called multiple times in order
+     * to write multiple indexes. The default version of index file is used.
+     *
+     * @param index
+     * @return the number of bytes written to the stream
+     * @throws IOException
+     */
+    public int write(Index index) throws IOException {
+        return write(index, VERSION);
+    }
+
+    /**
+     * Writes the specified index to the associated output stream. This may be called multiple times in order
      * to write multiple indexes.
      *
      * @param index the index to write to the stream
+     * @param version the index file version
      * @return the number of bytes written to the stream
      * @throws IOException if any i/o error occurs
      */
-    public int write(Index index) throws IOException {
+    public int write(Index index, byte version) throws IOException {
+
+        if (version < 1 || version > VERSION) {
+            throw new UnsupportedVersion("Version: " + version);
+        }
+
         PackedDataOutputStream stream = new PackedDataOutputStream(new BufferedOutputStream(out));
         stream.writeInt(MAGIC);
-        stream.writeByte(VERSION);
+        stream.writeByte(version);
 
         buildTables(index);
         writeClassTable(stream);
         writeStringTable(stream);
-        writeClasses(stream, index);
+        writeClasses(stream, index, version);
         stream.flush();
         return stream.size();
     }
@@ -152,13 +170,19 @@ public final class IndexWriter {
     }
 
 
-    private void writeClasses(PackedDataOutputStream stream, Index index) throws IOException {
+    private void writeClasses(PackedDataOutputStream stream, Index index, byte version) throws IOException {
         Collection<ClassInfo> classes = index.getKnownClasses();
         stream.writePackedU32(classes.size());
         for (ClassInfo clazz: classes) {
             stream.writePackedU32(positionOf(clazz.name()));
             stream.writePackedU32(clazz.superName() == null ? 0 : positionOf(clazz.superName()));
             stream.writeShort(clazz.flags());
+
+            // hasNoArgsConstructor supported since version 2
+            if (version >= 2) {
+                stream.writeBoolean(clazz.hasNoArgsConstructor());
+            }
+
             DotName[] interfaces = clazz.interfaces();
             stream.writePackedU32(interfaces.length);
             for (DotName intf: interfaces)

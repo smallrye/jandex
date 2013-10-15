@@ -113,15 +113,15 @@ public final class DotName implements Comparable<DotName> {
     /**
      * Returns whether this DotName is a componentized variant.
      *
-     * @return true if it is compponentized, false if it is a simple DotName
+     * @return true if it is componentized, false if it is a simple DotName
      */
     public boolean isComponentized() {
-        return !componentized;
+        return componentized;
     }
 
     /**
      * Returns the regular fully qualifier class name.
-     * 
+     *
      * @return The fully qualified class name
      */
     public String toString() {

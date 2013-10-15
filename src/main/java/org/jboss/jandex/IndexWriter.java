@@ -124,7 +124,7 @@ public final class IndexWriter {
         for (Map.Entry<DotName, Integer> entry : classTable.entrySet()) {
             entry.setValue(pos++);
             DotName name = entry.getKey();
-            assert !name.isComponentized();
+            assert name.isComponentized();
 
             int nameDepth = 0;
             for (DotName prefix = name.prefix(); prefix != null; prefix = prefix.prefix())

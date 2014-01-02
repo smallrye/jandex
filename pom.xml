@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
 	<properties>
-		<jandexVersion>1.1.0</jandexVersion>
+		<jandexVersion>1.1.1</jandexVersion>
 	</properties>
     
     <parent>
@@ -12,7 +12,7 @@
         <version>5</version>
     </parent>
     <artifactId>jandex</artifactId>
-    <version>${jandexVersion}.Final</version>
+    <version>${jandexVersion}.Final-SNAPSHOT</version>
     <name>Java Annotation Indexer</name>
     <packaging>bundle</packaging>
 

@@ -37,9 +37,10 @@ import org.jboss.jandex.Indexer;
 
 /**
  * Generate a Jandex index for classes compiled as part of the current project.
- * 
+ *
  * @goal jandex
  * @phase process-classes
+ * @threadSafe
  * @author jdcasey
  */
 public class JandexGoal
@@ -49,7 +50,7 @@ public class JandexGoal
     /**
      * By default, process the classes compiled for the project. If you need to process other sets of classes, such as
      * test classes, see the "fileSets" parameter.
-     * 
+     *
      * @parameter default-value="${project.build.outputDirectory}"
      * @readonly
      */
@@ -58,7 +59,7 @@ public class JandexGoal
     /**
      * Process the classes found in these file-sets, after considering the specified includes and excludes, if any. The
      * format is: <br/>
-     * 
+     *
      * <pre>
      * <code>
      * &lt;fileSets&gt;
@@ -74,31 +75,31 @@ public class JandexGoal
      * &lt;/fileSets&gt;
      * </code>
      * </pre>
-     * 
+     *
      * <br>
      * <em>NOTE: Standard globbing expressions are supported in includes/excludes.</em>
-     * 
+     *
      * @parameter
      */
     private List<FileSet> fileSets;
 
     /**
      * If true, construct an implied file-set using the target/classes directory, and process the classes there.
-     * 
+     *
      * @parameter default-value="true"
      */
     private final boolean processDefaultFileSet = true;
 
     /**
      * Print verbose output (debug output without needing to enable -X for the whole build)
-     * 
+     *
      * @parameter default-value="false"
      */
     private boolean verbose = false;
 
     /**
      * Skip execution if set.
-     * 
+     *
      * @parameter default-value="false" expression="${jandex.skip}"
      */
     private boolean skip = true;

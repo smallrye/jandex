@@ -201,7 +201,7 @@ public final class Indexer {
 
             MethodInfo method = new MethodInfo(currentClass, name, args, returnType, flags);
 
-            if(INIT_METHOD_NAME.equals(name) && args.length == 0) {
+            if (INIT_METHOD_NAME.equals(name) && args.length == 0) {
                 hasNoArgsConstructor.set(true);
             }
             processAttributes(data, method);
@@ -226,12 +226,11 @@ public final class Indexer {
             String name = intern(decodeUtf8Entry(data.readUnsignedShort()));
             String descriptor = decodeUtf8Entry(data.readUnsignedShort());
 
-            if(INIT_METHOD_NAME.equals(name)) {
-
+            if (INIT_METHOD_NAME.equals(name)) {
                 IntegerHolder pos = new IntegerHolder();
                 Type[] args = parseMethodArgs(descriptor, pos);
 
-                if(args.length == 0) {
+                if (args.length == 0) {
                     hasNoArgsConstructor.set(true);
                     return;
                 }

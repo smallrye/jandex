@@ -162,7 +162,7 @@ public class BasicTestCase {
     private void assertHasNoArgsConstructor(Class<?> clazz, boolean result) throws IOException {
         ClassInfo classInfo = getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
         assertNotNull(classInfo);
-        if(result) {
+        if (result) {
             assertTrue(classInfo.hasNoArgsConstructor());
         } else {
             assertFalse(classInfo.hasNoArgsConstructor());

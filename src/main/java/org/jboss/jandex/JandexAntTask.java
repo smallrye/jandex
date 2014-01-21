@@ -45,17 +45,17 @@ public class JandexAntTask  extends Task {
 
     @Override
     public void execute() throws BuildException {
-        if(!run) {
+        if (!run) {
             return;
         }
-        if(modify && newJar) {
+        if (modify && newJar) {
             throw new BuildException("Specifying both modify and newJar does not make sense.");
         }
         Indexer indexer = new Indexer();
         for(FileSet fileset : filesets) {
             String[] files = fileset.getDirectoryScanner(getProject()).getIncludedFiles();
             for(String file : files) {
-                if(file.endsWith(".jar")) {
+                if (file.endsWith(".jar")) {
                     try {
                         JarIndexer.createJarIndex(new File(fileset.getDir().getAbsolutePath() + "/" +file), indexer, modify, newJar,verbose);
                     } catch (IOException e) {

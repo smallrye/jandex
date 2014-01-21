@@ -26,6 +26,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.jandex.ClassInfo.ImmutableValueHolder;
+import org.jboss.jandex.ClassInfo.ValueHolder;
+
 /**
  * Reads a Jandex index file and returns the saved index. See {@link Indexer}
  * for a thorough description of how the Index data is produced.
@@ -92,18 +95,23 @@ public final class IndexReader {
      */
     public Index read() throws IOException {
         PackedDataInputStream stream = new PackedDataInputStream(new BufferedInputStream(input));
-        if (stream.readInt() != MAGIC)
+        if (stream.readInt() != MAGIC) {
+            stream.close();
             throw new IllegalArgumentException("Not a jandex index");
+        }
         byte version = stream.readByte();
 
-        if (version != VERSION)
+        // All previous versions are supported
+        if (version < 1 || version > VERSION) {
+            stream.close();
             throw new UnsupportedVersion("Version: " + version);
+        }
 
         try {
             masterAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
             readClassTable(stream);
             readStringTable(stream);
-            return readClasses(stream);
+            return readClasses(stream, version);
         } finally {
             classTable = null;
             stringTable = null;
@@ -112,7 +120,7 @@ public final class IndexReader {
     }
 
 
-    private Index readClasses(PackedDataInputStream stream) throws IOException {
+    private Index readClasses(PackedDataInputStream stream, byte version) throws IOException {
         int entries = stream.readPackedU32();
         HashMap<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>();
         HashMap<DotName, List<ClassInfo>> implementors = new HashMap<DotName, List<ClassInfo>>();
@@ -123,6 +131,17 @@ public final class IndexReader {
             DotName name = classTable[stream.readPackedU32()];
             DotName superName = classTable[stream.readPackedU32()];
             short flags = stream.readShort();
+
+            // Immutable value holders used here to save some resources
+            ValueHolder<Boolean> hasNoArgsConstructor;
+            if (version < 2) {
+                // hasNoArgsConstructor supported since version 2
+                hasNoArgsConstructor = ImmutableValueHolder.emptyHolder();
+            } else {
+                hasNoArgsConstructor = stream.readBoolean() ? ImmutableValueHolder.TRUE_HOLDER
+                        : ImmutableValueHolder.FALSE_HOLDER;
+            }
+
             int numIntfs = stream.readPackedU32();
             DotName[] interfaces = new DotName[numIntfs];
             for (int j = 0; j < numIntfs; j++) {
@@ -130,7 +149,7 @@ public final class IndexReader {
             }
 
             Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
-            ClassInfo clazz = new ClassInfo(name, superName, flags, interfaces, annotations);
+            ClassInfo clazz = new ClassInfo(name, superName, flags, interfaces, annotations, hasNoArgsConstructor);
             classes.put(name, clazz);
             addClassToMap(subclasses, superName, clazz);
             for (DotName interfaceName : interfaces) {

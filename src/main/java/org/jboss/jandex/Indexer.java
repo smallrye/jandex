@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.jandex.ClassInfo.ValueHolder;
+
 /**
  * Analyzes and indexes the annotation and key structural information of a set
  * of classes. The indexer will purposefully skip any class that is not Java 5
@@ -76,7 +78,7 @@ public final class Indexer {
     private final static int CONSTANT_INVOKEDYNAMIC = 18;
     private final static int CONSTANT_METHODHANDLE = 15;
     private final static int CONSTANT_METHODTYPE = 16;
-    
+
     // "RuntimeVisibleAnnotations"
     private final static byte[] RUNTIME_ANNOTATIONS = new byte[] {
         0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x56, 0x69, 0x73, 0x69, 0x62,
@@ -96,6 +98,8 @@ public final class Indexer {
 
     private final static int HAS_RUNTIME_ANNOTATION = 1;
     private final static int HAS_RUNTIME_PARAM_ANNOTATION = 2;
+
+    private final static String INIT_METHOD_NAME = "<init>";
 
     private static boolean match(byte[] target, int offset, byte[] expected) {
         if (target.length - offset < expected.length)
@@ -135,6 +139,8 @@ public final class Indexer {
     private volatile ClassInfo publishClass;
     private HashMap<DotName, List<AnnotationInstance>> classAnnotations;
     private StrongInternPool<String> internPool;
+
+    private ValueHolder<Boolean> hasNoArgsConstructor;
 
     // Index lifespan fields
     private Map<DotName, List<AnnotationInstance>> masterAnnotations;
@@ -195,7 +201,42 @@ public final class Indexer {
 
             MethodInfo method = new MethodInfo(currentClass, name, args, returnType, flags);
 
+            if(INIT_METHOD_NAME.equals(name) && args.length == 0) {
+                hasNoArgsConstructor.set(true);
+            }
             processAttributes(data, method);
+        }
+    }
+
+    private void detectNoArgsConstructor(DataInputStream data) throws IOException {
+
+        int numFields = data.readUnsignedShort();
+
+        for (int i = 0; i < numFields; i++) {
+            // Flags, name, type
+            skipFully(data, 6);
+            skipAttributes(data);
+        }
+
+        int numMethods = data.readUnsignedShort();
+
+        for (int i = 0; i < numMethods; i++) {
+            // Flags not needed
+            skipFully(data, 2);
+            String name = intern(decodeUtf8Entry(data.readUnsignedShort()));
+            String descriptor = decodeUtf8Entry(data.readUnsignedShort());
+
+            if(INIT_METHOD_NAME.equals(name)) {
+
+                IntegerHolder pos = new IntegerHolder();
+                Type[] args = parseMethodArgs(descriptor, pos);
+
+                if(args.length == 0) {
+                    hasNoArgsConstructor.set(true);
+                    return;
+                }
+            }
+            skipAttributes(data);
         }
     }
 
@@ -209,6 +250,16 @@ public final class Indexer {
             FieldInfo field = new FieldInfo(currentClass, name, type, flags);
 
             processAttributes(data, field);
+        }
+    }
+
+    private void skipAttributes(DataInputStream data) throws IOException {
+        int numAttrs = data.readUnsignedShort();
+        for (int a = 0; a < numAttrs; a++) {
+            // Constant pool index
+            skipFully(data, 2);
+            long attributeLen = data.readInt() & 0xFFFFFFFFL;
+            skipFully(data, attributeLen);
         }
     }
 
@@ -343,7 +394,8 @@ public final class Indexer {
         }
 
         this.classAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
-        this.currentClass = new ClassInfo(thisName, superName, flags, interfaces, classAnnotations);
+        this.hasNoArgsConstructor = new ValueHolder<Boolean>(false);
+        this.currentClass = new ClassInfo(thisName, superName, flags, interfaces, classAnnotations, hasNoArgsConstructor);
 
         if (superName != null)
             addSubclass(superName, currentClass);
@@ -653,8 +705,10 @@ public final class Indexer {
             boolean hasAnnotations = processConstantPool(data);
 
             processClassInfo(data);
-            if (!hasAnnotations)
+            if (!hasAnnotations) {
+                detectNoArgsConstructor(data);
                 return currentClass;
+            }
 
             processFieldInfo(data);
             processMethodInfo(data);
@@ -672,6 +726,8 @@ public final class Indexer {
             currentClass = null;
             classAnnotations = null;
             internPool = null;
+
+            hasNoArgsConstructor = null;
         }
     }
 

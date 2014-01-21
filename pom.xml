@@ -1,10 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-	<properties>
-		<jandexVersion>1.1.1</jandexVersion>
-	</properties>
+    <properties>
+        <jandexVersion>1.1.1.Alpha1-SNAPSHOT</jandexVersion>
+    </properties>
     
     <parent>
         <groupId>org.jboss</groupId>
@@ -12,7 +11,7 @@
         <version>5</version>
     </parent>
     <artifactId>jandex</artifactId>
-    <version>${jandexVersion}.Final-SNAPSHOT</version>
+    <version>${jandexVersion}</version>
     <name>Java Annotation Indexer</name>
     <packaging>bundle</packaging>
 
@@ -51,29 +50,29 @@
                 </archive>
                 </configuration>
             </plugin>
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<version>2.3.7</version>
-				<extensions>true</extensions>
-				<configuration>
-					<instructions>
-						<Bundle-SymbolicName>${pom.groupId}.${pom.artifactId}</Bundle-SymbolicName>
-						<Bundle-Version>${jandexVersion}</Bundle-Version>
-						<Export-Package>
-							org.jboss.jandex;version="${jandexVersion}"
-						</Export-Package>
-						<Import-Package>
-							org.apache.tools.ant;resolution:=optional,
-							org.apache.tools.ant.types;resolution:=optional,
-							*
-						</Import-Package>
-						<!-- Without the -nouses BND directive, the org.jboss.jandex export will get the optional 
-						ant packages in a "uses" clause. -->
-						<_nouses>true</_nouses>
-					</instructions>
-				</configuration>
-			</plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.3.7</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${pom.groupId}.${pom.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Version>${jandexVersion}</Bundle-Version>
+                        <Export-Package>
+                            org.jboss.jandex;version="${jandexVersion}"
+                        </Export-Package>
+                        <Import-Package>
+                            org.apache.tools.ant;resolution:=optional,
+                            org.apache.tools.ant.types;resolution:=optional,
+                            *
+                        </Import-Package>
+                        <!-- Without the -nouses BND directive, the org.jboss.jandex export will get the optional 
+                        ant packages in a "uses" clause. -->
+                        <_nouses>true</_nouses>
+                    </instructions>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <dependencies>

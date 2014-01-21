@@ -61,7 +61,7 @@
 						<Bundle-SymbolicName>${pom.groupId}.${pom.artifactId}</Bundle-SymbolicName>
 						<Bundle-Version>${jandexVersion}</Bundle-Version>
 						<Export-Package>
-							org.jboss.jandex
+							org.jboss.jandex;version="${jandexVersion}"
 						</Export-Package>
 						<Import-Package>
 							org.apache.tools.ant;resolution:=optional,

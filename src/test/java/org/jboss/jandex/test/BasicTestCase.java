@@ -119,7 +119,7 @@ public class BasicTestCase {
         new IndexWriter(baos).write(index, (byte)1);
 
         index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
-        assertNull(index.getClassByName(DotName.createSimple(DummyClass.class.getName())).hasNoArgsConstructor());
+        assertFalse(index.getClassByName(DotName.createSimple(DummyClass.class.getName())).hasNoArgsConstructor());
     }
 
     @Test

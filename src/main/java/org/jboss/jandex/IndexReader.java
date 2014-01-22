@@ -26,9 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.ClassInfo.ImmutableValueHolder;
-import org.jboss.jandex.ClassInfo.ValueHolder;
-
 /**
  * Reads a Jandex index file and returns the saved index. See {@link Indexer}
  * for a thorough description of how the Index data is produced.
@@ -131,16 +128,8 @@ public final class IndexReader {
             DotName name = classTable[stream.readPackedU32()];
             DotName superName = classTable[stream.readPackedU32()];
             short flags = stream.readShort();
-
-            // Immutable value holders used here to save some resources
-            ValueHolder<Boolean> hasNoArgsConstructor;
-            if (version < 2) {
-                // hasNoArgsConstructor supported since version 2
-                hasNoArgsConstructor = ImmutableValueHolder.emptyHolder();
-            } else {
-                hasNoArgsConstructor = stream.readBoolean() ? ImmutableValueHolder.TRUE_HOLDER
-                        : ImmutableValueHolder.FALSE_HOLDER;
-            }
+            // No args supported in version 2+
+            boolean hasNoArgsConstructor = version >= 2 && stream.readBoolean();
 
             int numIntfs = stream.readPackedU32();
             DotName[] interfaces = new DotName[numIntfs];

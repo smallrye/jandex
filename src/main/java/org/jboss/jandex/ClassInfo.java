@@ -45,13 +45,19 @@ import java.util.Map;
 public final class ClassInfo implements AnnotationTarget {
 
     private final DotName name;
-    private short flags;
+    private final short flags;
     private final DotName superName;
     private final DotName[] interfaces;
     private final Map<DotName, List<AnnotationInstance>> annotations;
-    private final ValueHolder<Boolean> hasNoArgsConstructor;
 
-    ClassInfo(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations, ValueHolder<Boolean> hasNoArgsConstructor) {
+    // Not final to allow lazy initialization, immutable once published
+    private boolean hasNoArgsConstructor;
+
+    ClassInfo(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations) {
+        this(name, superName, flags, interfaces, annotations, false);
+    }
+
+    ClassInfo(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
         this.name = name;
         this.superName = superName;
         this.flags = flags;
@@ -71,8 +77,8 @@ public final class ClassInfo implements AnnotationTarget {
      * @param annotations the annotations on this class
      * @return a new mock class representation
      */
-    public static final ClassInfo create(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations, ValueHolder<Boolean> isTopLevelWithNoArgsConstructor) {
-        return new ClassInfo(name, superName, flags, interfaces, annotations, isTopLevelWithNoArgsConstructor);
+    public static ClassInfo create(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
+        return new ClassInfo(name, superName, flags, interfaces, annotations, hasNoArgsConstructor);
     }
 
     public String toString() {
@@ -100,53 +106,19 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
-     * @return {@link Boolean#TRUE} in case of the Java class is top-level or
-     *         static nested with no-args constructor, {@link Boolean#FALSE} if
-     *         it is not and <code>null</code> if info not available
+     * Returns a boolean indicating the presence of a no-arg constructor, if supported by the underlying index store.
+     * This information is available in indexes produced by Jandex 1.2.0 and later.
+     *
+     * @return <code>true</code> in case of the Java class has a no-args constructor, <code>false</code>
+     *         if it does not, or it is not known
+     * @since 1.2.0
      */
-    public final Boolean hasNoArgsConstructor() {
-        return hasNoArgsConstructor.get();
+    public final boolean hasNoArgsConstructor() {
+        return hasNoArgsConstructor;
     }
 
-    public static class ValueHolder<T> {
-
-        T value;
-
-        public ValueHolder(T initialValue) {
-            this.value = initialValue;
-        }
-
-        public T get() {
-            return value;
-        }
-
-        public void set(T value) {
-            this.value = value;
-        }
-
+    /** Lazily initialize hasNoArgsConstructor. Can only be called before publication */
+    void setHasNoArgsConstructor(boolean hasNoArgsConstructor) {
+        this.hasNoArgsConstructor = hasNoArgsConstructor;
     }
-
-    public static class ImmutableValueHolder<T> extends ValueHolder<T> {
-
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        static final ImmutableValueHolder EMPTY_HOLDER = new ImmutableValueHolder(null);
-        static final ImmutableValueHolder<Boolean> TRUE_HOLDER = new ImmutableValueHolder<Boolean>(true);
-        static final ImmutableValueHolder<Boolean> FALSE_HOLDER = new ImmutableValueHolder<Boolean>(false);
-
-        @SuppressWarnings("unchecked")
-        static <T> ImmutableValueHolder<T> emptyHolder() {
-            return (ImmutableValueHolder<T>) EMPTY_HOLDER;
-        }
-
-        public ImmutableValueHolder(T initialValue) {
-            super(initialValue);
-        }
-
-        @Override
-        public void set(Object value) {
-            throw new UnsupportedOperationException();
-        }
-
-    }
-
 }

@@ -31,8 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.ClassInfo.ValueHolder;
-
 /**
  * Analyzes and indexes the annotation and key structural information of a set
  * of classes. The indexer will purposefully skip any class that is not Java 5
@@ -140,8 +138,6 @@ public final class Indexer {
     private HashMap<DotName, List<AnnotationInstance>> classAnnotations;
     private StrongInternPool<String> internPool;
 
-    private ValueHolder<Boolean> hasNoArgsConstructor;
-
     // Index lifespan fields
     private Map<DotName, List<AnnotationInstance>> masterAnnotations;
     private Map<DotName, List<ClassInfo>> subclasses;
@@ -202,7 +198,7 @@ public final class Indexer {
             MethodInfo method = new MethodInfo(currentClass, name, args, returnType, flags);
 
             if (INIT_METHOD_NAME.equals(name) && args.length == 0) {
-                hasNoArgsConstructor.set(true);
+                currentClass.setHasNoArgsConstructor(true);
             }
             processAttributes(data, method);
         }
@@ -231,7 +227,7 @@ public final class Indexer {
                 Type[] args = parseMethodArgs(descriptor, pos);
 
                 if (args.length == 0) {
-                    hasNoArgsConstructor.set(true);
+                    currentClass.setHasNoArgsConstructor(true);
                     return;
                 }
             }
@@ -393,8 +389,7 @@ public final class Indexer {
         }
 
         this.classAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
-        this.hasNoArgsConstructor = new ValueHolder<Boolean>(false);
-        this.currentClass = new ClassInfo(thisName, superName, flags, interfaces, classAnnotations, hasNoArgsConstructor);
+        this.currentClass = new ClassInfo(thisName, superName, flags, interfaces, classAnnotations);
 
         if (superName != null)
             addSubclass(superName, currentClass);
@@ -713,8 +708,10 @@ public final class Indexer {
             processMethodInfo(data);
             processAttributes(data, currentClass);
 
-            // Trigger a happens-before edge since the annotation map is populated
-            // AFTER the class is constructed
+            // Trigger a happens-before edge since the annotation map, and no-arg boolean is populated
+            // AFTER the class is constructed.
+            //
+            // TODO this is probably not necessary and should be researched for removal
             publishClass = currentClass;
 
             return publishClass;
@@ -725,8 +722,6 @@ public final class Indexer {
             currentClass = null;
             classAnnotations = null;
             internPool = null;
-
-            hasNoArgsConstructor = null;
         }
     }
 

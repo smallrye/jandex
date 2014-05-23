@@ -147,7 +147,7 @@ public class JarIndexer {
             Index index = indexer.complete();
             int bytes = writer.write(index);
 
-            out.flush();
+            out.close();
 
             if (modify) {
                 jarFile.delete();

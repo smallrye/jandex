@@ -45,7 +45,7 @@ import java.util.Map;
  */
 public final class IndexReader {
     private static final int MAGIC = 0xBABE1F15;
-    private static final byte VERSION = 2;
+    private static final byte VERSION = 3;
     private static final byte FIELD_TAG = 1;
     private static final byte METHOD_TAG = 2;
     private static final byte METHOD_PARAMATER_TAG = 3;
@@ -128,8 +128,8 @@ public final class IndexReader {
             DotName name = classTable[stream.readPackedU32()];
             DotName superName = classTable[stream.readPackedU32()];
             short flags = stream.readShort();
-            // No args supported in version 2+
-            boolean hasNoArgsConstructor = version >= 2 && stream.readBoolean();
+            // No args supported in version 3+
+            boolean hasNoArgsConstructor = version >= 3 && stream.readBoolean();
 
             int numIntfs = stream.readPackedU32();
             DotName[] interfaces = new DotName[numIntfs];

@@ -52,7 +52,7 @@ import java.util.TreeMap;
 public final class IndexWriter {
     // babelfish (no h)
     private static final int MAGIC = 0xBABE1F15;
-    private static final byte VERSION = 2;
+    private static final byte VERSION = 3;
     private static final byte FIELD_TAG = 1;
     private static final byte METHOD_TAG = 2;
     private static final byte METHOD_PARAMATER_TAG = 3;
@@ -178,8 +178,8 @@ public final class IndexWriter {
             stream.writePackedU32(clazz.superName() == null ? 0 : positionOf(clazz.superName()));
             stream.writeShort(clazz.flags());
 
-            // hasNoArgsConstructor supported since version 2
-            if (version >= 2) {
+            // hasNoArgsConstructor supported since version 3
+            if (version >= 3) {
                 stream.writeBoolean(clazz.hasNoArgsConstructor());
             }
 

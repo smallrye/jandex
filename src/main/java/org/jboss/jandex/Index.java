@@ -35,7 +35,7 @@ import java.util.Set;
  * <p>It contains the following information:
  * <ol>
  * <li>All annotations and a collection of targets they refer to </li>
- * <li>All classes (including interfaces) scanned during the indexing process (typical all classes in a jar)</li>
+ * <li>All classes (including methodParameters) scanned during the indexing process (typical all classes in a jar)</li>
  * <li>All subclasses indexed by super class known to this index</li>
  < </ol>
  *

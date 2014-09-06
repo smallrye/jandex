@@ -175,7 +175,7 @@ public final class Indexer {
         int loc = name.lastIndexOf(delim);
         String local = intern(name.substring(loc + 1));
         DotName prefix = loc < 1 ? null : convertToName(intern(name.substring(0, loc)), delim);
-        result = new DotName(prefix, local, true);
+        result = new DotName(prefix, local, true, false);
 
         names.put(name, result);
 
@@ -549,49 +549,32 @@ public final class Indexer {
         int start = pos.i;
 
         char c = descriptor.charAt(start);
+
+        Type type = PrimitiveType.decode(c);
+        if (type != null) {
+            return type;
+        }
+
         DotName name;
-        Type.Kind kind = Type.Kind.PRIMITIVE;
         switch (c) {
-            case 'B': name = new DotName(null, "byte", true); break;
-            case 'C': name = new DotName(null, "char", true); break;
-            case 'D': name = new DotName(null, "double", true); break;
-            case 'F': name = new DotName(null, "float", true); break;
-            case 'I': name = new DotName(null, "int", true); break;
-            case 'J': name = new DotName(null, "long", true); break;
-            case 'S': name = new DotName(null, "short", true); break;
-            case 'Z': name = new DotName(null, "boolean", true); break;
-
-            case 'V':
-                name = new DotName(null, "void", true);
-                kind = Type.Kind.VOID;
-                break;
-
+            case 'V': return VoidType.VOID;
             case 'L': {
                 int end = start;
                 while (descriptor.charAt(++end) != ';');
                 name = convertToName(descriptor.substring(start + 1, end), '/');
-                kind = Type.Kind.CLASS;
                 pos.i = end;
-                break;
+                return new ClassType(name);
             }
             case '[': {
                 int end = start;
                 while (descriptor.charAt(++end) == '[');
-                if (descriptor.charAt(end) == 'L') {
-                    while (descriptor.charAt(++end) != ';');
-                }
-
-                //we replace the / characters with a .
-                //so it matches the name format returned by the reflection API
-                name = new DotName(null, descriptor.substring(start, end + 1).replace('/','.'), true);
-                kind = Type.Kind.ARRAY;
+                int depth = end - start;
                 pos.i = end;
-                break;
+                type = parseType(descriptor, pos);
+                return new ArrayType(type, depth);
             }
             default: throw new IllegalArgumentException("Invalid descriptor: " + descriptor + " pos " + start);
         }
-
-        return new Type(name, kind);
     }
 
     private boolean processConstantPool(DataInputStream stream) throws IOException {

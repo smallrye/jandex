@@ -295,7 +295,7 @@ public final class IndexReader {
     private Type readType(PackedDataInputStream stream) throws IOException {
         Type.Kind kind = Type.Kind.fromOrdinal(stream.readByte());
         DotName name = classTable[stream.readPackedU32()];
-        return new Type(name, kind);
+        return Type.create(name, kind);
     }
 
 
@@ -325,7 +325,7 @@ public final class IndexReader {
                     curr = curr.prefix();
             }
 
-            classTable[i] = curr = new DotName(curr, local, true);
+            classTable[i] = curr = new DotName(curr, local, true, false);
             lastDepth = depth;
         }
     }

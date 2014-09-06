@@ -25,9 +25,9 @@ package org.jboss.jandex;
  *
  * @author Jason T. Greene
  */
-public final class Type {
+public abstract class Type {
+    public static final Type[] EMPTY_ARRAY = new Type[0];
     private final DotName name;
-    private final Kind kind;
 
     /**
      * Represents a "kind" of Type.
@@ -49,8 +49,13 @@ public final class Type {
         PRIMITIVE,
 
         /** Used to designate a Java method that returns nothing */
-        VOID;
+        VOID,
 
+        TYPE_VARIABLE,
+
+        WILDCARD_TYPE,
+
+        PARAMETERIZED_TYPE;
         /**
          * This method exists since the brainiacs that designed java thought
          * that not only should enums be complex objects instead of simple
@@ -72,21 +77,60 @@ public final class Type {
                     return VOID;
             }
         }
-    };
-
-    Type(DotName name, Kind kind) {
-        this.name = name;
-        this.kind = kind;
     }
 
-    public static final Type create(DotName name, Kind kind) {
+    Type(DotName name) {
+        this.name = name;
+    }
+
+    @Deprecated
+    public static Type create(DotName name, Kind kind) {
         if (name == null)
             throw new IllegalArgumentException("name can not be null!");
 
         if (kind == null)
             throw new IllegalArgumentException("kind can not be null!");
 
-        return new Type(name, kind);
+        String string = name.toString();
+
+        switch (kind) {
+            case ARRAY:
+                int start = string.lastIndexOf('[');
+                if (start < 0) {
+                    throw new IllegalArgumentException("Not a valid array name");
+                }
+                int depth = ++start;
+
+                Type type = PrimitiveType.decode(string.charAt(start));
+                if (type != null) {
+                    return new ArrayType(type, depth);
+                }
+
+                char c = string.charAt(start);
+                switch (c) {
+                    case 'V':
+                        type = VoidType.VOID;
+                        break;
+                    case 'L':
+                        int end = start;
+                        while (string.charAt(++end) != ';') ;
+
+                        type = new ClassType(DotName.createSimple(string.substring(start + 1, end).replace('.', '/')));
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Component type not supported: " + c);
+                }
+
+                return new ArrayType(type, depth);
+            case CLASS:
+                return new ClassType(name);
+            case PRIMITIVE:
+                return PrimitiveType.decode(name.toString());
+            case VOID:
+                return VoidType.VOID;
+            default:
+                throw new IllegalArgumentException("Kind not supported: " + kind);
+        }
     }
 
     /**
@@ -106,11 +150,9 @@ public final class Type {
      *
      * @return the kind
      */
-    public Kind kind() {
-        return kind;
-    }
+    public abstract Kind kind();
 
     public String toString() {
-        return name.toString();
+        return name().toString();
     }
 }

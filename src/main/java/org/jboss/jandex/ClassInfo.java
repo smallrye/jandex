@@ -27,7 +27,7 @@ import java.util.Map;
  * Java class, it is not intended as a complete replacement for Java reflection.
  * Only the methods and fields which are references by an annotation are stored.
  *
- * <p>Global information including the parent class, implemented interfaces, and
+ * <p>Global information including the parent class, implemented methodParameters, and
  * access flags are also provided since this information is often necessary.
  *
  * <p>Note that a parent class and interface may exist outside of the scope of the
@@ -73,7 +73,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @param name the name of this class
      * @param superName the name of the parent class
      * @param flags the class attributes
-     * @param interfaces the interfaces this class implements
+     * @param interfaces the methodParameters this class implements
      * @param annotations the annotations on this class
      * @return a new mock class representation
      */

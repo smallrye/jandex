@@ -46,8 +46,15 @@ public class ParameterizedType extends Type {
     public String toString() {
         StringBuilder builder = new StringBuilder();
 
+        if (owner != null) {
+            builder.append(owner);
+            builder.append('$').append(name().local());
+        } else {
+            builder.append(name());
+        }
+
         if (parameters.length > 0) {
-            builder.append(name()).append('<');
+            builder.append('<');
             builder.append(parameters[0]);
             for (int i = 1; i < parameters.length; i++) {
                 builder.append(", ").append(parameters[i]);

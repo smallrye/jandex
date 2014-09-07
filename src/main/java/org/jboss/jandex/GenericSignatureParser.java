@@ -1,5 +1,9 @@
 package org.jboss.jandex;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -272,7 +276,7 @@ class GenericSignatureParser {
 
         // Suffix
         while (signature.charAt(pos) == '.') {
-            int mark = pos + 1;
+            int mark = ++pos;
             int end = advanceNameEnd();
             name = names.wrap(name, signature.substring(mark, end), true);
             types = parseTypeArguments();
@@ -444,20 +448,35 @@ class GenericSignatureParser {
         throw new IllegalStateException("Corrupted name");
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         GenericSignatureParser parser = new GenericSignatureParser();
-        MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Object;>(Ljava/lang/Class<TU;>;)Ljava/lang/Class<+TU;>;");
-        MethodSignature sig2 = parser.parseMethodSignature("<K:Ljava/lang/Object;V:Ljava/lang/Object;>(Ljava/util/Map<TK;TV;>;Ljava/lang/Class<TK;>;Ljava/lang/Class<TV;>;)Ljava/util/Map<TK;TV;>;");
-        MethodSignature sig3 = parser.parseMethodSignature("<T:Ljava/lang/Object;>(Ljava/util/Collection<-TT;>;[TT;)Z");
-        MethodSignature sig4 = parser.parseMethodSignature("(Ljava/util/Collection<*>;Ljava/util/Collection<*>;)Z");
-        ClassSignature sig5 = parser.parseClassSignature("<C:Lio/undertow/server/protocol/framed/AbstractFramedChannel<TC;TR;TS;>;R:Lio/undertow/server/protocol/framed/AbstractFramedStreamSourceChannel<TC;TR;TS;>;S:Lio/undertow/server/protocol/framed/AbstractFramedStreamSinkChannel<TC;TR;TS;>;>Ljava/lang/Object;Lorg/xnio/channels/ConnectedChannel;");
-        ClassSignature sig6 = parser.parseClassSignature("Lcom/apple/laf/AquaUtils$RecyclableSingleton<Ljavax/swing/text/LayeredHighlighter$LayerPainter;>;");
-        System.out.println(sig1);
-        System.out.println(sig2);
-        System.out.println(sig3);
-        System.out.println(sig4);
-        System.out.println(sig5);
-        System.out.println(sig6);
+//        MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Object;>(Ljava/lang/Class<TU;>;)Ljava/lang/Class<+TU;>;");
+//        MethodSignature sig2 = parser.parseMethodSignature("<K:Ljava/lang/Object;V:Ljava/lang/Object;>(Ljava/util/Map<TK;TV;>;Ljava/lang/Class<TK;>;Ljava/lang/Class<TV;>;)Ljava/util/Map<TK;TV;>;");
+//        MethodSignature sig3 = parser.parseMethodSignature("<T:Ljava/lang/Object;>(Ljava/util/Collection<-TT;>;[TT;)Z");
+//        MethodSignature sig4 = parser.parseMethodSignature("(Ljava/util/Collection<*>;Ljava/util/Collection<*>;)Z");
+      //MethodSignature sig7 = parser.parseMethodSignature("()Lcom/sun/xml/internal/bind/v2/model/impl/ElementInfoImpl<Ljava/lang/reflect/Type;Ljava/lang/Class;Ljava/lang/reflect/Field;Ljava/lang/reflect/Method;>.PropertyImpl;");
+//        ClassSignature sig5 = parser.parseClassSignature("<C:Lio/undertow/server/protocol/framed/AbstractFramedChannel<TC;TR;TS;>;R:Lio/undertow/server/protocol/framed/AbstractFramedStreamSourceChannel<TC;TR;TS;>;S:Lio/undertow/server/protocol/framed/AbstractFramedStreamSinkChannel<TC;TR;TS;>;>Ljava/lang/Object;Lorg/xnio/channels/ConnectedChannel;");
+//        ClassSignature sig6 = parser.parseClassSignature("Lcom/apple/laf/AquaUtils$RecyclableSingleton<Ljavax/swing/text/LayeredHighlighter$LayerPainter;>;");
+//        System.out.println(sig1);
+//        System.out.println(sig2);
+//        System.out.println(sig3);
+//        System.out.println(sig4);
+//        System.out.println(sig5);
+//        System.out.println(sig6);
+       // System.out.println(sig7);
+
+        BufferedReader reader = new BufferedReader(new FileReader("/Users/jason/sigmethods.txt"));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            try {
+                System.out.println(parser.parseMethodSignature(line));
+            } catch (Exception e) {
+                System.err.println(line);
+                e.printStackTrace(System.err);
+                System.exit(-1);
+            }
+        }
+
     }
 
 

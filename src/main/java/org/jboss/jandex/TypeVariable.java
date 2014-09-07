@@ -52,8 +52,8 @@ public class TypeVariable extends Type {
         StringBuilder builder = new StringBuilder();
         builder.append(name);
 
-
-        if (bounds.length > 0) {
+        // FIXME - revist this logic
+        if (bounds.length > 0 && bounds[0].name() != DotName.OBJECT_NAME) {
             builder.append(" extends ").append(bounds[0]);
 
             for (int i = 1; i < bounds.length; i++) {

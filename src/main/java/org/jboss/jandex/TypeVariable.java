@@ -17,12 +17,15 @@
  */
 package org.jboss.jandex;
 
+import java.util.Arrays;
+
 /**
  * @author Jason T. Greene
  */
-public class TypeVariable extends Type {
-    private String name;
-    private Type[] bounds;
+public final class TypeVariable extends Type {
+    private final String name;
+    private final Type[] bounds;
+    private int hash;
 
     TypeVariable(String name) {
         this(name, EMPTY_ARRAY);
@@ -62,5 +65,34 @@ public class TypeVariable extends Type {
         }
 
         return builder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        TypeVariable that = (TypeVariable) o;
+
+        return name.equals(that.name) && Arrays.equals(bounds, that.bounds);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = this.hash;
+        if (hash != 0) {
+            return hash;
+        }
+
+        hash = super.hashCode();
+        hash = 31 * hash + name.hashCode();
+        hash = 31 * hash + Arrays.hashCode(bounds);
+        return this.hash = hash;
     }
 }

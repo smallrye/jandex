@@ -21,18 +21,14 @@ package org.jboss.jandex;
  * @author Jason T. Greene
  */
 public final class ArrayType extends Type {
-    private Type component;
-    private int dimensions;
+    private final Type component;
+    private final int dimensions;
+    private int hash;
 
     ArrayType(Type component, int dimensions) {
         super(null);
         this.dimensions = dimensions;
         this.component = component;
-    }
-
-    public ArrayType(DotName name) {
-        // FIXME parse;
-        super(name);
     }
 
     public Type component() {
@@ -69,5 +65,30 @@ public final class ArrayType extends Type {
     @Override
     public Kind kind() {
         return Kind.ARRAY;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (! (o instanceof ArrayType)) {
+            return false;
+        }
+        ArrayType arrayType = (ArrayType) o;
+
+        return dimensions == arrayType.dimensions && component.equals(arrayType.component);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = this.hash;
+        if (hash != 0) {
+            return hash;
+        }
+        hash = component.hashCode();
+        hash = 31 * hash + dimensions;
+        return this.hash = hash;
     }
 }

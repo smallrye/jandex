@@ -153,6 +153,26 @@ public abstract class Type {
     public abstract Kind kind();
 
     public String toString() {
-        return name().toString();
+        return name.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Type type = (Type) o;
+
+        return name.equals(type.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 }

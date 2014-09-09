@@ -17,12 +17,15 @@
  */
 package org.jboss.jandex;
 
+import java.util.Arrays;
+
 /**
  * @author Jason T. Greene
  */
 public class ParameterizedType extends Type {
-    private Type[] parameters;
-    private Type owner;
+    private final Type[] parameters;
+    private final Type owner;
+    private int hash;
 
     ParameterizedType(DotName name, Type[] parameters, Type owner) {
         super(name);
@@ -63,5 +66,32 @@ public class ParameterizedType extends Type {
         }
 
         return builder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        ParameterizedType other = (ParameterizedType) o;
+        return owner.equals(other.owner) && Arrays.equals(parameters, other.parameters);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = this.hash;
+        if (hash != 0) {
+            return hash;
+        }
+
+        hash = super.hashCode();
+        hash = 31 * hash + Arrays.hashCode(parameters);
+        hash = 31 * hash + owner.hashCode();
+        return this.hash = hash;
     }
 }

@@ -173,7 +173,7 @@ public final class DotName implements Comparable<DotName> {
 
     public int hashCode() {
         int hash = this.hash;
-        if (hash > 0)
+        if (hash != 0)
             return hash;
 
         if (prefix != null) {

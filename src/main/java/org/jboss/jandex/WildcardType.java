@@ -23,8 +23,9 @@ package org.jboss.jandex;
 public class WildcardType extends Type {
     private static Type OBJECT = new ClassType(DotName.OBJECT_NAME);
 
-    private Type bound;
-    private boolean isExtends;
+    private final boolean isExtends;
+    private final Type bound;
+    private int hash;
 
     WildcardType(Type bound, boolean isExtends) {
         super(isExtends && bound != null ? bound.name() : DotName.OBJECT_NAME);
@@ -59,5 +60,31 @@ public class WildcardType extends Type {
         }
 
         return builder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        WildcardType other = (WildcardType) o;
+        return isExtends == other.isExtends && bound.equals(other.bound);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = this.hash;
+        if (hash != 0) {
+            return hash;
+        }
+
+        hash = super.hashCode();
+        hash = 31 * hash + (isExtends ? 1 : 0);
+        hash = 31 * hash + bound.hashCode();
+        return this.hash = hash;
     }
 }

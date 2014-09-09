@@ -23,22 +23,22 @@ package org.jboss.jandex;
 public class WildcardType extends Type {
     private static Type OBJECT = new ClassType(DotName.OBJECT_NAME);
 
-    private Type extendsBound;
-    private Type superBound;
+    private Type bound;
+    private boolean isExtends;
 
-    WildcardType(Type extendsBound, Type superBound) {
-        super(extendsBound != null ? extendsBound.name() : DotName.OBJECT_NAME);
-        this.extendsBound = extendsBound != null ? extendsBound : OBJECT;
-        this.superBound = superBound;
+    WildcardType(Type bound, boolean isExtends) {
+        super(isExtends && bound != null ? bound.name() : DotName.OBJECT_NAME);
+        this.bound = isExtends && bound == null ? OBJECT : bound;
+        this.isExtends = isExtends;
 
     }
 
     public Type extendsBound() {
-        return extendsBound;
+        return isExtends ? bound : OBJECT;
     }
 
     public Type superBound() {
-        return superBound;
+        return isExtends ? null : bound;
     }
 
     @Override
@@ -50,12 +50,12 @@ public class WildcardType extends Type {
         StringBuilder builder = new StringBuilder();
         builder.append('?');
 
-        if (extendsBound != OBJECT) {
-            builder.append(" extends ").append(extendsBound);
+        if (isExtends && bound != OBJECT) {
+            builder.append(" extends ").append(bound);
         }
 
-        if (superBound != null) {
-            builder.append(" super ").append(superBound);
+        if (!isExtends && bound != null) {
+            builder.append(" super ").append(bound);
         }
 
         return builder.toString();

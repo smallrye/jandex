@@ -18,6 +18,7 @@
 
 package org.jboss.jandex;
 
+import java.security.Signature;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +29,92 @@ class NameTable {
     private StrongInternPool<String> stringPool = new StrongInternPool<String>();
     private StrongInternPool<DotName> namePool = new StrongInternPool<DotName>();
     private Map<String, DotName> names = new HashMap<String, DotName>();
+    private Map<Slice, Type> types = new HashMap<Slice, Type>();
+    private Map<Slice, Type[]> typeLists = new HashMap<Slice, Type[]>();
+
+    static class Slice {
+        private final String string;
+        private final int start;
+        private final int end;
+
+        private Slice(String string, int start, int end) {
+            this.string = string;
+            this.start = start;
+            this.end = end;
+        }
+
+        static Slice create(String string, int start, int end) {
+            if (start < 0 || start >= end || end < 0 || end > string.length()) {
+                throw new IllegalArgumentException();
+            }
+
+            return new Slice(string, start, end);
+        }
+
+        public int hashCode() {
+            int hash = 0;
+            int start = this.start;
+            int end = this.end;
+
+            for (int i = start; i < end; i++) {
+                hash = 31 * hash + string.charAt(i);
+            }
+
+            return hash;
+        }
+
+        public boolean equals(Object other) {
+            if (!(other instanceof Slice)) {
+                return false;
+            }
+
+            Slice otherSlice = (Slice) other;
+            int otherStart = otherSlice.start;
+            int otherEnd = otherSlice.end;
+            int start = this.start;
+            int end = this.end;
+            String otherString = otherSlice.string;
+            String string = this.string;
+
+            if (otherEnd - otherStart != end - start) {
+                return false;
+            }
+
+            while (start < end) {
+                if (string.charAt(start++) != otherString.charAt(otherStart++)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public String toString() {
+            return string.substring(start, end);
+        }
+    }
+
+    Slice createSlice(String string, int start,int  end) {
+        return Slice.create(string, start, end);
+    }
+
+    Type getType(Slice slice) {
+        return types.get(slice);
+    }
+
+    Type storeType(Slice slice, Type type) {
+        types.put(slice, type);
+        return type;
+    }
+
+    Type[] getTypeList(Slice slice) {
+        return typeLists.get(slice);
+    }
+
+    Type[] storeTypeList(Slice slice, Type[] typeList) {
+        typeLists.put(slice, typeList);
+        return typeList;
+    }
 
     DotName convertToName(String name) {
         return convertToName(name, '.');
@@ -66,11 +153,11 @@ class NameTable {
         return intern(name, '.');
     }
 
-    public String intern(String string) {
+    String intern(String string) {
         return stringPool.intern(string);
     }
 
-    public DotName intern(DotName dotName, char delim) {
+    DotName intern(DotName dotName, char delim) {
         String name = dotName.toString(delim);
         DotName old = names.get(name);
         if (old == null) {

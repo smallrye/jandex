@@ -1,11 +1,12 @@
 package org.jboss.jandex;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Jason T. Greene
@@ -95,10 +96,11 @@ class GenericSignatureParser {
      *   ReferenceTypeSignature
      *
      */
-    private static WildcardType UNBOUNDED_WILDCARD = new WildcardType(null, null);
+    private static WildcardType UNBOUNDED_WILDCARD = new WildcardType(null, true);
     private String signature;
     private int pos;
     private NameTable names;
+    private Map<String, TypeVariable> typeParameters = new HashMap<String, TypeVariable>();
 
     GenericSignatureParser() {
         names = new NameTable();
@@ -243,6 +245,8 @@ class GenericSignatureParser {
 
     MethodSignature parseMethodSignature(String signature) {
         this.signature = signature;
+        this.typeParameters.clear();
+
         this.pos = 0;
         Type[] typeParameters = parseTypeParameters();
 
@@ -266,9 +270,18 @@ class GenericSignatureParser {
     }
 
     private Type parseClassTypeSignature() {
+        int end = scanReferenceTypeEnd();
+        String signature = this.signature;
+        NameTable.Slice slice = names.createSlice(signature, pos, end);
+        Type type = names.getType(slice);
+
+        if (type != null) {
+            this.pos = end;
+            return type;
+        }
+
         DotName name = parseName();
         Type[] types = parseTypeArguments();
-        Type type = null;
 
         if (types.length > 0) {
             type = new ParameterizedType(name, types, null);
@@ -277,8 +290,8 @@ class GenericSignatureParser {
         // Suffix
         while (signature.charAt(pos) == '.') {
             int mark = ++pos;
-            int end = advanceNameEnd();
-            name = names.wrap(name, signature.substring(mark, end), true);
+            int suffixEnd = advanceNameEnd();
+            name = names.wrap(name, signature.substring(mark, suffixEnd), true);
             types = parseTypeArguments();
 
             // A suffix is a parameterized type if it has typeParameters or it's owner is a parameterized type
@@ -291,10 +304,34 @@ class GenericSignatureParser {
                 type = new ParameterizedType(name, types, type);
             }
         }
-        advancePast(';');
-        return type != null ? type : new ClassType(name);
+        this.pos++; // ;
+        type = type != null ? type : new ClassType(name);
+        names.storeType(slice, type);
+        return type;
     }
 
+    private int scanReferenceTypeEnd() {
+        String signature = this.signature;
+        int i = pos;
+        int open = 0;
+
+        while (i < signature.length()) {
+            switch (signature.charAt(i++)) {
+                case '<':
+                    open++;
+                    break;
+                case '>':
+                    open--;
+                    break;
+                case ';':
+                    if (open == 0) {
+                        return i;
+                    }
+            }
+        }
+
+        throw new IllegalArgumentException("Invalid signature, class type is missing terminator");
+    }
 
     private Type[] parseTypeArguments() {
         return parseTypeList(true);
@@ -310,6 +347,15 @@ class GenericSignatureParser {
             return Type.EMPTY_ARRAY;
         }
         pos++;
+
+        int end = scanListEnd();
+        NameTable.Slice slice = names.createSlice(signature, pos, end);
+        Type[] typeList = names.getTypeList(slice);
+        if (typeList != null) {
+            this.pos = end;
+            return typeList;
+        }
+
         List<Type> types = new ArrayList<Type>();
         for (;;) {
             Type t = argument ? parseTypeArgument() : parseTypeParameter();
@@ -318,7 +364,29 @@ class GenericSignatureParser {
             }
             types.add(t);
         }
-        return types.toArray(new Type[types.size()]);
+        return names.storeTypeList(slice, types.toArray(new Type[types.size()]));
+    }
+
+    private int scanListEnd() {
+        String signature = this.signature;
+        int i = pos;
+        int open = 0;
+
+        while (i < signature.length()) {
+            switch (signature.charAt(i++)) {
+                case '<':
+                    open++;
+                    break;
+                case '>':
+                    if (--open < 0) {
+                        return i;
+                    }
+
+                    break;
+            }
+        }
+
+        throw new IllegalArgumentException("Invalid signature, class type is missing terminator");
     }
 
     private Type parseTypeArgument() {
@@ -329,12 +397,10 @@ class GenericSignatureParser {
             case '*':
                 return UNBOUNDED_WILDCARD;
             case '-': {
-                Type lowerBound = parseReferenceType();
-                return new WildcardType(lowerBound, null);
+                return parseWildCard(false);
             }
             case '+': {
-                Type upperBound = parseReferenceType();
-                return new WildcardType(null, upperBound);
+                return parseWildCard(true);
             }
             default:
                 pos--;
@@ -342,16 +408,36 @@ class GenericSignatureParser {
         }
     }
 
+    private Type parseWildCard(boolean isExtends) {
+        int end = scanReferenceTypeEnd();
+        NameTable.Slice slice = names.createSlice(signature, pos, end);
+        Type type = names.getType(slice);
+        if (type != null) {
+            pos = end;
+            return type;
+        }
+
+        Type bound = parseReferenceType();
+        return names.storeType(slice,  new WildcardType(bound, isExtends));
+    }
+
     private Type parseTypeParameter() {
         int start = pos;
+        String signature = this.signature;
 
         if (signature.charAt(start) == '>') {
             pos++;
             return null;
         }
 
+        int end = scanTypeParameterEnd();
+        NameTable.Slice slice = names.createSlice(signature, start, end);
+        TypeVariable type = (TypeVariable) names.getType(slice);
+        if (type != null) {
+            return type;
+        }
+
         int bound = advancePast(':');
-        String signature = this.signature;
         String name = names.intern(signature.substring(start, bound));
 
         ArrayList<Type> bounds = new ArrayList<Type>();
@@ -367,7 +453,45 @@ class GenericSignatureParser {
             bounds.add(parseReferenceType());
         }
 
-        return new TypeVariable(name, bounds.toArray(new Type[bounds.size()]));
+        type = new TypeVariable(name, bounds.toArray(new Type[bounds.size()]));
+        names.storeType(slice, type);
+        typeParameters.put(type.identifier(), type);
+        return type;
+    }
+
+    private int scanTypeParameterEnd() {
+        String signature = this.signature;
+        int i = pos;
+        int open = 0;
+
+        while (i < signature.length() - 1) {
+            char c = signature.charAt(i++);
+            switch (c) {
+                case ':': {
+                    char peek = signature.charAt(i);
+                    if (peek != 'T' && peek != 'L' && peek != '[') {
+                        return i;
+                    }
+                    break;
+                }
+                case '<':
+                    open++;
+                    break;
+                case '>':
+                    open--;
+                    break;
+                case ';':
+                    if (open == 0) {
+                        char peek = signature.charAt(i);
+                        if (peek != ':') {
+                            return i;
+                        }
+                    }
+                    break;
+            }
+        }
+
+        throw new IllegalArgumentException("Invalid signature, class type is missing terminator");
     }
 
     private Type parseReturnType() {
@@ -384,16 +508,37 @@ class GenericSignatureParser {
         char c = signature.charAt(mark);
         switch (c) {
             case 'T':
-                String name = names.intern(signature.substring(mark + 1, advancePast(';')));
-                return new TypeVariable(name);
+                return parseTypeVariable();
             case 'L':
                 return parseClassTypeSignature();
             case '[':
-                int last = advanceNot('[');
-                return new ArrayType(parseJavaType(), last - mark);
+                return parseArrayType();
             default:
                 return null;
         }
+    }
+
+    private Type parseArrayType() {
+        int mark = this.pos;
+        int end = scanReferenceTypeEnd();
+        NameTable.Slice slice = names.createSlice(signature, mark, end);
+
+        Type type = names.getType(slice);
+        if (type != null) {
+            pos = end;
+            return type;
+        }
+
+        int last = advanceNot('[');
+        type = new ArrayType(parseJavaType(), last - mark);
+        names.storeType(slice, type);
+        return type;
+    }
+
+    private Type parseTypeVariable() {
+        String name = names.intern(signature.substring(pos + 1, advancePast(';')));
+        Type type = typeParameters.get(name);
+        return type == null ? new TypeVariable(name) : type;
     }
 
     private Type parseJavaType() {
@@ -450,32 +595,32 @@ class GenericSignatureParser {
 
     public static void main(String[] args) throws IOException {
         GenericSignatureParser parser = new GenericSignatureParser();
-//        MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Object;>(Ljava/lang/Class<TU;>;)Ljava/lang/Class<+TU;>;");
-//        MethodSignature sig2 = parser.parseMethodSignature("<K:Ljava/lang/Object;V:Ljava/lang/Object;>(Ljava/util/Map<TK;TV;>;Ljava/lang/Class<TK;>;Ljava/lang/Class<TV;>;)Ljava/util/Map<TK;TV;>;");
-//        MethodSignature sig3 = parser.parseMethodSignature("<T:Ljava/lang/Object;>(Ljava/util/Collection<-TT;>;[TT;)Z");
-//        MethodSignature sig4 = parser.parseMethodSignature("(Ljava/util/Collection<*>;Ljava/util/Collection<*>;)Z");
-      //MethodSignature sig7 = parser.parseMethodSignature("()Lcom/sun/xml/internal/bind/v2/model/impl/ElementInfoImpl<Ljava/lang/reflect/Type;Ljava/lang/Class;Ljava/lang/reflect/Field;Ljava/lang/reflect/Method;>.PropertyImpl;");
-//        ClassSignature sig5 = parser.parseClassSignature("<C:Lio/undertow/server/protocol/framed/AbstractFramedChannel<TC;TR;TS;>;R:Lio/undertow/server/protocol/framed/AbstractFramedStreamSourceChannel<TC;TR;TS;>;S:Lio/undertow/server/protocol/framed/AbstractFramedStreamSinkChannel<TC;TR;TS;>;>Ljava/lang/Object;Lorg/xnio/channels/ConnectedChannel;");
-//        ClassSignature sig6 = parser.parseClassSignature("Lcom/apple/laf/AquaUtils$RecyclableSingleton<Ljavax/swing/text/LayeredHighlighter$LayerPainter;>;");
-//        System.out.println(sig1);
-//        System.out.println(sig2);
-//        System.out.println(sig3);
-//        System.out.println(sig4);
-//        System.out.println(sig5);
-//        System.out.println(sig6);
-       // System.out.println(sig7);
+        MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Foo;>(Ljava/lang/Class<TU;>;TU;)Ljava/lang/Class<+TU;>;");
+        MethodSignature sig2 = parser.parseMethodSignature("<K:Ljava/lang/Object;V:Ljava/lang/Object;>(Ljava/util/Map<TK;TV;>;Ljava/lang/Class<TK;>;Ljava/lang/Class<TV;>;)Ljava/util/Map<TK;TV;>;");
+        MethodSignature sig3 = parser.parseMethodSignature("<T:Ljava/lang/Object;>(Ljava/util/Collection<-TT;>;[TT;)Z");
+       MethodSignature sig4 = parser.parseMethodSignature("(Ljava/util/Collection<*>;Ljava/util/Collection<*>;)Z");
+      MethodSignature sig7 = parser.parseMethodSignature("()Lcom/sun/xml/internal/bind/v2/model/impl/ElementInfoImpl<Ljava/lang/reflect/Type;Ljava/lang/Class;Ljava/lang/reflect/Field;Ljava/lang/reflect/Method;>.PropertyImpl;");
+        ClassSignature sig5 = parser.parseClassSignature("<C:Lio/undertow/server/protocol/framed/AbstractFramedChannel<TC;TR;TS;>;R:Lio/undertow/server/protocol/framed/AbstractFramedStreamSourceChannel<TC;TR;TS;>;S:Lio/undertow/server/protocol/framed/AbstractFramedStreamSinkChannel<TC;TR;TS;>;>Ljava/lang/Object;Lorg/xnio/channels/ConnectedChannel;");
+        ClassSignature sig6 = parser.parseClassSignature("Lcom/apple/laf/AquaUtils$RecyclableSingleton<Ljavax/swing/text/LayeredHighlighter$LayerPainter;>;");
+        System.out.println(sig1);
+        System.out.println(sig2);
+        System.out.println(sig3);
+        System.out.println(sig4);
+        System.out.println(sig5);
+        System.out.println(sig6);
+       System.out.println(sig7);
 
-        BufferedReader reader = new BufferedReader(new FileReader("/Users/jason/sigmethods.txt"));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            try {
-                System.out.println(parser.parseMethodSignature(line));
-            } catch (Exception e) {
-                System.err.println(line);
-                e.printStackTrace(System.err);
-                System.exit(-1);
-            }
-        }
+//        BufferedReader reader = new BufferedReader(new FileReader("/Users/jason/sigmethods.txt"));
+//        String line;
+//        while ((line = reader.readLine()) != null) {
+//            try {
+//                System.out.println(parser.parseMethodSignature(line));
+//            } catch (Exception e) {
+//                System.err.println(line);
+//                e.printStackTrace(System.err);
+//                System.exit(-1);
+//            }
+//        }
 
     }
 

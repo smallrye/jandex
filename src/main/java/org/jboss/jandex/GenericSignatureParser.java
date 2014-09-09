@@ -270,18 +270,10 @@ class GenericSignatureParser {
     }
 
     private Type parseClassTypeSignature() {
-        int end = scanReferenceTypeEnd();
         String signature = this.signature;
-        NameTable.Slice slice = names.createSlice(signature, pos, end);
-        Type type = names.getType(slice);
-
-        if (type != null) {
-            this.pos = end;
-            return type;
-        }
-
         DotName name = parseName();
         Type[] types = parseTypeArguments();
+        Type type = null;
 
         if (types.length > 0) {
             type = new ParameterizedType(name, types, null);
@@ -305,32 +297,7 @@ class GenericSignatureParser {
             }
         }
         this.pos++; // ;
-        type = type != null ? type : new ClassType(name);
-        names.storeType(slice, type);
-        return type;
-    }
-
-    private int scanReferenceTypeEnd() {
-        String signature = this.signature;
-        int i = pos;
-        int open = 0;
-
-        while (i < signature.length()) {
-            switch (signature.charAt(i++)) {
-                case '<':
-                    open++;
-                    break;
-                case '>':
-                    open--;
-                    break;
-                case ';':
-                    if (open == 0) {
-                        return i;
-                    }
-            }
-        }
-
-        throw new IllegalArgumentException("Invalid signature, class type is missing terminator");
+        return type != null ? type : new ClassType(name);
     }
 
     private Type[] parseTypeArguments() {
@@ -348,14 +315,6 @@ class GenericSignatureParser {
         }
         pos++;
 
-        int end = scanListEnd();
-        NameTable.Slice slice = names.createSlice(signature, pos, end);
-        Type[] typeList = names.getTypeList(slice);
-        if (typeList != null) {
-            this.pos = end;
-            return typeList;
-        }
-
         List<Type> types = new ArrayList<Type>();
         for (;;) {
             Type t = argument ? parseTypeArgument() : parseTypeParameter();
@@ -364,29 +323,8 @@ class GenericSignatureParser {
             }
             types.add(t);
         }
-        return names.storeTypeList(slice, types.toArray(new Type[types.size()]));
-    }
 
-    private int scanListEnd() {
-        String signature = this.signature;
-        int i = pos;
-        int open = 0;
-
-        while (i < signature.length()) {
-            switch (signature.charAt(i++)) {
-                case '<':
-                    open++;
-                    break;
-                case '>':
-                    if (--open < 0) {
-                        return i;
-                    }
-
-                    break;
-            }
-        }
-
-        throw new IllegalArgumentException("Invalid signature, class type is missing terminator");
+        return types.toArray(new Type[types.size()]);
     }
 
     private Type parseTypeArgument() {
@@ -409,16 +347,8 @@ class GenericSignatureParser {
     }
 
     private Type parseWildCard(boolean isExtends) {
-        int end = scanReferenceTypeEnd();
-        NameTable.Slice slice = names.createSlice(signature, pos, end);
-        Type type = names.getType(slice);
-        if (type != null) {
-            pos = end;
-            return type;
-        }
-
         Type bound = parseReferenceType();
-        return names.storeType(slice,  new WildcardType(bound, isExtends));
+        return new WildcardType(bound, isExtends);
     }
 
     private Type parseTypeParameter() {
@@ -428,13 +358,6 @@ class GenericSignatureParser {
         if (signature.charAt(start) == '>') {
             pos++;
             return null;
-        }
-
-        int end = scanTypeParameterEnd();
-        NameTable.Slice slice = names.createSlice(signature, start, end);
-        TypeVariable type = (TypeVariable) names.getType(slice);
-        if (type != null) {
-            return type;
         }
 
         int bound = advancePast(':');
@@ -453,45 +376,9 @@ class GenericSignatureParser {
             bounds.add(parseReferenceType());
         }
 
-        type = new TypeVariable(name, bounds.toArray(new Type[bounds.size()]));
-        names.storeType(slice, type);
-        typeParameters.put(type.identifier(), type);
+        TypeVariable type = new TypeVariable(name, bounds.toArray(new Type[bounds.size()]));
+        typeParameters.put(name, type);
         return type;
-    }
-
-    private int scanTypeParameterEnd() {
-        String signature = this.signature;
-        int i = pos;
-        int open = 0;
-
-        while (i < signature.length() - 1) {
-            char c = signature.charAt(i++);
-            switch (c) {
-                case ':': {
-                    char peek = signature.charAt(i);
-                    if (peek != 'T' && peek != 'L' && peek != '[') {
-                        return i;
-                    }
-                    break;
-                }
-                case '<':
-                    open++;
-                    break;
-                case '>':
-                    open--;
-                    break;
-                case ';':
-                    if (open == 0) {
-                        char peek = signature.charAt(i);
-                        if (peek != ':') {
-                            return i;
-                        }
-                    }
-                    break;
-            }
-        }
-
-        throw new IllegalArgumentException("Invalid signature, class type is missing terminator");
     }
 
     private Type parseReturnType() {
@@ -520,19 +407,8 @@ class GenericSignatureParser {
 
     private Type parseArrayType() {
         int mark = this.pos;
-        int end = scanReferenceTypeEnd();
-        NameTable.Slice slice = names.createSlice(signature, mark, end);
-
-        Type type = names.getType(slice);
-        if (type != null) {
-            pos = end;
-            return type;
-        }
-
         int last = advanceNot('[');
-        type = new ArrayType(parseJavaType(), last - mark);
-        names.storeType(slice, type);
-        return type;
+        return new ArrayType(parseJavaType(), last - mark);
     }
 
     private Type parseTypeVariable() {

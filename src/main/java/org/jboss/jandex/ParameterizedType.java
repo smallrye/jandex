@@ -68,7 +68,6 @@ public class ParameterizedType extends Type {
         return builder.toString();
     }
 
-    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -79,10 +78,11 @@ public class ParameterizedType extends Type {
         }
 
         ParameterizedType other = (ParameterizedType) o;
-        return owner.equals(other.owner) && Arrays.equals(parameters, other.parameters);
+
+        return (owner == other.owner || (owner != null && owner.equals(other.owner)))
+                && Arrays.equals(parameters, other.parameters);
     }
 
-    @Override
     public int hashCode() {
         int hash = this.hash;
         if (hash != 0) {
@@ -91,7 +91,7 @@ public class ParameterizedType extends Type {
 
         hash = super.hashCode();
         hash = 31 * hash + Arrays.hashCode(parameters);
-        hash = 31 * hash + owner.hashCode();
-        return this.hash = hash;
+        hash = 31 * hash + (owner != null ? owner.hashCode() : 0);
+        return hash;
     }
 }

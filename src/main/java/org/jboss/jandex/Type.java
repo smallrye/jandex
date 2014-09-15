@@ -53,6 +53,8 @@ public abstract class Type {
 
         TYPE_VARIABLE,
 
+        UNRESOLVED_TYPE_VARIABLE,
+
         WILDCARD_TYPE,
 
         PARAMETERIZED_TYPE;

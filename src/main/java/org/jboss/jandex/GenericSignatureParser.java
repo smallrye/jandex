@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -225,11 +226,11 @@ class GenericSignatureParser {
         this.signature = signature;
         this.pos = 0;
         Type[] parameters = parseTypeParameters();
-        Type superClass = parseClassTypeSignature();
+        Type superClass = names.intern(parseClassTypeSignature());
         int end = signature.length();
         List<Type> interfaces = new ArrayList<Type>();
         while (pos < end) {
-            interfaces.add(parseClassTypeSignature());
+            interfaces.add(names.intern(parseClassTypeSignature()));
         }
 
         return new ClassSignature(parameters, superClass, interfaces.toArray(new Type[interfaces.size()]));
@@ -253,7 +254,11 @@ class GenericSignatureParser {
         expect('(');
         List<Type> parameters = new ArrayList<Type>();
         while (signature.charAt(pos) != ')') {
-            parameters.add(parseJavaType());
+            Type type = parseJavaType();
+            if (type == null) {
+                throw new IllegalArgumentException("Corrupted argument, or unclosed brace at: " + pos);
+            }
+            parameters.add(type);
         }
         pos++;
 
@@ -315,7 +320,7 @@ class GenericSignatureParser {
         }
         pos++;
 
-        List<Type> types = new ArrayList<Type>();
+        ArrayList<Type> types = new ArrayList<Type>();
         for (;;) {
             Type t = argument ? parseTypeArgument() : parseTypeParameter();
             if (t == null) {
@@ -323,7 +328,9 @@ class GenericSignatureParser {
             }
             types.add(t);
         }
-
+        if (!argument) {
+            resolveTypeList(types);
+        }
         return types.toArray(new Type[types.size()]);
     }
 
@@ -393,16 +400,22 @@ class GenericSignatureParser {
     private Type parseReferenceType() {
         int mark = pos;
         char c = signature.charAt(mark);
+        Type type;
         switch (c) {
             case 'T':
-                return parseTypeVariable();
+                type = parseTypeVariable();
+                break;
             case 'L':
-                return parseClassTypeSignature();
+                type = parseClassTypeSignature();
+                break;
             case '[':
-                return parseArrayType();
+                type = parseArrayType();
+                break;
             default:
                 return null;
         }
+
+        return names.intern(type);
     }
 
     private Type parseArrayType() {
@@ -414,7 +427,21 @@ class GenericSignatureParser {
     private Type parseTypeVariable() {
         String name = names.intern(signature.substring(pos + 1, advancePast(';')));
         Type type = typeParameters.get(name);
-        return type == null ? new TypeVariable(name) : type;
+        return type == null ? new UnresolvedTypeVariable(name) : type;
+    }
+
+    private void resolveTypeList(ArrayList<Type> list) {
+        int size = list.size();
+        for (int i = 0; i < size; i++) {
+            Type type = list.get(i);
+            if (type instanceof UnresolvedTypeVariable) {
+                type = typeParameters.get(((UnresolvedTypeVariable)type).identifier());
+                if (type != null) {
+                    list.set(i, type);
+                }
+            }
+        }
+
     }
 
     private Type parseJavaType() {
@@ -471,20 +498,21 @@ class GenericSignatureParser {
 
     public static void main(String[] args) throws IOException {
         GenericSignatureParser parser = new GenericSignatureParser();
-        MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Foo;>(Ljava/lang/Class<TU;>;TU;)Ljava/lang/Class<+TU;>;");
-        MethodSignature sig2 = parser.parseMethodSignature("<K:Ljava/lang/Object;V:Ljava/lang/Object;>(Ljava/util/Map<TK;TV;>;Ljava/lang/Class<TK;>;Ljava/lang/Class<TV;>;)Ljava/util/Map<TK;TV;>;");
-        MethodSignature sig3 = parser.parseMethodSignature("<T:Ljava/lang/Object;>(Ljava/util/Collection<-TT;>;[TT;)Z");
-       MethodSignature sig4 = parser.parseMethodSignature("(Ljava/util/Collection<*>;Ljava/util/Collection<*>;)Z");
-      MethodSignature sig7 = parser.parseMethodSignature("()Lcom/sun/xml/internal/bind/v2/model/impl/ElementInfoImpl<Ljava/lang/reflect/Type;Ljava/lang/Class;Ljava/lang/reflect/Field;Ljava/lang/reflect/Method;>.PropertyImpl;");
-        ClassSignature sig5 = parser.parseClassSignature("<C:Lio/undertow/server/protocol/framed/AbstractFramedChannel<TC;TR;TS;>;R:Lio/undertow/server/protocol/framed/AbstractFramedStreamSourceChannel<TC;TR;TS;>;S:Lio/undertow/server/protocol/framed/AbstractFramedStreamSinkChannel<TC;TR;TS;>;>Ljava/lang/Object;Lorg/xnio/channels/ConnectedChannel;");
-        ClassSignature sig6 = parser.parseClassSignature("Lcom/apple/laf/AquaUtils$RecyclableSingleton<Ljavax/swing/text/LayeredHighlighter$LayerPainter;>;");
-        System.out.println(sig1);
-        System.out.println(sig2);
-        System.out.println(sig3);
-        System.out.println(sig4);
-        System.out.println(sig5);
-        System.out.println(sig6);
-       System.out.println(sig7);
+        MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Foo;>((Ljava/lang/Class<TU;>;TU;)Ljava/lang/Class<+TU;>;");
+//        MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Foo;>(Ljava/lang/Class<TU;>;TU;)Ljava/lang/Class<+TU;>;");
+//        MethodSignature sig2 = parser.parseMethodSignature("<K:Ljava/lang/Object;V:Ljava/lang/Object;>(Ljava/util/Map<TK;TV;>;Ljava/lang/Class<TK;>;Ljava/lang/Class<TV;>;)Ljava/util/Map<TK;TV;>;");
+//        MethodSignature sig3 = parser.parseMethodSignature("<T:Ljava/lang/Object;>(Ljava/util/Collection<-TT;>;[TT;)Z");
+//       MethodSignature sig4 = parser.parseMethodSignature("(Ljava/util/Collection<*>;Ljava/util/Collection<*>;)Z");
+//      MethodSignature sig7 = parser.parseMethodSignature("()Lcom/sun/xml/internal/bind/v2/model/impl/ElementInfoImpl<Ljava/lang/reflect/Type;Ljava/lang/Class;Ljava/lang/reflect/Field;Ljava/lang/reflect/Method;>.PropertyImpl;");
+//        ClassSignature sig5 = parser.parseClassSignature("<C:Lio/undertow/server/protocol/framed/AbstractFramedChannel<TC;TR;TS;>;R:Lio/undertow/server/protocol/framed/AbstractFramedStreamSourceChannel<TC;TR;TS;>;S:Lio/undertow/server/protocol/framed/AbstractFramedStreamSinkChannel<TC;TR;TS;>;>Ljava/lang/Object;Lorg/xnio/channels/ConnectedChannel;");
+//        ClassSignature sig6 = parser.parseClassSignature("Lcom/apple/laf/AquaUtils$RecyclableSingleton<Ljavax/swing/text/LayeredHighlighter$LayerPainter;>;");
+//        System.out.println(sig1);
+//        System.out.println(sig2);
+//        System.out.println(sig3);
+//        System.out.println(sig4);
+//        System.out.println(sig5);
+//        System.out.println(sig6);
+//       System.out.println(sig7);
 
 //        BufferedReader reader = new BufferedReader(new FileReader("/Users/jason/sigmethods.txt"));
 //        String line;

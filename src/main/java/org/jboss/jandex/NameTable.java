@@ -27,7 +27,7 @@ import java.util.Map;
  */
 class NameTable {
     private StrongInternPool<String> stringPool = new StrongInternPool<String>();
-    private StrongInternPool<DotName> namePool = new StrongInternPool<DotName>();
+    private StrongInternPool<Type> typePool = new StrongInternPool<Type>();
     private Map<String, DotName> names = new HashMap<String, DotName>();
 
     DotName convertToName(String name) {
@@ -69,6 +69,10 @@ class NameTable {
 
     String intern(String string) {
         return stringPool.intern(string);
+    }
+
+    Type intern(Type type) {
+        return typePool.intern(type);
     }
 
     DotName intern(DotName dotName, char delim) {

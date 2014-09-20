@@ -101,7 +101,9 @@ class GenericSignatureParser {
     private String signature;
     private int pos;
     private NameTable names;
-    private Map<String, TypeVariable> typeParameters = new HashMap<String, TypeVariable>();
+    private Map<String, TypeVariable> typeParameters;
+    private Map<String, TypeVariable> methodTypeParameters = new HashMap<String, TypeVariable>();
+    private Map<String, TypeVariable> classTypeParameteres = new HashMap<String, TypeVariable>();
 
     GenericSignatureParser() {
         names = new NameTable();
@@ -224,6 +226,8 @@ class GenericSignatureParser {
 
     ClassSignature parseClassSignature(String signature) {
         this.signature = signature;
+        this.typeParameters = this.classTypeParameteres;
+        this.typeParameters.clear();
         this.pos = 0;
         Type[] parameters = parseTypeParameters();
         Type superClass = names.intern(parseClassTypeSignature());
@@ -234,7 +238,6 @@ class GenericSignatureParser {
         }
 
         return new ClassSignature(parameters, superClass, interfaces.toArray(new Type[interfaces.size()]));
-
     }
 
     private void expect(char c) {
@@ -246,9 +249,10 @@ class GenericSignatureParser {
 
     MethodSignature parseMethodSignature(String signature) {
         this.signature = signature;
+        this.typeParameters = this.methodTypeParameters;
         this.typeParameters.clear();
-
         this.pos = 0;
+
         Type[] typeParameters = parseTypeParameters();
 
         expect('(');
@@ -433,15 +437,24 @@ class GenericSignatureParser {
     private void resolveTypeList(ArrayList<Type> list) {
         int size = list.size();
         for (int i = 0; i < size; i++) {
-            Type type = list.get(i);
-            if (type instanceof UnresolvedTypeVariable) {
-                type = typeParameters.get(((UnresolvedTypeVariable)type).identifier());
-                if (type != null) {
-                    list.set(i, type);
-                }
+            Type type = resolveType(list.get(i));
+            if (type != null) {
+                list.set(i, type);
             }
         }
+    }
 
+    private Type resolveType(Type type) {
+        if (! (type instanceof UnresolvedTypeVariable)) {
+            return null;
+        }
+
+        return resolveType(((UnresolvedTypeVariable) type).identifier());
+    }
+
+    private Type resolveType(String identifier) {
+        Type ret = methodTypeParameters.get(identifier);
+        return ret == null ? classTypeParameteres.get(identifier) : ret;
     }
 
     private Type parseJavaType() {
@@ -498,7 +511,7 @@ class GenericSignatureParser {
 
     public static void main(String[] args) throws IOException {
         GenericSignatureParser parser = new GenericSignatureParser();
-        MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Foo;>((Ljava/lang/Class<TU;>;TU;)Ljava/lang/Class<+TU;>;");
+        MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Foo;>(Ljava/lang/Class<TU;>;TU;)Ljava/lang/Class<+TU;>;");
 //        MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Foo;>(Ljava/lang/Class<TU;>;TU;)Ljava/lang/Class<+TU;>;");
 //        MethodSignature sig2 = parser.parseMethodSignature("<K:Ljava/lang/Object;V:Ljava/lang/Object;>(Ljava/util/Map<TK;TV;>;Ljava/lang/Class<TK;>;Ljava/lang/Class<TV;>;)Ljava/util/Map<TK;TV;>;");
 //        MethodSignature sig3 = parser.parseMethodSignature("<T:Ljava/lang/Object;>(Ljava/util/Collection<-TT;>;[TT;)Z");

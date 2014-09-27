@@ -18,20 +18,21 @@
 package org.jboss.jandex;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
  * @author Jason T. Greene
  */
 public final class PrimitiveType extends Type {
-    public static final PrimitiveType BYTE = new PrimitiveType(new DotName(null, "byte", true, false));
-    public static final PrimitiveType CHAR = new PrimitiveType(new DotName(null, "char", true, false));
-    public static final PrimitiveType DOUBLE = new PrimitiveType(new DotName(null, "double", true, false));
-    public static final PrimitiveType FLOAT = new PrimitiveType(new DotName(null, "float", true, false));
-    public static final PrimitiveType INT = new PrimitiveType(new DotName(null, "int", true, false));
-    public static final PrimitiveType LONG = new PrimitiveType(new DotName(null, "long", true, false));
-    public static final PrimitiveType SHORT = new PrimitiveType(new DotName(null, "short", true, false));
-    public static final PrimitiveType BOOLEAN = new PrimitiveType(new DotName(null, "boolean", true, false));
+    static final PrimitiveType BYTE = new PrimitiveType(Primitive.BYTE);
+    static final PrimitiveType CHAR = new PrimitiveType(Primitive.CHAR);
+    static final PrimitiveType DOUBLE = new PrimitiveType(Primitive.DOUBLE);
+    static final PrimitiveType FLOAT = new PrimitiveType(Primitive.FLOAT);
+    static final PrimitiveType INT = new PrimitiveType(Primitive.INT);
+    static final PrimitiveType LONG = new PrimitiveType(Primitive.LONG);
+    static final PrimitiveType SHORT = new PrimitiveType(Primitive.SHORT);
+    static final PrimitiveType BOOLEAN = new PrimitiveType(Primitive.BOOLEAN);
 
     private static final Map<String, PrimitiveType> reverseMap = new HashMap<String, PrimitiveType>();
 
@@ -46,8 +47,15 @@ public final class PrimitiveType extends Type {
         reverseMap.put("boolean", BOOLEAN);
     }
 
-    private PrimitiveType(DotName name) {
-        super(name);
+    public enum Primitive {
+        BYTE, CHAR, DOUBLE, FLOAT, INT, LONG, SHORT, BOOLEAN
+    }
+
+    private final Primitive primitive;
+
+    private PrimitiveType(Primitive primitive) {
+        super(new DotName(null, primitive.name().toLowerCase(Locale.ENGLISH), true, false));
+        this.primitive = primitive;
     }
 
     @Override
@@ -55,20 +63,51 @@ public final class PrimitiveType extends Type {
         return Kind.PRIMITIVE;
     }
 
+    public Primitive primitive() {
+        return primitive;
+    }
+
+    @Override
+    public PrimitiveType asPrimitiveType() {
+        return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof PrimitiveType)) {
+            return false;
+        }
+
+        PrimitiveType that = (PrimitiveType) o;
+        return super.equals(o) && primitive == that.primitive;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + primitive.hashCode();
+        return result;
+    }
+
     char toCode() {
-        if (this == BYTE) {
+        Primitive primitive = this.primitive;
+        if (primitive == Primitive.BYTE) {
             return 'B';
-        } else if (this == CHAR) {
+        } else if (primitive == Primitive.CHAR) {
             return 'C';
-        } else if (this == DOUBLE) {
+        } else if (primitive == Primitive.DOUBLE) {
             return 'D';
-        } else if (this == FLOAT) {
+        } else if (primitive == Primitive.FLOAT) {
             return 'F';
-        } else if (this == INT) {
+        } else if (primitive == Primitive.INT) {
             return 'I';
-        } else if (this == LONG) {
+        } else if (primitive == Primitive.LONG) {
             return 'J';
-        } else if (this == SHORT) {
+        } else if (primitive == Primitive.SHORT) {
             return 'S';
         }
 

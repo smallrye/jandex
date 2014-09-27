@@ -31,7 +31,7 @@ import java.lang.reflect.Modifier;
  */
 public final class FieldInfo implements AnnotationTarget {
     private final String name;
-    private final Type type;
+    private Type type;
     private final short flags;
     private final ClassInfo clazz;
 
@@ -100,5 +100,9 @@ public final class FieldInfo implements AnnotationTarget {
 
     public String toString() {
         return type + " " + clazz.name() + "." + name;
+    }
+
+    void setType(Type type) {
+        this.type = type;
     }
 }

@@ -47,6 +47,11 @@ public class WildcardType extends Type {
         return Kind.WILDCARD_TYPE;
     }
 
+    @Override
+    public WildcardType asWildcardType() {
+        return this;
+    }
+
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append('?');

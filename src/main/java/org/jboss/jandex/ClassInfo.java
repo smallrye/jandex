@@ -18,6 +18,7 @@
 
 package org.jboss.jandex;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,11 @@ public final class ClassInfo implements AnnotationTarget {
     private final DotName superName;
     private final DotName[] interfaces;
     private final Map<DotName, List<AnnotationInstance>> annotations;
+    private Collection<Type> interfaceTypes;
+    private Type superClassType;
+    private List<Type> typeParameters;
+    private Collection<MethodInfo> methods;
+    private Collection<FieldInfo> fields;
 
     // Not final to allow lazy initialization, immutable once published
     private boolean hasNoArgsConstructor;
@@ -105,6 +111,26 @@ public final class ClassInfo implements AnnotationTarget {
         return annotations;
     }
 
+    public final Collection<MethodInfo> methods() {
+        return methods;
+    }
+
+    public final Collection<FieldInfo> fields() {
+        return fields;
+    }
+
+    public final Collection<Type> interfaceTypes() {
+        return interfaceTypes;
+    }
+
+    public final Type superClassType() {
+        return superClassType;
+    }
+
+    public final List<Type> typeParameters() {
+        return typeParameters;
+    }
+
     /**
      * Returns a boolean indicating the presence of a no-arg constructor, if supported by the underlying index store.
      * This information is available in indexes produced by Jandex 1.2.0 and later.
@@ -120,5 +146,25 @@ public final class ClassInfo implements AnnotationTarget {
     /** Lazily initialize hasNoArgsConstructor. Can only be called before publication */
     void setHasNoArgsConstructor(boolean hasNoArgsConstructor) {
         this.hasNoArgsConstructor = hasNoArgsConstructor;
+    }
+
+    void setFields(List<FieldInfo> fields) {
+        this.fields = fields;
+    }
+
+    void setMethods(List<MethodInfo> methods) {
+        this.methods = methods;
+    }
+
+    void setSuperClassType(Type superClassType) {
+        this.superClassType = superClassType;
+    }
+
+    void setInterfaceTypes(Collection<Type> interfaceTypes) {
+        this.interfaceTypes = interfaceTypes;
+    }
+
+    void setTypeParameters(List<Type> typeParameters) {
+        this.typeParameters = typeParameters;
     }
 }

@@ -21,7 +21,7 @@ package org.jboss.jandex;
  * @author Jason T. Greene
  */
 public class VoidType extends Type {
-    public static final VoidType VOID = new VoidType();
+    static final VoidType VOID = new VoidType();
 
     private VoidType() {
         super(new DotName(null, "void", true, false));
@@ -30,5 +30,10 @@ public class VoidType extends Type {
     @Override
     public Kind kind() {
         return Kind.VOID;
+    }
+
+    @Override
+    public VoidType asVoidType() {
+        return this;
     }
 }

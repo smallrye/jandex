@@ -38,6 +38,11 @@ public final class UnresolvedTypeVariable extends Type {
         return Kind.UNRESOLVED_TYPE_VARIABLE;
     }
 
+    @Override
+    public UnresolvedTypeVariable asUnresolvedTypeVariable() {
+        return this;
+    }
+
     public String toString() {
         return name;
     }

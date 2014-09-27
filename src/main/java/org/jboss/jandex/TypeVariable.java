@@ -51,6 +51,11 @@ public final class TypeVariable extends Type {
         return Kind.TYPE_VARIABLE;
     }
 
+    @Override
+    public TypeVariable asTypeVariable() {
+        return this;
+    }
+
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(name);

@@ -29,4 +29,9 @@ public final class ClassType extends Type {
     public Kind kind() {
         return Kind.CLASS;
     }
+
+    @Override
+    public ClassType asClassType() {
+        return this;
+    }
 }

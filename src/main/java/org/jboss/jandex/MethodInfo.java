@@ -19,6 +19,8 @@
 package org.jboss.jandex;
 
 import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Represents a Java method that was annotated.
@@ -30,10 +32,14 @@ import java.lang.reflect.Modifier;
  */
 public final class MethodInfo implements AnnotationTarget {
     private final String name;
-    private final Type[] args;
-    private final Type returnType;
+    private Type[] args;
+    private Type returnType;
+    private List<Type> typeParameters;
+    private List<Type> exceptions = Collections.emptyList();
+
     private final short flags;
     private final ClassInfo clazz;
+
 
     MethodInfo(ClassInfo clazz, String name, Type[] args, Type returnType,  short flags) {
         this.clazz = clazz;
@@ -107,6 +113,13 @@ public final class MethodInfo implements AnnotationTarget {
         return returnType;
     }
 
+    public final List<Type> exceptions() {
+        return exceptions;
+    }
+
+    public final List<Type> typeParameters() {
+        return typeParameters;
+    }
 
     /**
      * Returns the access fields of this method. {@link Modifier} can be used on this value.
@@ -127,6 +140,32 @@ public final class MethodInfo implements AnnotationTarget {
         }
         builder.append(')');
 
+        if (exceptions.size() > 0) {
+            builder.append(" throws ");
+            for (int i = 0; i < exceptions.size(); i++) {
+                builder.append(exceptions.get(i));
+                if (i < exceptions.size() - 1) {
+                    builder.append(", ");
+                }
+            }
+        }
+
         return builder.toString();
+    }
+
+    void setTypeParameters(List<Type> typeParameters) {
+        this.typeParameters = typeParameters;
+    }
+
+    void setParameters(Type[] parameters) {
+        this.args = parameters;
+    }
+
+    void setReturnType(Type returnType) {
+        this.returnType = returnType;
+    }
+
+    void setExceptions(List<Type> exceptions) {
+        this.exceptions = exceptions;
     }
 }

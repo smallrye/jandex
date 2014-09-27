@@ -77,6 +77,14 @@ public abstract class Type {
                 default:
                 case 3:
                     return VOID;
+                case 4:
+                    return TYPE_VARIABLE;
+                case 5:
+                    return UNRESOLVED_TYPE_VARIABLE;
+                case 6:
+                    return WILDCARD_TYPE;
+                case 7:
+                    return PARAMETERIZED_TYPE;
             }
         }
     }
@@ -153,6 +161,38 @@ public abstract class Type {
      * @return the kind
      */
     public abstract Kind kind();
+
+    public ClassType asClassType() {
+        throw new IllegalArgumentException("Not a class type!");
+    }
+
+    public ParameterizedType asParameterizedType() {
+        throw new IllegalArgumentException("Not a parameterized type!");
+    }
+
+    public TypeVariable asTypeVariable() {
+        throw new IllegalArgumentException("Not a type variable!");
+    }
+
+    public ArrayType asArrayType() {
+        throw new IllegalArgumentException("Not an array type!");
+    }
+
+    public WildcardType asWildcardType() {
+        throw new IllegalArgumentException("Not a wildcard type!");
+    }
+
+    public UnresolvedTypeVariable asUnresolvedTypeVariable() {
+        throw new IllegalArgumentException("Not an unresolved type variable!");
+    }
+
+    public PrimitiveType asPrimitiveType() {
+        throw new IllegalArgumentException("Not a primitive type!");
+    }
+
+    public VoidType asVoidType() {
+        throw new IllegalArgumentException("Not a void type!");
+    }
 
     public String toString() {
         return name.toString();

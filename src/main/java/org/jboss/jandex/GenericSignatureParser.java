@@ -1,11 +1,8 @@
 package org.jboss.jandex;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -102,7 +99,7 @@ class GenericSignatureParser {
     private int pos;
     private NameTable names;
     private Map<String, TypeVariable> typeParameters;
-    private Map<String, TypeVariable> methodTypeParameters = new HashMap<String, TypeVariable>();
+    private Map<String, TypeVariable> elementTypeParameters = new HashMap<String, TypeVariable>();
     private Map<String, TypeVariable> classTypeParameteres = new HashMap<String, TypeVariable>();
 
     GenericSignatureParser() {
@@ -246,10 +243,19 @@ class GenericSignatureParser {
          }
      }
 
+    Type parseFieldSignature(String signature) {
+        this.signature = signature;
+        this.typeParameters = this.elementTypeParameters;
+        this.typeParameters.clear();
+        this.pos = 0;
+
+        return parseReferenceType();
+    }
+
 
     MethodSignature parseMethodSignature(String signature) {
         this.signature = signature;
-        this.typeParameters = this.methodTypeParameters;
+        this.typeParameters = this.elementTypeParameters;
         this.typeParameters.clear();
         this.pos = 0;
 
@@ -430,7 +436,7 @@ class GenericSignatureParser {
 
     private Type parseTypeVariable() {
         String name = names.intern(signature.substring(pos + 1, advancePast(';')));
-        Type type = typeParameters.get(name);
+        Type type = resolveType(name);
         return type == null ? new UnresolvedTypeVariable(name) : type;
     }
 
@@ -453,7 +459,7 @@ class GenericSignatureParser {
     }
 
     private Type resolveType(String identifier) {
-        Type ret = methodTypeParameters.get(identifier);
+        Type ret = elementTypeParameters.get(identifier);
         return ret == null ? classTypeParameteres.get(identifier) : ret;
     }
 

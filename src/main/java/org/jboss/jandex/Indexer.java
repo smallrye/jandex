@@ -26,8 +26,10 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -91,11 +93,25 @@ public final class Indexer {
         0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73
     };
 
+    // "Signature"
+    private final static byte[] SIGNATURE = new byte[] {
+        0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65
+    };
+
+    // "Exceptions"
+    private final static byte[] EXCEPTIONS = new byte[] {
+        0x45, 0x78, 0x63, 0x65, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73
+    };
+
     private final static int RUNTIME_ANNOTATIONS_LEN = RUNTIME_ANNOTATIONS.length;
     private final static int RUNTIME_PARAM_ANNOTATIONS_LEN = RUNTIME_PARAM_ANNOTATIONS.length;
+    private final static int SIGNATURE_LEN = SIGNATURE.length;
+    private final static int EXCEPTIONS_LEN = EXCEPTIONS.length;
 
     private final static int HAS_RUNTIME_ANNOTATION = 1;
     private final static int HAS_RUNTIME_PARAM_ANNOTATION = 2;
+    private final static int HAS_SIGNATURE = 3;
+    private final static int HAS_EXCEPTIONS = 4;
 
     private final static String INIT_METHOD_NAME = "<init>";
 
@@ -137,6 +153,7 @@ public final class Indexer {
     private volatile ClassInfo publishClass;
     private HashMap<DotName, List<AnnotationInstance>> classAnnotations;
     private StrongInternPool<String> internPool;
+    private List<Object> signatures;
 
     // Index lifespan fields
     private Map<DotName, List<AnnotationInstance>> masterAnnotations;
@@ -144,6 +161,7 @@ public final class Indexer {
     private Map<DotName, List<ClassInfo>> implementors;
     private Map<DotName, ClassInfo> classes;
     private Map<String, DotName> names;
+    private GenericSignatureParser signatureParser;
 
     private void initIndexMaps() {
         if (masterAnnotations == null)
@@ -160,8 +178,15 @@ public final class Indexer {
 
         if (names == null)
             names = new HashMap<String, DotName>();
+
+        if (signatureParser == null) {
+            signatureParser = new GenericSignatureParser();
+        }
     }
 
+    private void initSignatures() {
+        signatures = new ArrayList<Object>();
+    }
 
     private DotName convertToName(String name) {
         return convertToName(name, '.');
@@ -184,6 +209,7 @@ public final class Indexer {
 
     private void processMethodInfo(DataInputStream data) throws IOException {
         int numMethods = data.readUnsignedShort();
+        List<MethodInfo> methods = numMethods > 0 ? new ArrayList<MethodInfo>(numMethods) : Collections.<MethodInfo>emptyList();
 
         for (int i = 0; i < numMethods; i++) {
             short flags = (short) data.readUnsignedShort();
@@ -201,7 +227,10 @@ public final class Indexer {
                 currentClass.setHasNoArgsConstructor(true);
             }
             processAttributes(data, method);
+            methods.add(method);
         }
+
+        currentClass.setMethods(methods);
     }
 
     private void detectNoArgsConstructor(DataInputStream data) throws IOException {
@@ -237,7 +266,7 @@ public final class Indexer {
 
     private void processFieldInfo(DataInputStream data) throws IOException {
         int numFields = data.readUnsignedShort();
-
+        List<FieldInfo> fields = numFields > 0 ? new ArrayList<FieldInfo>(numFields) : Collections.<FieldInfo>emptyList();
         for (int i = 0; i < numFields; i++) {
             short flags = (short) data.readUnsignedShort();
             String name = intern(decodeUtf8Entry(data.readUnsignedShort()));
@@ -245,7 +274,9 @@ public final class Indexer {
             FieldInfo field = new FieldInfo(currentClass, name, type, flags);
 
             processAttributes(data, field);
+            fields.add(field);
         }
+        currentClass.setFields(fields);
     }
 
     private void skipAttributes(DataInputStream data) throws IOException {
@@ -270,16 +301,77 @@ public final class Indexer {
                     processAnnotation(data, target);
             } else if (annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION){
                 if (!(target instanceof MethodInfo))
-                    throw new IllegalStateException("RuntimeVisibleParameterAnnotaitons appeared on a non-method");
+                    throw new IllegalStateException("RuntimeVisibleParameterAnnotations appeared on a non-method");
                 int numParameters = data.readUnsignedByte();
                 for (short p = 0; p < numParameters; p++) {
                     int numAnnotations = data.readUnsignedShort();
                     while (numAnnotations-- > 0)
                         processAnnotation(data, new MethodParameterInfo((MethodInfo)target, p));
                 }
+            } else if (annotationAttribute == HAS_SIGNATURE) {
+                processSignature(data, target);
+            } else if (annotationAttribute == HAS_EXCEPTIONS && target instanceof MethodInfo) {
+                processExceptions(data, (MethodInfo)target);
             } else {
                 skipFully(data, attributeLen);
             }
+        }
+    }
+
+    private void processExceptions(DataInputStream data, MethodInfo target) throws IOException {
+        int numExceptions = data.readUnsignedShort();
+
+        List<Type> exceptions = numExceptions > 0 ? new ArrayList<Type>(numExceptions) : Collections.<Type>emptyList();
+        for (int i = 0; i < numExceptions; i++) {
+            exceptions.add(new ClassType(decodeClassEntry(data.readUnsignedShort())));
+        }
+
+        // Do not overwrite a signature exception
+        if (numExceptions > 0 && target.exceptions().size() == 0) {
+            target.setExceptions(exceptions);
+        }
+    }
+
+    private void processSignature(DataInputStream data, AnnotationTarget target) throws IOException {
+        String signature =  decodeUtf8Entry(data.readUnsignedShort());
+
+        if (target instanceof ClassInfo) {
+            ClassInfo clazz = (ClassInfo) target;
+            GenericSignatureParser.ClassSignature classSignature = signatureParser.parseClassSignature(signature);
+            clazz.setInterfaceTypes(Arrays.asList(classSignature.interfaces()));
+            clazz.setSuperClassType(classSignature.superClass());
+            clazz.setTypeParameters(Arrays.asList(classSignature.parameters()));
+
+            for (int i = 0; i < signatures.size(); i += 2) {
+                String elementSignature = (String) signatures.get(i);
+                Object element = signatures.get(i + 1);
+
+                if (element instanceof FieldInfo) {
+                    parseFieldSignature(elementSignature, (FieldInfo)element);
+                } else if (element instanceof MethodInfo) {
+                    parseMethodSignature(elementSignature, (MethodInfo)element);
+                }
+            }
+            signatures.clear();
+            signatures = null;
+        } else {
+            signatures.add(signature);
+            signatures.add(target);
+        }
+    }
+
+    private void parseFieldSignature(String signature, FieldInfo field) {
+        Type type = signatureParser.parseFieldSignature(signature);
+        field.setType(type);
+    }
+
+    private void parseMethodSignature(String signature, MethodInfo method) {
+        GenericSignatureParser.MethodSignature methodSignature = signatureParser.parseMethodSignature(signature);
+        method.setParameters(methodSignature.methodParameters());
+        method.setReturnType(methodSignature.returnType());
+        method.setTypeParameters(Arrays.asList(methodSignature.typeParameters()));
+        if (methodSignature.throwables().length > 0) {
+            method.setExceptions(Arrays.asList(methodSignature.throwables()));
         }
     }
 
@@ -641,6 +733,10 @@ public final class Indexer {
                     } else if (len == RUNTIME_PARAM_ANNOTATIONS_LEN && match(buf, offset, RUNTIME_PARAM_ANNOTATIONS)) {
                         annoAttributes[pos] = HAS_RUNTIME_PARAM_ANNOTATION;
                         hasAnnotations = true;
+                    }  else if (len == SIGNATURE_LEN && match(buf, offset, SIGNATURE)) {
+                        annoAttributes[pos] = HAS_SIGNATURE;
+                    }  else if (len == EXCEPTIONS_LEN && match(buf, offset, EXCEPTIONS)) {
+                        annoAttributes[pos] = HAS_EXCEPTIONS;
                     }
                     offset += len;
                     break;
@@ -682,10 +778,12 @@ public final class Indexer {
             boolean hasAnnotations = processConstantPool(data);
 
             processClassInfo(data);
-            if (!hasAnnotations) {
-                detectNoArgsConstructor(data);
-                return currentClass;
-            }
+//            if (!hasAnnotations) {
+//                detectNoArgsConstructor(data);
+//                return currentClass;
+//            }
+
+            initSignatures();
 
             processFieldInfo(data);
             processMethodInfo(data);
@@ -722,6 +820,7 @@ public final class Indexer {
             masterAnnotations = null;
             subclasses = null;
             classes = null;
+            signatureParser = null;
         }
     }
 }

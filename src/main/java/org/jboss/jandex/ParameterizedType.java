@@ -46,6 +46,11 @@ public class ParameterizedType extends Type {
         return Kind.PARAMETERIZED_TYPE;
     }
 
+    @Override
+    public ParameterizedType asParameterizedType() {
+        return this;
+    }
+
     public String toString() {
         StringBuilder builder = new StringBuilder();
 

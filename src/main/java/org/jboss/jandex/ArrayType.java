@@ -68,6 +68,11 @@ public final class ArrayType extends Type {
     }
 
     @Override
+    public ArrayType asArrayType() {
+        return this;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

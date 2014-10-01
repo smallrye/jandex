@@ -2,7 +2,10 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <properties>
-        <jandexVersion>1.2.1.Final</jandexVersion>
+        <jandexVersion>1.2.2.Final</jandexVersion>
+        <maven.compiler.source>1.6</maven.compiler.source>
+        <maven.compiler.target>1.6</maven.compiler.target>
+        <jdk.min.version>1.6</jdk.min.version>
     </properties>
     
     <parent>
@@ -27,18 +30,6 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.1</version>
-                <configuration>
-                    <debug>true</debug>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                    <showDeprecation>true</showDeprecation>
-                    <showWarnings>true</showWarnings>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.3.1</version>
                 <configuration>
@@ -56,6 +47,12 @@
                 <version>2.3.7</version>
                 <extensions>true</extensions>
                 <configuration>
+                    <archive>
+                        <index>true</index>
+                        <manifest>
+                            <mainClass>org.jboss.jandex.Main</mainClass>
+                        </manifest>
+                    </archive>
                     <instructions>
                         <Bundle-SymbolicName>${pom.groupId}.${pom.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${jandexVersion}</Bundle-Version>

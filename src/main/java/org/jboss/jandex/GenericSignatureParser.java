@@ -102,9 +102,9 @@ class GenericSignatureParser {
     private Map<String, TypeVariable> elementTypeParameters = new HashMap<String, TypeVariable>();
     private Map<String, TypeVariable> classTypeParameteres = new HashMap<String, TypeVariable>();
 
-    GenericSignatureParser() {
-        names = new NameTable();
+    GenericSignatureParser(NameTable names) {
         names.intern(DotName.OBJECT_NAME, '/');
+        this.names = names;
     }
 
     static class ClassSignature {
@@ -516,7 +516,7 @@ class GenericSignatureParser {
     }
 
     public static void main(String[] args) throws IOException {
-        GenericSignatureParser parser = new GenericSignatureParser();
+        GenericSignatureParser parser = new GenericSignatureParser(new NameTable());
         MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Foo;>(Ljava/lang/Class<TU;>;TU;)Ljava/lang/Class<+TU;>;");
 //        MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Foo;>(Ljava/lang/Class<TU;>;TU;)Ljava/lang/Class<+TU;>;");
 //        MethodSignature sig2 = parser.parseMethodSignature("<K:Ljava/lang/Object;V:Ljava/lang/Object;>(Ljava/util/Map<TK;TV;>;Ljava/lang/Class<TK;>;Ljava/lang/Class<TV;>;)Ljava/util/Map<TK;TV;>;");

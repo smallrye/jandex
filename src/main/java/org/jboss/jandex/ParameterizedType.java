@@ -18,6 +18,8 @@
 package org.jboss.jandex;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Jason T. Greene
@@ -28,12 +30,20 @@ public class ParameterizedType extends Type {
     private int hash;
 
     ParameterizedType(DotName name, Type[] parameters, Type owner) {
-        super(name);
+        this(name, parameters, owner, null);
+    }
+
+    ParameterizedType(DotName name, Type[] parameters, Type owner, AnnotationInstance[] annotations) {
+        super(name, annotations);
         this.parameters = parameters == null ? EMPTY_ARRAY : parameters;
         this.owner = owner;
     }
 
-    public Type[] parameters() {
+    public List<Type> parameters() {
+        return Collections.unmodifiableList(Arrays.asList(parameters));
+    }
+
+    Type[] parameterArray() {
         return parameters;
     }
 
@@ -56,7 +66,9 @@ public class ParameterizedType extends Type {
 
         if (owner != null) {
             builder.append(owner);
-            builder.append('$').append(name().local());
+            builder.append('$');
+            appendAnnotations(builder);
+            builder.append(name().local());
         } else {
             builder.append(name());
         }
@@ -71,6 +83,19 @@ public class ParameterizedType extends Type {
         }
 
         return builder.toString();
+    }
+
+    @Override
+    ParameterizedType copyType(AnnotationInstance[] newAnnotations) {
+        return new ParameterizedType(name(), parameters, owner, newAnnotations);
+    }
+
+    ParameterizedType copyType(Type[] parameters) {
+        return new ParameterizedType(name(), parameters, owner, annotationArray());
+    }
+
+    ParameterizedType copyType(Type owner) {
+        return new ParameterizedType(name(), parameters, owner, annotationArray());
     }
 
     public boolean equals(Object o) {
@@ -97,6 +122,6 @@ public class ParameterizedType extends Type {
         hash = super.hashCode();
         hash = 31 * hash + Arrays.hashCode(parameters);
         hash = 31 * hash + (owner != null ? owner.hashCode() : 0);
-        return hash;
+        return this.hash = hash;
     }
 }

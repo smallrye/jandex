@@ -18,6 +18,10 @@
 
 package org.jboss.jandex;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Represents a Java type declaration that is specified on methods or fields. A
  * type can be any class based type (interface, class, annotation), any
@@ -25,9 +29,11 @@ package org.jboss.jandex;
  *
  * @author Jason T. Greene
  */
-public abstract class Type {
+public abstract class Type implements AnnotationTarget {
     public static final Type[] EMPTY_ARRAY = new Type[0];
+    private static final AnnotationInstance[] EMPTY_ANNOTATIONS = new AnnotationInstance[0];
     private final DotName name;
+    private final AnnotationInstance[] annotations;
 
     /**
      * Represents a "kind" of Type.
@@ -89,8 +95,15 @@ public abstract class Type {
         }
     }
 
-    Type(DotName name) {
+    Type(DotName name, AnnotationInstance[] annotations) {
         this.name = name;
+        annotations = annotations == null ? EMPTY_ANNOTATIONS : annotations;
+
+        if (annotations.length > 1) {
+            Arrays.sort(annotations, AnnotationInstance.NAME_COMPARATOR);
+        }
+
+        this.annotations = annotations;
     }
 
     @Deprecated
@@ -195,7 +208,20 @@ public abstract class Type {
     }
 
     public String toString() {
-        return name.toString();
+        StringBuilder builder = new StringBuilder();
+        appendAnnotations(builder);
+        builder.append(name);
+
+        return builder.toString();
+    }
+
+    void appendAnnotations(StringBuilder builder) {
+        AnnotationInstance[] annotations = this.annotations;
+        if (annotations.length > 0) {
+            for (AnnotationInstance instance : annotations) {
+                builder.append(instance).append(' ');
+            }
+        }
     }
 
     @Override
@@ -210,11 +236,29 @@ public abstract class Type {
 
         Type type = (Type) o;
 
-        return name.equals(type.name);
+        return name.equals(type.name) && Arrays.equals(annotations, type.annotations);
     }
+
+    public List<AnnotationInstance> annotations() {
+        return Collections.unmodifiableList(Arrays.asList(annotations));
+    }
+
+    AnnotationInstance[] annotationArray() {
+        return annotations;
+    }
+
+    Type addAnnotation(AnnotationInstance annotation) {
+        AnnotationInstance[] newAnnotations = Arrays.copyOf(annotations, annotations.length + 1);
+        newAnnotations[newAnnotations.length - 1] = annotation;
+        return copyType(newAnnotations);
+    }
+
+    abstract Type copyType(AnnotationInstance[] newAnnotations);
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        int result = name.hashCode();
+        result = 31 * result + Arrays.hashCode(annotations);
+        return result;
     }
 }

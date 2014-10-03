@@ -25,7 +25,11 @@ public final class UnresolvedTypeVariable extends Type {
     private int hash;
 
     UnresolvedTypeVariable(String name) {
-        super(DotName.OBJECT_NAME);
+        this (name, null);
+    }
+
+    UnresolvedTypeVariable(String name, AnnotationInstance[] annotations) {
+        super(DotName.OBJECT_NAME, annotations);
         this.name = name;
     }
 
@@ -45,6 +49,11 @@ public final class UnresolvedTypeVariable extends Type {
 
     public String toString() {
         return name;
+    }
+
+    @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new UnresolvedTypeVariable(name, newAnnotations);
     }
 
     @Override

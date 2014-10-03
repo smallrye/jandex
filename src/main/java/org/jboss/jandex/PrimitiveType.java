@@ -54,7 +54,11 @@ public final class PrimitiveType extends Type {
     private final Primitive primitive;
 
     private PrimitiveType(Primitive primitive) {
-        super(new DotName(null, primitive.name().toLowerCase(Locale.ENGLISH), true, false));
+        this(primitive, null);
+    }
+
+    private PrimitiveType(Primitive primitive, AnnotationInstance[] annotations) {
+        super(new DotName(null, primitive.name().toLowerCase(Locale.ENGLISH), true, false), annotations);
         this.primitive = primitive;
     }
 
@@ -84,6 +88,11 @@ public final class PrimitiveType extends Type {
 
         PrimitiveType that = (PrimitiveType) o;
         return super.equals(o) && primitive == that.primitive;
+    }
+
+    @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new PrimitiveType(primitive, newAnnotations);
     }
 
     @Override

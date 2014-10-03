@@ -39,10 +39,24 @@ import java.util.List;
  */
 public final class AnnotationInstance {
     private static final AnnotationValue[] ANNOTATION_VALUES_TYPE = new AnnotationValue[0];
+    static final InstanceNameComparator NAME_COMPARATOR = new InstanceNameComparator();
 
     private final DotName name;
-    private final AnnotationTarget target;
+    private AnnotationTarget target;
     private final AnnotationValue[] values;
+
+    static class InstanceNameComparator implements Comparator<AnnotationInstance> {
+        public int compare(AnnotationInstance instance, AnnotationInstance instance2) {
+            return instance.name().compareTo(instance2.name());
+        }
+    }
+
+
+    AnnotationInstance(AnnotationInstance instance, AnnotationTarget target) {
+        this.name = instance.name;
+        this.values = instance.values;
+        this.target = target;
+    }
 
     AnnotationInstance(DotName name, AnnotationTarget target, AnnotationValue[] values) {
         this.name = name;
@@ -157,7 +171,7 @@ public final class AnnotationInstance {
     }
 
     public String toString() {
-        StringBuilder builder = new StringBuilder("@").append(name).append("(");
+        StringBuilder builder = new StringBuilder("@").append(name.local()).append("(");
         for (int i = 0; i < values.length; i++) {
             builder.append(values[i]);
             if (i < values.length - 1)
@@ -168,5 +182,9 @@ public final class AnnotationInstance {
             builder.append(" on ").append(target);
 
         return builder.toString();
+    }
+
+    void setTarget(AnnotationTarget target) {
+        this.target = target;
     }
 }

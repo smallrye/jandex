@@ -27,8 +27,13 @@ public class WildcardType extends Type {
     private final Type bound;
     private int hash;
 
+
     WildcardType(Type bound, boolean isExtends) {
-        super(isExtends && bound != null ? bound.name() : DotName.OBJECT_NAME);
+        this(bound, isExtends, null);
+    }
+
+    WildcardType(Type bound, boolean isExtends, AnnotationInstance[] annotations) {
+        super(isExtends && bound != null ? bound.name() : DotName.OBJECT_NAME, annotations);
         this.bound = isExtends && bound == null ? OBJECT : bound;
         this.isExtends = isExtends;
 
@@ -40,6 +45,10 @@ public class WildcardType extends Type {
 
     public Type superBound() {
         return isExtends ? null : bound;
+    }
+
+    Type bound() {
+        return bound;
     }
 
     @Override
@@ -54,6 +63,7 @@ public class WildcardType extends Type {
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
+        appendAnnotations(builder);
         builder.append('?');
 
         if (isExtends && bound != OBJECT) {
@@ -65,6 +75,15 @@ public class WildcardType extends Type {
         }
 
         return builder.toString();
+    }
+
+    @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new WildcardType(bound, isExtends, newAnnotations);
+    }
+
+    Type copyType(Type bound) {
+        return new WildcardType(bound, isExtends, annotationArray());
     }
 
     @Override

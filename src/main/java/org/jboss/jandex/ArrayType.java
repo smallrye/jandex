@@ -17,6 +17,8 @@
  */
 package org.jboss.jandex;
 
+import java.util.ArrayDeque;
+
 /**
  * @author Jason T. Greene
  */
@@ -26,7 +28,11 @@ public final class ArrayType extends Type {
     private int hash;
 
     ArrayType(Type component, int dimensions) {
-        super(null);
+        this(component, dimensions, null);
+    }
+
+    ArrayType(Type component, int dimensions, AnnotationInstance[] annotations) {
+        super(DotName.OBJECT_NAME, annotations);
         this.dimensions = dimensions;
         this.component = component;
     }
@@ -55,11 +61,46 @@ public final class ArrayType extends Type {
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append(component);
-        for (int i = 0; i < dimensions; i++) {
-            builder.append("[]");
+        //appendAnnotations(builder);
+//        builder.append(component);
+//        for (int i = 0; i < dimensions; i++) {
+//            builder.append("[]");
+//        }
+        ArrayDeque<Type> types = buildComponentTree(null);
+
+        builder.append(types.pollLast());
+        for (Type type : types) {
+            ArrayType arrayType = type.asArrayType();
+            if (arrayType.annotationArray().length > 0) {
+                builder.append(' ');
+                arrayType.appendAnnotations(builder);
+            }
+            for (int i = 0; i < arrayType.dimensions; i++) {
+                builder.append("[]");
+            }
         }
+
         return builder.toString();
+    }
+
+    private ArrayDeque<Type> buildComponentTree(ArrayDeque<Type> tree) {
+        if (tree == null) {
+            tree = new ArrayDeque<Type>();
+        }
+
+        tree.add(this);
+
+        if (component.kind() == Kind.ARRAY) {
+            component.asArrayType().buildComponentTree(tree);
+        } else {
+            tree.add(component);
+        }
+
+        return tree;
+    }
+
+    public int dimensions() {
+        return dimensions;
     }
 
     @Override
@@ -83,7 +124,7 @@ public final class ArrayType extends Type {
         }
         ArrayType arrayType = (ArrayType) o;
 
-        return dimensions == arrayType.dimensions && component.equals(arrayType.component);
+        return super.equals(o) && dimensions == arrayType.dimensions && component.equals(arrayType.component);
     }
 
     @Override
@@ -92,8 +133,19 @@ public final class ArrayType extends Type {
         if (hash != 0) {
             return hash;
         }
-        hash = component.hashCode();
+
+        hash = super.hashCode();
+        hash = 31 * hash + component.hashCode();
         hash = 31 * hash + dimensions;
         return this.hash = hash;
+    }
+
+    @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new ArrayType(component, dimensions, newAnnotations);
+    }
+
+    Type copyType(Type component, int dimensions) {
+        return new ArrayType(component, dimensions, annotationArray());
     }
 }

@@ -21,8 +21,13 @@ package org.jboss.jandex;
  * @author Jason T. Greene
  */
 public final class ClassType extends Type {
+
     ClassType(DotName name) {
-        super(name);
+        this(name, null);
+    }
+
+    ClassType(DotName name, AnnotationInstance[] annotations) {
+        super(name, annotations);
     }
 
     @Override
@@ -33,5 +38,10 @@ public final class ClassType extends Type {
     @Override
     public ClassType asClassType() {
         return this;
+    }
+
+    @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new ClassType(name(), newAnnotations);
     }
 }

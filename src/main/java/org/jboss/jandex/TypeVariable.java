@@ -33,7 +33,11 @@ public final class TypeVariable extends Type {
     }
 
     TypeVariable(String name, Type[] bounds) {
-        super(bounds.length > 0 ? bounds[0].name() : DotName.OBJECT_NAME);
+        this(name, bounds, null);
+    }
+
+    TypeVariable(String name, Type[] bounds, AnnotationInstance[] annotations) {
+        super(bounds.length > 0 ? bounds[0].name() : DotName.OBJECT_NAME, annotations);
         this.name = name;
         this.bounds = bounds;
     }
@@ -58,6 +62,7 @@ public final class TypeVariable extends Type {
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
+        appendAnnotations(builder);
         builder.append(name);
 
         // FIXME - revist this logic
@@ -86,6 +91,11 @@ public final class TypeVariable extends Type {
 
         return name.equals(that.name) && Arrays.equals(bounds, that.bounds);
 
+    }
+
+    @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new TypeVariable(name, bounds, newAnnotations);
     }
 
     @Override

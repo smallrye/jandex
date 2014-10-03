@@ -23,11 +23,14 @@ import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -93,6 +96,14 @@ public final class Indexer {
         0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73
     };
 
+
+    // "RuntimeTypeVisibleAnnotations"
+    private final static byte[] RUNTIME_TYPE_ANNOTATIONS = new byte[] {
+        0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x56, 0x69, 0x73, 0x69, 0x62,
+        0x6c, 0x65, 0x54, 0x79, 0x70, 0x65, 0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61,
+        0x74, 0x69, 0x6f, 0x6e, 0x73
+    };
+
     // "Signature"
     private final static byte[] SIGNATURE = new byte[] {
         0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65
@@ -103,17 +114,41 @@ public final class Indexer {
         0x45, 0x78, 0x63, 0x65, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73
     };
 
+    // "InnerClasses"
+    private final static byte[] INNER_CLASSES = new byte[] {
+        0x49, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73
+    };
+
     private final static int RUNTIME_ANNOTATIONS_LEN = RUNTIME_ANNOTATIONS.length;
     private final static int RUNTIME_PARAM_ANNOTATIONS_LEN = RUNTIME_PARAM_ANNOTATIONS.length;
+    private final static int RUNTIME_TYPE_ANNOTATIONS_LEN = RUNTIME_TYPE_ANNOTATIONS.length;
     private final static int SIGNATURE_LEN = SIGNATURE.length;
     private final static int EXCEPTIONS_LEN = EXCEPTIONS.length;
+    private final static int INNER_CLASSES_LEN = INNER_CLASSES.length;
 
     private final static int HAS_RUNTIME_ANNOTATION = 1;
     private final static int HAS_RUNTIME_PARAM_ANNOTATION = 2;
-    private final static int HAS_SIGNATURE = 3;
-    private final static int HAS_EXCEPTIONS = 4;
+    private final static int HAS_RUNTIME_TYPE_ANNOTATION = 3;
+    private final static int HAS_SIGNATURE = 4;
+    private final static int HAS_EXCEPTIONS = 5;
+    private final static int HAS_INNNER_CLASSES = 6;
 
     private final static String INIT_METHOD_NAME = "<init>";
+
+    private static class InnerClassInfo {
+        private InnerClassInfo(DotName innerClass, DotName enclosingClass, String simpleName, int flags) {
+            this.innnerClass = innerClass;
+            this.enclosingClass = enclosingClass;
+            this.simpleName = simpleName;
+            this.flags = flags;
+        }
+
+        private final DotName innnerClass;
+        private DotName enclosingClass;
+        private String simpleName;
+        private int flags;
+
+    }
 
     private static boolean match(byte[] target, int offset, byte[] expected) {
         if (target.length - offset < expected.length)
@@ -152,16 +187,19 @@ public final class Indexer {
     private ClassInfo currentClass;
     private volatile ClassInfo publishClass;
     private HashMap<DotName, List<AnnotationInstance>> classAnnotations;
-    private StrongInternPool<String> internPool;
     private List<Object> signatures;
+    private Map<DotName, InnerClassInfo> innerClasses;
+    private IdentityHashMap<AnnotationTarget, List<TypeAnnotation>> typeAnnotations;
+
 
     // Index lifespan fields
     private Map<DotName, List<AnnotationInstance>> masterAnnotations;
     private Map<DotName, List<ClassInfo>> subclasses;
     private Map<DotName, List<ClassInfo>> implementors;
     private Map<DotName, ClassInfo> classes;
-    private Map<String, DotName> names;
+    private NameTable names;
     private GenericSignatureParser signatureParser;
+
 
     private void initIndexMaps() {
         if (masterAnnotations == null)
@@ -177,35 +215,18 @@ public final class Indexer {
             classes = new HashMap<DotName, ClassInfo>();
 
         if (names == null)
-            names = new HashMap<String, DotName>();
+            names = new NameTable();
 
         if (signatureParser == null) {
-            signatureParser = new GenericSignatureParser();
+            signatureParser = new GenericSignatureParser(names);
         }
     }
 
-    private void initSignatures() {
+    private void initClassFields() {
         signatures = new ArrayList<Object>();
+        typeAnnotations = new IdentityHashMap<AnnotationTarget, List<TypeAnnotation>>();
     }
 
-    private DotName convertToName(String name) {
-        return convertToName(name, '.');
-    }
-
-    private DotName convertToName(String name, char delim) {
-        DotName result = names.get(name);
-        if (result != null)
-            return result;
-
-        int loc = name.lastIndexOf(delim);
-        String local = intern(name.substring(loc + 1));
-        DotName prefix = loc < 1 ? null : convertToName(intern(name.substring(0, loc)), delim);
-        result = new DotName(prefix, local, true, false);
-
-        names.put(name, result);
-
-        return result;
-    }
 
     private void processMethodInfo(DataInputStream data) throws IOException {
         int numMethods = data.readUnsignedShort();
@@ -296,26 +317,411 @@ public final class Indexer {
             long attributeLen = data.readInt() & 0xFFFFFFFFL;
             byte annotationAttribute = constantPoolAnnoAttrributes[index - 1];
             if (annotationAttribute == HAS_RUNTIME_ANNOTATION) {
-                int numAnnotations = data.readUnsignedShort();
-                while (numAnnotations-- > 0)
-                    processAnnotation(data, target);
-            } else if (annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION){
+                processAnnotations(data, target);
+            } else if (annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION) {
                 if (!(target instanceof MethodInfo))
                     throw new IllegalStateException("RuntimeVisibleParameterAnnotations appeared on a non-method");
                 int numParameters = data.readUnsignedByte();
                 for (short p = 0; p < numParameters; p++) {
-                    int numAnnotations = data.readUnsignedShort();
-                    while (numAnnotations-- > 0)
-                        processAnnotation(data, new MethodParameterInfo((MethodInfo)target, p));
+                    processAnnotations(data, new MethodParameterInfo((MethodInfo) target, p));
                 }
+            } else if (annotationAttribute == HAS_RUNTIME_TYPE_ANNOTATION) {
+                processTypeAnnotations(data, target);
             } else if (annotationAttribute == HAS_SIGNATURE) {
                 processSignature(data, target);
             } else if (annotationAttribute == HAS_EXCEPTIONS && target instanceof MethodInfo) {
-                processExceptions(data, (MethodInfo)target);
+                processExceptions(data, (MethodInfo) target);
+            } else if (annotationAttribute == HAS_INNNER_CLASSES && target instanceof ClassInfo) {
+                processInnerClasses(data, (ClassInfo) target);
             } else {
                 skipFully(data, attributeLen);
             }
         }
+    }
+
+    private void processAnnotations(DataInputStream data, AnnotationTarget target) throws IOException {
+        int numAnnotations = data.readUnsignedShort();
+        while (numAnnotations-- > 0)
+            processAnnotation(data, target);
+    }
+
+    private void processInnerClasses(DataInputStream data, ClassInfo target) throws IOException {
+        int numClasses = data.readUnsignedShort();
+        innerClasses = numClasses > 0 ? new HashMap<DotName, InnerClassInfo>(numClasses)
+                                      : Collections.<DotName, InnerClassInfo>emptyMap();
+        for (int i = 0; i < numClasses; i++) {
+            DotName innerClass = decodeClassEntry(data.readUnsignedShort());
+            int outerIndex = data.readUnsignedShort();
+            DotName outerClass = outerIndex == 0 ? null : decodeClassEntry(outerIndex);
+            int simpleIndex = data.readUnsignedShort();
+            String simpleName = simpleIndex == 0 ? null : decodeUtf8Entry(simpleIndex);
+            int flags = data.readUnsignedShort();
+
+            innerClasses.put(innerClass, new InnerClassInfo(innerClass, outerClass, simpleName, flags));
+        }
+    }
+
+
+    private void processTypeAnnotations(DataInputStream data, AnnotationTarget target) throws IOException {
+        int numAnnotations = data.readUnsignedShort();
+        List<TypeAnnotation> annotations = new ArrayList<TypeAnnotation>(numAnnotations);
+
+        for (int i = 0; i < numAnnotations; i++) {
+            TypeAnnotation annotation = processTypeAnnotation(data, target);
+            if (annotation != null) {
+                annotations.add(annotation);
+            }
+        }
+
+        typeAnnotations.put(target, annotations);
+    }
+
+    private static class TypeAnnotation {
+        private AnnotationInstance annotation;
+        private Deque<PathElement> pathElements;
+
+    }
+
+    private static class TypeParameterTypeAnnotation  extends TypeAnnotation {
+        int typeParameterIndex;
+
+        private TypeParameterTypeAnnotation(int typeParameterIndex) {
+            this.typeParameterIndex = typeParameterIndex;
+        }
+    }
+
+    private static class ClassExtendsTypeAnnotation extends TypeAnnotation {
+        private int superTypeIndex;
+
+        private ClassExtendsTypeAnnotation(int superTypeIndex) {
+            this.superTypeIndex = superTypeIndex;
+        }
+    }
+
+    private static class TypeParameterBoundTypeAnnotation extends TypeParameterTypeAnnotation {
+        private int boundIndex;
+
+        private TypeParameterBoundTypeAnnotation(int typeParameterIndex, int boundIndex) {
+            super(typeParameterIndex);
+            this.boundIndex = boundIndex;
+        }
+    }
+
+    private static class MethodParameterTypeAnnotation extends TypeAnnotation {
+        private int parameterIndex;
+
+        private MethodParameterTypeAnnotation(int parameterIndex) {
+            this.parameterIndex = parameterIndex;
+        }
+    }
+
+    private static class ThrowsTypeAnnotation extends TypeAnnotation {
+        private int exceptionIndex;
+
+        private ThrowsTypeAnnotation(int exceptionIndex) {
+            this.exceptionIndex = exceptionIndex;
+        }
+    }
+
+
+    private static class EmptyTypeAnnotation extends TypeAnnotation {
+    }
+
+    private TypeAnnotation processTypeAnnotation(DataInputStream data, AnnotationTarget target) throws IOException {
+        int targetType = data.readUnsignedByte();
+        TypeAnnotation typeAnnotation = null;
+        switch (targetType) {
+            case 0x00: // CLASS_TYPE_PARAMETER
+            case 0x01: // METHOD_TYPE_PARAMETER
+            {
+                typeAnnotation = new TypeParameterTypeAnnotation(data.readUnsignedByte());
+                break;
+            }
+            case 0x10: // CLASS_EXTENDS
+            {
+                typeAnnotation = new ClassExtendsTypeAnnotation(data.readUnsignedShort());
+                break;
+            }
+            case 0x11: // CLASS_TYPE_PARAMETER_BOUND
+            case 0x12: // METHOD_TYPE_PARAMETER_BOUND
+            {
+                typeAnnotation = new TypeParameterBoundTypeAnnotation(data.readUnsignedByte(), data.readUnsignedByte());
+                break;
+            }
+            case 0x13: // FIELD
+            case 0x14: // METHOD_RETURN
+            case 0x15: // METHOD_RECEIVER
+                typeAnnotation = new EmptyTypeAnnotation();
+                break;
+            case 0x16: // METHOD_FORMAL_PARAMETER
+            {
+                typeAnnotation = new MethodParameterTypeAnnotation(data.readUnsignedByte());
+                break;
+            }
+            case 0x17: // THROWS
+            {
+                typeAnnotation = new ThrowsTypeAnnotation(data.readUnsignedShort());
+                break;
+            }
+            // Skip code attribute values, which shouldn't be present
+
+            case 0x40: // LOCAL_VARIABLE
+            case 0x41: // RESOURCE_VARIABLE
+                skipFully(data, data.readUnsignedShort() * 6);
+                break;
+            case 0x42: // EXCEPTION_PARAMETER
+                skipFully(data, 2);
+                break;
+            case 0x43: // INSTANCEOF
+            case 0x44: // NEW
+            case 0x45: // CONSTRUCTOR_REFERENCE
+            case 0x46: // METHOD_REFERENCE
+                skipFully(data, 2);
+                break;
+            case 0x47: // CAST
+            case 0x48: // CONSTRUCTOR_INVOCATION_TYPE_ARGUMENT
+            case 0x49: // METHOD_INVOCATION_TYPE_ARGUMENT
+            case 0x4A: // CONSTRUCTOR_REFERENCE_TYPE_ARGUMENT
+            case 0x4B: // METHOD_REFERENCE_TYPE_ARGUMENT
+                skipFully(data, 3);
+                break;
+            default:
+                throw new IllegalStateException("Invalid type annotation target type");
+
+        }
+
+        Deque<PathElement> pathElements = processTargetPath(data);
+
+        AnnotationInstance annotation = processAnnotation(data, null);
+        if (typeAnnotation == null) {
+            return null;
+        }
+        typeAnnotation.pathElements = pathElements;
+        typeAnnotation.annotation = annotation;
+        return typeAnnotation;
+    }
+
+    private void resolveTypeAnnotations() {
+        for (Map.Entry<AnnotationTarget, List<TypeAnnotation>> entry : typeAnnotations.entrySet()) {
+            AnnotationTarget key = entry.getKey();
+            List<TypeAnnotation> annotations = entry.getValue();
+
+            for (TypeAnnotation annotation : annotations) {
+                resolveTypeAnnotation(key, annotation);
+            }
+        }
+    }
+
+    private static List<Type> readTypeParameters(AnnotationTarget target) {
+        if (target instanceof ClassInfo) {
+            return ((ClassInfo)target).typeParameters();
+        } else if (target instanceof MethodInfo) {
+            return ((MethodInfo)target).typeParameters();
+        }
+
+        throw new IllegalStateException("Type annotation referred to type parameters on an invalid target: " + target);
+    }
+
+    private static List<Type> setTypeParameters(AnnotationTarget target, List<Type> typeParameters) {
+        if (target instanceof ClassInfo) {
+            ((ClassInfo)target).setTypeParameters(typeParameters);
+        } else if (target instanceof MethodInfo) {
+            ((MethodInfo)target).setTypeParameters(typeParameters);
+        }
+
+        throw new IllegalStateException("Type annotation referred to type parameters on an invalid target: " + target);
+    }
+
+    private void resolveTypeAnnotation(AnnotationTarget target, TypeAnnotation typeAnnotation) {
+        if (typeAnnotation instanceof TypeParameterBoundTypeAnnotation) {
+            TypeParameterBoundTypeAnnotation parameterAnnotation = (TypeParameterBoundTypeAnnotation) typeAnnotation;
+            List<Type> types = new ArrayList<Type>(readTypeParameters(target));
+            int index = parameterAnnotation.typeParameterIndex;
+            if (index >= types.size()) {
+                return;
+            }
+
+            TypeVariable type = types.get(index).asTypeVariable();
+            type = new TypeVariable(type.identifier(), type.bounds().clone());
+            int boundIndex = parameterAnnotation.boundIndex;
+            if (boundIndex >= type.bounds().length) {
+                return;
+            }
+            type.bounds()[boundIndex] = resolveTypePath(type.bounds()[boundIndex], typeAnnotation);
+
+            types.set(index, type);
+            setTypeParameters(target, types);
+        } else if (typeAnnotation instanceof TypeParameterTypeAnnotation) {
+            TypeParameterTypeAnnotation parameterAnnotation = (TypeParameterTypeAnnotation) typeAnnotation;
+            List<Type> types = new ArrayList<Type>(readTypeParameters(target));
+            int index = parameterAnnotation.typeParameterIndex;
+            if (index >= types.size()) {
+                return;
+            }
+
+            types.set(index, resolveTypePath(types.get(index), typeAnnotation));
+            setTypeParameters(target, types);
+
+        } else if (typeAnnotation instanceof ClassExtendsTypeAnnotation && target instanceof ClassInfo) {
+            ClassInfo clazz = (ClassInfo) target;
+            ClassExtendsTypeAnnotation extendsAnnotation = (ClassExtendsTypeAnnotation) typeAnnotation;
+            int index = extendsAnnotation.superTypeIndex;
+            if (index == 65535) {
+                clazz.setSuperClassType(resolveTypePath(clazz.superClassType(), typeAnnotation));
+            } else if (index < clazz.interfaceTypes().size()) {
+                List<Type> types = new ArrayList<Type>(clazz.interfaceTypes());
+                types.set(index, resolveTypePath(types.get(index), typeAnnotation));
+                clazz.setInterfaceTypes(types);
+            }
+        } else if (typeAnnotation instanceof MethodParameterTypeAnnotation && target instanceof MethodInfo) {
+            MethodInfo method = (MethodInfo) target;
+            MethodParameterTypeAnnotation parameterAnnotation = (MethodParameterTypeAnnotation) typeAnnotation;
+            int index = parameterAnnotation.parameterIndex;
+            List<Type> types = Arrays.asList(method.args());
+
+            if (index >= types.size()) {
+                return;
+            }
+
+            types.set(index, resolveTypePath(types.get(index), typeAnnotation));
+            method.setParameters(types.toArray(new Type[types.size()]));
+        } else if (typeAnnotation instanceof EmptyTypeAnnotation && target instanceof FieldInfo) {
+            FieldInfo field = (FieldInfo) target;
+            field.setType(resolveTypePath(field.type(), typeAnnotation));
+        }
+    }
+
+    private Type resolveTypePath(Type type, TypeAnnotation typeAnnotation) {
+        Deque<PathElement> elements = typeAnnotation.pathElements;
+        PathElement element = elements.pollFirst();
+        if (element == null) {
+            return type.addAnnotation(typeAnnotation.annotation);
+        }
+
+        if (element.kind == PathElement.Kind.ARRAY) {
+            ArrayType arrayType = type.asArrayType();
+            int dimensions = arrayType.dimensions();
+            while (--dimensions > 0 && elements.size() > 0 && elements.peekFirst().kind == PathElement.Kind.ARRAY) {
+                elements.pollFirst();
+            }
+
+            Type nested = dimensions > 0 ? new ArrayType(arrayType.component(), dimensions) : arrayType.component();
+            nested = resolveTypePath(nested, typeAnnotation);
+
+            return arrayType.copyType(nested, arrayType.dimensions() - dimensions);
+        } else if (element.kind == PathElement.Kind.PARAMETERIZED) {
+            ParameterizedType parameterizedType = type.asParameterizedType();
+            Type[] parameters = parameterizedType.parameterArray().clone();
+            int pos = element.pos;
+            if (pos >= parameters.length) {
+                throw new IllegalStateException("Type annotation referred to a type parameter that does not exist");
+            }
+
+            parameters[pos] = resolveTypePath(parameters[pos], typeAnnotation);
+            return parameterizedType.copyType(parameters);
+        } else if (element.kind == PathElement.Kind.WILDCARD_BOUND) {
+            WildcardType wildcardType = type.asWildcardType();
+            Type bound = resolveTypePath(wildcardType.bound(), typeAnnotation);
+            return wildcardType.copyType(bound);
+        } else if (element.kind == PathElement.Kind.NESTED) {
+            int depth = 1;
+            while (elements.size() > 0 && elements.peekFirst().kind == PathElement.Kind.NESTED) {
+                elements.pollFirst();
+                depth++;
+            }
+
+            return rebuildNestedType(type, depth, typeAnnotation);
+        }
+
+        throw new IllegalStateException("Unknown path element");
+
+    }
+
+
+
+    private Type rebuildNestedType(Type type, int depth, TypeAnnotation typeAnnotation) {
+        ArrayDeque<InnerClassInfo> classes = new ArrayDeque<InnerClassInfo>();
+        Map<DotName, ParameterizedType> pTypeTree = new HashMap<DotName, ParameterizedType>();
+        DotName name = type.name();
+
+        if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            ParameterizedType pType = type.asParameterizedType();
+            do {
+                pTypeTree.put(pType.name(), pType);
+                // This will waste a parent ClassType instance, but that's ok
+                pType = (ParameterizedType) (pType.owner() instanceof ParameterizedType ? pType.owner() : null);
+
+            } while (pType != null);
+        }
+
+        InnerClassInfo info = innerClasses.get(name);
+        while (info != null) {
+            classes.addFirst(info);
+            name = info.enclosingClass;
+            info = name != null ? innerClasses.get(name) : null;
+        }
+
+        Type last = null;
+        for (InnerClassInfo current : classes) {
+            DotName currentName = current.innnerClass;
+            ParameterizedType pType = pTypeTree.get(currentName);
+
+            // Static classes do not count for NESTED path elements
+            if (depth > 0 && current.enclosingClass != null && !Modifier.isStatic(current.flags)) {
+                --depth;
+            }
+
+            if (last != null) {
+                last = pType != null ? pType.copyType(last) : new ParameterizedType(currentName, null, last);
+            } else if (pType != null) {
+                last = pType;
+            }
+
+
+            if (depth == 0) {
+                if (last == null) {
+                    last = new ClassType(currentName);
+                }
+
+                last = resolveTypePath(last, typeAnnotation);
+
+                // Assignment to -1 messes up IDEA data-flow, use -- instead
+                depth--;
+            }
+        }
+
+        if (last == null) {
+            throw new IllegalStateException("Required class information is missing");
+        }
+
+        return last;
+    }
+
+
+    private static class PathElement {
+        private static enum Kind {ARRAY, NESTED, WILDCARD_BOUND, PARAMETERIZED}
+        private static Kind[] KINDS = Kind.values();
+        private Kind kind;
+        private int pos;
+
+        private PathElement(Kind kind, int pos) {
+            this.kind = kind;
+            this.pos = pos;
+        }
+    }
+
+
+    private Deque<PathElement> processTargetPath(DataInputStream data) throws IOException {
+        int numElements = data.readUnsignedByte();
+
+        Deque<PathElement> elements = new ArrayDeque<PathElement>(numElements);
+        for (int i = 0; i < numElements; i++) {
+            int kind = data.readUnsignedByte();
+            int pos = data.readUnsignedByte();
+            elements.add(new PathElement(PathElement.KINDS[kind], pos));
+        }
+
+        return elements;
     }
 
     private void processExceptions(DataInputStream data, MethodInfo target) throws IOException {
@@ -334,29 +740,29 @@ public final class Indexer {
 
     private void processSignature(DataInputStream data, AnnotationTarget target) throws IOException {
         String signature =  decodeUtf8Entry(data.readUnsignedShort());
+        signatures.add(signature);
+        signatures.add(target);
+    }
 
-        if (target instanceof ClassInfo) {
-            ClassInfo clazz = (ClassInfo) target;
-            GenericSignatureParser.ClassSignature classSignature = signatureParser.parseClassSignature(signature);
-            clazz.setInterfaceTypes(Arrays.asList(classSignature.interfaces()));
-            clazz.setSuperClassType(classSignature.superClass());
-            clazz.setTypeParameters(Arrays.asList(classSignature.parameters()));
+    private void parseClassSignature(String signature, ClassInfo clazz) {
+        GenericSignatureParser.ClassSignature classSignature = signatureParser.parseClassSignature(signature);
+        clazz.setInterfaceTypes(Arrays.asList(classSignature.interfaces()));
+        clazz.setSuperClassType(classSignature.superClass());
+        clazz.setTypeParameters(Arrays.asList(classSignature.parameters()));
+    }
 
-            for (int i = 0; i < signatures.size(); i += 2) {
-                String elementSignature = (String) signatures.get(i);
-                Object element = signatures.get(i + 1);
+    private void applySignatures() {
+        for (int i = 0; i < signatures.size(); i += 2) {
+            String elementSignature = (String) signatures.get(i);
+            Object element = signatures.get(i + 1);
 
-                if (element instanceof FieldInfo) {
-                    parseFieldSignature(elementSignature, (FieldInfo)element);
-                } else if (element instanceof MethodInfo) {
-                    parseMethodSignature(elementSignature, (MethodInfo)element);
-                }
+            if (element instanceof FieldInfo) {
+                parseFieldSignature(elementSignature, (FieldInfo)element);
+            } else if (element instanceof MethodInfo) {
+                parseMethodSignature(elementSignature, (MethodInfo) element);
+            } else if (element instanceof ClassInfo) {
+                parseClassSignature(elementSignature, (ClassInfo) element);
             }
-            signatures.clear();
-            signatures = null;
-        } else {
-            signatures.add(signature);
-            signatures.add(target);
         }
     }
 
@@ -392,7 +798,7 @@ public final class Indexer {
             }
         });
 
-        DotName annotationName = convertToName(annotation);
+        DotName annotationName = names.convertToName(annotation);
         AnnotationInstance instance = new AnnotationInstance(annotationName, target, values);
 
         // Don't record nested annotations in index
@@ -416,7 +822,7 @@ public final class Indexer {
     }
 
     private String intern(String string) {
-        return internPool.intern(string);
+        return names.intern(string);
     }
 
     private AnnotationValue processAnnotationElementValue(String name, DataInputStream data) throws IOException {
@@ -537,7 +943,7 @@ public final class Indexer {
             throw new IllegalStateException("Constant pool entry is not a class info type: " + classInfoIndex + ":" + pos);
 
         int nameIndex = (pool[++pos] & 0xFF) << 8 | (pool[++pos] & 0xFF);
-        return convertToName(decodeUtf8Entry(nameIndex), '/');
+        return names.convertToName(decodeUtf8Entry(nameIndex), '/');
     }
 
     private String decodeUtf8Entry(int index) {
@@ -653,7 +1059,7 @@ public final class Indexer {
             case 'L': {
                 int end = start;
                 while (descriptor.charAt(++end) != ';');
-                name = convertToName(descriptor.substring(start + 1, end), '/');
+                name = names.convertToName(descriptor.substring(start + 1, end), '/');
                 pos.i = end;
                 return new ClassType(name);
             }
@@ -733,10 +1139,14 @@ public final class Indexer {
                     } else if (len == RUNTIME_PARAM_ANNOTATIONS_LEN && match(buf, offset, RUNTIME_PARAM_ANNOTATIONS)) {
                         annoAttributes[pos] = HAS_RUNTIME_PARAM_ANNOTATION;
                         hasAnnotations = true;
-                    }  else if (len == SIGNATURE_LEN && match(buf, offset, SIGNATURE)) {
+                    } else if (len == RUNTIME_TYPE_ANNOTATIONS_LEN && match(buf, offset, RUNTIME_TYPE_ANNOTATIONS)) {
+                        annoAttributes[pos] = HAS_RUNTIME_TYPE_ANNOTATION;
+                    } else if (len == SIGNATURE_LEN && match(buf, offset, SIGNATURE)) {
                         annoAttributes[pos] = HAS_SIGNATURE;
-                    }  else if (len == EXCEPTIONS_LEN && match(buf, offset, EXCEPTIONS)) {
+                    } else if (len == EXCEPTIONS_LEN && match(buf, offset, EXCEPTIONS)) {
                         annoAttributes[pos] = HAS_EXCEPTIONS;
+                    } else if (len == INNER_CLASSES_LEN && match(buf, offset, INNER_CLASSES)) {
+                        annoAttributes[pos] = HAS_INNNER_CLASSES;
                     }
                     offset += len;
                     break;
@@ -773,7 +1183,6 @@ public final class Indexer {
                 return null;
 
             initIndexMaps();
-            internPool = new StrongInternPool<String>();
 
             boolean hasAnnotations = processConstantPool(data);
 
@@ -783,11 +1192,14 @@ public final class Indexer {
 //                return currentClass;
 //            }
 
-            initSignatures();
+            initClassFields();
 
             processFieldInfo(data);
             processMethodInfo(data);
             processAttributes(data, currentClass);
+
+            applySignatures();
+            resolveTypeAnnotations();
 
             // Trigger a happens-before edge since the annotation map, and no-arg boolean is populated
             // AFTER the class is constructed.
@@ -802,7 +1214,8 @@ public final class Indexer {
             constantPoolAnnoAttrributes = null;
             currentClass = null;
             classAnnotations = null;
-            internPool = null;
+            innerClasses = null;
+            signatures = null;
         }
     }
 
@@ -821,6 +1234,7 @@ public final class Indexer {
             subclasses = null;
             classes = null;
             signatureParser = null;
+            names = null;
         }
     }
 }

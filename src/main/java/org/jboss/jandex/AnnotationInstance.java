@@ -189,4 +189,25 @@ public final class AnnotationInstance {
     void setTarget(AnnotationTarget target) {
         this.target = target;
     }
+
+    @Override
+    /**
+     * Two annotations are considered equal if they have the same name, and the same values.
+     * Their target may differ and is purely informational.
+     */
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AnnotationInstance instance = (AnnotationInstance) o;
+
+        return name.equals(instance.name) && Arrays.equals(values, instance.values);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + Arrays.hashCode(values);
+        return result;
+    }
 }

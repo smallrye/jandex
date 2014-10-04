@@ -170,16 +170,18 @@ public final class AnnotationInstance {
         return Collections.unmodifiableList(Arrays.asList(values));
     }
 
-    public String toString() {
-        StringBuilder builder = new StringBuilder("@").append(name.local()).append("(");
-        for (int i = 0; i < values.length; i++) {
-            builder.append(values[i]);
-            if (i < values.length - 1)
-                builder.append(",");
+    public String toString(boolean simple) {
+        StringBuilder builder = new StringBuilder("@").append(simple ? name.local() : name);
+
+        if (values.length > 0) {
+            builder.append("(");
+            for (int i = 0; i < values.length; i++) {
+                builder.append(values[i]);
+                if (i < values.length - 1)
+                    builder.append(",");
+            }
+            builder.append(')');
         }
-        builder.append(')');
-        if (target != null)
-            builder.append(" on ").append(target);
 
         return builder.toString();
     }

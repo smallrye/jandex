@@ -19,6 +19,8 @@
 package org.jboss.jandex;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,8 +34,9 @@ import java.util.List;
  */
 public final class MethodInfo implements AnnotationTarget {
     private final String name;
-    private Type[] args;
+    private List<Type> parameters;
     private Type returnType;
+    private Type receiverType;
     private List<Type> typeParameters;
     private List<Type> exceptions = Collections.emptyList();
 
@@ -41,12 +44,13 @@ public final class MethodInfo implements AnnotationTarget {
     private final ClassInfo clazz;
 
 
-    MethodInfo(ClassInfo clazz, String name, Type[] args, Type returnType,  short flags) {
+    MethodInfo(ClassInfo clazz, String name, List<Type> parameters, Type returnType,  short flags) {
         this.clazz = clazz;
         this.name = name;
-        this.args = args;
+        this.parameters = Collections.unmodifiableList(parameters);
         this.returnType = returnType;
         this.flags = flags;
+        this.receiverType = new ClassType(clazz.name());
     }
 
     /**
@@ -59,7 +63,7 @@ public final class MethodInfo implements AnnotationTarget {
       * @param flags the method attributes
       * @return a mock field
       */
-     public static final MethodInfo create(ClassInfo clazz, String name, Type[] args, Type returnType, short flags) {
+     public static MethodInfo create(ClassInfo clazz, String name, Type[] args, Type returnType, short flags) {
          if (clazz == null)
              throw new IllegalArgumentException("Clazz can't be null");
 
@@ -72,7 +76,7 @@ public final class MethodInfo implements AnnotationTarget {
          if (returnType == null)
             throw new IllegalArgumentException("returnType can't be null");
 
-         return new MethodInfo(clazz, name, args, returnType, flags);
+         return new MethodInfo(clazz, name, Arrays.asList(args), returnType, flags);
      }
 
 
@@ -99,8 +103,18 @@ public final class MethodInfo implements AnnotationTarget {
      *
      * @return all parameter types
      */
+    @Deprecated
     public final Type[] args() {
-        return args;
+        return parameters.toArray(new Type[parameters.size()]);
+    }
+
+    /**
+     * Returns a list containing parameter types in parameter order.
+     *
+     * @return all parameter types
+     */
+    public final List<Type> parameters() {
+        return parameters;
     }
 
     /**
@@ -111,6 +125,10 @@ public final class MethodInfo implements AnnotationTarget {
      */
     public final Type returnType() {
         return returnType;
+    }
+
+    public final Type receiverType() {
+        return receiverType;
     }
 
     public final List<Type> exceptions() {
@@ -133,9 +151,9 @@ public final class MethodInfo implements AnnotationTarget {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(returnType).append(' ').append(clazz.name()).append('.').append(name).append('(');
-        for (int i = 0; i < args.length; i++) {
-            builder.append(args[i]);
-            if (i + 1 < args.length)
+        for (int i = 0; i < parameters.size(); i++) {
+            builder.append(parameters.get(i));
+            if (i + 1 < parameters.size())
                 builder.append(", ");
         }
         builder.append(')');
@@ -157,8 +175,8 @@ public final class MethodInfo implements AnnotationTarget {
         this.typeParameters = typeParameters;
     }
 
-    void setParameters(Type[] parameters) {
-        this.args = parameters;
+    void setParameters(List<Type> parameters) {
+        this.parameters = Collections.unmodifiableList(parameters);
     }
 
     void setReturnType(Type returnType) {
@@ -166,6 +184,10 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     void setExceptions(List<Type> exceptions) {
-        this.exceptions = exceptions;
+        this.exceptions = Collections.unmodifiableList(exceptions);
+    }
+
+    void setReceiverType(Type receiverType) {
+        this.receiverType = receiverType;
     }
 }

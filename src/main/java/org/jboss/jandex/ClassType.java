@@ -22,6 +22,8 @@ package org.jboss.jandex;
  */
 public final class ClassType extends Type {
 
+    public static final ClassType OBJECT_TYPE = new ClassType(DotName.OBJECT_NAME);
+
     ClassType(DotName name) {
         this(name, null);
     }
@@ -43,5 +45,9 @@ public final class ClassType extends Type {
     @Override
     Type copyType(AnnotationInstance[] newAnnotations) {
         return new ClassType(name(), newAnnotations);
+    }
+
+    ParameterizedType toParameterizedType() {
+        return new ParameterizedType(name(), null, null, annotationArray());
     }
 }

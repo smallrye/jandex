@@ -18,6 +18,7 @@
 
 package org.jboss.jandex;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -48,26 +49,26 @@ public final class ClassInfo implements AnnotationTarget {
     private final DotName name;
     private final short flags;
     private final DotName superName;
-    private final DotName[] interfaces;
+    private final List<DotName> interfaces;
     private final Map<DotName, List<AnnotationInstance>> annotations;
-    private Collection<Type> interfaceTypes;
+    private List<Type> interfaceTypes;
     private Type superClassType;
     private List<Type> typeParameters;
-    private Collection<MethodInfo> methods;
-    private Collection<FieldInfo> fields;
+    private List<MethodInfo> methods;
+    private List<FieldInfo> fields;
 
     // Not final to allow lazy initialization, immutable once published
     private boolean hasNoArgsConstructor;
 
-    ClassInfo(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations) {
+    ClassInfo(DotName name, DotName superName, short flags, List<DotName> interfaces, Map<DotName, List<AnnotationInstance>> annotations) {
         this(name, superName, flags, interfaces, annotations, false);
     }
 
-    ClassInfo(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
+    ClassInfo(DotName name, DotName superName, short flags, List<DotName> interfaces, Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
         this.name = name;
         this.superName = superName;
         this.flags = flags;
-        this.interfaces = interfaces;
+        this.interfaces = Collections.unmodifiableList(interfaces);
         this.annotations = Collections.unmodifiableMap(annotations);
         this.hasNoArgsConstructor = hasNoArgsConstructor;
     }
@@ -84,7 +85,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @return a new mock class representation
      */
     public static ClassInfo create(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
-        return new ClassInfo(name, superName, flags, interfaces, annotations, hasNoArgsConstructor);
+        return new ClassInfo(name, superName, flags, Arrays.asList(interfaces), annotations, hasNoArgsConstructor);
     }
 
     public String toString() {
@@ -103,23 +104,28 @@ public final class ClassInfo implements AnnotationTarget {
         return superName;
     }
 
+    @Deprecated
     public final DotName[] interfaces() {
-        return interfaces;
+        return interfaces.toArray(new DotName[interfaces.size()]);
     }
 
     public final Map<DotName, List<AnnotationInstance>> annotations() {
         return annotations;
     }
 
-    public final Collection<MethodInfo> methods() {
+    public final List<MethodInfo> methods() {
         return methods;
     }
 
-    public final Collection<FieldInfo> fields() {
+    public final List<FieldInfo> fields() {
         return fields;
     }
 
-    public final Collection<Type> interfaceTypes() {
+    public final List<DotName> interfaceNamess() {
+        return interfaces;
+    }
+
+    public final List<Type> interfaceTypes() {
         return interfaceTypes;
     }
 
@@ -149,22 +155,22 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     void setFields(List<FieldInfo> fields) {
-        this.fields = fields;
+        this.fields = Collections.unmodifiableList(fields);
     }
 
     void setMethods(List<MethodInfo> methods) {
-        this.methods = methods;
+        this.methods = Collections.unmodifiableList(methods);
     }
 
     void setSuperClassType(Type superClassType) {
         this.superClassType = superClassType;
     }
 
-    void setInterfaceTypes(Collection<Type> interfaceTypes) {
-        this.interfaceTypes = interfaceTypes;
+    void setInterfaceTypes(List<Type> interfaceTypes) {
+        this.interfaceTypes = Collections.unmodifiableList(interfaceTypes);
     }
 
     void setTypeParameters(List<Type> typeParameters) {
-        this.typeParameters = typeParameters;
+        this.typeParameters = Collections.unmodifiableList(typeParameters);
     }
 }

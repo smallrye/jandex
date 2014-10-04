@@ -42,6 +42,8 @@ import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexReader;
 import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.Type;
 import org.junit.Test;
 
 public class TypeAnnotationTestCase {
@@ -51,11 +53,35 @@ public class TypeAnnotationTestCase {
         Indexer indexer = new Indexer();
         InputStream stream = getClass().getClassLoader().getResourceAsStream("TExample.class");
         indexer.index(stream);
+        stream = getClass().getClassLoader().getResourceAsStream("VExample$1Fun$O1$O2$O3$Nested.class");
+        indexer.index(stream);
+        stream = getClass().getClassLoader().getResourceAsStream("VExample$1Fun.class");
+        indexer.index(stream);
+
         Index index = indexer.complete();
 
         for (FieldInfo field : index.getClassByName(DotName.createSimple("org.wildfly.security.TExample")).fields()) {
             System.out.println(field.type());
         }
+
+        for (MethodInfo method : index.getClassByName(DotName.createSimple("org.wildfly.security.VExample$1Fun")).methods()) {
+            Type[] args = method.args();
+            if (args.length > 0) {
+                System.out.println(args[0]);
+            } else if (method.returnType().kind() != Type.Kind.VOID) {
+                System.out.println(method.returnType());
+            }  else {
+                System.out.println(method.receiverType());
+            }
+        }
+
+        ClassInfo clazz = index.getClassByName(DotName.createSimple("org.wildfly.security.VExample$1Fun$O1$O2$O3$Nested"));
+
+        for (Type type : clazz.typeParameters()) {
+            System.out.println(type);
+        }
+        System.out.println(clazz.superClassType());
+
     }
 
 

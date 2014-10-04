@@ -66,10 +66,11 @@ public class ParameterizedType extends Type {
 
         if (owner != null) {
             builder.append(owner);
-            builder.append('$');
+            builder.append('.');
             appendAnnotations(builder);
             builder.append(name().local());
         } else {
+            appendAnnotations(builder);
             builder.append(name());
         }
 

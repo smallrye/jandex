@@ -132,9 +132,9 @@ public final class IndexReader {
             boolean hasNoArgsConstructor = version >= 3 && stream.readBoolean();
 
             int numIntfs = stream.readPackedU32();
-            DotName[] interfaces = new DotName[numIntfs];
+            List<DotName> interfaces = new ArrayList<DotName>(numIntfs);
             for (int j = 0; j < numIntfs; j++) {
-                interfaces[j] = classTable[stream.readPackedU32()];
+                interfaces.add(classTable[stream.readPackedU32()]);
             }
 
             Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
@@ -263,9 +263,9 @@ public final class IndexReader {
     private MethodInfo readMethod(ClassInfo clazz, PackedDataInputStream stream) throws IOException {
         String name = stringTable[stream.readPackedU32()];
         int numArgs = stream.readPackedU32();
-        Type args[] = new Type[numArgs];
+        List<Type> args = new ArrayList<Type>(numArgs);
         for (int i = 0; i < numArgs; i ++) {
-            args[i] = readType(stream);
+            args.add(readType(stream));
         }
         Type returnType = readType(stream);
         short flags = stream.readShort();

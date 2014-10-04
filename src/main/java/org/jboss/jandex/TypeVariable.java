@@ -18,6 +18,8 @@
 package org.jboss.jandex;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Jason T. Greene
@@ -46,7 +48,11 @@ public final class TypeVariable extends Type {
         return name;
     }
 
-    public Type[] bounds() {
+    public List<Type> bounds() {
+        return Collections.unmodifiableList(Arrays.asList(bounds));
+    }
+
+    Type[] boundArray() {
         return bounds;
     }
 
@@ -60,17 +66,17 @@ public final class TypeVariable extends Type {
         return this;
     }
 
-    public String toString() {
+    public String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
         builder.append(name);
 
         // FIXME - revist this logic
-        if (bounds.length > 0 && bounds[0].name() != DotName.OBJECT_NAME) {
-            builder.append(" extends ").append(bounds[0]);
+        if (!simple && bounds.length > 0 && !(bounds.length == 1 && ClassType.OBJECT_TYPE.equals(bounds[0]))) {
+            builder.append(" extends ").append(bounds[0].toString(true));
 
             for (int i = 1; i < bounds.length; i++) {
-                builder.append(" & ").append(bounds[i]);
+                builder.append(" & ").append(bounds[i].toString(true));
             }
         }
 
@@ -96,6 +102,16 @@ public final class TypeVariable extends Type {
     @Override
     Type copyType(AnnotationInstance[] newAnnotations) {
         return new TypeVariable(name, bounds, newAnnotations);
+    }
+
+    TypeVariable copyType(int boundIndex, Type bound) {
+        if (boundIndex > bounds.length) {
+            throw new IllegalArgumentException("Bound index outside of bounds");
+        }
+
+        Type[] bounds = this.bounds.clone();
+        bounds[boundIndex] = bound;
+        return new TypeVariable(name, bounds, annotationArray());
     }
 
     @Override

@@ -159,11 +159,11 @@ class GenericSignatureParser {
 
     static class MethodSignature {
         private final Type[] typeParameters;
-        private final Type[] methodParameters;
+        private final List<Type> methodParameters;
         private final Type returnType;
         private final Type[] throwables;
 
-        private MethodSignature(Type[] typeParameters, Type[] methodParameters, Type returnType, Type[] throwables) {
+        private MethodSignature(Type[] typeParameters, List<Type> methodParameters, Type returnType, Type[] throwables) {
             this.typeParameters = typeParameters;
             this.methodParameters = methodParameters;
             this.returnType = returnType;
@@ -178,7 +178,7 @@ class GenericSignatureParser {
             return returnType;
         }
 
-        public Type[] methodParameters() {
+        public List<Type> methodParameters() {
             return methodParameters;
         }
 
@@ -199,11 +199,11 @@ class GenericSignatureParser {
             }
 
             builder.append(returnType).append(" (");
-            if (methodParameters.length > 0) {
-                builder.append(methodParameters[0]);
+            if (methodParameters.size() > 0) {
+                builder.append(methodParameters.get(0));
 
-                for (int i = 1; i < methodParameters.length; i++) {
-                    builder.append(", ").append(methodParameters[i]);
+                for (int i = 1; i < methodParameters.size(); i++) {
+                    builder.append(", ").append(methodParameters.get(i));
                 }
             }
             builder.append(')');
@@ -279,7 +279,7 @@ class GenericSignatureParser {
             throwables.add(parseReferenceType());
         }
 
-        return new MethodSignature(typeParameters, parameters.toArray(new Type[parameters.size()]), returnType,
+        return new MethodSignature(typeParameters, parameters, returnType,
                 throwables.toArray(new Type[throwables.size()]));
 
     }
@@ -446,11 +446,19 @@ class GenericSignatureParser {
             Type type = resolveType(list.get(i));
             if (type != null) {
                 list.set(i, type);
+                typeParameters.put(type.asTypeVariable().identifier(), type.asTypeVariable());
             }
         }
     }
 
     private Type resolveType(Type type) {
+        if (type instanceof TypeVariable) {
+            TypeVariable typeVariable = resolveBounds(type);
+
+            return typeVariable != type ? typeVariable : null;
+        }
+
+
         if (! (type instanceof UnresolvedTypeVariable)) {
             return null;
         }
@@ -458,8 +466,20 @@ class GenericSignatureParser {
         return resolveType(((UnresolvedTypeVariable) type).identifier());
     }
 
-    private Type resolveType(String identifier) {
-        Type ret = elementTypeParameters.get(identifier);
+    private TypeVariable resolveBounds(Type type) {
+        TypeVariable typeVariable = type.asTypeVariable();
+        Type[] bounds = typeVariable.boundArray();
+        for (int i = 0; i < bounds.length; i++) {
+            Type newType = resolveType(bounds[i]);
+            if (newType != null && newType != bounds[i]) {
+                typeVariable = typeVariable.copyType(i, newType);
+            }
+        }
+        return typeVariable;
+    }
+
+    private TypeVariable resolveType(String identifier) {
+        TypeVariable ret = elementTypeParameters.get(identifier);
         return ret == null ? classTypeParameteres.get(identifier) : ret;
     }
 

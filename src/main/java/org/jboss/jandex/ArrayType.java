@@ -61,42 +61,32 @@ public final class ArrayType extends Type {
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        //appendAnnotations(builder);
-//        builder.append(component);
-//        for (int i = 0; i < dimensions; i++) {
-//            builder.append("[]");
-//        }
-        ArrayDeque<Type> types = buildComponentTree(null);
 
-        builder.append(types.pollLast());
-        for (Type type : types) {
-            ArrayType arrayType = type.asArrayType();
-            if (arrayType.annotationArray().length > 0) {
-                builder.append(' ');
-                arrayType.appendAnnotations(builder);
-            }
-            for (int i = 0; i < arrayType.dimensions; i++) {
-                builder.append("[]");
-            }
-        }
+        appendRootComponent(builder);
+        appendArraySyntax(builder);
 
         return builder.toString();
     }
 
-    private ArrayDeque<Type> buildComponentTree(ArrayDeque<Type> tree) {
-        if (tree == null) {
-            tree = new ArrayDeque<Type>();
-        }
-
-        tree.add(this);
-
+    private void appendRootComponent(StringBuilder builder) {
         if (component.kind() == Kind.ARRAY) {
-            component.asArrayType().buildComponentTree(tree);
+            component.asArrayType().appendRootComponent(builder);
         } else {
-            tree.add(component);
+            builder.append(component);
         }
+    }
 
-        return tree;
+    private void appendArraySyntax(StringBuilder builder) {
+        if (annotationArray().length > 0) {
+            builder.append(' ');
+            appendAnnotations(builder);
+        }
+        for (int i = 0; i < dimensions; i++) {
+            builder.append("[]");
+        }
+        if (component.kind() == Kind.ARRAY) {
+            component.asArrayType().appendArraySyntax(builder);
+        }
     }
 
     public int dimensions() {

@@ -134,6 +134,7 @@ public final class Indexer {
     private final static int HAS_INNNER_CLASSES = 6;
 
     private final static String INIT_METHOD_NAME = "<init>";
+    private IdentityHashMap<AnnotationTarget, Object> signaturePresent;
 
     private static class InnerClassInfo {
         private InnerClassInfo(DotName innerClass, DotName enclosingClass, String simpleName, int flags) {
@@ -223,6 +224,7 @@ public final class Indexer {
     }
 
     private void initClassFields() {
+        signaturePresent = new IdentityHashMap<AnnotationTarget, Object>();
         signatures = new ArrayList<Object>();
         typeAnnotations = new IdentityHashMap<AnnotationTarget, List<TypeAnnotation>>();
     }
@@ -238,13 +240,13 @@ public final class Indexer {
             String descriptor = decodeUtf8Entry(data.readUnsignedShort());
 
             IntegerHolder pos = new IntegerHolder();
-            Type[] args = parseMethodArgs(descriptor, pos);
+            List<Type> parameters = parseMethodArgs(descriptor, pos);
             pos.i++;
             Type returnType = parseType(descriptor, pos);
 
-            MethodInfo method = new MethodInfo(currentClass, name, args, returnType, flags);
+            MethodInfo method = new MethodInfo(currentClass, name, parameters, returnType, flags);
 
-            if (INIT_METHOD_NAME.equals(name) && args.length == 0) {
+            if (INIT_METHOD_NAME.equals(name) && parameters.size() == 0) {
                 currentClass.setHasNoArgsConstructor(true);
             }
             processAttributes(data, method);
@@ -274,9 +276,9 @@ public final class Indexer {
 
             if (INIT_METHOD_NAME.equals(name)) {
                 IntegerHolder pos = new IntegerHolder();
-                Type[] args = parseMethodArgs(descriptor, pos);
+                List<Type> args = parseMethodArgs(descriptor, pos);
 
-                if (args.length == 0) {
+                if (args.size() == 0) {
                     currentClass.setHasNoArgsConstructor(true);
                     return;
                 }
@@ -376,17 +378,23 @@ public final class Indexer {
         typeAnnotations.put(target, annotations);
     }
 
-    private static class TypeAnnotation {
+    private static abstract class TypeAnnotation {
         private AnnotationInstance annotation;
         private Deque<PathElement> pathElements;
+        private boolean genericsRequired;
 
+        protected TypeAnnotation(boolean genericsRequired) {
+            this.genericsRequired = genericsRequired;
+        }
     }
 
     private static class TypeParameterTypeAnnotation  extends TypeAnnotation {
         int typeParameterIndex;
 
         private TypeParameterTypeAnnotation(int typeParameterIndex) {
+            super(true);
             this.typeParameterIndex = typeParameterIndex;
+
         }
     }
 
@@ -394,6 +402,7 @@ public final class Indexer {
         private int superTypeIndex;
 
         private ClassExtendsTypeAnnotation(int superTypeIndex) {
+            super(false);
             this.superTypeIndex = superTypeIndex;
         }
     }
@@ -411,6 +420,7 @@ public final class Indexer {
         private int parameterIndex;
 
         private MethodParameterTypeAnnotation(int parameterIndex) {
+            super(false);
             this.parameterIndex = parameterIndex;
         }
     }
@@ -419,12 +429,19 @@ public final class Indexer {
         private int exceptionIndex;
 
         private ThrowsTypeAnnotation(int exceptionIndex) {
+            super(false);
             this.exceptionIndex = exceptionIndex;
         }
     }
 
 
     private static class EmptyTypeAnnotation extends TypeAnnotation {
+        private boolean receiver;
+
+        private EmptyTypeAnnotation(boolean receiver) {
+            super(receiver);
+            this.receiver = receiver;
+        }
     }
 
     private TypeAnnotation processTypeAnnotation(DataInputStream data, AnnotationTarget target) throws IOException {
@@ -451,7 +468,7 @@ public final class Indexer {
             case 0x13: // FIELD
             case 0x14: // METHOD_RETURN
             case 0x15: // METHOD_RECEIVER
-                typeAnnotation = new EmptyTypeAnnotation();
+                typeAnnotation = new EmptyTypeAnnotation(targetType == 0x15);
                 break;
             case 0x16: // METHOD_FORMAL_PARAMETER
             {
@@ -490,14 +507,13 @@ public final class Indexer {
 
         }
 
-        Deque<PathElement> pathElements = processTargetPath(data);
 
-        AnnotationInstance annotation = processAnnotation(data, null);
         if (typeAnnotation == null) {
             return null;
         }
-        typeAnnotation.pathElements = pathElements;
-        typeAnnotation.annotation = annotation;
+
+        processTargetPath(data, typeAnnotation);
+        typeAnnotation.annotation = processAnnotation(data, null);
         return typeAnnotation;
     }
 
@@ -522,17 +538,25 @@ public final class Indexer {
         throw new IllegalStateException("Type annotation referred to type parameters on an invalid target: " + target);
     }
 
-    private static List<Type> setTypeParameters(AnnotationTarget target, List<Type> typeParameters) {
+    private void setTypeParameters(AnnotationTarget target, List<Type> typeParameters) {
         if (target instanceof ClassInfo) {
             ((ClassInfo)target).setTypeParameters(typeParameters);
+            return;
         } else if (target instanceof MethodInfo) {
             ((MethodInfo)target).setTypeParameters(typeParameters);
+            return;
         }
 
         throw new IllegalStateException("Type annotation referred to type parameters on an invalid target: " + target);
+
     }
 
     private void resolveTypeAnnotation(AnnotationTarget target, TypeAnnotation typeAnnotation) {
+        // Signature is erroneously omitted from bridge methods with generic type annotations
+        if (typeAnnotation.genericsRequired && !signaturePresent.containsKey(target)) {
+            return;
+        }
+
         if (typeAnnotation instanceof TypeParameterBoundTypeAnnotation) {
             TypeParameterBoundTypeAnnotation parameterAnnotation = (TypeParameterBoundTypeAnnotation) typeAnnotation;
             List<Type> types = new ArrayList<Type>(readTypeParameters(target));
@@ -542,13 +566,11 @@ public final class Indexer {
             }
 
             TypeVariable type = types.get(index).asTypeVariable();
-            type = new TypeVariable(type.identifier(), type.bounds().clone());
             int boundIndex = parameterAnnotation.boundIndex;
-            if (boundIndex >= type.bounds().length) {
+            if (boundIndex >= type.boundArray().length) {
                 return;
             }
-            type.bounds()[boundIndex] = resolveTypePath(type.bounds()[boundIndex], typeAnnotation);
-
+            type = type.copyType(boundIndex, resolveTypePath(type.boundArray()[boundIndex], typeAnnotation));
             types.set(index, type);
             setTypeParameters(target, types);
         } else if (typeAnnotation instanceof TypeParameterTypeAnnotation) {
@@ -577,17 +599,24 @@ public final class Indexer {
             MethodInfo method = (MethodInfo) target;
             MethodParameterTypeAnnotation parameterAnnotation = (MethodParameterTypeAnnotation) typeAnnotation;
             int index = parameterAnnotation.parameterIndex;
-            List<Type> types = Arrays.asList(method.args());
+            List<Type> types = new ArrayList<Type>(method.parameters());
 
             if (index >= types.size()) {
                 return;
             }
 
             types.set(index, resolveTypePath(types.get(index), typeAnnotation));
-            method.setParameters(types.toArray(new Type[types.size()]));
+            method.setParameters(types);
         } else if (typeAnnotation instanceof EmptyTypeAnnotation && target instanceof FieldInfo) {
             FieldInfo field = (FieldInfo) target;
             field.setType(resolveTypePath(field.type(), typeAnnotation));
+        } else if (typeAnnotation instanceof EmptyTypeAnnotation && target instanceof MethodInfo) {
+            MethodInfo method = (MethodInfo) target;
+            if (((EmptyTypeAnnotation)typeAnnotation).receiver) {
+                method.setReceiverType(resolveTypePath(method.receiverType(), typeAnnotation));
+            } else {
+                method.setReturnType(resolveTypePath(method.returnType(), typeAnnotation));
+            }
         }
     }
 
@@ -634,40 +663,21 @@ public final class Indexer {
         }
 
         throw new IllegalStateException("Unknown path element");
-
     }
 
 
-
     private Type rebuildNestedType(Type type, int depth, TypeAnnotation typeAnnotation) {
-        ArrayDeque<InnerClassInfo> classes = new ArrayDeque<InnerClassInfo>();
-        Map<DotName, ParameterizedType> pTypeTree = new HashMap<DotName, ParameterizedType>();
         DotName name = type.name();
-
-        if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
-            ParameterizedType pType = type.asParameterizedType();
-            do {
-                pTypeTree.put(pType.name(), pType);
-                // This will waste a parent ClassType instance, but that's ok
-                pType = (ParameterizedType) (pType.owner() instanceof ParameterizedType ? pType.owner() : null);
-
-            } while (pType != null);
-        }
-
-        InnerClassInfo info = innerClasses.get(name);
-        while (info != null) {
-            classes.addFirst(info);
-            name = info.enclosingClass;
-            info = name != null ? innerClasses.get(name) : null;
-        }
+        Map<DotName, ParameterizedType> ownerMap = buildOwnerMap(type);
+        ArrayDeque<InnerClassInfo> classes = buildClassesQueue(name);
 
         Type last = null;
         for (InnerClassInfo current : classes) {
             DotName currentName = current.innnerClass;
-            ParameterizedType pType = pTypeTree.get(currentName);
+            ParameterizedType pType = ownerMap.get(currentName);
 
             // Static classes do not count for NESTED path elements
-            if (depth > 0 && current.enclosingClass != null && !Modifier.isStatic(current.flags)) {
+            if (depth > 0 && /* current.enclosingClass != null && */ !Modifier.isStatic(current.flags)) {
                 --depth;
             }
 
@@ -697,6 +707,33 @@ public final class Indexer {
         return last;
     }
 
+    private ArrayDeque<InnerClassInfo> buildClassesQueue(DotName name) {
+        ArrayDeque<InnerClassInfo> classes = new ArrayDeque<InnerClassInfo>();
+
+        InnerClassInfo info = innerClasses.get(name);
+        while (info != null) {
+            classes.addFirst(info);
+            name = info.enclosingClass;
+            info = name != null ? innerClasses.get(name) : null;
+        }
+        return classes;
+    }
+
+    private Map<DotName, ParameterizedType> buildOwnerMap(Type type) {
+        Map<DotName, ParameterizedType> pTypeTree = new HashMap<DotName, ParameterizedType>();
+
+
+        Type nextType = type;
+        do {
+            ParameterizedType pType = nextType instanceof ParameterizedType
+                                      ? nextType.asParameterizedType()
+                                      : nextType.asClassType().toParameterizedType();
+            pTypeTree.put(pType.name(), pType);
+            nextType = pType.owner();
+        } while (nextType != null);
+        return pTypeTree;
+    }
+
 
     private static class PathElement {
         private static enum Kind {ARRAY, NESTED, WILDCARD_BOUND, PARAMETERIZED}
@@ -711,17 +748,21 @@ public final class Indexer {
     }
 
 
-    private Deque<PathElement> processTargetPath(DataInputStream data) throws IOException {
+    private void processTargetPath(DataInputStream data, TypeAnnotation typeAnnotation) throws IOException {
         int numElements = data.readUnsignedByte();
 
         Deque<PathElement> elements = new ArrayDeque<PathElement>(numElements);
         for (int i = 0; i < numElements; i++) {
-            int kind = data.readUnsignedByte();
+            int kindIndex = data.readUnsignedByte();
             int pos = data.readUnsignedByte();
-            elements.add(new PathElement(PathElement.KINDS[kind], pos));
+            PathElement.Kind kind = PathElement.KINDS[kindIndex];
+            if (kind == PathElement.Kind.WILDCARD_BOUND || kind == PathElement.Kind.PARAMETERIZED) {
+                typeAnnotation.genericsRequired = true;
+            }
+            elements.add(new PathElement(kind, pos));
         }
 
-        return elements;
+        typeAnnotation.pathElements = elements;
     }
 
     private void processExceptions(DataInputStream data, MethodInfo target) throws IOException {
@@ -742,6 +783,7 @@ public final class Indexer {
         String signature =  decodeUtf8Entry(data.readUnsignedShort());
         signatures.add(signature);
         signatures.add(target);
+        signaturePresent.put(target, null);
     }
 
     private void parseClassSignature(String signature, ClassInfo clazz) {
@@ -811,7 +853,8 @@ public final class Indexer {
 
     }
 
-    private void recordAnnotation(Map<DotName, List<AnnotationInstance>> classAnnotations, DotName annotation, AnnotationInstance instance) {
+    private void recordAnnotation(Map<DotName, List<AnnotationInstance>> classAnnotations, DotName annotation,
+                                  AnnotationInstance instance) {
         List<AnnotationInstance> list = classAnnotations.get(annotation);
         if (list == null) {
             list = new ArrayList<AnnotationInstance>();
@@ -880,10 +923,10 @@ public final class Indexer {
         DotName superName = (superIndex != 0) ? decodeClassEntry(superIndex) : null;
 
         int numInterfaces = data.readUnsignedShort();
-        DotName[] interfaces = new DotName[numInterfaces];
+        List<DotName> interfaces = new ArrayList<DotName>(numInterfaces);
 
         for (int i = 0; i < numInterfaces; i++) {
-            interfaces[i] = decodeClassEntry(data.readUnsignedShort());
+            interfaces.add(decodeClassEntry(data.readUnsignedShort()));
         }
 
         this.classAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
@@ -893,7 +936,7 @@ public final class Indexer {
             addSubclass(superName, currentClass);
 
         for (int i = 0; i < numInterfaces; i++) {
-            addImplementor(interfaces[i], currentClass);
+            addImplementor(interfaces.get(i), currentClass);
         }
 
         classes.put(currentClass.name(), currentClass);
@@ -1027,7 +1070,7 @@ public final class Indexer {
 
     private static class IntegerHolder { private int i; };
 
-    private Type[] parseMethodArgs(String descriptor, IntegerHolder pos) {
+    private List<Type> parseMethodArgs(String descriptor, IntegerHolder pos) {
         if (descriptor.charAt(pos.i) != '(')
             throw new IllegalArgumentException("Invalid descriptor: " + descriptor);
 
@@ -1036,7 +1079,7 @@ public final class Indexer {
             types.add(parseType(descriptor, pos));
         }
 
-        return types.toArray(new Type[0]);
+        return types;
     }
 
     private Type parseType(String descriptor) {
@@ -1216,6 +1259,7 @@ public final class Indexer {
             classAnnotations = null;
             innerClasses = null;
             signatures = null;
+            signaturePresent = null;
         }
     }
 

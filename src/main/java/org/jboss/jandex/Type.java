@@ -208,6 +208,10 @@ public abstract class Type implements AnnotationTarget {
     }
 
     public String toString() {
+        return toString(false);
+    }
+
+    public String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
         builder.append(name);
@@ -219,7 +223,7 @@ public abstract class Type implements AnnotationTarget {
         AnnotationInstance[] annotations = this.annotations;
         if (annotations.length > 0) {
             for (AnnotationInstance instance : annotations) {
-                builder.append(instance).append(' ');
+                builder.append(instance.toString(true)).append(' ');
             }
         }
     }
@@ -250,7 +254,9 @@ public abstract class Type implements AnnotationTarget {
     Type addAnnotation(AnnotationInstance annotation) {
         AnnotationInstance[] newAnnotations = Arrays.copyOf(annotations, annotations.length + 1);
         newAnnotations[newAnnotations.length - 1] = annotation;
-        return copyType(newAnnotations);
+        Type type = copyType(newAnnotations);
+        annotation.setTarget(type);
+        return type;
     }
 
     abstract Type copyType(AnnotationInstance[] newAnnotations);

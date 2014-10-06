@@ -64,7 +64,8 @@ public class TypeAnnotationTestCase {
             System.out.println(field.type());
         }
 
-        for (MethodInfo method : index.getClassByName(DotName.createSimple("org.wildfly.security.VExample$1Fun")).methods()) {
+        ClassInfo localClazz = index.getClassByName(DotName.createSimple("org.wildfly.security.VExample$1Fun"));
+        for (MethodInfo method : localClazz.methods()) {
             Type[] args = method.args();
             if (args.length > 0) {
                 System.out.println(args[0]);
@@ -82,6 +83,9 @@ public class TypeAnnotationTestCase {
         }
         System.out.println(clazz.superClassType());
 
+        System.out.println(localClazz.enclosingMethod());
+        System.out.println(localClazz.nestingType());
+        System.out.println(localClazz.enclosingClass());
     }
 
 

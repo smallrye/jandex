@@ -18,6 +18,8 @@
 
 package org.jboss.jandex;
 
+import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
+
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -119,19 +121,26 @@ public final class Indexer {
         0x49, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73
     };
 
+    // "EnclosingMethod"
+    private final static byte[] ENCLOSING_METHOD = new byte[] {
+        0x45, 0x6e, 0x63, 0x6c, 0x6f, 0x73, 0x69, 0x6e, 0x67, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64
+    };
+
     private final static int RUNTIME_ANNOTATIONS_LEN = RUNTIME_ANNOTATIONS.length;
     private final static int RUNTIME_PARAM_ANNOTATIONS_LEN = RUNTIME_PARAM_ANNOTATIONS.length;
     private final static int RUNTIME_TYPE_ANNOTATIONS_LEN = RUNTIME_TYPE_ANNOTATIONS.length;
     private final static int SIGNATURE_LEN = SIGNATURE.length;
     private final static int EXCEPTIONS_LEN = EXCEPTIONS.length;
     private final static int INNER_CLASSES_LEN = INNER_CLASSES.length;
+    private final static int ENCLOSING_METHOD_LEN = ENCLOSING_METHOD.length;
 
     private final static int HAS_RUNTIME_ANNOTATION = 1;
     private final static int HAS_RUNTIME_PARAM_ANNOTATION = 2;
     private final static int HAS_RUNTIME_TYPE_ANNOTATION = 3;
     private final static int HAS_SIGNATURE = 4;
     private final static int HAS_EXCEPTIONS = 5;
-    private final static int HAS_INNNER_CLASSES = 6;
+    private final static int HAS_INNER_CLASSES = 6;
+    private final static int HAS_ENCLOSING_METHOD = 7;
 
     private final static String INIT_METHOD_NAME = "<init>";
     private IdentityHashMap<AnnotationTarget, Object> signaturePresent;
@@ -241,7 +250,6 @@ public final class Indexer {
 
             IntegerHolder pos = new IntegerHolder();
             List<Type> parameters = parseMethodArgs(descriptor, pos);
-            pos.i++;
             Type returnType = parseType(descriptor, pos);
 
             MethodInfo method = new MethodInfo(currentClass, name, parameters, returnType, flags);
@@ -333,8 +341,10 @@ public final class Indexer {
                 processSignature(data, target);
             } else if (annotationAttribute == HAS_EXCEPTIONS && target instanceof MethodInfo) {
                 processExceptions(data, (MethodInfo) target);
-            } else if (annotationAttribute == HAS_INNNER_CLASSES && target instanceof ClassInfo) {
+            } else if (annotationAttribute == HAS_INNER_CLASSES && target instanceof ClassInfo) {
                 processInnerClasses(data, (ClassInfo) target);
+            } else if (annotationAttribute == HAS_ENCLOSING_METHOD && target instanceof ClassInfo) {
+                processEnclosingMethod(data, (ClassInfo) target);
             } else {
                 skipFully(data, attributeLen);
             }
@@ -359,8 +369,30 @@ public final class Indexer {
             String simpleName = simpleIndex == 0 ? null : decodeUtf8Entry(simpleIndex);
             int flags = data.readUnsignedShort();
 
+            if (innerClass.equals(target.name())) {
+                target.setInnerClassInfo(outerClass, simpleName);
+            }
+
             innerClasses.put(innerClass, new InnerClassInfo(innerClass, outerClass, simpleName, flags));
         }
+    }
+
+    private void processEnclosingMethod(DataInputStream data, ClassInfo target) throws IOException {
+        int classIndex = data.readUnsignedShort();
+        int index = data.readUnsignedShort();
+        if (index == 0) {
+            return; // Enclosed in a static or an instance variable
+        }
+
+        DotName enclosingClass = decodeClassEntry(classIndex);
+        NameAndType nameAndType = decodeNameAndTypeEntry(index);
+
+        IntegerHolder pos = new IntegerHolder();
+        List<Type> parameters = parseMethodArgs(nameAndType.descriptor, pos);
+        Type returnType = parseType(nameAndType.descriptor, pos);
+
+        EnclosingMethodInfo method = new EnclosingMethodInfo(nameAndType.name, returnType, parameters, enclosingClass);
+        target.setEnclosingMethod(method);
     }
 
 
@@ -1001,6 +1033,30 @@ public final class Indexer {
         return new String(pool, ++pos, len, Charset.forName("UTF-8"));
     }
 
+    private static class NameAndType {
+        private String name;
+        private String descriptor;
+
+        private NameAndType(String name, String descriptor) {
+            this.name = name;
+            this.descriptor = descriptor;
+        }
+    }
+
+    private NameAndType decodeNameAndTypeEntry(int index) {
+        byte[] pool = constantPool;
+        int[] offsets = constantPoolOffsets;
+
+        int pos = offsets[index - 1];
+        if (pool[pos] != CONSTANT_NAMEANDTYPE)
+            throw new IllegalStateException("Constant pool entry is not a name and type type: " + index + ":" + pos);
+
+        int nameIndex = (pool[++pos] & 0xFF) << 8 | (pool[++pos] & 0xFF);
+        int descriptorIndex = (pool[++pos] & 0xFF) << 8 | (pool[++pos] & 0xFF);
+
+        return new NameAndType(intern(decodeUtf8Entry(nameIndex)), decodeUtf8Entry(descriptorIndex));
+    }
+
     private int bitsToInt(byte[] pool, int pos) {
         return (pool[++pos] & 0xFF) << 24 | (pool[++pos] & 0xFF) << 16 | (pool[++pos] & 0xFF) << 8  | (pool[++pos] & 0xFF);
     }
@@ -1079,6 +1135,7 @@ public final class Indexer {
             types.add(parseType(descriptor, pos));
         }
 
+        pos.i++;
         return types;
     }
 
@@ -1189,7 +1246,9 @@ public final class Indexer {
                     } else if (len == EXCEPTIONS_LEN && match(buf, offset, EXCEPTIONS)) {
                         annoAttributes[pos] = HAS_EXCEPTIONS;
                     } else if (len == INNER_CLASSES_LEN && match(buf, offset, INNER_CLASSES)) {
-                        annoAttributes[pos] = HAS_INNNER_CLASSES;
+                        annoAttributes[pos] = HAS_INNER_CLASSES;
+                    } else if (len == ENCLOSING_METHOD_LEN && match(buf, offset, ENCLOSING_METHOD)) {
+                        annoAttributes[pos] = HAS_ENCLOSING_METHOD;
                     }
                     offset += len;
                     break;

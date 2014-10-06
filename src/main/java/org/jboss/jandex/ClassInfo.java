@@ -19,7 +19,6 @@
 package org.jboss.jandex;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -51,14 +50,67 @@ public final class ClassInfo implements AnnotationTarget {
     private final DotName superName;
     private final List<DotName> interfaces;
     private final Map<DotName, List<AnnotationInstance>> annotations;
+
+    // Not final to allow lazy initialization, immutable once published
     private List<Type> interfaceTypes;
     private Type superClassType;
     private List<Type> typeParameters;
     private List<MethodInfo> methods;
     private List<FieldInfo> fields;
-
-    // Not final to allow lazy initialization, immutable once published
     private boolean hasNoArgsConstructor;
+    private NestingInfo nestingInfo;
+
+    public enum NestingType {TOP_LEVEL, INNER, LOCAL, ANONYMOUS}
+
+    private static final class NestingInfo {
+        private DotName enclosingClass;
+        private String simpleName;
+        private EnclosingMethodInfo enclosingMethod;
+    }
+
+    public static final class EnclosingMethodInfo {
+        private String name;
+        private Type returnType;
+        private List<Type> parameters;
+        private DotName enclosingClass;
+
+
+        public String name() {
+            return name;
+        }
+
+        public Type returnType() {
+            return returnType;
+        }
+
+        public List<Type> parameters() {
+            return parameters;
+        }
+
+        public DotName enclosingClass() {
+            return enclosingClass;
+        }
+
+        EnclosingMethodInfo(String name, Type returnType, List<Type> parameters, DotName enclosingClass) {
+            this.name = name;
+            this.returnType = returnType;
+            this.parameters = Collections.unmodifiableList(parameters);
+            this.enclosingClass = enclosingClass;
+        }
+
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append(returnType).append(' ').append(enclosingClass).append('.').append(name).append('(');
+            for (int i = 0; i < parameters.size(); i++) {
+                builder.append(parameters.get(i));
+                if (i + 1 < parameters.size())
+                    builder.append(", ");
+            }
+            builder.append(')');
+            return builder.toString();
+        }
+
+    }
 
     ClassInfo(DotName name, DotName superName, short flags, List<DotName> interfaces, Map<DotName, List<AnnotationInstance>> annotations) {
         this(name, superName, flags, interfaces, annotations, false);
@@ -149,6 +201,30 @@ public final class ClassInfo implements AnnotationTarget {
         return hasNoArgsConstructor;
     }
 
+    public NestingType nestingType() {
+        if (nestingInfo == null) {
+            return NestingType.TOP_LEVEL;
+        } else if (nestingInfo.enclosingClass != null) {
+            return NestingType.INNER;
+        } else if (nestingInfo.simpleName != null) {
+            return NestingType.LOCAL;
+        }
+
+        return NestingType.ANONYMOUS;
+    }
+
+    public String simpleName() {
+        return nestingInfo != null ? nestingInfo.simpleName : null;
+    }
+
+    public DotName enclosingClass() {
+        return nestingInfo != null ? nestingInfo.enclosingClass : null;
+    }
+
+    public EnclosingMethodInfo enclosingMethod() {
+        return nestingInfo != null ? nestingInfo.enclosingMethod : null;
+    }
+
     /** Lazily initialize hasNoArgsConstructor. Can only be called before publication */
     void setHasNoArgsConstructor(boolean hasNoArgsConstructor) {
         this.hasNoArgsConstructor = hasNoArgsConstructor;
@@ -172,5 +248,22 @@ public final class ClassInfo implements AnnotationTarget {
 
     void setTypeParameters(List<Type> typeParameters) {
         this.typeParameters = Collections.unmodifiableList(typeParameters);
+    }
+
+    void setInnerClassInfo(DotName enclosingClass, String simpleName) {
+        if (nestingInfo == null) {
+            nestingInfo = new NestingInfo();
+        }
+
+        nestingInfo.enclosingClass = enclosingClass;
+        nestingInfo.simpleName = simpleName;
+    }
+
+    void setEnclosingMethod(EnclosingMethodInfo enclosingMethod) {
+        if (nestingInfo == null) {
+            nestingInfo = new NestingInfo();
+        }
+
+        nestingInfo.enclosingMethod = enclosingMethod;
     }
 }

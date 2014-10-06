@@ -187,6 +187,10 @@ public final class AnnotationInstance {
     }
 
     void setTarget(AnnotationTarget target) {
+        if (this.target != null) {
+            throw new IllegalStateException("Attempt to modify target post-initialization");
+        }
+
         this.target = target;
     }
 

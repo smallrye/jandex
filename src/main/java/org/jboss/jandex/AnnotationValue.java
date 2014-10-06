@@ -73,55 +73,55 @@ public abstract class AnnotationValue {
         this.name = name;
     }
 
-    public static final AnnotationValue createByteValue(String name, byte b) {
+    public static AnnotationValue createByteValue(String name, byte b) {
         return new ByteValue(name, b);
     }
 
-    public static final AnnotationValue createShortValue(String name, short s) {
+    public static AnnotationValue createShortValue(String name, short s) {
         return new ShortValue(name, s);
     }
 
-    public static final AnnotationValue createIntegerValue(String name, int i) {
+    public static AnnotationValue createIntegerValue(String name, int i) {
         return new IntegerValue(name, i);
     }
 
-    public static final AnnotationValue createCharacterValue(String name, char c) {
+    public static AnnotationValue createCharacterValue(String name, char c) {
         return new CharacterValue(name, c);
     }
 
-    public static final AnnotationValue createFloatValue(String name, float f) {
+    public static AnnotationValue createFloatValue(String name, float f) {
         return new FloatValue(name, f);
     }
 
-    public static final AnnotationValue createDouleValue(String name, double d) {
+    public static AnnotationValue createDouleValue(String name, double d) {
         return new DoubleValue(name, d);
     }
 
-    public static final AnnotationValue createLongalue(String name, long l) {
+    public static AnnotationValue createLongalue(String name, long l) {
         return new LongValue(name, l);
     }
 
-    public static final AnnotationValue createBooleanValue(String name, boolean bool) {
+    public static AnnotationValue createBooleanValue(String name, boolean bool) {
         return new BooleanValue(name, bool);
     }
 
-    public static final AnnotationValue createStringValue(String name, String string) {
+    public static AnnotationValue createStringValue(String name, String string) {
         return new StringValue(name, string);
     }
 
-    public static final AnnotationValue createClassValue(String name, Type type) {
+    public static AnnotationValue createClassValue(String name, Type type) {
         return new ClassValue(name, type);
     }
 
-    public static final AnnotationValue createEnumValue(String name, DotName typeName, String value) {
+    public static AnnotationValue createEnumValue(String name, DotName typeName, String value) {
         return new EnumValue(name, typeName, value);
     }
 
-    public static final AnnotationValue createArrayValue(String name, AnnotationValue[] values) {
+    public static AnnotationValue createArrayValue(String name, AnnotationValue[] values) {
         return new ArrayValue(name, values);
     }
 
-    public static final AnnotationValue createNestedAnnotationValue(String name, AnnotationInstance instance)
+    public static AnnotationValue createNestedAnnotationValue(String name, AnnotationInstance instance)
     {
         return new NestedAnnotation(name, instance);
     }

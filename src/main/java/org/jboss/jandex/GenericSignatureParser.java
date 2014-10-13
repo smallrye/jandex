@@ -100,7 +100,7 @@ class GenericSignatureParser {
     private NameTable names;
     private Map<String, TypeVariable> typeParameters;
     private Map<String, TypeVariable> elementTypeParameters = new HashMap<String, TypeVariable>();
-    private Map<String, TypeVariable> classTypeParameteres = new HashMap<String, TypeVariable>();
+    private Map<String, TypeVariable> classTypeParameters = new HashMap<String, TypeVariable>();
 
     GenericSignatureParser(NameTable names) {
         names.intern(DotName.OBJECT_NAME, '/');
@@ -223,7 +223,7 @@ class GenericSignatureParser {
 
     ClassSignature parseClassSignature(String signature) {
         this.signature = signature;
-        this.typeParameters = this.classTypeParameteres;
+        this.typeParameters = this.classTypeParameters;
         this.typeParameters.clear();
         this.pos = 0;
         Type[] parameters = parseTypeParameters();
@@ -480,7 +480,7 @@ class GenericSignatureParser {
 
     private TypeVariable resolveType(String identifier) {
         TypeVariable ret = elementTypeParameters.get(identifier);
-        return ret == null ? classTypeParameteres.get(identifier) : ret;
+        return ret == null ? classTypeParameters.get(identifier) : ret;
     }
 
     private Type parseJavaType() {

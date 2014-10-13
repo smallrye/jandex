@@ -19,6 +19,7 @@
 package org.jboss.jandex;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -120,8 +121,8 @@ public final class ClassInfo implements AnnotationTarget {
         this.name = name;
         this.superName = superName;
         this.flags = flags;
-        this.interfaces = Collections.unmodifiableList(interfaces);
-        this.annotations = Collections.unmodifiableMap(annotations);
+        this.interfaces = Utils.emptyOrWrap(interfaces);
+        this.annotations = Collections.unmodifiableMap(annotations);  // FIXME
         this.hasNoArgsConstructor = hasNoArgsConstructor;
     }
 
@@ -165,15 +166,36 @@ public final class ClassInfo implements AnnotationTarget {
         return annotations;
     }
 
+    public final Collection<AnnotationInstance> classAnnotations() {
+        return new AnnotationTargetFilterCollection<ClassInfo>(annotations, ClassInfo.class);
+    }
+
     public final List<MethodInfo> methods() {
         return methods;
+    }
+
+    public final MethodInfo method(String name, Type... parameters) {
+        MethodInfo key = new MethodInfo(null, name, Arrays.asList(parameters), null, (short) 0);
+        int i = Collections.binarySearch(methods, key, MethodInfo.NAME_AND_PARAMETER_COMPARATOR);
+        return i >= 0 ? methods.get(i) : null;
+    }
+
+    public final MethodInfo firstMethod(String name) {
+        MethodInfo key = new MethodInfo(null, name, Collections.<Type>emptyList(), null, (short) 0);
+        int i = Collections.binarySearch(methods, key, MethodInfo.NAME_AND_PARAMETER_COMPARATOR);
+        if (i < -methods.size()) {
+            return null;
+        }
+
+        MethodInfo method = i >= 0 ? methods.get(i) : methods.get(++i * -1);
+        return method.name().equals(name) ? method : null;
     }
 
     public final List<FieldInfo> fields() {
         return fields;
     }
 
-    public final List<DotName> interfaceNamess() {
+    public final List<DotName> interfaceNames() {
         return interfaces;
     }
 
@@ -235,6 +257,11 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     void setMethods(List<MethodInfo> methods) {
+        if (methods.size() == 0) {
+            this.methods = Collections.emptyList();
+        }
+
+        Collections.sort(methods, MethodInfo.NAME_AND_PARAMETER_COMPARATOR);
         this.methods = Collections.unmodifiableList(methods);
     }
 

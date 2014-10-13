@@ -22,6 +22,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -33,24 +34,59 @@ import java.util.List;
  * @author Jason T. Greene
  */
 public final class MethodInfo implements AnnotationTarget {
+    static final int SYNTHETIC = 0x1000;
+    static final int BRIDGE    = 0x0040;
+
     private final String name;
-    private List<Type> parameters;
+    private Type[] parameters;
     private Type returnType;
+    private Type[] exceptions;
     private Type receiverType;
-    private List<Type> typeParameters;
-    private List<Type> exceptions = Collections.emptyList();
+    private Type[] typeParameters;
+    private AnnotationInstance[] annotations;
 
     private final short flags;
     private final ClassInfo clazz;
+
+    static final NameAndParameterComparator NAME_AND_PARAMETER_COMPARATOR = new NameAndParameterComparator();
+
+    static class NameAndParameterComparator implements Comparator<MethodInfo> {
+        public int compare(MethodInfo instance, MethodInfo instance2) {
+            int x = instance.name().compareTo(instance2.name());
+            if (x != 0) {
+                return x;
+            }
+
+            x = instance.parameters.length - instance2.parameters.length;
+            if (x != 0) {
+                return x;
+            }
+
+            for (int i = 0; i < instance.parameters.length; i++) {
+                Type t1 = instance.parameters[i];
+                Type t2 = instance2.parameters[i];
+
+                x = t1.name().compareTo(t2.name());
+                if (x != 0) {
+                    return x;
+                }
+            }
+
+            // Prefer non-synthetic methods when matching
+            return (instance.flags & (SYNTHETIC|BRIDGE)) - (instance2.flags & (SYNTHETIC|BRIDGE));
+        }
+    }
 
 
     MethodInfo(ClassInfo clazz, String name, List<Type> parameters, Type returnType,  short flags) {
         this.clazz = clazz;
         this.name = name;
-        this.parameters = Collections.unmodifiableList(parameters);
+        this.parameters = parameters.size() == 0 ? Type.EMPTY_ARRAY : parameters.toArray(new Type[parameters.size()]);
         this.returnType = returnType;
         this.flags = flags;
-        this.receiverType = new ClassType(clazz.name());
+        this.annotations = AnnotationInstance.EMPTY_ARRAY;
+        this.exceptions = Type.EMPTY_ARRAY;
+        this.typeParameters = Type.EMPTY_ARRAY;
     }
 
     /**
@@ -105,7 +141,7 @@ public final class MethodInfo implements AnnotationTarget {
      */
     @Deprecated
     public final Type[] args() {
-        return parameters.toArray(new Type[parameters.size()]);
+        return parameters.clone();
     }
 
     /**
@@ -114,7 +150,7 @@ public final class MethodInfo implements AnnotationTarget {
      * @return all parameter types
      */
     public final List<Type> parameters() {
-        return parameters;
+        return Collections.unmodifiableList(Arrays.asList(parameters));
     }
 
     /**
@@ -128,15 +164,29 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     public final Type receiverType() {
-        return receiverType;
+        return receiverType != null ? receiverType : new ClassType(clazz.name());
     }
 
     public final List<Type> exceptions() {
-        return exceptions;
+        return Collections.unmodifiableList(Arrays.asList(exceptions));
     }
 
     public final List<Type> typeParameters() {
-        return typeParameters;
+        return Collections.unmodifiableList(Arrays.asList(typeParameters));
+    }
+
+    public final List<AnnotationInstance> annotations() {
+        return Collections.unmodifiableList(Arrays.asList(annotations));
+    }
+
+    public final AnnotationInstance annotation(DotName name) {
+        AnnotationInstance key = new AnnotationInstance(name, null, null);
+        int i = Arrays.binarySearch(annotations, key, AnnotationInstance.NAME_COMPARATOR);
+        return i >= 0 ? annotations[i] : null;
+    }
+
+    public final boolean hasAnnotation(DotName name) {
+        return annotation(name) != null;
     }
 
     /**
@@ -151,18 +201,18 @@ public final class MethodInfo implements AnnotationTarget {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(returnType).append(' ').append(clazz.name()).append('.').append(name).append('(');
-        for (int i = 0; i < parameters.size(); i++) {
-            builder.append(parameters.get(i));
-            if (i + 1 < parameters.size())
+        for (int i = 0; i < parameters.length; i++) {
+            builder.append(parameters[i]);
+            if (i + 1 < parameters.length)
                 builder.append(", ");
         }
         builder.append(')');
 
-        if (exceptions.size() > 0) {
+        if (exceptions.length > 0) {
             builder.append(" throws ");
-            for (int i = 0; i < exceptions.size(); i++) {
-                builder.append(exceptions.get(i));
-                if (i < exceptions.size() - 1) {
+            for (int i = 0; i < exceptions.length; i++) {
+                builder.append(exceptions[i]);
+                if (i < exceptions.length - 1) {
                     builder.append(", ");
                 }
             }
@@ -172,22 +222,31 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     void setTypeParameters(List<Type> typeParameters) {
-        this.typeParameters = typeParameters;
+        if (typeParameters.size() > 0) {
+            this.typeParameters = typeParameters.toArray(new Type[typeParameters.size()]);
+        }
     }
 
-    void setParameters(List<Type> parameters) {
-        this.parameters = Collections.unmodifiableList(parameters);
+    void setParameters(List<Type> parameters, NameTable names) {
+        this.parameters = parameters.size() == 0 ? Type.EMPTY_ARRAY : names.intern(parameters.toArray(new Type[parameters.size()]));
     }
 
     void setReturnType(Type returnType) {
         this.returnType = returnType;
     }
 
-    void setExceptions(List<Type> exceptions) {
-        this.exceptions = Collections.unmodifiableList(exceptions);
+    void setExceptions(List<Type> exceptions, NameTable names) {
+        this.exceptions = exceptions.size() == 0 ? Type.EMPTY_ARRAY : names.intern(exceptions.toArray(new Type[exceptions.size()]));
     }
 
     void setReceiverType(Type receiverType) {
         this.receiverType = receiverType;
+    }
+
+    void setAnnotations(List<AnnotationInstance> annotations) {
+        if (annotations.size() > 0) {
+            this.annotations = annotations.toArray(new AnnotationInstance[annotations.size()]);
+            Arrays.sort(this.annotations, AnnotationInstance.NAME_COMPARATOR);
+        }
     }
 }

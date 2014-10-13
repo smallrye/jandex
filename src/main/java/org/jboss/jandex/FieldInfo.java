@@ -19,6 +19,9 @@
 package org.jboss.jandex;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Represents a field that was annotated.
@@ -34,12 +37,15 @@ public final class FieldInfo implements AnnotationTarget {
     private Type type;
     private final short flags;
     private final ClassInfo clazz;
+    private List<AnnotationInstance> annotations;
+
 
     FieldInfo(ClassInfo clazz, String name, Type type, short flags) {
         this.clazz = clazz;
         this.name = name;
         this.type = type;
         this.flags = flags;
+        this.annotations = Collections.emptyList();
     }
 
     /**
@@ -51,7 +57,7 @@ public final class FieldInfo implements AnnotationTarget {
      * @param flags the field attributes
      * @return a mock field
      */
-    public static final FieldInfo create(ClassInfo clazz, String name, Type type, short flags) {
+    public static FieldInfo create(ClassInfo clazz, String name, Type type, short flags) {
          if (clazz == null)
              throw new IllegalArgumentException("Clazz can't be null");
 
@@ -89,6 +95,10 @@ public final class FieldInfo implements AnnotationTarget {
         return type;
     }
 
+    public List<AnnotationInstance> annotations() {
+        return annotations;
+    }
+
     /**
      * Returns the access fields of this field. {@link Modifier} can be used on this value.
      *
@@ -104,5 +114,13 @@ public final class FieldInfo implements AnnotationTarget {
 
     void setType(Type type) {
         this.type = type;
+    }
+
+    void setAnnotations(List<AnnotationInstance> annotations) {
+        if (annotations.size() > 0) {
+            annotations = new ArrayList<AnnotationInstance>(annotations);
+            Collections.sort(annotations, AnnotationInstance.NAME_COMPARATOR);
+            this.annotations = Collections.unmodifiableList(annotations);
+        }
     }
 }

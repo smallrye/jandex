@@ -29,7 +29,7 @@ import java.util.List;
  *
  * @author Jason T. Greene
  */
-public abstract class Type implements AnnotationTarget {
+public abstract class Type {
     public static final Type[] EMPTY_ARRAY = new Type[0];
     private static final AnnotationInstance[] EMPTY_ANNOTATIONS = new AnnotationInstance[0];
     private final DotName name;
@@ -106,7 +106,6 @@ public abstract class Type implements AnnotationTarget {
         this.annotations = annotations;
     }
 
-    @Deprecated
     public static Type create(DotName name, Kind kind) {
         if (name == null)
             throw new IllegalArgumentException("name can not be null!");
@@ -252,10 +251,15 @@ public abstract class Type implements AnnotationTarget {
     }
 
     Type addAnnotation(AnnotationInstance annotation) {
+        AnnotationTarget target = annotation.target();
+        if (! (target instanceof TypeTarget)) {
+            throw new IllegalArgumentException("Invalid target type");
+        }
+
         AnnotationInstance[] newAnnotations = Arrays.copyOf(annotations, annotations.length + 1);
         newAnnotations[newAnnotations.length - 1] = annotation;
         Type type = copyType(newAnnotations);
-        annotation.setTarget(type);
+        ((TypeTarget)target).setTarget(this);
         return type;
     }
 

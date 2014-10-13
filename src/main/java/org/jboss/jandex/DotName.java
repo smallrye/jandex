@@ -240,7 +240,7 @@ public final class DotName implements Comparable<DotName> {
 
         DotName other = (DotName)o;
         if (other.prefix == null && prefix == null)
-            return local.equals(other.local);
+            return local.equals(other.local) && innerClass == other.innerClass;
 
         if (!other.componentized && componentized)
             return toString().equals(other.local);
@@ -248,6 +248,6 @@ public final class DotName implements Comparable<DotName> {
         if (other.componentized && !componentized)
             return other.toString().equals(local);
 
-        return local.equals(other.local) && prefix.equals(other.prefix);
+        return local.equals(other.local) && prefix.equals(other.prefix) && innerClass == other.innerClass;
     }
 }

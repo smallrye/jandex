@@ -25,14 +25,14 @@ import java.util.Map;
  * @author Jason T. Greene
  */
 public final class PrimitiveType extends Type {
-    static final PrimitiveType BYTE = new PrimitiveType(Primitive.BYTE);
-    static final PrimitiveType CHAR = new PrimitiveType(Primitive.CHAR);
-    static final PrimitiveType DOUBLE = new PrimitiveType(Primitive.DOUBLE);
-    static final PrimitiveType FLOAT = new PrimitiveType(Primitive.FLOAT);
-    static final PrimitiveType INT = new PrimitiveType(Primitive.INT);
-    static final PrimitiveType LONG = new PrimitiveType(Primitive.LONG);
-    static final PrimitiveType SHORT = new PrimitiveType(Primitive.SHORT);
-    static final PrimitiveType BOOLEAN = new PrimitiveType(Primitive.BOOLEAN);
+    public static final PrimitiveType BYTE = new PrimitiveType(Primitive.BYTE);
+    public static final PrimitiveType CHAR = new PrimitiveType(Primitive.CHAR);
+    public static final PrimitiveType DOUBLE = new PrimitiveType(Primitive.DOUBLE);
+    public static final PrimitiveType FLOAT = new PrimitiveType(Primitive.FLOAT);
+    public static final PrimitiveType INT = new PrimitiveType(Primitive.INT);
+    public static final PrimitiveType LONG = new PrimitiveType(Primitive.LONG);
+    public static final PrimitiveType SHORT = new PrimitiveType(Primitive.SHORT);
+    public static final PrimitiveType BOOLEAN = new PrimitiveType(Primitive.BOOLEAN);
 
     private static final Map<String, PrimitiveType> reverseMap = new HashMap<String, PrimitiveType>();
 
@@ -61,6 +61,7 @@ public final class PrimitiveType extends Type {
         super(new DotName(null, primitive.name().toLowerCase(Locale.ENGLISH), true, false), annotations);
         this.primitive = primitive;
     }
+
 
     @Override
     public Kind kind() {

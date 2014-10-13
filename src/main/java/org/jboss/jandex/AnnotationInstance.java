@@ -40,6 +40,7 @@ import java.util.List;
 public final class AnnotationInstance {
     private static final AnnotationValue[] ANNOTATION_VALUES_TYPE = new AnnotationValue[0];
     static final InstanceNameComparator NAME_COMPARATOR = new InstanceNameComparator();
+    static final AnnotationInstance[] EMPTY_ARRAY = new AnnotationInstance[0];
 
     private final DotName name;
     private AnnotationTarget target;
@@ -61,7 +62,7 @@ public final class AnnotationInstance {
     AnnotationInstance(DotName name, AnnotationTarget target, AnnotationValue[] values) {
         this.name = name;
         this.target = target;
-        this.values = values.length > 0 ? values : AnnotationValue.EMPTY_VALUE_ARRAY;
+        this.values = values != null && values.length > 0 ? values : AnnotationValue.EMPTY_VALUE_ARRAY;
     }
 
     /**
@@ -195,17 +196,13 @@ public final class AnnotationInstance {
     }
 
     @Override
-    /**
-     * Two annotations are considered equal if they have the same name, and the same values.
-     * Their target may differ and is purely informational.
-     */
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
         AnnotationInstance instance = (AnnotationInstance) o;
 
-        return name.equals(instance.name) && Arrays.equals(values, instance.values);
+        return target == instance.target && name.equals(instance.name) && Arrays.equals(values, instance.values);
     }
 
     @Override

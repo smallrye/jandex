@@ -53,11 +53,11 @@ public final class ClassInfo implements AnnotationTarget {
     private final Map<DotName, List<AnnotationInstance>> annotations;
 
     // Not final to allow lazy initialization, immutable once published
-    private List<Type> interfaceTypes;
+    private Type[] interfaceTypes;
     private Type superClassType;
-    private List<Type> typeParameters;
-    private List<MethodInfo> methods;
-    private List<FieldInfo> fields;
+    private Type[] typeParameters;
+    private MethodInfo[] methods;
+    private FieldInfo[] fields;
     private boolean hasNoArgsConstructor;
     private NestingInfo nestingInfo;
 
@@ -171,28 +171,28 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     public final List<MethodInfo> methods() {
-        return methods;
+        return Collections.unmodifiableList(Arrays.asList(methods));
     }
 
     public final MethodInfo method(String name, Type... parameters) {
         MethodInfo key = new MethodInfo(null, name, Arrays.asList(parameters), null, (short) 0);
-        int i = Collections.binarySearch(methods, key, MethodInfo.NAME_AND_PARAMETER_COMPARATOR);
-        return i >= 0 ? methods.get(i) : null;
+        int i = Arrays.binarySearch(methods, key, MethodInfo.NAME_AND_PARAMETER_COMPARATOR);
+        return i >= 0 ? methods[i] : null;
     }
 
     public final MethodInfo firstMethod(String name) {
         MethodInfo key = new MethodInfo(null, name, Collections.<Type>emptyList(), null, (short) 0);
-        int i = Collections.binarySearch(methods, key, MethodInfo.NAME_AND_PARAMETER_COMPARATOR);
-        if (i < -methods.size()) {
+        int i = Arrays.binarySearch(methods, key, MethodInfo.NAME_AND_PARAMETER_COMPARATOR);
+        if (i < -methods.length) {
             return null;
         }
 
-        MethodInfo method = i >= 0 ? methods.get(i) : methods.get(++i * -1);
+        MethodInfo method = i >= 0 ? methods[i] : methods[++i * -1];
         return method.name().equals(name) ? method : null;
     }
 
     public final List<FieldInfo> fields() {
-        return fields;
+        return Collections.unmodifiableList(Arrays.asList(fields));
     }
 
     public final List<DotName> interfaceNames() {
@@ -200,7 +200,7 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     public final List<Type> interfaceTypes() {
-        return interfaceTypes;
+        return Collections.unmodifiableList(Arrays.asList(interfaceTypes));
     }
 
     public final Type superClassType() {
@@ -208,7 +208,7 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     public final List<Type> typeParameters() {
-        return typeParameters;
+        return Collections.unmodifiableList(Arrays.asList(typeParameters));
     }
 
     /**
@@ -253,16 +253,21 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     void setFields(List<FieldInfo> fields) {
-        this.fields = Collections.unmodifiableList(fields);
+        if (fields.size() == 0) {
+            this.fields = FieldInfo.EMPTY_ARRAY;
+        }
+
+        this.fields = fields.toArray(new FieldInfo[fields.size()]);
+        Arrays.sort(this.fields, FieldInfo.NAME_COMPARATOR);
     }
 
     void setMethods(List<MethodInfo> methods) {
         if (methods.size() == 0) {
-            this.methods = Collections.emptyList();
+            this.methods = MethodInfo.EMPTY_ARRAY;
         }
 
-        Collections.sort(methods, MethodInfo.NAME_AND_PARAMETER_COMPARATOR);
-        this.methods = Collections.unmodifiableList(methods);
+        this.methods = methods.toArray(new MethodInfo[methods.size()]);
+        Arrays.sort(this.methods, MethodInfo.NAME_AND_PARAMETER_COMPARATOR);
     }
 
     void setSuperClassType(Type superClassType) {
@@ -270,11 +275,13 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     void setInterfaceTypes(List<Type> interfaceTypes) {
-        this.interfaceTypes = Collections.unmodifiableList(interfaceTypes);
+        this.interfaceTypes = interfaceTypes.size() == 0 ? Type.EMPTY_ARRAY
+                                                         : interfaceTypes.toArray(new Type[interfaceTypes.size()]);
     }
 
     void setTypeParameters(List<Type> typeParameters) {
-        this.typeParameters = Collections.unmodifiableList(typeParameters);
+        this.typeParameters = typeParameters.size() == 0 ? Type.EMPTY_ARRAY
+                                                         : typeParameters.toArray(new Type[typeParameters.size()]);
     }
 
     void setInnerClassInfo(DotName enclosingClass, String simpleName) {

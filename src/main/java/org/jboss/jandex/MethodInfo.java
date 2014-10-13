@@ -19,7 +19,6 @@
 package org.jboss.jandex;
 
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,6 +35,7 @@ import java.util.List;
 public final class MethodInfo implements AnnotationTarget {
     static final int SYNTHETIC = 0x1000;
     static final int BRIDGE    = 0x0040;
+    static final MethodInfo[] EMPTY_ARRAY = new MethodInfo[0];
 
     private final String name;
     private Type[] parameters;

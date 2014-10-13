@@ -19,8 +19,9 @@
 package org.jboss.jandex;
 
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -33,19 +34,27 @@ import java.util.List;
  *
  */
 public final class FieldInfo implements AnnotationTarget {
+    static final FieldInfo[] EMPTY_ARRAY = new FieldInfo[0];
     private final String name;
     private Type type;
     private final short flags;
     private final ClassInfo clazz;
-    private List<AnnotationInstance> annotations;
+    private AnnotationInstance[] annotations;
 
+    static final NameComparator NAME_COMPARATOR = new NameComparator();
+
+    static class NameComparator implements Comparator<FieldInfo> {
+        public int compare(FieldInfo instance, FieldInfo instance2) {
+            return instance.name.compareTo(instance2.name);
+        }
+    }
 
     FieldInfo(ClassInfo clazz, String name, Type type, short flags) {
         this.clazz = clazz;
         this.name = name;
         this.type = type;
         this.flags = flags;
-        this.annotations = Collections.emptyList();
+        this.annotations = AnnotationInstance.EMPTY_ARRAY;
     }
 
     /**
@@ -96,7 +105,7 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     public List<AnnotationInstance> annotations() {
-        return annotations;
+        return Collections.unmodifiableList(Arrays.asList(annotations));
     }
 
     /**
@@ -117,10 +126,9 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     void setAnnotations(List<AnnotationInstance> annotations) {
-        if (annotations.size() > 0) {
-            annotations = new ArrayList<AnnotationInstance>(annotations);
-            Collections.sort(annotations, AnnotationInstance.NAME_COMPARATOR);
-            this.annotations = Collections.unmodifiableList(annotations);
-        }
-    }
+         if (annotations.size() > 0) {
+             this.annotations = annotations.toArray(new AnnotationInstance[annotations.size()]);
+             Arrays.sort(this.annotations, AnnotationInstance.NAME_COMPARATOR);
+         }
+     }
 }

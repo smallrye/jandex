@@ -35,39 +35,16 @@ import java.util.List;
  *
  */
 public final class FieldInfo implements AnnotationTarget {
-    static final FieldInfo[] EMPTY_ARRAY = new FieldInfo[0];
-    private final byte[] name;
-    private Type type;
-    private final short flags;
     private final ClassInfo clazz;
-    private AnnotationInstance[] annotations;
+    private FieldInternal internal;
 
-    static final NameComparator NAME_COMPARATOR = new NameComparator();
-
-    static class NameComparator implements Comparator<FieldInfo> {
-
-        private int compare(byte[] left, byte[] right) {
-               for (int i = 0, j = 0; i < left.length && j < right.length; i++, j++) {
-                   int a = (left[i] & 0xff);
-                   int b = (right[j] & 0xff);
-                   if (a != b) {
-                       return a - b;
-                   }
-               }
-               return left.length - right.length;
-           }
-
-        public int compare(FieldInfo instance, FieldInfo instance2) {
-            return compare(instance.name, instance2.name); //instance.name.compareTo(instance2.name);
-        }
+    FieldInfo(ClassInfo clazz, FieldInternal internal) {
+        this.clazz = clazz;
+        this.internal = internal;
     }
 
     FieldInfo(ClassInfo clazz, byte[] name, Type type, short flags) {
-        this.clazz = clazz;
-        this.name = name;
-        this.type = type;
-        this.flags = flags;
-        this.annotations = AnnotationInstance.EMPTY_ARRAY;
+        this(clazz, new FieldInternal(clazz, name, type, flags));
     }
 
     /**
@@ -96,11 +73,7 @@ public final class FieldInfo implements AnnotationTarget {
      * @return the local name of the field
      */
     public final String name() {
-        try {
-            return new String(name, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        return internal.name();
     }
 
     /**
@@ -118,11 +91,11 @@ public final class FieldInfo implements AnnotationTarget {
      * @return the type
      */
     public final Type type() {
-        return type;
+        return internal.type();
     }
 
     public List<AnnotationInstance> annotations() {
-        return Collections.unmodifiableList(Arrays.asList(annotations));
+        return internal.annotations();
     }
 
     /**
@@ -131,21 +104,26 @@ public final class FieldInfo implements AnnotationTarget {
      * @return the access flags of this field
      */
     public final short flags() {
-        return flags;
+        return internal.flags();
     }
 
     public String toString() {
-        return type + " " + clazz.name() + "." + name;
+        return internal.toString(clazz);
     }
 
     void setType(Type type) {
-        this.type = type;
+        internal.setType(type);
     }
 
     void setAnnotations(List<AnnotationInstance> annotations) {
-         if (annotations.size() > 0) {
-             this.annotations = annotations.toArray(new AnnotationInstance[annotations.size()]);
-             Arrays.sort(this.annotations, AnnotationInstance.NAME_COMPARATOR);
-         }
-     }
+        internal.setAnnotations(annotations);
+    }
+
+    FieldInternal fieldInternal() {
+        return internal;
+    }
+
+    void setFieldInternal(FieldInternal internal) {
+        this.internal = internal;
+    }
 }

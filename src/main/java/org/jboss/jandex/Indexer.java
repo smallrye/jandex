@@ -203,6 +203,7 @@ public final class Indexer {
     private Map<DotName, InnerClassInfo> innerClasses;
     private IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>> typeAnnotations;
     private List<MethodInfo> methods;
+    private List<FieldInfo> fields;
 
     // Index lifespan fields
     private Map<DotName, List<AnnotationInstance>> masterAnnotations;
@@ -315,7 +316,7 @@ public final class Indexer {
             elementAnnotations.clear();
             fields.add(field);
         }
-        currentClass.setFields(fields);
+        this.fields = fields;
     }
 
     private void skipAttributes(DataInputStream data) throws IOException {
@@ -1315,6 +1316,7 @@ public final class Indexer {
             resolveTypeAnnotations();
 
             currentClass.setMethods(methods, names);
+            currentClass.setFields(fields, names);
 
             return currentClass;
         } finally {

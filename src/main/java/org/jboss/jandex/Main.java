@@ -68,7 +68,7 @@ public class Main {
             long start = System.currentTimeMillis();
             index = getIndex(start)
                     ;
-            index.printAnnotations();
+            //index.printAnnotations();
             outputFile = null;
             source = null;
 

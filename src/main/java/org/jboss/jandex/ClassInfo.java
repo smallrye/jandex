@@ -58,7 +58,7 @@ public final class ClassInfo implements AnnotationTarget {
     private Type superClassType;
     private Type[] typeParameters;
     private MethodInternal[] methods;
-    private FieldInfo[] fields;
+    private FieldInternal[] fields;
     private boolean hasNoArgsConstructor;
     private NestingInfo nestingInfo;
 
@@ -193,7 +193,7 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     public final List<FieldInfo> fields() {
-        return Collections.unmodifiableList(Arrays.asList(fields));
+        return new FieldInfoGenerator(this, fields);
     }
 
     public final List<DotName> interfaceNames() {
@@ -261,18 +261,25 @@ public final class ClassInfo implements AnnotationTarget {
         this.hasNoArgsConstructor = hasNoArgsConstructor;
     }
 
-    void setFields(List<FieldInfo> fields) {
+    void setFields(List<FieldInfo> fields, NameTable names) {
         if (fields.size() == 0) {
-            this.fields = FieldInfo.EMPTY_ARRAY;
+            this.fields = FieldInternal.EMPTY_ARRAY;
+            return;
         }
-
-        this.fields = fields.toArray(new FieldInfo[fields.size()]);
-        Arrays.sort(this.fields, FieldInfo.NAME_COMPARATOR);
+        this.fields = new FieldInternal[fields.size()];
+        for (int i = 0; i < fields.size(); i++) {
+            FieldInfo fieldInfo = fields.get(i);
+            FieldInternal internal = names.intern(fieldInfo.fieldInternal());
+            fieldInfo.setFieldInternal(internal);
+            this.fields[i] = internal;
+        }
+        Arrays.sort(this.fields, FieldInternal.NAME_COMPARATOR);
     }
 
     void setMethods(List<MethodInfo> methods, NameTable names) {
         if (methods.size() == 0) {
             this.methods = MethodInternal.EMPTY_ARRAY;
+            return;
         }
 
         this.methods = new MethodInternal[methods.size()];

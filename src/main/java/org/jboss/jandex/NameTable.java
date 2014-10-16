@@ -30,6 +30,7 @@ class NameTable {
     private StrongInternPool<Type[]> typeListPool = new StrongInternPool<Type[]>();
     private StrongInternPool<byte[]> bPool = new StrongInternPool<byte[]>();
     private StrongInternPool<MethodInternal> mPool = new StrongInternPool<MethodInternal>();
+    private StrongInternPool<FieldInternal> fpool = new StrongInternPool<FieldInternal>();
     private Map<String, DotName> names = new HashMap<String, DotName>();
 
     DotName convertToName(String name) {
@@ -87,6 +88,10 @@ class NameTable {
 
     MethodInternal intern(MethodInternal methodInternal) {
         return mPool.intern(methodInternal);
+    }
+
+    FieldInternal intern(FieldInternal fieldInternal) {
+        return fpool.intern(fieldInternal);
     }
 
     DotName intern(DotName dotName, char delim) {

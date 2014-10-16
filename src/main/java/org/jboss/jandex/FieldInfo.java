@@ -18,6 +18,7 @@
 
 package org.jboss.jandex;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,7 +36,7 @@ import java.util.List;
  */
 public final class FieldInfo implements AnnotationTarget {
     static final FieldInfo[] EMPTY_ARRAY = new FieldInfo[0];
-    private final String name;
+    private final byte[] name;
     private Type type;
     private final short flags;
     private final ClassInfo clazz;
@@ -44,12 +45,24 @@ public final class FieldInfo implements AnnotationTarget {
     static final NameComparator NAME_COMPARATOR = new NameComparator();
 
     static class NameComparator implements Comparator<FieldInfo> {
+
+        private int compare(byte[] left, byte[] right) {
+               for (int i = 0, j = 0; i < left.length && j < right.length; i++, j++) {
+                   int a = (left[i] & 0xff);
+                   int b = (right[j] & 0xff);
+                   if (a != b) {
+                       return a - b;
+                   }
+               }
+               return left.length - right.length;
+           }
+
         public int compare(FieldInfo instance, FieldInfo instance2) {
-            return instance.name.compareTo(instance2.name);
+            return compare(instance.name, instance2.name); //instance.name.compareTo(instance2.name);
         }
     }
 
-    FieldInfo(ClassInfo clazz, String name, Type type, short flags) {
+    FieldInfo(ClassInfo clazz, byte[] name, Type type, short flags) {
         this.clazz = clazz;
         this.name = name;
         this.type = type;
@@ -73,7 +86,7 @@ public final class FieldInfo implements AnnotationTarget {
          if (name == null)
              throw new IllegalArgumentException("Name can't be null");
 
-        return new FieldInfo(clazz, name, type, flags);
+        return new FieldInfo(clazz, Utils.toUTF8(name), type, flags);
     }
 
 
@@ -83,7 +96,11 @@ public final class FieldInfo implements AnnotationTarget {
      * @return the local name of the field
      */
     public final String name() {
-        return name;
+        try {
+            return new String(name, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

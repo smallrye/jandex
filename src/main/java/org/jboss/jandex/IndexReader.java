@@ -128,7 +128,7 @@ public final class IndexReader {
             DotName name = classTable[stream.readPackedU32()];
             DotName superName = classTable[stream.readPackedU32()];
             short flags = stream.readShort();
-            // No args supported in version 3+
+            // No copyParameters supported in version 3+
             boolean hasNoArgsConstructor = version >= 3 && stream.readBoolean();
 
             int numIntfs = stream.readPackedU32();
@@ -167,7 +167,7 @@ public final class IndexReader {
                         String name = stringTable[stream.readPackedU32()];
                         Type type = readType(stream);
                         short flags = stream.readShort();
-                        target = new FieldInfo(clazz, name, type, flags);
+                        target = new FieldInfo(clazz, Utils.toUTF8(name), type, flags);
                         break;
                     }
                     case METHOD_TAG: {
@@ -269,7 +269,9 @@ public final class IndexReader {
         }
         Type returnType = readType(stream);
         short flags = stream.readShort();
-        return  new MethodInfo(clazz, name, args, returnType, flags);
+
+        byte[] bytes = Utils.toUTF8(name);
+        return new MethodInfo(clazz, bytes, args, returnType, flags);
     }
 
     private void recordAnnotation(Map<DotName, List<AnnotationInstance>> annotations, DotName annotation, AnnotationInstance instance) {

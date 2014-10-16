@@ -159,11 +159,11 @@ class GenericSignatureParser {
 
     static class MethodSignature {
         private final Type[] typeParameters;
-        private final List<Type> methodParameters;
+        private final Type[] methodParameters;
         private final Type returnType;
         private final Type[] throwables;
 
-        private MethodSignature(Type[] typeParameters, List<Type> methodParameters, Type returnType, Type[] throwables) {
+        private MethodSignature(Type[] typeParameters, Type[] methodParameters, Type returnType, Type[] throwables) {
             this.typeParameters = typeParameters;
             this.methodParameters = methodParameters;
             this.returnType = returnType;
@@ -178,7 +178,7 @@ class GenericSignatureParser {
             return returnType;
         }
 
-        public List<Type> methodParameters() {
+        public Type[] methodParameters() {
             return methodParameters;
         }
 
@@ -199,11 +199,11 @@ class GenericSignatureParser {
             }
 
             builder.append(returnType).append(" (");
-            if (methodParameters.size() > 0) {
-                builder.append(methodParameters.get(0));
+            if (methodParameters.length > 0) {
+                builder.append(methodParameters[0]);
 
-                for (int i = 1; i < methodParameters.size(); i++) {
-                    builder.append(", ").append(methodParameters.get(i));
+                for (int i = 1; i < methodParameters.length; i++) {
+                    builder.append(", ").append(methodParameters[i]);
                 }
             }
             builder.append(')');
@@ -234,7 +234,8 @@ class GenericSignatureParser {
             interfaces.add(names.intern(parseClassTypeSignature()));
         }
 
-        return new ClassSignature(parameters, superClass, interfaces.toArray(new Type[interfaces.size()]));
+        Type[] intfArray = names.intern(interfaces.toArray(new Type[interfaces.size()]));
+        return new ClassSignature(parameters, superClass, intfArray);
     }
 
     private void expect(char c) {
@@ -273,14 +274,15 @@ class GenericSignatureParser {
         pos++;
 
         Type returnType = parseReturnType();
-        List<Type> throwables = new ArrayList<Type>();
+        List<Type> exceptions = new ArrayList<Type>();
         while (pos < signature.length()) {
             expect('^');
-            throwables.add(parseReferenceType());
+            exceptions.add(parseReferenceType());
         }
 
-        return new MethodSignature(typeParameters, parameters, returnType,
-                throwables.toArray(new Type[throwables.size()]));
+        Type[] exceptionsArray = names.intern(exceptions.toArray(new Type[exceptions.size()]));
+        Type[] types = names.intern(parameters.toArray(new Type[parameters.size()]));
+        return new MethodSignature(typeParameters, types, returnType, exceptionsArray);
 
     }
 
@@ -304,15 +306,15 @@ class GenericSignatureParser {
             // A suffix is a parameterized type if it has typeParameters or it's owner is a parameterized type
             // The first parameterized type needs a standard class type for the owner
             if (type == null && types.length > 0) {
-                type = new ClassType(name.prefix());
+                type = names.intern(new ClassType(name.prefix()));
             }
 
             if (type != null) {
-                type = new ParameterizedType(name, types, type);
+                type = names.intern(new ParameterizedType(name, types, type));
             }
         }
         this.pos++; // ;
-        return type != null ? type : new ClassType(name);
+        return type != null ? type : names.intern(new ClassType(name));
     }
 
     private Type[] parseTypeArguments() {
@@ -341,7 +343,7 @@ class GenericSignatureParser {
         if (!argument) {
             resolveTypeList(types);
         }
-        return types.toArray(new Type[types.size()]);
+        return names.intern(types.toArray(new Type[types.size()]));
     }
 
     private Type parseTypeArgument() {
@@ -457,7 +459,6 @@ class GenericSignatureParser {
 
             return typeVariable != type ? typeVariable : null;
         }
-
 
         if (! (type instanceof UnresolvedTypeVariable)) {
             return null;

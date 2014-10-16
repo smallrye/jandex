@@ -142,7 +142,8 @@ public final class Indexer {
     private final static int HAS_INNER_CLASSES = 6;
     private final static int HAS_ENCLOSING_METHOD = 7;
 
-    private final static String INIT_METHOD_NAME = "<init>";
+    private final static byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
+
     private IdentityHashMap<AnnotationTarget, Object> signaturePresent;
 
     private static class InnerClassInfo {
@@ -196,12 +197,12 @@ public final class Indexer {
     private int[] constantPoolOffsets;
     private byte[] constantPoolAnnoAttrributes;
     private ClassInfo currentClass;
-    private volatile ClassInfo publishClass;
     private HashMap<DotName, List<AnnotationInstance>> classAnnotations;
     private ArrayList<AnnotationInstance> elementAnnotations;
     private List<Object> signatures;
     private Map<DotName, InnerClassInfo> innerClasses;
     private IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>> typeAnnotations;
+    private List<MethodInfo> methods;
 
     // Index lifespan fields
     private Map<DotName, List<AnnotationInstance>> masterAnnotations;
@@ -247,7 +248,7 @@ public final class Indexer {
 
         for (int i = 0; i < numMethods; i++) {
             short flags = (short) data.readUnsignedShort();
-            String name = intern(decodeUtf8Entry(data.readUnsignedShort()));
+            byte[] name = intern(decodeUtf8EntryAsBytes(data.readUnsignedShort()));
             String descriptor = decodeUtf8Entry(data.readUnsignedShort());
 
             IntegerHolder pos = new IntegerHolder();
@@ -256,7 +257,7 @@ public final class Indexer {
 
             MethodInfo method = new MethodInfo(currentClass, name, parameters, returnType, flags);
 
-            if (INIT_METHOD_NAME.equals(name) && parameters.size() == 0) {
+            if (parameters.size() == 0 && Arrays.equals(INIT_METHOD_NAME, name)) {
                 currentClass.setHasNoArgsConstructor(true);
             }
             processAttributes(data, method);
@@ -266,7 +267,7 @@ public final class Indexer {
             methods.add(method);
         }
 
-        currentClass.setMethods(methods);
+        this.methods = methods;
     }
 
     private void detectNoArgsConstructor(DataInputStream data) throws IOException {
@@ -305,7 +306,7 @@ public final class Indexer {
         List<FieldInfo> fields = numFields > 0 ? new ArrayList<FieldInfo>(numFields) : Collections.<FieldInfo>emptyList();
         for (int i = 0; i < numFields; i++) {
             short flags = (short) data.readUnsignedShort();
-            String name = intern(decodeUtf8Entry(data.readUnsignedShort()));
+            byte[] name = intern(decodeUtf8EntryAsBytes(data.readUnsignedShort()));
             Type type = parseType(decodeUtf8Entry(data.readUnsignedShort()));
             FieldInfo field = new FieldInfo(currentClass, name, type, flags);
 
@@ -511,17 +512,17 @@ public final class Indexer {
         }
     }
 
-    private static List<Type> readTypeParameters(AnnotationTarget target) {
+    private static Type[] copyTypeParameters(AnnotationTarget target) {
         if (target instanceof ClassInfo) {
-            return ((ClassInfo)target).typeParameters();
+            return ((ClassInfo)target).typeParameterArray().clone();
         } else if (target instanceof MethodInfo) {
-            return ((MethodInfo)target).typeParameters();
+            return ((MethodInfo)target).typeParameterArray().clone();
         }
 
         throw new IllegalStateException("Type annotation referred to type parameters on an invalid target: " + target);
     }
 
-    private void setTypeParameters(AnnotationTarget target, List<Type> typeParameters) {
+    private void setTypeParameters(AnnotationTarget target, Type[] typeParameters) {
         if (target instanceof ClassInfo) {
             ((ClassInfo)target).setTypeParameters(typeParameters);
             return;
@@ -544,31 +545,30 @@ public final class Indexer {
 
         if (typeTarget.kind() == TypeTarget.Kind.TYPE_PARAMETER_BOUND) {
             TypeParameterBoundTypeTarget bound = (TypeParameterBoundTypeTarget) typeTarget;
-            List<Type> types = new ArrayList<Type>(readTypeParameters(target));
+            Type[] types = copyTypeParameters(target);
             int index = bound.position();
-            if (index >= types.size()) {
+            if (index >= types.length) {
                 return;
             }
 
-            TypeVariable type = types.get(index).asTypeVariable();
+            TypeVariable type = types[index].asTypeVariable();
             int boundIndex = bound.boundPosition();
             if (boundIndex >= type.boundArray().length) {
                 return;
             }
             type = type.copyType(boundIndex, resolveTypePath(type.boundArray()[boundIndex], typeAnnotationState));
-            types.set(index, type);
-            setTypeParameters(target, types);
+            types[index] = intern(type);
+            setTypeParameters(target, intern(types));
         } else if (typeTarget.kind() == TypeTarget.Kind.TYPE_PARAMETER) {
             TypeParameterTypeTarget parameter = (TypeParameterTypeTarget) typeTarget;
-            List<Type> types = new ArrayList<Type>(readTypeParameters(target));
+            Type[] types = copyTypeParameters(target);
             int index = parameter.position();
-            if (index >= types.size()) {
+            if (index >= types.length) {
                 return;
             }
 
-            types.set(index, resolveTypePath(types.get(index), typeAnnotationState));
-            setTypeParameters(target, types);
-
+            types[index] = resolveTypePath(types[index], typeAnnotationState);
+            setTypeParameters(target, intern(types));
         } else if (typeTarget.kind() == TypeTarget.Kind.CLASS_EXTENDS) {
             ClassInfo clazz = (ClassInfo) target;
             ClassExtendsTypeTarget extendsTarget = (ClassExtendsTypeTarget) typeTarget;
@@ -576,22 +576,22 @@ public final class Indexer {
             if (index == 65535) {
                 clazz.setSuperClassType(resolveTypePath(clazz.superClassType(), typeAnnotationState));
             } else if (index < clazz.interfaceTypes().size()) {
-                List<Type> types = new ArrayList<Type>(clazz.interfaceTypes());
-                types.set(index, resolveTypePath(types.get(index), typeAnnotationState));
-                clazz.setInterfaceTypes(types);
+                Type[] types = clazz.copyInterfaceTypes();
+                types[index] = resolveTypePath(types[index], typeAnnotationState);
+                clazz.setInterfaceTypes(intern(types));
             }
         } else if (typeTarget.kind() == TypeTarget.Kind.METHOD_PARAMETER) {
             MethodInfo method = (MethodInfo) target;
             MethodParameterTypeTarget parameter = (MethodParameterTypeTarget) typeTarget;
             int index = parameter.position();
-            List<Type> types = new ArrayList<Type>(method.parameters());
+            Type[] types = method.copyParameters();
 
-            if (index >= types.size()) {
+            if (index >= types.length) {
                 return;
             }
 
-            types.set(index, resolveTypePath(types.get(index), typeAnnotationState));
-            method.setParameters(types, names);
+            types[index] = resolveTypePath(types[index], typeAnnotationState);
+            method.setParameters(intern(types));
         } else if (typeTarget.kind() == TypeTarget.Kind.EMPTY && target instanceof FieldInfo) {
             FieldInfo field = (FieldInfo) target;
             field.setType(resolveTypePath(field.type(), typeAnnotationState));
@@ -605,13 +605,14 @@ public final class Indexer {
         } else if (typeTarget.kind() == TypeTarget.Kind.THROWS  && target instanceof MethodInfo) {
             MethodInfo method = (MethodInfo) target;
             int position = ((ThrowsTypeTarget)typeTarget).position();
-            List<Type> exceptions = new ArrayList<Type>(method.exceptions());
+            Type[] exceptions = method.copyExceptions();
 
-            if (position >= exceptions.size()) {
+            if (position >= exceptions.length) {
                 return;
             }
 
-            exceptions.set(position, resolveTypePath(exceptions.get(position), typeAnnotationState));
+            exceptions[position] = resolveTypePath(exceptions[position], typeAnnotationState);
+            method.setExceptions(intern(exceptions));
         }
     }
 
@@ -619,7 +620,9 @@ public final class Indexer {
         Deque<PathElement> elements = typeAnnotationState.pathElements;
         PathElement element = elements.pollFirst();
         if (element == null) {
-            return type.addAnnotation(typeAnnotationState.annotation);
+            typeAnnotationState.target.setTarget(type);
+            // Clone the instance with a null target so that it can be interned
+            return intern(type.addAnnotation(new AnnotationInstance(typeAnnotationState.annotation, null)));
         }
 
         if (element.kind == PathElement.Kind.ARRAY) {
@@ -632,7 +635,7 @@ public final class Indexer {
             Type nested = dimensions > 0 ? new ArrayType(arrayType.component(), dimensions) : arrayType.component();
             nested = resolveTypePath(nested, typeAnnotationState);
 
-            return arrayType.copyType(nested, arrayType.dimensions() - dimensions);
+            return intern(arrayType.copyType(nested, arrayType.dimensions() - dimensions));
         } else if (element.kind == PathElement.Kind.PARAMETERIZED) {
             ParameterizedType parameterizedType = type.asParameterizedType();
             Type[] parameters = parameterizedType.parameterArray().clone();
@@ -642,11 +645,11 @@ public final class Indexer {
             }
 
             parameters[pos] = resolveTypePath(parameters[pos], typeAnnotationState);
-            return parameterizedType.copyType(parameters);
+            return intern(parameterizedType.copyType(parameters));
         } else if (element.kind == PathElement.Kind.WILDCARD_BOUND) {
             WildcardType wildcardType = type.asWildcardType();
             Type bound = resolveTypePath(wildcardType.bound(), typeAnnotationState);
-            return wildcardType.copyType(bound);
+            return intern(wildcardType.copyType(bound));
         } else if (element.kind == PathElement.Kind.NESTED) {
             int depth = 1;
             while (elements.size() > 0 && elements.peekFirst().kind == PathElement.Kind.NESTED) {
@@ -677,7 +680,7 @@ public final class Indexer {
             }
 
             if (last != null) {
-                last = pType != null ? pType.copyType(last) : new ParameterizedType(currentName, null, last);
+                last = intern(pType != null ? pType.copyType(last) : new ParameterizedType(currentName, null, last));
             } else if (pType != null) {
                 last = pType;
             }
@@ -685,7 +688,7 @@ public final class Indexer {
 
             if (depth == 0) {
                 if (last == null) {
-                    last = new ClassType(currentName);
+                    last = intern(new ClassType(currentName));
                 }
 
                 last = resolveTypePath(last, typeAnnotationState);
@@ -780,14 +783,14 @@ public final class Indexer {
     private void processExceptions(DataInputStream data, MethodInfo target) throws IOException {
         int numExceptions = data.readUnsignedShort();
 
-        List<Type> exceptions = numExceptions > 0 ? new ArrayList<Type>(numExceptions) : Collections.<Type>emptyList();
+        Type[] exceptions = numExceptions <= 0 ? Type.EMPTY_ARRAY : new Type[numExceptions];
         for (int i = 0; i < numExceptions; i++) {
-            exceptions.add(names.intern(new ClassType(decodeClassEntry(data.readUnsignedShort()))));
+            exceptions[i] = intern(new ClassType(decodeClassEntry(data.readUnsignedShort())));
         }
 
         // Do not overwrite a signature exception
         if (numExceptions > 0 && target.exceptions().size() == 0) {
-            target.setExceptions(exceptions, names);
+            target.setExceptions(exceptions);
         }
     }
 
@@ -800,9 +803,9 @@ public final class Indexer {
 
     private void parseClassSignature(String signature, ClassInfo clazz) {
         GenericSignatureParser.ClassSignature classSignature = signatureParser.parseClassSignature(signature);
-        clazz.setInterfaceTypes(Arrays.asList(classSignature.interfaces()));
+        clazz.setInterfaceTypes(classSignature.interfaces());
         clazz.setSuperClassType(classSignature.superClass());
-        clazz.setTypeParameters(Arrays.asList(classSignature.parameters()));
+        clazz.setTypeParameters(classSignature.parameters());
     }
 
     private void applySignatures() {
@@ -827,11 +830,11 @@ public final class Indexer {
 
     private void parseMethodSignature(String signature, MethodInfo method) {
         GenericSignatureParser.MethodSignature methodSignature = signatureParser.parseMethodSignature(signature);
-        method.setParameters(methodSignature.methodParameters(), names);
+        method.setParameters(methodSignature.methodParameters());
         method.setReturnType(methodSignature.returnType());
-        method.setTypeParameters(Arrays.asList(methodSignature.typeParameters()));
+        method.setTypeParameters(methodSignature.typeParameters());
         if (methodSignature.throwables().length > 0) {
-            method.setExceptions(Arrays.asList(methodSignature.throwables()),names);
+            method.setExceptions(methodSignature.throwables());
         }
     }
 
@@ -882,6 +885,18 @@ public final class Indexer {
 
     private String intern(String string) {
         return names.intern(string);
+    }
+
+    private byte[] intern(byte[] bytes) {
+        return names.intern(bytes);
+    }
+
+    private Type intern(Type type) {
+        return names.intern(type);
+    }
+
+    private Type[] intern(Type[] type) {
+        return names.intern(type);
     }
 
     private AnnotationValue processAnnotationElementValue(String name, DataInputStream data) throws IOException {
@@ -1015,6 +1030,19 @@ public final class Indexer {
 
         int len = (pool[++pos] & 0xFF) << 8 | (pool[++pos] & 0xFF);
         return new String(pool, ++pos, len, Charset.forName("UTF-8"));
+    }
+
+    private byte[] decodeUtf8EntryAsBytes(int index) {
+        byte[] pool = constantPool;
+        int[] offsets = constantPoolOffsets;
+
+        int pos = offsets[index - 1];
+        if (pool[pos] != CONSTANT_UTF8)
+            throw new IllegalStateException("Constant pool entry is not a utf8 info type: " + index + ":" + pos);
+
+        int len = (pool[++pos] & 0xFF) << 8 | (pool[++pos] & 0xFF);
+
+        return Arrays.copyOfRange(pool, ++pos, len + pos);
     }
 
     private static class NameAndType {
@@ -1286,13 +1314,9 @@ public final class Indexer {
             applySignatures();
             resolveTypeAnnotations();
 
-            // Trigger a happens-before edge since the annotation map, and no-arg boolean is populated
-            // AFTER the class is constructed.
-            //
-            // TODO this is probably not necessary and should be researched for removal
-            publishClass = currentClass;
+            currentClass.setMethods(methods, names);
 
-            return publishClass;
+            return currentClass;
         } finally {
             constantPool = null;
             constantPoolOffsets = null;

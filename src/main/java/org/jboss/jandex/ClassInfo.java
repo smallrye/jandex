@@ -18,6 +18,7 @@
 
 package org.jboss.jandex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -56,7 +57,7 @@ public final class ClassInfo implements AnnotationTarget {
     private Type[] interfaceTypes;
     private Type superClassType;
     private Type[] typeParameters;
-    private MethodInfo[] methods;
+    private MethodInternal[] methods;
     private FieldInfo[] fields;
     private boolean hasNoArgsConstructor;
     private NestingInfo nestingInfo;
@@ -171,23 +172,23 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     public final List<MethodInfo> methods() {
-        return Collections.unmodifiableList(Arrays.asList(methods));
+        return new MethodInfoGenerator(this, methods);
     }
 
     public final MethodInfo method(String name, Type... parameters) {
-        MethodInfo key = new MethodInfo(null, name, Arrays.asList(parameters), null, (short) 0);
-        int i = Arrays.binarySearch(methods, key, MethodInfo.NAME_AND_PARAMETER_COMPARATOR);
-        return i >= 0 ? methods[i] : null;
+        MethodInternal key = new MethodInternal(Utils.toUTF8(name), Arrays.asList(parameters), null, (short) 0);
+        int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
+        return i >= 0 ? new MethodInfo(this, methods[i]) : null;
     }
 
     public final MethodInfo firstMethod(String name) {
-        MethodInfo key = new MethodInfo(null, name, Collections.<Type>emptyList(), null, (short) 0);
-        int i = Arrays.binarySearch(methods, key, MethodInfo.NAME_AND_PARAMETER_COMPARATOR);
+        MethodInternal key = new MethodInternal(Utils.toUTF8(name), Collections.<Type>emptyList(), null, (short) 0);
+        int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
         if (i < -methods.length) {
             return null;
         }
 
-        MethodInfo method = i >= 0 ? methods[i] : methods[++i * -1];
+        MethodInfo method = new MethodInfo(this,i >= 0 ? methods[i] : methods[++i * -1]);
         return method.name().equals(name) ? method : null;
     }
 
@@ -203,6 +204,10 @@ public final class ClassInfo implements AnnotationTarget {
         return Collections.unmodifiableList(Arrays.asList(interfaceTypes));
     }
 
+    final Type[] copyInterfaceTypes() {
+        return interfaceTypes.clone();
+    }
+
     public final Type superClassType() {
         return superClassType;
     }
@@ -211,11 +216,15 @@ public final class ClassInfo implements AnnotationTarget {
         return Collections.unmodifiableList(Arrays.asList(typeParameters));
     }
 
+    final Type[] typeParameterArray() {
+        return typeParameters;
+    }
+
     /**
      * Returns a boolean indicating the presence of a no-arg constructor, if supported by the underlying index store.
      * This information is available in indexes produced by Jandex 1.2.0 and later.
      *
-     * @return <code>true</code> in case of the Java class has a no-args constructor, <code>false</code>
+     * @return <code>true</code> in case of the Java class has a no-copyParameters constructor, <code>false</code>
      *         if it does not, or it is not known
      * @since 1.2.0
      */
@@ -261,27 +270,31 @@ public final class ClassInfo implements AnnotationTarget {
         Arrays.sort(this.fields, FieldInfo.NAME_COMPARATOR);
     }
 
-    void setMethods(List<MethodInfo> methods) {
+    void setMethods(List<MethodInfo> methods, NameTable names) {
         if (methods.size() == 0) {
-            this.methods = MethodInfo.EMPTY_ARRAY;
+            this.methods = MethodInternal.EMPTY_ARRAY;
         }
 
-        this.methods = methods.toArray(new MethodInfo[methods.size()]);
-        Arrays.sort(this.methods, MethodInfo.NAME_AND_PARAMETER_COMPARATOR);
+        this.methods = new MethodInternal[methods.size()];
+        for (int i = 0; i < methods.size(); i++) {
+            MethodInfo methodInfo = methods.get(i);
+            MethodInternal internal = names.intern(methodInfo.methodInternal());
+            methodInfo.setMethodInternal(internal);
+            this.methods[i] = internal;
+        }
+        Arrays.sort(this.methods, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
     }
 
     void setSuperClassType(Type superClassType) {
         this.superClassType = superClassType;
     }
 
-    void setInterfaceTypes(List<Type> interfaceTypes) {
-        this.interfaceTypes = interfaceTypes.size() == 0 ? Type.EMPTY_ARRAY
-                                                         : interfaceTypes.toArray(new Type[interfaceTypes.size()]);
+    void setInterfaceTypes(Type[] interfaceTypes) {
+        this.interfaceTypes = interfaceTypes.length == 0 ? Type.EMPTY_ARRAY : interfaceTypes;
     }
 
-    void setTypeParameters(List<Type> typeParameters) {
-        this.typeParameters = typeParameters.size() == 0 ? Type.EMPTY_ARRAY
-                                                         : typeParameters.toArray(new Type[typeParameters.size()]);
+    void setTypeParameters(Type[] typeParameters) {
+        this.typeParameters = typeParameters.length == 0 ? Type.EMPTY_ARRAY : typeParameters;
     }
 
     void setInnerClassInfo(DotName enclosingClass, String simpleName) {

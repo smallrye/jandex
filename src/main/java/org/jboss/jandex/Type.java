@@ -252,15 +252,13 @@ public abstract class Type {
 
     Type addAnnotation(AnnotationInstance annotation) {
         AnnotationTarget target = annotation.target();
-        if (! (target instanceof TypeTarget)) {
+        if (target != null) {
             throw new IllegalArgumentException("Invalid target type");
         }
 
         AnnotationInstance[] newAnnotations = Arrays.copyOf(annotations, annotations.length + 1);
         newAnnotations[newAnnotations.length - 1] = annotation;
-        Type type = copyType(newAnnotations);
-        ((TypeTarget)target).setTarget(this);
-        return type;
+        return copyType(newAnnotations);
     }
 
     abstract Type copyType(AnnotationInstance[] newAnnotations);

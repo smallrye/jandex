@@ -162,6 +162,7 @@ public final class IndexWriter {
     }
 
     private int positionOf(DotName className) {
+        className = downgradeName(className);
         Integer i = classTable.get(className);
         if (i == null)
             throw new IllegalStateException("Class not found in class table:" + className);
@@ -383,12 +384,33 @@ public final class IndexWriter {
     }
 
     private void addClassName(DotName name) {
+        name = downgradeName(name);
+
         if (! classTable.containsKey(name))
             classTable.put(name, null);
 
         DotName prefix = name.prefix();
         if (prefix != null)
             addClassName(prefix);
+    }
+
+    private DotName downgradeName(DotName name) {
+        DotName n = name;
+        StringBuilder builder = null;
+        while (n.isInner()) {
+            if (builder == null) {
+                builder = new StringBuilder();
+            }
+
+            builder.insert(0, n.local()).insert(0, '$');
+            if (! n.prefix().isInner()) {
+                builder.insert(0, n.prefix().local());
+                name = new DotName(n.prefix().prefix(), builder.toString(), true, false);
+            }
+
+            n = n.prefix();
+        }
+        return name;
     }
 
 }

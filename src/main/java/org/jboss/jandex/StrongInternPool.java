@@ -127,6 +127,10 @@ class StrongInternPool<E> implements Cloneable, Serializable {
             return Arrays.equals((Object[])o1, (Object[])o2);
         }
 
+        if (o1 instanceof byte[] && o2 instanceof byte[]) {
+            return Arrays.equals((byte[])o1, (byte[])o2);
+        }
+
         return o1 != null && o1.equals(o2);
     }
 
@@ -140,7 +144,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
 
     // The normal bit spreader...
     private static final int hash(Object o) {
-        int h = o instanceof Object[] ? Arrays.hashCode((Object[])o) : o.hashCode();
+        int h = o instanceof Object[] ? Arrays.hashCode((Object[])o) : o instanceof byte[] ? Arrays.hashCode((byte[])o) : o.hashCode();
         h ^= (h >>> 20) ^ (h >>> 12);
         return h ^ (h >>> 7) ^ (h >>> 4);
     }

@@ -18,9 +18,7 @@
 
 package org.jboss.jandex;
 
-import java.security.Signature;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,6 +28,8 @@ class NameTable {
     private StrongInternPool<String> stringPool = new StrongInternPool<String>();
     private StrongInternPool<Type> typePool = new StrongInternPool<Type>();
     private StrongInternPool<Type[]> typeListPool = new StrongInternPool<Type[]>();
+    private StrongInternPool<byte[]> bPool = new StrongInternPool<byte[]>();
+    private StrongInternPool<MethodInternal> mPool = new StrongInternPool<MethodInternal>();
     private Map<String, DotName> names = new HashMap<String, DotName>();
 
     DotName convertToName(String name) {
@@ -79,6 +79,14 @@ class NameTable {
 
     Type[] intern(Type[] types) {
         return typeListPool.intern(types);
+    }
+
+    byte[] intern(byte[] bytes) {
+        return bPool.intern(bytes);
+    }
+
+    MethodInternal intern(MethodInternal methodInternal) {
+        return mPool.intern(methodInternal);
     }
 
     DotName intern(DotName dotName, char delim) {

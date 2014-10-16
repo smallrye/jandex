@@ -18,10 +18,9 @@
 
 package org.jboss.jandex;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -33,60 +32,18 @@ import java.util.List;
  * @author Jason T. Greene
  */
 public final class MethodInfo implements AnnotationTarget {
-    static final int SYNTHETIC = 0x1000;
-    static final int BRIDGE    = 0x0040;
-    static final MethodInfo[] EMPTY_ARRAY = new MethodInfo[0];
 
-    private final String name;
-    private Type[] parameters;
-    private Type returnType;
-    private Type[] exceptions;
-    private Type receiverType;
-    private Type[] typeParameters;
-    private AnnotationInstance[] annotations;
-
-    private final short flags;
+    private MethodInternal methodInternal = new MethodInternal();
     private final ClassInfo clazz;
 
-    static final NameAndParameterComparator NAME_AND_PARAMETER_COMPARATOR = new NameAndParameterComparator();
 
-    static class NameAndParameterComparator implements Comparator<MethodInfo> {
-        public int compare(MethodInfo instance, MethodInfo instance2) {
-            int x = instance.name().compareTo(instance2.name());
-            if (x != 0) {
-                return x;
-            }
-
-            x = instance.parameters.length - instance2.parameters.length;
-            if (x != 0) {
-                return x;
-            }
-
-            for (int i = 0; i < instance.parameters.length; i++) {
-                Type t1 = instance.parameters[i];
-                Type t2 = instance2.parameters[i];
-
-                x = t1.name().compareTo(t2.name());
-                if (x != 0) {
-                    return x;
-                }
-            }
-
-            // Prefer non-synthetic methods when matching
-            return (instance.flags & (SYNTHETIC|BRIDGE)) - (instance2.flags & (SYNTHETIC|BRIDGE));
-        }
+    MethodInfo(ClassInfo clazz, MethodInternal methodInternal) {
+        this.methodInternal = methodInternal;
+        this.clazz = clazz;
     }
 
-
-    MethodInfo(ClassInfo clazz, String name, List<Type> parameters, Type returnType,  short flags) {
-        this.clazz = clazz;
-        this.name = name;
-        this.parameters = parameters.size() == 0 ? Type.EMPTY_ARRAY : parameters.toArray(new Type[parameters.size()]);
-        this.returnType = returnType;
-        this.flags = flags;
-        this.annotations = AnnotationInstance.EMPTY_ARRAY;
-        this.exceptions = Type.EMPTY_ARRAY;
-        this.typeParameters = Type.EMPTY_ARRAY;
+    MethodInfo(ClassInfo clazz, byte[] name, List<Type> parameters, Type returnType,  short flags) {
+        this(clazz, new MethodInternal(name, parameters, returnType, flags));
     }
 
     /**
@@ -112,7 +69,13 @@ public final class MethodInfo implements AnnotationTarget {
          if (returnType == null)
             throw new IllegalArgumentException("returnType can't be null");
 
-         return new MethodInfo(clazz, name, Arrays.asList(args), returnType, flags);
+         byte[] bytes;
+         try {
+             bytes = name.getBytes("UTF-8");
+         } catch (UnsupportedEncodingException e) {
+             throw new IllegalArgumentException(e);
+         }
+         return new MethodInfo(clazz, bytes, Arrays.asList(args), returnType, flags);
      }
 
 
@@ -122,7 +85,7 @@ public final class MethodInfo implements AnnotationTarget {
      * @return the name of the method
      */
     public final String name() {
-        return name;
+        return methodInternal.name();
     }
 
     /**
@@ -141,7 +104,11 @@ public final class MethodInfo implements AnnotationTarget {
      */
     @Deprecated
     public final Type[] args() {
-        return parameters.clone();
+        return methodInternal.copyParameters();
+    }
+
+    final Type[] copyParameters() {
+        return methodInternal.copyParameters();
     }
 
     /**
@@ -150,7 +117,7 @@ public final class MethodInfo implements AnnotationTarget {
      * @return all parameter types
      */
     public final List<Type> parameters() {
-        return Collections.unmodifiableList(Arrays.asList(parameters));
+        return methodInternal.parameters();
     }
 
     /**
@@ -160,33 +127,35 @@ public final class MethodInfo implements AnnotationTarget {
      * @return the type of this method's return value
      */
     public final Type returnType() {
-        return returnType;
+        return methodInternal.returnType();
     }
 
     public final Type receiverType() {
-        return receiverType != null ? receiverType : new ClassType(clazz.name());
+        return methodInternal.receiverType(clazz);
     }
 
     public final List<Type> exceptions() {
-        return Collections.unmodifiableList(Arrays.asList(exceptions));
+        return methodInternal.exceptions();
+    }
+
+    final Type[] copyExceptions() {
+        return methodInternal.copyExceptions();
     }
 
     public final List<Type> typeParameters() {
-        return Collections.unmodifiableList(Arrays.asList(typeParameters));
+        return methodInternal.typeParameters();
     }
 
     public final List<AnnotationInstance> annotations() {
-        return Collections.unmodifiableList(Arrays.asList(annotations));
+        return methodInternal.annotations();
     }
 
     public final AnnotationInstance annotation(DotName name) {
-        AnnotationInstance key = new AnnotationInstance(name, null, null);
-        int i = Arrays.binarySearch(annotations, key, AnnotationInstance.NAME_COMPARATOR);
-        return i >= 0 ? annotations[i] : null;
+        return  methodInternal.annotation(name);
     }
 
     public final boolean hasAnnotation(DotName name) {
-        return annotation(name) != null;
+        return methodInternal.hasAnnotation(name);
     }
 
     /**
@@ -195,58 +164,46 @@ public final class MethodInfo implements AnnotationTarget {
      * @return the access flags of this method
      */
     public final short flags() {
-        return flags;
+        return methodInternal.flags();
     }
 
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(returnType).append(' ').append(clazz.name()).append('.').append(name).append('(');
-        for (int i = 0; i < parameters.length; i++) {
-            builder.append(parameters[i]);
-            if (i + 1 < parameters.length)
-                builder.append(", ");
-        }
-        builder.append(')');
-
-        if (exceptions.length > 0) {
-            builder.append(" throws ");
-            for (int i = 0; i < exceptions.length; i++) {
-                builder.append(exceptions[i]);
-                if (i < exceptions.length - 1) {
-                    builder.append(", ");
-                }
-            }
-        }
-
-        return builder.toString();
+        return methodInternal.toString();
     }
 
-    void setTypeParameters(List<Type> typeParameters) {
-        if (typeParameters.size() > 0) {
-            this.typeParameters = typeParameters.toArray(new Type[typeParameters.size()]);
-        }
+    final MethodInternal methodInternal() {
+        return methodInternal;
     }
 
-    void setParameters(List<Type> parameters, NameTable names) {
-        this.parameters = parameters.size() == 0 ? Type.EMPTY_ARRAY : names.intern(parameters.toArray(new Type[parameters.size()]));
+    final void setMethodInternal(MethodInternal methodInternal) {
+        this.methodInternal = methodInternal;
+    }
+
+    final Type[] typeParameterArray() {
+        return methodInternal.typeParameterArray();
+    }
+
+    void setTypeParameters(Type[] typeParameters) {
+        methodInternal.setTypeParameters(typeParameters);
+    }
+
+    void setParameters(Type[] parameters) {
+        methodInternal.setParameters(parameters);
     }
 
     void setReturnType(Type returnType) {
-        this.returnType = returnType;
+        methodInternal.setReturnType(returnType);
     }
 
-    void setExceptions(List<Type> exceptions, NameTable names) {
-        this.exceptions = exceptions.size() == 0 ? Type.EMPTY_ARRAY : names.intern(exceptions.toArray(new Type[exceptions.size()]));
+    void setExceptions(Type[] exceptions) {
+        methodInternal.setExceptions(exceptions);
     }
 
     void setReceiverType(Type receiverType) {
-        this.receiverType = receiverType;
+        methodInternal.setReceiverType(receiverType);
     }
 
     void setAnnotations(List<AnnotationInstance> annotations) {
-        if (annotations.size() > 0) {
-            this.annotations = annotations.toArray(new AnnotationInstance[annotations.size()]);
-            Arrays.sort(this.annotations, AnnotationInstance.NAME_COMPARATOR);
-        }
+        methodInternal.setAnnotations(annotations);
     }
 }

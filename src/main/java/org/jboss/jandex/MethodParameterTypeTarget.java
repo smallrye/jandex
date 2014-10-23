@@ -9,6 +9,10 @@ public class MethodParameterTypeTarget extends PositionBasedTypeTarget {
         super(enclosingTarget, position);
     }
 
+    MethodParameterTypeTarget(AnnotationTarget enclosingTarget, Type target, int position) {
+        super(enclosingTarget, target, position);
+    }
+
     @Override
     public final Kind kind() {
         return Kind.METHOD_PARAMETER;
@@ -17,5 +21,10 @@ public class MethodParameterTypeTarget extends PositionBasedTypeTarget {
     @Override
     public MethodInfo enclosingTarget() {
         return (MethodInfo) super.enclosingTarget();
+    }
+
+    @Override
+    public MethodParameterTypeTarget asMethodParameter() {
+        return this;
     }
 }

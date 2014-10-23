@@ -51,6 +51,10 @@ public class WildcardType extends Type {
         return bound;
     }
 
+    boolean isExtends() {
+        return isExtends;
+    }
+
     @Override
     public Kind kind() {
         return Kind.WILDCARD_TYPE;

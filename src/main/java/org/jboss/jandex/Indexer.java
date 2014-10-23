@@ -253,12 +253,12 @@ public final class Indexer {
             String descriptor = decodeUtf8Entry(data.readUnsignedShort());
 
             IntegerHolder pos = new IntegerHolder();
-            List<Type> parameters = parseMethodArgs(descriptor, pos);
+            Type[] parameters = intern(parseMethodArgs(descriptor, pos));
             Type returnType = parseType(descriptor, pos);
 
             MethodInfo method = new MethodInfo(currentClass, name, parameters, returnType, flags);
 
-            if (parameters.size() == 0 && Arrays.equals(INIT_METHOD_NAME, name)) {
+            if (parameters.length == 0 && Arrays.equals(INIT_METHOD_NAME, name)) {
                 currentClass.setHasNoArgsConstructor(true);
             }
             processAttributes(data, method);
@@ -291,9 +291,9 @@ public final class Indexer {
 
             if (INIT_METHOD_NAME.equals(name)) {
                 IntegerHolder pos = new IntegerHolder();
-                List<Type> args = parseMethodArgs(descriptor, pos);
+                Type[] args = parseMethodArgs(descriptor, pos);
 
-                if (args.size() == 0) {
+                if (args.length == 0) {
                     currentClass.setHasNoArgsConstructor(true);
                     return;
                 }
@@ -397,7 +397,7 @@ public final class Indexer {
         NameAndType nameAndType = decodeNameAndTypeEntry(index);
 
         IntegerHolder pos = new IntegerHolder();
-        List<Type> parameters = parseMethodArgs(nameAndType.descriptor, pos);
+        Type[] parameters = intern(parseMethodArgs(nameAndType.descriptor, pos));
         Type returnType = parseType(nameAndType.descriptor, pos);
 
         EnclosingMethodInfo method = new EnclosingMethodInfo(nameAndType.name, returnType, parameters, enclosingClass);
@@ -955,20 +955,22 @@ public final class Indexer {
         DotName superName = (superIndex != 0) ? decodeClassEntry(superIndex) : null;
 
         int numInterfaces = data.readUnsignedShort();
-        List<DotName> interfaces = new ArrayList<DotName>(numInterfaces);
+        List<Type> interfaces = new ArrayList<Type>(numInterfaces);
 
         for (int i = 0; i < numInterfaces; i++) {
-            interfaces.add(decodeClassEntry(data.readUnsignedShort()));
+            interfaces.add(intern(new ClassType(decodeClassEntry(data.readUnsignedShort()))));
         }
+        Type[] interfaceTypes = intern(interfaces.toArray(new Type[interfaces.size()]));
+        Type superClassType = superName == null ? null : intern(new ClassType(superName));
 
         this.classAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
-        this.currentClass = new ClassInfo(thisName, superName, flags, interfaces, classAnnotations);
+        this.currentClass = new ClassInfo(thisName, superClassType, flags, interfaceTypes, classAnnotations);
 
         if (superName != null)
             addSubclass(superName, currentClass);
 
         for (int i = 0; i < numInterfaces; i++) {
-            addImplementor(interfaces.get(i), currentClass);
+            addImplementor(interfaces.get(i).name(), currentClass);
         }
 
         classes.put(currentClass.name(), currentClass);
@@ -1139,7 +1141,7 @@ public final class Indexer {
 
     private static class IntegerHolder { private int i; };
 
-    private List<Type> parseMethodArgs(String descriptor, IntegerHolder pos) {
+    private Type[] parseMethodArgs(String descriptor, IntegerHolder pos) {
         if (descriptor.charAt(pos.i) != '(')
             throw new IllegalArgumentException("Invalid descriptor: " + descriptor);
 
@@ -1149,7 +1151,7 @@ public final class Indexer {
         }
 
         pos.i++;
-        return types;
+        return types.toArray(new Type[types.size()]);
     }
 
     private Type parseType(String descriptor) {

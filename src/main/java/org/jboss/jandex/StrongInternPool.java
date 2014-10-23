@@ -89,6 +89,11 @@ class StrongInternPool<E> implements Cloneable, Serializable {
      */
     private transient int modCount;
 
+    /**
+     * Cache for an index
+     */
+    private transient Index index;
+
     public StrongInternPool(int initialCapacity, float loadFactor) {
         if (initialCapacity < 0)
             throw new IllegalArgumentException("Can not have a negative size table!");
@@ -443,7 +448,11 @@ class StrongInternPool<E> implements Cloneable, Serializable {
     }
 
     public Index index() {
-        return new Index();
+        if (index == null || index.modCount != modCount) {
+            index = new Index();
+        }
+
+        return index;
     }
 
     public String toString() {
@@ -464,18 +473,21 @@ class StrongInternPool<E> implements Cloneable, Serializable {
 
     public class Index {
         private int[] offsets;
+        private int modCount;
 
         Index() {
             offsets = new int[table.length];
-            for (int i = 0, c = 0; i < offsets.length; i++) {
+            for (int i = 0, c = 1; i < offsets.length; i++) {
                 if (table[i] != null)
                     offsets[i] = c++;
             }
+            modCount = StrongInternPool.this.modCount;
         }
 
         public int positionOf(E e)
         {
-            return offsets[offset(e)];
+            int offset = offset(e);
+            return offset < 0 ? -1 : offsets[offset];
         }
     }
 

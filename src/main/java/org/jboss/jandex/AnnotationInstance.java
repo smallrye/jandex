@@ -171,6 +171,10 @@ public final class AnnotationInstance {
         return Collections.unmodifiableList(Arrays.asList(values));
     }
 
+    AnnotationValue[] valueArray() {
+        return values;
+    }
+
     public String toString(boolean simple) {
         StringBuilder builder = new StringBuilder("@").append(simple ? name.local() : name);
 

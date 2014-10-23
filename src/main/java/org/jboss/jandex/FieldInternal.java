@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-final class FieldInternal implements AnnotationTarget {
+final class FieldInternal {
     static final FieldInternal[] EMPTY_ARRAY = new FieldInternal[0];
     private final byte[] name;
     private Type type;
@@ -50,11 +50,15 @@ final class FieldInternal implements AnnotationTarget {
         }
     }
 
-    FieldInternal(ClassInfo clazz, byte[] name, Type type, short flags) {
+    FieldInternal(byte[] name, Type type, short flags) {
+        this(name, type, flags, AnnotationInstance.EMPTY_ARRAY);
+    }
+
+    FieldInternal(byte[] name, Type type, short flags, AnnotationInstance[] annotations) {
         this.name = name;
         this.type = type;
         this.flags = flags;
-        this.annotations = AnnotationInstance.EMPTY_ARRAY;
+        this.annotations = annotations;
     }
 
     @Override
@@ -97,12 +101,20 @@ final class FieldInternal implements AnnotationTarget {
         return Utils.fromUTF8(name);
     }
 
+    final byte[] nameBytes() {
+        return name;
+    }
+
     final Type type() {
         return type;
     }
 
     final List<AnnotationInstance> annotations() {
         return Collections.unmodifiableList(Arrays.asList(annotations));
+    }
+
+    final AnnotationInstance[] annotationArray() {
+        return annotations;
     }
 
     final short flags() {

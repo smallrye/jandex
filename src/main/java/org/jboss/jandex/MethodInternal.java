@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * @author Jason T. Greene
  */
-class MethodInternal {
+final class MethodInternal {
     static final int SYNTHETIC = 0x1000;
     static final int BRIDGE    = 0x0040;
     static final MethodInternal[] EMPTY_ARRAY = new MethodInternal[0];
@@ -64,14 +64,29 @@ class MethodInternal {
 
     MethodInternal() {}
 
-    MethodInternal(byte[] name, List<Type> parameters, Type returnType, short flags) {
+
+
+    MethodInternal(byte[] name, Type[] parameters, Type returnType, short flags) {
         this.name = name;
-        this.parameters = parameters.size() == 0 ? Type.EMPTY_ARRAY : parameters.toArray(new Type[parameters.size()]);
+        this.parameters = parameters.length == 0 ? Type.EMPTY_ARRAY : parameters;
         this.returnType = returnType;
         this.flags = flags;
         this.annotations = AnnotationInstance.EMPTY_ARRAY;
         this.exceptions = Type.EMPTY_ARRAY;
         this.typeParameters = Type.EMPTY_ARRAY;
+    }
+
+    MethodInternal(byte[] name, Type[] parameters, Type returnType, short flags,
+                   Type receiverType, Type[] typeParameters, Type[] exceptions,
+                   AnnotationInstance[] annotations) {
+        this.name = name;
+        this.parameters = parameters.length == 0 ? Type.EMPTY_ARRAY : parameters;
+        this.returnType = returnType;
+        this.flags = flags;
+        this.annotations = annotations;
+        this.exceptions = exceptions;
+        this.typeParameters = typeParameters;
+        this.receiverType = receiverType;
     }
 
     @Override
@@ -126,8 +141,16 @@ class MethodInternal {
         return Utils.fromUTF8(name);
     }
 
+    final byte[] nameBytes() {
+        return name;
+    }
+
     final Type[] copyParameters() {
         return parameters.clone();
+    }
+
+    final Type[] parameterArray() {
+        return parameters;
     }
 
     final Type[] copyExceptions() {
@@ -146,8 +169,16 @@ class MethodInternal {
         return receiverType != null ? receiverType : new ClassType(clazz.name());
     }
 
+    final Type receiverTypeField() {
+        return receiverType;
+    }
+
     final List<Type> exceptions() {
         return Collections.unmodifiableList(Arrays.asList(exceptions));
+    }
+
+    final Type[] exceptionArray() {
+        return exceptions;
     }
 
     final List<Type> typeParameters() {
@@ -156,6 +187,10 @@ class MethodInternal {
 
     final List<AnnotationInstance> annotations() {
         return Collections.unmodifiableList(Arrays.asList(annotations));
+    }
+
+    final AnnotationInstance[] annotationArray() {
+        return annotations;
     }
 
     final AnnotationInstance annotation(DotName name) {

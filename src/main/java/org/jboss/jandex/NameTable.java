@@ -28,9 +28,9 @@ class NameTable {
     private StrongInternPool<String> stringPool = new StrongInternPool<String>();
     private StrongInternPool<Type> typePool = new StrongInternPool<Type>();
     private StrongInternPool<Type[]> typeListPool = new StrongInternPool<Type[]>();
-    private StrongInternPool<byte[]> bPool = new StrongInternPool<byte[]>();
-    private StrongInternPool<MethodInternal> mPool = new StrongInternPool<MethodInternal>();
-    private StrongInternPool<FieldInternal> fpool = new StrongInternPool<FieldInternal>();
+    private StrongInternPool<byte[]> bytePool = new StrongInternPool<byte[]>();
+    private StrongInternPool<MethodInternal> methodPool = new StrongInternPool<MethodInternal>();
+    private StrongInternPool<FieldInternal> fieldPool = new StrongInternPool<FieldInternal>();
     private Map<String, DotName> names = new HashMap<String, DotName>();
 
     DotName convertToName(String name) {
@@ -74,24 +74,72 @@ class NameTable {
         return stringPool.intern(string);
     }
 
+    int positionOf(String string) {
+        return stringPool.index().positionOf(string);
+    }
+
     Type intern(Type type) {
         return typePool.intern(type);
+    }
+
+    int positionOf(Type type) {
+        return typePool.index().positionOf(type);
     }
 
     Type[] intern(Type[] types) {
         return typeListPool.intern(types);
     }
 
+    int positionOf(Type[] types) {
+        return typeListPool.index().positionOf(types);
+    }
+
     byte[] intern(byte[] bytes) {
-        return bPool.intern(bytes);
+        return bytePool.intern(bytes);
+    }
+
+    int positionOf(byte[] type) {
+        return bytePool.index().positionOf(type);
     }
 
     MethodInternal intern(MethodInternal methodInternal) {
-        return mPool.intern(methodInternal);
+        return methodPool.intern(methodInternal);
+    }
+
+    int positionOf(MethodInternal methodInternal) {
+        return methodPool.index().positionOf(methodInternal);
     }
 
     FieldInternal intern(FieldInternal fieldInternal) {
-        return fpool.intern(fieldInternal);
+        return fieldPool.intern(fieldInternal);
+    }
+
+    int positionOf(FieldInternal fieldInternal) {
+        return fieldPool.index().positionOf(fieldInternal);
+    }
+
+    StrongInternPool<String> stringPool() {
+        return stringPool;
+    }
+
+    StrongInternPool<byte[]> bytePool() {
+        return bytePool;
+    }
+
+    StrongInternPool<Type> typePool() {
+        return typePool;
+    }
+
+    StrongInternPool<Type[]> typeListPool() {
+        return typeListPool;
+    }
+
+    StrongInternPool<MethodInternal> methodPool() {
+        return methodPool;
+    }
+
+    StrongInternPool<FieldInternal> fieldPool() {
+        return fieldPool;
     }
 
     DotName intern(DotName dotName, char delim) {

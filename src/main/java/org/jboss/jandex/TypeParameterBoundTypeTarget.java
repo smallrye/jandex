@@ -11,6 +11,11 @@ public class TypeParameterBoundTypeTarget extends TypeParameterTypeTarget {
         this.boundPosition = boundPosition;
     }
 
+    TypeParameterBoundTypeTarget(AnnotationTarget enclosingTarget, Type target, int position, int boundPosition) {
+        super(enclosingTarget, target, position);
+        this.boundPosition = boundPosition;
+    }
+
     public final int boundPosition() {
         return boundPosition;
     }
@@ -18,5 +23,10 @@ public class TypeParameterBoundTypeTarget extends TypeParameterTypeTarget {
     @Override
     public final Kind kind() {
         return Kind.TYPE_PARAMETER_BOUND;
+    }
+
+    @Override
+    public TypeParameterBoundTypeTarget asTypeParameterBound() {
+        return this;
     }
 }

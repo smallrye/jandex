@@ -34,15 +34,18 @@ import java.util.List;
 public final class MethodInfo implements AnnotationTarget {
 
     private MethodInternal methodInternal = new MethodInternal();
-    private final ClassInfo clazz;
+    private ClassInfo clazz;
 
+
+    MethodInfo() {
+    }
 
     MethodInfo(ClassInfo clazz, MethodInternal methodInternal) {
         this.methodInternal = methodInternal;
         this.clazz = clazz;
     }
 
-    MethodInfo(ClassInfo clazz, byte[] name, List<Type> parameters, Type returnType,  short flags) {
+    MethodInfo(ClassInfo clazz, byte[] name, Type[] parameters, Type returnType,  short flags) {
         this(clazz, new MethodInternal(name, parameters, returnType, flags));
     }
 
@@ -75,7 +78,7 @@ public final class MethodInfo implements AnnotationTarget {
          } catch (UnsupportedEncodingException e) {
              throw new IllegalArgumentException(e);
          }
-         return new MethodInfo(clazz, bytes, Arrays.asList(args), returnType, flags);
+         return new MethodInfo(clazz, bytes, args, returnType, flags);
      }
 
 
@@ -177,6 +180,10 @@ public final class MethodInfo implements AnnotationTarget {
 
     final void setMethodInternal(MethodInternal methodInternal) {
         this.methodInternal = methodInternal;
+    }
+
+    final void setClassInfo(ClassInfo clazz) {
+        this.clazz = clazz;
     }
 
     final Type[] typeParameterArray() {

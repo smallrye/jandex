@@ -35,8 +35,11 @@ import java.util.List;
  *
  */
 public final class FieldInfo implements AnnotationTarget {
-    private final ClassInfo clazz;
+    private ClassInfo clazz;
     private FieldInternal internal;
+
+    FieldInfo() {
+    }
 
     FieldInfo(ClassInfo clazz, FieldInternal internal) {
         this.clazz = clazz;
@@ -44,7 +47,7 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     FieldInfo(ClassInfo clazz, byte[] name, Type type, short flags) {
-        this(clazz, new FieldInternal(clazz, name, type, flags));
+        this(clazz, new FieldInternal(name, type, flags));
     }
 
     /**
@@ -125,5 +128,9 @@ public final class FieldInfo implements AnnotationTarget {
 
     void setFieldInternal(FieldInternal internal) {
         this.internal = internal;
+    }
+
+    void setClassInfo(ClassInfo clazz) {
+        this.clazz = clazz;
     }
 }

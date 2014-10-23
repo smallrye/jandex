@@ -151,4 +151,27 @@ public final class PrimitiveType extends Type {
                 return null;
         }
     }
+
+    static PrimitiveType fromOridinal(int ordinal) {
+        switch (ordinal) {
+            case 0:
+                return BYTE;
+            case 1:
+                return CHAR;
+            case 2:
+                return DOUBLE;
+            case 3:
+                return FLOAT;
+            case 4:
+                return INT;
+            case 5:
+                return LONG;
+            case 6:
+                return SHORT;
+            case 7:
+                return BOOLEAN;
+            default:
+                throw new IllegalArgumentException();
+        }
+    }
 }

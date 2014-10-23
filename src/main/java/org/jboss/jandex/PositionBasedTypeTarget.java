@@ -9,7 +9,11 @@ public abstract class PositionBasedTypeTarget extends TypeTarget {
     PositionBasedTypeTarget(AnnotationTarget enclosingTarget, int position) {
         super(enclosingTarget);
         this.position = position;
+    }
 
+    PositionBasedTypeTarget(AnnotationTarget enclosingTarget, Type target, int position) {
+        super(enclosingTarget, target);
+        this.position = position;
     }
 
     public final int position() {

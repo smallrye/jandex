@@ -11,6 +11,11 @@ public class EmptyTypeTarget extends TypeTarget {
         this.receiver = receiver;
     }
 
+    EmptyTypeTarget(AnnotationTarget enclosingTarget, Type target, boolean receiver) {
+        super(enclosingTarget, target);
+        this.receiver = receiver;
+    }
+
     public boolean isReceiver() {
         return receiver;
     }
@@ -18,5 +23,10 @@ public class EmptyTypeTarget extends TypeTarget {
     @Override
     public final Kind kind() {
         return Kind.EMPTY;
+    }
+
+    @Override
+    public EmptyTypeTarget asEmpty() {
+        return this;
     }
 }

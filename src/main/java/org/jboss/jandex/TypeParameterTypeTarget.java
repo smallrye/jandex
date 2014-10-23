@@ -9,8 +9,17 @@ public class TypeParameterTypeTarget extends PositionBasedTypeTarget {
         super(enclosingTarget, position);
     }
 
+    TypeParameterTypeTarget(AnnotationTarget enclosingTarget, Type target, int position) {
+        super(enclosingTarget, target, position);
+    }
+
     @Override
     public Kind kind() {
         return Kind.TYPE_PARAMETER;
+    }
+
+    @Override
+    public TypeParameterTypeTarget asTypeParameter() {
+        return this;
     }
 }

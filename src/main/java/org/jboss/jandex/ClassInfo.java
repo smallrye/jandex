@@ -18,6 +18,7 @@
 
 package org.jboss.jandex;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,8 +50,6 @@ public final class ClassInfo implements AnnotationTarget {
 
     private final DotName name;
     private final short flags;
-    private final DotName superName;
-    private final List<DotName> interfaces;
     private final Map<DotName, List<AnnotationInstance>> annotations;
 
     // Not final to allow lazy initialization, immutable once published
@@ -73,7 +72,7 @@ public final class ClassInfo implements AnnotationTarget {
     public static final class EnclosingMethodInfo {
         private String name;
         private Type returnType;
-        private List<Type> parameters;
+        private Type[] parameters;
         private DotName enclosingClass;
 
 
@@ -86,6 +85,10 @@ public final class ClassInfo implements AnnotationTarget {
         }
 
         public List<Type> parameters() {
+            return Collections.unmodifiableList(Arrays.asList(parameters));
+        }
+
+        Type[] parametersArray() {
             return parameters;
         }
 
@@ -93,19 +96,19 @@ public final class ClassInfo implements AnnotationTarget {
             return enclosingClass;
         }
 
-        EnclosingMethodInfo(String name, Type returnType, List<Type> parameters, DotName enclosingClass) {
+        EnclosingMethodInfo(String name, Type returnType, Type[] parameters, DotName enclosingClass) {
             this.name = name;
             this.returnType = returnType;
-            this.parameters = Collections.unmodifiableList(parameters);
+            this.parameters = parameters;
             this.enclosingClass = enclosingClass;
         }
 
         public String toString() {
             StringBuilder builder = new StringBuilder();
             builder.append(returnType).append(' ').append(enclosingClass).append('.').append(name).append('(');
-            for (int i = 0; i < parameters.size(); i++) {
-                builder.append(parameters.get(i));
-                if (i + 1 < parameters.size())
+            for (int i = 0; i < parameters.length; i++) {
+                builder.append(parameters[i]);
+                if (i + 1 < parameters.length)
                     builder.append(", ");
             }
             builder.append(')');
@@ -114,17 +117,18 @@ public final class ClassInfo implements AnnotationTarget {
 
     }
 
-    ClassInfo(DotName name, DotName superName, short flags, List<DotName> interfaces, Map<DotName, List<AnnotationInstance>> annotations) {
-        this(name, superName, flags, interfaces, annotations, false);
+    ClassInfo(DotName name, Type superClassType, short flags, Type[] interfaceTypes, Map<DotName, List<AnnotationInstance>> annotations) {
+        this(name, superClassType, flags, interfaceTypes, annotations, false);
     }
 
-    ClassInfo(DotName name, DotName superName, short flags, List<DotName> interfaces, Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
+    ClassInfo(DotName name, Type superClassType, short flags, Type[] interfaceTypes, Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
         this.name = name;
-        this.superName = superName;
+        this.superClassType = superClassType;
         this.flags = flags;
-        this.interfaces = Utils.emptyOrWrap(interfaces);
+        this.interfaceTypes = interfaceTypes.length == 0 ? Type.EMPTY_ARRAY : interfaceTypes;
         this.annotations = Collections.unmodifiableMap(annotations);  // FIXME
         this.hasNoArgsConstructor = hasNoArgsConstructor;
+        this.typeParameters = Type.EMPTY_ARRAY;
     }
 
     /**
@@ -139,7 +143,13 @@ public final class ClassInfo implements AnnotationTarget {
      * @return a new mock class representation
      */
     public static ClassInfo create(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
-        return new ClassInfo(name, superName, flags, Arrays.asList(interfaces), annotations, hasNoArgsConstructor);
+        Type[] interfaceTypes = new Type[interfaces.length];
+        for (int i = 0; i < interfaces.length; i++) {
+            interfaceTypes[i] = new ClassType(interfaces[i]);
+        }
+
+        ClassType superClassType = superName == null ? null : new ClassType(superName);
+        return new ClassInfo(name, superClassType, flags, interfaceTypes, annotations, hasNoArgsConstructor);
     }
 
     public String toString() {
@@ -155,12 +165,16 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     public final DotName superName() {
-        return superName;
+        return superClassType == null ? null : superClassType.name();
     }
 
     @Deprecated
     public final DotName[] interfaces() {
-        return interfaces.toArray(new DotName[interfaces.size()]);
+        DotName[] interfaces = new DotName[interfaceTypes.length];
+        for (int i = 0; i < interfaceTypes.length; i++) {
+            interfaces[i] = interfaceTypes[i].name();
+        }
+        return interfaces;
     }
 
     public final Map<DotName, List<AnnotationInstance>> annotations() {
@@ -175,14 +189,18 @@ public final class ClassInfo implements AnnotationTarget {
         return new MethodInfoGenerator(this, methods);
     }
 
+    final MethodInternal[] methodArray() {
+        return methods;
+    }
+
     public final MethodInfo method(String name, Type... parameters) {
-        MethodInternal key = new MethodInternal(Utils.toUTF8(name), Arrays.asList(parameters), null, (short) 0);
+        MethodInternal key = new MethodInternal(Utils.toUTF8(name), parameters, null, (short) 0);
         int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
         return i >= 0 ? new MethodInfo(this, methods[i]) : null;
     }
 
     public final MethodInfo firstMethod(String name) {
-        MethodInternal key = new MethodInternal(Utils.toUTF8(name), Collections.<Type>emptyList(), null, (short) 0);
+        MethodInternal key = new MethodInternal(Utils.toUTF8(name), Type.EMPTY_ARRAY, null, (short) 0);
         int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
         if (i < -methods.length) {
             return null;
@@ -196,12 +214,30 @@ public final class ClassInfo implements AnnotationTarget {
         return new FieldInfoGenerator(this, fields);
     }
 
+    final FieldInternal[] fieldArray() {
+        return fields;
+    }
+
     public final List<DotName> interfaceNames() {
-        return interfaces;
+        return new AbstractList<DotName>() {
+            @Override
+            public DotName get(int i) {
+                return interfaceTypes[i].name();
+            }
+
+            @Override
+            public int size() {
+                return interfaceTypes.length;
+            }
+        };
     }
 
     public final List<Type> interfaceTypes() {
         return Collections.unmodifiableList(Arrays.asList(interfaceTypes));
+    }
+
+    final Type[] interfaceTypeArray() {
+        return interfaceTypes;
     }
 
     final Type[] copyInterfaceTypes() {
@@ -276,6 +312,14 @@ public final class ClassInfo implements AnnotationTarget {
         Arrays.sort(this.fields, FieldInternal.NAME_COMPARATOR);
     }
 
+    void setFieldArray(FieldInternal[] fields) {
+        this.fields = fields;
+    }
+
+    void setMethodArray(MethodInternal[] methods) {
+        this.methods = methods;
+    }
+
     void setMethods(List<MethodInfo> methods, NameTable names) {
         if (methods.size() == 0) {
             this.methods = MethodInternal.EMPTY_ARRAY;
@@ -305,6 +349,10 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     void setInnerClassInfo(DotName enclosingClass, String simpleName) {
+        if (enclosingClass == null && simpleName == null) {
+            return;
+        }
+
         if (nestingInfo == null) {
             nestingInfo = new NestingInfo();
         }
@@ -314,6 +362,10 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     void setEnclosingMethod(EnclosingMethodInfo enclosingMethod) {
+        if (enclosingMethod == null) {
+            return;
+        }
+
         if (nestingInfo == null) {
             nestingInfo = new NestingInfo();
         }

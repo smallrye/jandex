@@ -188,7 +188,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         // Null is the implicit first entry
         Type[][] typeListTable = this.typeListTable;
         // Already emitted entries are omitted as gaps in the table portion
-        for (int i = 1; i < typeListTable.length; i = findNextNull(typeListTable, i)) {
+        for (int i = findNextNull(typeListTable, 1); i < typeListTable.length; i = findNextNull(typeListTable, i)) {
             typeListTable[i] = readTypeListEntry(stream);
         }
     }
@@ -459,7 +459,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         Type type = typeTable[stream.readPackedU32()];
 
         FieldInfo fieldInfo = new FieldInfo();
-        AnnotationInstance[] annotations = readAnnotations(stream, new MethodInfo());
+        AnnotationInstance[] annotations = readAnnotations(stream, fieldInfo);
         FieldInternal fieldInternal = new FieldInternal(name, type, flags, annotations);
         fieldInfo.setFieldInternal(fieldInternal);
         return fieldInternal;

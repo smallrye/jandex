@@ -66,19 +66,10 @@ public class Main {
             }
 
             long start = System.currentTimeMillis();
-            index = getIndex(start)
-                    ;
+            index = getIndex(start);
             //index.printAnnotations();
             outputFile = null;
             source = null;
-
-
-
-            for(;;) {
-                System.gc();
-                Thread.sleep(5000);
-            }
-
         } catch (Exception e) {
             if (!verbose && (e instanceof IllegalArgumentException || e instanceof FileNotFoundException)) {
                 System.err.println(e.getMessage() == null ? e.getClass().getSimpleName() : "ERROR: " + e.getMessage());

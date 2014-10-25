@@ -497,7 +497,7 @@ public final class Indexer {
         }
 
         BooleanHolder genericsRequired = new BooleanHolder();
-        Deque<PathElement> pathElements = processTargetPath(data, genericsRequired);
+        ArrayList<PathElement> pathElements = processTargetPath(data, genericsRequired);
         AnnotationInstance annotation = processAnnotation(data, typeTarget);
         return new TypeAnnotationState(typeTarget, annotation, pathElements, genericsRequired.bool);
     }
@@ -511,6 +511,27 @@ public final class Indexer {
                 resolveTypeAnnotation(key, annotation);
             }
         }
+    }
+
+    private void updateTypeTargets() {
+        for (Map.Entry<AnnotationTarget, List<TypeAnnotationState>> entry : typeAnnotations.entrySet()) {
+            AnnotationTarget key = entry.getKey();
+            List<TypeAnnotationState> annotations = entry.getValue();
+
+            for (TypeAnnotationState annotation : annotations) {
+                updateTypeTarget(key, annotation);
+            }
+        }
+    }
+
+    private static Type[] getTypeParameters(AnnotationTarget target) {
+        if (target instanceof ClassInfo) {
+            return ((ClassInfo)target).typeParameterArray();
+        } else if (target instanceof MethodInfo) {
+            return ((MethodInfo)target).typeParameterArray();
+        }
+
+        throw new IllegalStateException("Type annotation referred to type parameters on an invalid target: " + target);
     }
 
     private static Type[] copyTypeParameters(AnnotationTarget target) {
@@ -539,6 +560,7 @@ public final class Indexer {
     private void resolveTypeAnnotation(AnnotationTarget target, TypeAnnotationState typeAnnotationState) {
         // Signature is erroneously omitted from bridge methods with generic type annotations
         if (typeAnnotationState.genericsRequired && !signaturePresent.containsKey(target)) {
+            typeAnnotationState.target.setTarget(VoidType.VOID);
             return;
         }
 
@@ -618,47 +640,145 @@ public final class Indexer {
     }
 
     private Type resolveTypePath(Type type, TypeAnnotationState typeAnnotationState) {
-        Deque<PathElement> elements = typeAnnotationState.pathElements;
-        PathElement element = elements.pollFirst();
+        PathElementStack elements = typeAnnotationState.pathElements;
+        PathElement element = elements.pop();
         if (element == null) {
-            typeAnnotationState.target.setTarget(type);
+            type = intern(type.addAnnotation(new AnnotationInstance(typeAnnotationState.annotation, null)));
+            typeAnnotationState.target.setTarget(type);       // FIXME
             // Clone the instance with a null target so that it can be interned
-            return intern(type.addAnnotation(new AnnotationInstance(typeAnnotationState.annotation, null)));
+            return type;
         }
 
-        if (element.kind == PathElement.Kind.ARRAY) {
-            ArrayType arrayType = type.asArrayType();
-            int dimensions = arrayType.dimensions();
-            while (--dimensions > 0 && elements.size() > 0 && elements.peekFirst().kind == PathElement.Kind.ARRAY) {
-                elements.pollFirst();
+        switch (element.kind) {
+            case ARRAY: {
+                ArrayType arrayType = type.asArrayType();
+                int dimensions = arrayType.dimensions();
+                while (--dimensions > 0 && elements.size() > 0 && elements.peek().kind == PathElement.Kind.ARRAY) {
+                    elements.pop();
+                }
+
+                Type nested = dimensions > 0 ? new ArrayType(arrayType.component(), dimensions) : arrayType.component();
+                nested = resolveTypePath(nested, typeAnnotationState);
+
+                return intern(arrayType.copyType(nested, arrayType.dimensions() - dimensions));
             }
+            case PARAMETERIZED: {
+                ParameterizedType parameterizedType = type.asParameterizedType();
+                Type[] parameters = parameterizedType.parameterArray().clone();
+                int pos = element.pos;
+                if (pos >= parameters.length) {
+                    throw new IllegalStateException("Type annotation referred to a type parameter that does not exist");
+                }
 
-            Type nested = dimensions > 0 ? new ArrayType(arrayType.component(), dimensions) : arrayType.component();
-            nested = resolveTypePath(nested, typeAnnotationState);
-
-            return intern(arrayType.copyType(nested, arrayType.dimensions() - dimensions));
-        } else if (element.kind == PathElement.Kind.PARAMETERIZED) {
-            ParameterizedType parameterizedType = type.asParameterizedType();
-            Type[] parameters = parameterizedType.parameterArray().clone();
-            int pos = element.pos;
-            if (pos >= parameters.length) {
-                throw new IllegalStateException("Type annotation referred to a type parameter that does not exist");
+                parameters[pos] = resolveTypePath(parameters[pos], typeAnnotationState);
+                return intern(parameterizedType.copyType(parameters));
             }
-
-            parameters[pos] = resolveTypePath(parameters[pos], typeAnnotationState);
-            return intern(parameterizedType.copyType(parameters));
-        } else if (element.kind == PathElement.Kind.WILDCARD_BOUND) {
-            WildcardType wildcardType = type.asWildcardType();
-            Type bound = resolveTypePath(wildcardType.bound(), typeAnnotationState);
-            return intern(wildcardType.copyType(bound));
-        } else if (element.kind == PathElement.Kind.NESTED) {
-            int depth = 1;
-            while (elements.size() > 0 && elements.peekFirst().kind == PathElement.Kind.NESTED) {
-                elements.pollFirst();
-                depth++;
+            case WILDCARD_BOUND: {
+                WildcardType wildcardType = type.asWildcardType();
+                Type bound = resolveTypePath(wildcardType.bound(), typeAnnotationState);
+                return intern(wildcardType.copyType(bound));
             }
+            case NESTED: {
+                int depth = popNestedDepth(elements);
 
-            return rebuildNestedType(type, depth, typeAnnotationState);
+                return rebuildNestedType(type, depth, typeAnnotationState);
+            }
+        }
+
+        throw new IllegalStateException("Unknown path element");
+    }
+
+    private int popNestedDepth(PathElementStack elements) {
+        int depth = 1;
+        while (elements.size() > 0 && elements.peek().kind == PathElement.Kind.NESTED) {
+            elements.pop();
+            depth++;
+        }
+        return depth;
+    }
+
+
+    private void updateTypeTarget(AnnotationTarget enclosingTarget, TypeAnnotationState typeAnnotationState) {
+        // Signature is erroneously omitted from bridge methods with generic type annotations
+        if (typeAnnotationState.genericsRequired && !signaturePresent.containsKey(enclosingTarget)) {
+            return;
+        }
+
+        typeAnnotationState.pathElements.reset();
+
+        TypeTarget target = typeAnnotationState.target;
+        Type type;
+        switch (target.kind()) {
+            case EMPTY: {
+                if (enclosingTarget instanceof FieldInfo) {
+                    type = ((FieldInfo)enclosingTarget).type();
+                } else {
+                    MethodInfo method = (MethodInfo) enclosingTarget;
+                    type = target.asEmpty().isReceiver() ? method.receiverType() : method.returnType();
+                }
+                break;
+            }
+            case CLASS_EXTENDS: {
+                ClassInfo clazz = (ClassInfo) enclosingTarget;
+                int position = target.asClassExtends().position();
+                type = position == 65535 ? clazz.superClassType() : clazz.interfaceTypeArray()[position];
+                break;
+            }
+            case METHOD_PARAMETER: {
+                MethodInfo method = (MethodInfo) enclosingTarget;
+                type = method.methodInternal().parameterArray()[target.asMethodParameter().position()];
+                break;
+            }
+            case TYPE_PARAMETER: {
+                type = getTypeParameters(enclosingTarget)[target.asTypeParameter().position()];
+                break;
+            }
+            case TYPE_PARAMETER_BOUND: {
+                TypeParameterBoundTypeTarget boundTarget = target.asTypeParameterBound();
+                type = getTypeParameters(enclosingTarget)[boundTarget.position()]
+                           .asTypeVariable().boundArray()[boundTarget.boundPosition()];
+                break;
+            }
+            case THROWS: {
+                type = ((MethodInfo)enclosingTarget).methodInternal().exceptionArray()[target.asThrows().position()];
+                break;
+            }
+            default:
+                throw new IllegalStateException("Unknown type target: " + target.kind());
+        }
+
+        type = searchTypePath(type, typeAnnotationState);
+        target.setTarget(type);
+    }
+
+    private Type searchTypePath(Type type, TypeAnnotationState typeAnnotationState) {
+        PathElementStack elements = typeAnnotationState.pathElements;
+        PathElement element = elements.pop();
+        if (element == null) {
+            return type;
+        }
+
+        switch (element.kind) {
+            case ARRAY: {
+                ArrayType arrayType = type.asArrayType();
+                int dimensions = arrayType.dimensions();
+                while (--dimensions > 0 && elements.size() > 0 && elements.peek().kind == PathElement.Kind.ARRAY) {
+                    elements.pop();
+                }
+                assert dimensions == 0;
+                return searchTypePath(arrayType.component(), typeAnnotationState);
+            }
+            case PARAMETERIZED: {
+                ParameterizedType parameterizedType = type.asParameterizedType();
+                return searchTypePath(parameterizedType.parameterArray()[element.pos], typeAnnotationState);
+            }
+            case WILDCARD_BOUND: {
+                return searchTypePath(type.asWildcardType().bound(), typeAnnotationState);
+            }
+            case NESTED: {
+                int depth = popNestedDepth(elements);
+                return searchNestedType(type, depth, typeAnnotationState);
+            }
         }
 
         throw new IllegalStateException("Unknown path element");
@@ -706,6 +826,28 @@ public final class Indexer {
         return last;
     }
 
+    private Type searchNestedType(Type type, int depth, TypeAnnotationState typeAnnotationState) {
+        DotName name = type.name();
+        Map<DotName, Type> ownerMap = buildOwnerMapNoCopy(type);
+        ArrayDeque<InnerClassInfo> classes = buildClassesQueue(name);
+
+        for (InnerClassInfo current : classes) {
+            DotName currentName = current.innnerClass;
+
+            // Static classes do not count for NESTED path elements
+            if (depth > 0 && !Modifier.isStatic(current.flags)) {
+                --depth;
+            }
+
+            if (depth == 0) {
+                Type owner = ownerMap.get(currentName);
+                return searchTypePath(owner == null ? type : owner, typeAnnotationState);
+            }
+        }
+
+        throw new IllegalStateException("Required class information is missing");
+    }
+
     private ArrayDeque<InnerClassInfo> buildClassesQueue(DotName name) {
         ArrayDeque<InnerClassInfo> classes = new ArrayDeque<InnerClassInfo>();
 
@@ -733,6 +875,18 @@ public final class Indexer {
         return pTypeTree;
     }
 
+    private Map<DotName, Type> buildOwnerMapNoCopy(Type type) {
+        Map<DotName, Type> typeTree = new HashMap<DotName, Type>();
+
+        Type nextType = type;
+        do {
+            typeTree.put(nextType.name(), nextType);
+            nextType = nextType.kind() == Type.Kind.PARAMETERIZED_TYPE ? nextType.asParameterizedType().owner() : null;
+        } while (nextType != null);
+
+        return typeTree;
+    }
+
 
     private static class PathElement {
         private static enum Kind {ARRAY, NESTED, WILDCARD_BOUND, PARAMETERIZED}
@@ -746,16 +900,46 @@ public final class Indexer {
         }
     }
 
+    private static class PathElementStack {
+        private int elementPos;
+        private final ArrayList<PathElement> pathElements;
+
+        PathElementStack(ArrayList<PathElement> pathElements) {
+            this.pathElements = pathElements;
+        }
+
+        PathElement pop() {
+            if (elementPos >= pathElements.size()) {
+                return null;
+            }
+
+            return pathElements.get(elementPos++);
+        }
+
+        PathElement peek() {
+            return pathElements.get(elementPos);
+        }
+
+        int size() {
+            return pathElements.size() - elementPos;
+        }
+
+        void reset() {
+            elementPos = 0;
+        }
+    }
+
     private static class TypeAnnotationState {
         private final TypeTarget target;
         private final AnnotationInstance annotation;
-        private final Deque<PathElement> pathElements;
         private final boolean genericsRequired;
+        private final PathElementStack pathElements;
 
-        public TypeAnnotationState(TypeTarget target, AnnotationInstance annotation, Deque<PathElement> pathElements, boolean genericsRequired) {
+
+        public TypeAnnotationState(TypeTarget target, AnnotationInstance annotation, ArrayList<PathElement> pathElements, boolean genericsRequired) {
             this.target = target;
             this.annotation = annotation;
-            this.pathElements = pathElements;
+            this.pathElements = new PathElementStack(pathElements);
             this.genericsRequired = genericsRequired;
         }
     }
@@ -764,10 +948,10 @@ public final class Indexer {
         boolean bool;
     }
 
-    private Deque<PathElement> processTargetPath(DataInputStream data, BooleanHolder genericsRequired) throws IOException {
+    private ArrayList<PathElement> processTargetPath(DataInputStream data, BooleanHolder genericsRequired) throws IOException {
         int numElements = data.readUnsignedByte();
 
-        Deque<PathElement> elements = new ArrayDeque<PathElement>(numElements);
+        ArrayList<PathElement> elements = new ArrayList<PathElement>(numElements);
         for (int i = 0; i < numElements; i++) {
             int kindIndex = data.readUnsignedByte();
             int pos = data.readUnsignedByte();
@@ -1316,6 +1500,7 @@ public final class Indexer {
 
             applySignatures();
             resolveTypeAnnotations();
+            updateTypeTargets();
 
             currentClass.setMethods(methods, names);
             currentClass.setFields(fields, names);

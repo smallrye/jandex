@@ -215,7 +215,7 @@ final class MethodInternal {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         String name = name();
-        builder.append(returnType).append(' ').append(name).append('.').append(name).append('(');
+        builder.append(returnType).append(' ').append(name).append('(');
         for (int i = 0; i < parameters.length; i++) {
             builder.append(parameters[i]);
             if (i + 1 < parameters.length)

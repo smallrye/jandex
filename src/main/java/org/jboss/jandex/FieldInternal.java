@@ -122,7 +122,7 @@ final class FieldInternal {
     }
 
     public String toString(ClassInfo clazz) {
-        return type + " " + clazz.name() + "." + name;
+        return type + " " + clazz.name() + "." + name();
     }
 
     void setType(Type type) {

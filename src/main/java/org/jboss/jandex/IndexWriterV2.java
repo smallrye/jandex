@@ -108,8 +108,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
         private int counter = 1;
 
         void addReference(T reference) {
-            assert table == null;
-
             if (references.containsKey(reference)) {
                 return;
             }
@@ -692,7 +690,13 @@ final class IndexWriterV2 extends IndexWriterImpl{
         for (AnnotationValue value : instance.values()) {
             buildAValueEntries(value);
         }
+
+        addAnnotationTarget(instance.target());
         annotationTable.addReference(instance);
+    }
+
+    private void addAnnotationTarget(AnnotationTarget target) {
+
     }
 
     private void addFieldList(FieldInternal[] fields) {
@@ -769,6 +773,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
                 break;
             case PARAMETERIZED_TYPE:
                 ParameterizedType parameterizedType = type.asParameterizedType();
+                addClassName(parameterizedType.name());
                 addType(parameterizedType.owner());
                 addTypeList(parameterizedType.parameterArray());
                 break;

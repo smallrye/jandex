@@ -21,10 +21,6 @@ public abstract class TypeTarget implements AnnotationTarget {
     }
 
     void setTarget(Type target) {
-        if (this.target != null) {
-            throw new IllegalStateException("Attempt to reassign target");
-        }
-
         this.target = target;
     }
 

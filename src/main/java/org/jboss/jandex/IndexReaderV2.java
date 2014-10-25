@@ -445,7 +445,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         Type[] exceptions = typeListTable[stream.readPackedU32()];
 
         MethodInfo methodInfo = new MethodInfo();
-        AnnotationInstance[] annotations = readAnnotations(stream, new MethodInfo());
+        AnnotationInstance[] annotations = readAnnotations(stream, methodInfo);
         MethodInternal methodInternal = new MethodInternal(name, parameters, returnType, flags,
                 receiverType, typeParameters,
                 exceptions, annotations);

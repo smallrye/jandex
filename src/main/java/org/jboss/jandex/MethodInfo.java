@@ -33,11 +33,12 @@ import java.util.List;
  */
 public final class MethodInfo implements AnnotationTarget {
 
-    private MethodInternal methodInternal = new MethodInternal();
+    private MethodInternal methodInternal;
     private ClassInfo clazz;
 
 
     MethodInfo() {
+        methodInternal = new MethodInternal();
     }
 
     MethodInfo(ClassInfo clazz, MethodInternal methodInternal) {

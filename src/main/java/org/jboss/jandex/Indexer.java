@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -566,7 +565,7 @@ public final class Indexer {
 
         TypeTarget typeTarget = typeAnnotationState.target;
 
-        if (typeTarget.kind() == TypeTarget.Kind.TYPE_PARAMETER_BOUND) {
+        if (typeTarget.usage() == TypeTarget.Usage.TYPE_PARAMETER_BOUND) {
             TypeParameterBoundTypeTarget bound = (TypeParameterBoundTypeTarget) typeTarget;
             Type[] types = copyTypeParameters(target);
             int index = bound.position();
@@ -582,7 +581,7 @@ public final class Indexer {
             type = type.copyType(boundIndex, resolveTypePath(type.boundArray()[boundIndex], typeAnnotationState));
             types[index] = intern(type);
             setTypeParameters(target, intern(types));
-        } else if (typeTarget.kind() == TypeTarget.Kind.TYPE_PARAMETER) {
+        } else if (typeTarget.usage() == TypeTarget.Usage.TYPE_PARAMETER) {
             TypeParameterTypeTarget parameter = (TypeParameterTypeTarget) typeTarget;
             Type[] types = copyTypeParameters(target);
             int index = parameter.position();
@@ -592,7 +591,7 @@ public final class Indexer {
 
             types[index] = resolveTypePath(types[index], typeAnnotationState);
             setTypeParameters(target, intern(types));
-        } else if (typeTarget.kind() == TypeTarget.Kind.CLASS_EXTENDS) {
+        } else if (typeTarget.usage() == TypeTarget.Usage.CLASS_EXTENDS) {
             ClassInfo clazz = (ClassInfo) target;
             ClassExtendsTypeTarget extendsTarget = (ClassExtendsTypeTarget) typeTarget;
             int index = extendsTarget.position();
@@ -603,7 +602,7 @@ public final class Indexer {
                 types[index] = resolveTypePath(types[index], typeAnnotationState);
                 clazz.setInterfaceTypes(intern(types));
             }
-        } else if (typeTarget.kind() == TypeTarget.Kind.METHOD_PARAMETER) {
+        } else if (typeTarget.usage() == TypeTarget.Usage.METHOD_PARAMETER) {
             MethodInfo method = (MethodInfo) target;
             MethodParameterTypeTarget parameter = (MethodParameterTypeTarget) typeTarget;
             int index = parameter.position();
@@ -615,17 +614,17 @@ public final class Indexer {
 
             types[index] = resolveTypePath(types[index], typeAnnotationState);
             method.setParameters(intern(types));
-        } else if (typeTarget.kind() == TypeTarget.Kind.EMPTY && target instanceof FieldInfo) {
+        } else if (typeTarget.usage() == TypeTarget.Usage.EMPTY && target instanceof FieldInfo) {
             FieldInfo field = (FieldInfo) target;
             field.setType(resolveTypePath(field.type(), typeAnnotationState));
-        } else if (typeTarget.kind() == TypeTarget.Kind.EMPTY && target instanceof MethodInfo) {
+        } else if (typeTarget.usage() == TypeTarget.Usage.EMPTY && target instanceof MethodInfo) {
             MethodInfo method = (MethodInfo) target;
             if (((EmptyTypeTarget) typeTarget).isReceiver()) {
                 method.setReceiverType(resolveTypePath(method.receiverType(), typeAnnotationState));
             } else {
                 method.setReturnType(resolveTypePath(method.returnType(), typeAnnotationState));
             }
-        } else if (typeTarget.kind() == TypeTarget.Kind.THROWS  && target instanceof MethodInfo) {
+        } else if (typeTarget.usage() == TypeTarget.Usage.THROWS  && target instanceof MethodInfo) {
             MethodInfo method = (MethodInfo) target;
             int position = ((ThrowsTypeTarget)typeTarget).position();
             Type[] exceptions = method.copyExceptions();
@@ -708,7 +707,7 @@ public final class Indexer {
 
         TypeTarget target = typeAnnotationState.target;
         Type type;
-        switch (target.kind()) {
+        switch (target.usage()) {
             case EMPTY: {
                 if (enclosingTarget instanceof FieldInfo) {
                     type = ((FieldInfo)enclosingTarget).type();
@@ -744,7 +743,7 @@ public final class Indexer {
                 break;
             }
             default:
-                throw new IllegalStateException("Unknown type target: " + target.kind());
+                throw new IllegalStateException("Unknown type target: " + target.usage());
         }
 
         type = searchTypePath(type, typeAnnotationState);

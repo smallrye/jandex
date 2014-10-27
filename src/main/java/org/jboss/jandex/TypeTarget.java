@@ -1,7 +1,5 @@
 package org.jboss.jandex;
 
-import java.util.Deque;
-
 /**
 * @author Jason T. Greene
 */
@@ -9,7 +7,7 @@ public abstract class TypeTarget implements AnnotationTarget {
     private final AnnotationTarget enclosingTarget;
     private Type target;
 
-    public enum Kind {EMPTY, CLASS_EXTENDS, METHOD_PARAMETER, TYPE_PARAMETER, TYPE_PARAMETER_BOUND, THROWS}
+    public enum Usage {EMPTY, CLASS_EXTENDS, METHOD_PARAMETER, TYPE_PARAMETER, TYPE_PARAMETER_BOUND, THROWS}
 
     TypeTarget(AnnotationTarget enclosingTarget, Type target) {
         this.enclosingTarget = enclosingTarget;
@@ -24,6 +22,11 @@ public abstract class TypeTarget implements AnnotationTarget {
         this.target = target;
     }
 
+    @Override
+    public final Kind kind() {
+        return Kind.TYPE;
+    }
+
     public AnnotationTarget enclosingTarget() {
         return enclosingTarget;
     }
@@ -32,7 +35,7 @@ public abstract class TypeTarget implements AnnotationTarget {
         return target;
     }
 
-    public abstract Kind kind();
+    public abstract Usage usage();
 
     public EmptyTypeTarget asEmpty() {
         throw new IllegalArgumentException("Not an empty type target");

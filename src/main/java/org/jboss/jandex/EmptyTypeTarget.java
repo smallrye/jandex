@@ -21,8 +21,8 @@ public class EmptyTypeTarget extends TypeTarget {
     }
 
     @Override
-    public final Kind kind() {
-        return Kind.EMPTY;
+    public final Usage usage() {
+        return Usage.EMPTY;
     }
 
     @Override

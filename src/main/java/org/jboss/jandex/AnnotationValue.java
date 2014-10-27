@@ -67,6 +67,9 @@ import java.util.Arrays;
 public abstract class AnnotationValue {
     static final AnnotationValue[] EMPTY_VALUE_ARRAY = new AnnotationValue[0];
 
+    public enum Kind {BYTE, SHORT, INTEGER, CHARACTER, FLOAT, DOUBLE, LONG,
+                      BOOLEAN, CLASS, STRING, ENUM, ARRAY, NESTED, UNKNOWN}
+
     private final String name;
 
     AnnotationValue(String name) {
@@ -141,9 +144,15 @@ public abstract class AnnotationValue {
      * Returns a detyped value that represents the underlying annotation value.
      * It is recommended that the type specific methods be used instead.
      *
-     * @return the underly value
+     * @return the underlying value
      */
     public abstract Object value();
+
+    public abstract Kind kind();
+
+    public Kind componentKind() {
+        throw new IllegalArgumentException("Not an array");
+    }
 
     /**
      * Converts the underlying numerical type to an integer as if it was
@@ -477,6 +486,11 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public Kind kind() {
+            return Kind.STRING;
+        }
+
         public String toString() {
             StringBuilder builder = new StringBuilder();
             if (super.name.length() > 0)
@@ -516,6 +530,11 @@ public abstract class AnnotationValue {
 
         public Byte value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.BYTE;
         }
 
         public int asInt() {
@@ -575,6 +594,11 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public Kind kind() {
+            return Kind.CHARACTER;
+        }
+
         public char asChar() {
             return value;
         }
@@ -610,6 +634,11 @@ public abstract class AnnotationValue {
 
         public Double value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.DOUBLE;
         }
 
         public int asInt() {
@@ -672,6 +701,11 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public Kind kind() {
+            return Kind.FLOAT;
+        }
+
         public int asInt() {
             return (int) value;
         }
@@ -728,6 +762,11 @@ public abstract class AnnotationValue {
 
         public Short value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.SHORT;
         }
 
         public int asInt() {
@@ -788,6 +827,11 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public Kind kind() {
+            return Kind.INTEGER;
+        }
+
         public int asInt() {
             return value;
         }
@@ -844,6 +888,11 @@ public abstract class AnnotationValue {
 
         public Long value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.LONG;
         }
 
         public int asInt() {
@@ -904,6 +953,11 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public Kind kind() {
+            return Kind.BOOLEAN;
+        }
+
         public boolean asBoolean() {
             return value;
         }
@@ -922,6 +976,11 @@ public abstract class AnnotationValue {
 
         public String value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ENUM;
         }
 
         public String asEnum() {
@@ -968,6 +1027,11 @@ public abstract class AnnotationValue {
             return type;
         }
 
+        @Override
+        public Kind kind() {
+            return Kind.CLASS;
+        }
+
         public Type asClass() {
             return type;
         }
@@ -1006,6 +1070,11 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public Kind kind() {
+            return Kind.NESTED;
+        }
+
         public AnnotationInstance asNested() {
             return value;
         }
@@ -1042,6 +1111,16 @@ public abstract class AnnotationValue {
 
         public AnnotationValue[] value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ARRAY;
+        }
+
+        @Override
+        public Kind componentKind() {
+            return value.length > 0 ? value[0].kind() : Kind.UNKNOWN;
         }
 
         AnnotationValue[] asArray() {

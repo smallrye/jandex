@@ -21,8 +21,8 @@ public class TypeParameterBoundTypeTarget extends TypeParameterTypeTarget {
     }
 
     @Override
-    public final Kind kind() {
-        return Kind.TYPE_PARAMETER_BOUND;
+    public final Usage usage() {
+        return Usage.TYPE_PARAMETER_BOUND;
     }
 
     @Override

@@ -152,6 +152,11 @@ public final class ClassInfo implements AnnotationTarget {
         return new ClassInfo(name, superClassType, flags, interfaceTypes, annotations, hasNoArgsConstructor);
     }
 
+    @Override
+    public final Kind kind() {
+        return Kind.CLASS;
+    }
+
     public String toString() {
         return name.toString();
     }

@@ -67,7 +67,6 @@ public class Main {
 
             long start = System.currentTimeMillis();
             index = getIndex(start);
-            //index.printAnnotations();
             outputFile = null;
             source = null;
         } catch (Exception e) {
@@ -160,9 +159,19 @@ public class Main {
             System.err.println("ERROR: Could not index " + source.getName() + ": " + message);
             if (verbose)
                 e.printStackTrace(System.err);
+        } finally {
+            safeClose(input);
         }
+    }
 
-        return;
+    private void safeClose(FileInputStream input) {
+        if (input != null) {
+            try {
+                input.close();
+            } catch (Throwable t) {
+                // EAT
+            }
+        }
     }
 
     private static void printUsage() {

@@ -13,8 +13,8 @@ public class ClassExtendsTypeTarget extends PositionBasedTypeTarget {
     }
 
     @Override
-    public final Kind kind() {
-        return Kind.CLASS_EXTENDS;
+    public final Usage usage() {
+        return Usage.CLASS_EXTENDS;
     }
 
     @Override

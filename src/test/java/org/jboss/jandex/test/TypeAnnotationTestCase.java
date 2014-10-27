@@ -25,6 +25,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -59,6 +61,14 @@ public class TypeAnnotationTestCase {
         indexer.index(stream);
 
         Index index = indexer.complete();
+
+        FileOutputStream out = new FileOutputStream("/tmp/blahblahblah");
+        IndexWriter writer = new IndexWriter(out);
+        writer.write(index);
+        out.close();
+
+        IndexReader reader = new IndexReader(new FileInputStream("/tmp/blahblahblah"));
+        index = reader.read();
 
         for (FieldInfo field : index.getClassByName(DotName.createSimple("org.wildfly.security.TExample")).fields()) {
             System.out.println(field.type());

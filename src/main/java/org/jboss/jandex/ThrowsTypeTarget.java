@@ -13,8 +13,8 @@ public class ThrowsTypeTarget extends PositionBasedTypeTarget {
     }
 
     @Override
-    public Kind kind() {
-        return Kind.THROWS;
+    public Usage usage() {
+        return Usage.THROWS;
     }
 
     @Override

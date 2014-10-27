@@ -69,4 +69,9 @@ public final class MethodParameterInfo implements AnnotationTarget {
     public String toString() {
         return method + " #" + parameter;
     }
+
+    @Override
+    public Kind kind() {
+        return Kind.METHOD_PARAMETER;
+    }
 }

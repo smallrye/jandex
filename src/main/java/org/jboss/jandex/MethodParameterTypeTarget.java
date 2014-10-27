@@ -14,8 +14,8 @@ public class MethodParameterTypeTarget extends PositionBasedTypeTarget {
     }
 
     @Override
-    public final Kind kind() {
-        return Kind.METHOD_PARAMETER;
+    public final Usage usage() {
+        return Usage.METHOD_PARAMETER;
     }
 
     @Override

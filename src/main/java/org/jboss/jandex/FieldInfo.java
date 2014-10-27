@@ -97,6 +97,10 @@ public final class FieldInfo implements AnnotationTarget {
         return internal.type();
     }
 
+    public final Kind kind() {
+        return Kind.FIELD;
+    }
+
     public List<AnnotationInstance> annotations() {
         return internal.annotations();
     }

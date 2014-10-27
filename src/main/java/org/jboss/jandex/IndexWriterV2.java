@@ -326,7 +326,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
     }
 
     private void writeTypeTarget(PackedDataOutputStream stream, TypeTarget typeTarget) throws IOException {
-        switch (typeTarget.kind()) {
+        switch (typeTarget.usage()) {
             case EMPTY: {
                 writeTypeTargetFields(stream, EMPTY_TYPE_TAG, typeTarget);
                 stream.writeByte(typeTarget.asEmpty().isReceiver() ? 1 : 0);

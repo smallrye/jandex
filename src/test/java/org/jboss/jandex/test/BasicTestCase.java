@@ -50,6 +50,11 @@ import org.junit.Test;
 
 public class BasicTestCase {
     @Retention(RetentionPolicy.RUNTIME)
+    public @interface FieldAnnotation {
+
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
     public @interface TestAnnotation {
         String name();
         int[] ints();
@@ -83,6 +88,9 @@ public class BasicTestCase {
     public class DummyClass implements Serializable {
         void doSomething(int x, long y, Long foo){}
         void doSomething(int x, long y){}
+
+        @FieldAnnotation
+        private int x;
 
         @MethodAnnotation1
         @MethodAnnotation2
@@ -129,7 +137,7 @@ public class BasicTestCase {
 
         index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
 
-        verifyDummy(index, false);
+        verifyDummy(index, true);
     }
 
     @Test

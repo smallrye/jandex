@@ -43,8 +43,18 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class AnnotationInstanceFilterTestCase {
-    private static class Hit implements AnnotationTarget{}
-    private static class Miss implements AnnotationTarget{}
+    private static class Hit implements AnnotationTarget{
+        @Override
+        public Kind kind() {
+            return null;
+        }
+    }
+    private static class Miss implements AnnotationTarget{
+        @Override
+        public Kind kind() {
+            return null;
+        }
+    }
 
     @Test
     public void testFilter() throws Exception {

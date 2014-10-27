@@ -31,4 +31,8 @@ package org.jboss.jandex;
  */
 public interface AnnotationTarget {
 
+    public enum Kind {CLASS, FIELD, METHOD, METHOD_PARAMETER, TYPE}
+
+    Kind kind();
+
 }

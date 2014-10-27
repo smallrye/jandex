@@ -38,7 +38,6 @@ public final class MethodInfo implements AnnotationTarget {
 
 
     MethodInfo() {
-        methodInternal = new MethodInternal();
     }
 
     MethodInfo(ClassInfo clazz, MethodInternal methodInternal) {
@@ -90,6 +89,10 @@ public final class MethodInfo implements AnnotationTarget {
      */
     public final String name() {
         return methodInternal.name();
+    }
+
+    public final Kind kind() {
+        return Kind.METHOD;
     }
 
     /**

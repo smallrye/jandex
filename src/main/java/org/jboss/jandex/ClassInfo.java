@@ -215,6 +215,16 @@ public final class ClassInfo implements AnnotationTarget {
         return method.name().equals(name) ? method : null;
     }
 
+    public final FieldInfo field(String name) {
+        FieldInternal key = new FieldInternal(Utils.toUTF8(name), VoidType.VOID, (short)0);
+        int i = Arrays.binarySearch(fields, key, FieldInternal.NAME_COMPARATOR);
+        if (i < 0) {
+            return null;
+        }
+
+        return new FieldInfo(this, fields[i]);
+    }
+
     public final List<FieldInfo> fields() {
         return new FieldInfoGenerator(this, fields);
     }

@@ -786,13 +786,13 @@ public final class Indexer {
 
     private Type rebuildNestedType(Type type, int depth, TypeAnnotationState typeAnnotationState) {
         DotName name = type.name();
-        Map<DotName, ParameterizedType> ownerMap = buildOwnerMap(type);
+        Map<DotName, Type> ownerMap = buildOwnerMap(type);
         ArrayDeque<InnerClassInfo> classes = buildClassesQueue(name);
 
         Type last = null;
         for (InnerClassInfo current : classes) {
             DotName currentName = current.innnerClass;
-            ParameterizedType pType = ownerMap.get(currentName);
+            Type oType = ownerMap.get(currentName);
 
             // Static classes do not count for NESTED path elements
             if (depth > 0 && /* current.enclosingClass != null && */ !Modifier.isStatic(current.flags)) {
@@ -800,9 +800,10 @@ public final class Indexer {
             }
 
             if (last != null) {
-                last = intern(pType != null ? pType.copyType(last) : new ParameterizedType(currentName, null, last));
-            } else if (pType != null) {
-                last = pType;
+                last = intern(oType != null ? convertParameterized(oType).copyType(last)
+                                            : new ParameterizedType(currentName, null, last));
+            } else if (oType != null) {
+                last = oType;
             }
 
 
@@ -825,9 +826,13 @@ public final class Indexer {
         return last;
     }
 
+    private ParameterizedType convertParameterized(Type oType) {
+        return oType instanceof ClassType ? oType.asClassType().toParameterizedType() : oType.asParameterizedType();
+    }
+
     private Type searchNestedType(Type type, int depth, TypeAnnotationState typeAnnotationState) {
         DotName name = type.name();
-        Map<DotName, Type> ownerMap = buildOwnerMapNoCopy(type);
+        Map<DotName, Type> ownerMap = buildOwnerMap(type);
         ArrayDeque<InnerClassInfo> classes = buildClassesQueue(name);
 
         for (InnerClassInfo current : classes) {
@@ -859,33 +864,16 @@ public final class Indexer {
         return classes;
     }
 
-    private Map<DotName, ParameterizedType> buildOwnerMap(Type type) {
-        Map<DotName, ParameterizedType> pTypeTree = new HashMap<DotName, ParameterizedType>();
-
+    private Map<DotName, Type> buildOwnerMap(Type type) {
+        Map<DotName, Type> pTypeTree = new HashMap<DotName, Type>();
 
         Type nextType = type;
         do {
-            ParameterizedType pType = nextType instanceof ParameterizedType
-                                      ? nextType.asParameterizedType()
-                                      : nextType.asClassType().toParameterizedType();
-            pTypeTree.put(pType.name(), pType);
-            nextType = pType.owner();
+            pTypeTree.put(nextType.name(), nextType);
+            nextType = nextType instanceof ParameterizedType ? nextType.asParameterizedType().owner() : null;
         } while (nextType != null);
         return pTypeTree;
     }
-
-    private Map<DotName, Type> buildOwnerMapNoCopy(Type type) {
-        Map<DotName, Type> typeTree = new HashMap<DotName, Type>();
-
-        Type nextType = type;
-        do {
-            typeTree.put(nextType.name(), nextType);
-            nextType = nextType.kind() == Type.Kind.PARAMETERIZED_TYPE ? nextType.asParameterizedType().owner() : null;
-        } while (nextType != null);
-
-        return typeTree;
-    }
-
 
     private static class PathElement {
         private static enum Kind {ARRAY, NESTED, WILDCARD_BOUND, PARAMETERIZED}

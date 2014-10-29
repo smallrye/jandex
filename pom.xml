@@ -3,6 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
     <properties>
         <jandexVersion>2.0.0.Alpha1</jandexVersion>
+        <maven.compiler.source>1.6</maven.compiler.source>
+        <maven.compiler.target>1.6</maven.compiler.target>
+        <jdk.min.version>1.6</jdk.min.version>
     </properties>
     
     <parent>
@@ -10,6 +13,7 @@
         <artifactId>jboss-parent</artifactId>
         <version>12</version>
     </parent>
+    <groupId>org.jboss.jandex</groupId>
     <artifactId>jandex</artifactId>
     <version>${jandexVersion}</version>
     <name>Java Annotation Indexer</name>
@@ -73,6 +77,13 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.7</version>
+            <type>jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.jandex</groupId>
+            <artifactId>typeannotation-test</artifactId>
+            <version>1.0</version>
             <type>jar</type>
             <scope>test</scope>
         </dependency>

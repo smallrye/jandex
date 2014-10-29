@@ -19,10 +19,11 @@
 package org.jboss.jandex.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -32,6 +33,8 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexReader;
+import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.ParameterizedType;
@@ -42,6 +45,23 @@ public class TypeAnnotationTestCase {
 
     @Test
     public void testIndexer() throws IOException {
+        Index index = buildIndex();
+        verifyTypeAnnotations(index);
+    }
+
+    @Test
+    public void testReadWrite() throws IOException {
+        Index index = buildIndex();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        new IndexWriter(baos).write(index);
+
+        index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
+
+        verifyTypeAnnotations(index);
+    }
+
+
+    private Index buildIndex() throws IOException {
         Indexer indexer = new Indexer();
         InputStream stream = getClass().getClassLoader().getResourceAsStream("test/TExample.class");
         indexer.index(stream);
@@ -52,8 +72,10 @@ public class TypeAnnotationTestCase {
         stream = getClass().getClassLoader().getResourceAsStream("test/VExample$1Fun.class");
         indexer.index(stream);
 
-        Index index = indexer.complete();
+        return indexer.complete();
+    }
 
+    private void verifyTypeAnnotations(Index index) {
         ClassInfo clazz = index.getClassByName(DotName.createSimple("test.TExample"));
         verifyTExampleFieldTypes(clazz);
 
@@ -70,7 +92,6 @@ public class TypeAnnotationTestCase {
 
         clazz = index.getClassByName(DotName.createSimple("test.VExample$O1$O2$O3$Nested"));
         verifyTypeParametersAndArguments(methodClass, clazz);
-
     }
 
     private void verifyTExampleFieldTypes(ClassInfo clazz) {

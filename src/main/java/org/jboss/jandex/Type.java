@@ -57,20 +57,22 @@ public abstract class Type {
         /** Used to designate a Java method that returns nothing */
         VOID,
 
+        /** A resolved generic type parameter or type argument */
         TYPE_VARIABLE,
 
+        /**
+         * An unresolved type parameter or argument. This is merely a placeholder
+         * which occurs during an error condition or incomplete processing. In most
+         * cases, it need not be dealt with.
+         */
         UNRESOLVED_TYPE_VARIABLE,
 
+        /** A generic wildcard type. */
         WILDCARD_TYPE,
 
+        /** A generic parameterized type */
         PARAMETERIZED_TYPE;
-        /**
-         * This method exists since the brainiacs that designed java thought
-         * that not only should enums be complex objects instead of simple
-         * integral types like every other sane language, they also should have
-         * the sole mechanism to reverse an ordinal (values() method) perform an
-         * array copy.
-         */
+
         public static Kind fromOrdinal(int ordinal) {
 
             switch (ordinal) {
@@ -156,10 +158,14 @@ public abstract class Type {
     }
 
     /**
-     * Returns the name of this type. Primitives and void are returned as the
+     * Returns the raw name of this type. Primitives and void are returned as the
      * Java reserved word (void, boolean, byte, short, char, int, long, float,
      * double). Arrays are returned using the internal JVM array syntax (see JVM
      * specification). Classes are returned as a normal DotName.
+     *
+     * <p>Generic values are returned as the underlying raw value. For example,
+     * a wildcard such as <code>? extends Number</code>, has a raw type of
+     * <code>Number</code>
      *
      * @return the name of this type
      */
@@ -174,34 +180,97 @@ public abstract class Type {
      */
     public abstract Kind kind();
 
+    /**
+     * Casts this type to a {@link org.jboss.jandex.ClassType} and returns it if the kind is {@link Kind#CLASS}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not a class
+     */
     public ClassType asClassType() {
         throw new IllegalArgumentException("Not a class type!");
     }
 
+    /**
+     * Casts this type to a {@link org.jboss.jandex.ParameterizedType} and returns it if the kind is
+     * {@link Kind#PARAMETERIZED_TYPE}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not a parameterized type
+     */
     public ParameterizedType asParameterizedType() {
         throw new IllegalArgumentException("Not a parameterized type!");
     }
 
+    /**
+     * Casts this type to a {@link org.jboss.jandex.ParameterizedType} and returns it if the kind is
+     * {@link Kind#TYPE_VARIABLE}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not a type variable
+     */
     public TypeVariable asTypeVariable() {
         throw new IllegalArgumentException("Not a type variable!");
     }
 
+    /**
+     * Casts this type to an {@link org.jboss.jandex.ArrayType} and returns it if the kind is
+     * {@link Kind#ARRAY}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not an array type
+     */
     public ArrayType asArrayType() {
         throw new IllegalArgumentException("Not an array type!");
     }
 
+    /**
+     * Casts this type to a {@link org.jboss.jandex.WildcardType} and returns it if the kind is
+     * {@link Kind#WILDCARD_TYPE}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not a wildcard type
+     */
     public WildcardType asWildcardType() {
         throw new IllegalArgumentException("Not a wildcard type!");
     }
 
+    /**
+     * Casts this type to an {@link org.jboss.jandex.UnresolvedTypeVariable} and returns it if the kind is
+     * {@link Kind#UNRESOLVED_TYPE_VARIABLE}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not an unresolved type
+     */
     public UnresolvedTypeVariable asUnresolvedTypeVariable() {
         throw new IllegalArgumentException("Not an unresolved type variable!");
     }
 
+    /**
+     * Casts this type to a {@link org.jboss.jandex.PrimitiveType} and returns it if the kind is
+     * {@link Kind#PRIMITIVE}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not a primitive type
+     */
     public PrimitiveType asPrimitiveType() {
         throw new IllegalArgumentException("Not a primitive type!");
     }
 
+    /**
+     * Casts this type to a {@link org.jboss.jandex.VoidType} and returns it if the kind is
+     * {@link Kind#VOID}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not a void type
+     */
     public VoidType asVoidType() {
         throw new IllegalArgumentException("Not a void type!");
     }

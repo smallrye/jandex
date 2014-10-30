@@ -18,6 +18,8 @@
 package org.jboss.jandex;
 
 /**
+ * Represents a Java array type declaration.
+ *
  * @author Jason T. Greene
  */
 public final class ArrayType extends Type {
@@ -35,6 +37,12 @@ public final class ArrayType extends Type {
         this.component = component;
     }
 
+    /**
+     * Returns the component type of the array. As an example, <code>String[]</code>
+     * has a component type of <code>String</code>
+     *
+     * @return the component type
+     */
     public Type component() {
         return component;
     }
@@ -87,6 +95,12 @@ public final class ArrayType extends Type {
         }
     }
 
+    /**
+     * The number of dimensions this array type has. For example, <code>String[][]</code>, would return a value
+     * of 2.
+     *
+     * @return the number of dimensions of this array type
+     */
     public int dimensions() {
         return dimensions;
     }

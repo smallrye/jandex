@@ -24,7 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Iteratively filters a map of multiple annotation targets to the instances with a specific target type.
+ * Iteratively filters a map of multiple annotation targets to the
+ * instances with a specific target type.
  *
  * @author Jason T. Greene
  */

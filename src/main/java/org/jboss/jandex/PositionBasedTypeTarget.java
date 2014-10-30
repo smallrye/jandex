@@ -34,6 +34,11 @@ public abstract class PositionBasedTypeTarget extends TypeTarget {
         this.position = position;
     }
 
+    /**
+     * Returns a subclass specific position where the type is located.
+     *
+     * @return the position
+     */
     public final int position() {
         return position;
     }

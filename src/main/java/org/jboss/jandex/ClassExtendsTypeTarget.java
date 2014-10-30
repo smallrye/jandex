@@ -18,8 +18,23 @@
 package org.jboss.jandex;
 
 /**
-* @author Jason T. Greene
-*/
+ * Represents a type annotation target which occurs in the extends or implements clause of an enclosing class.
+ * This class conveys the enclosing class definition, as well as a position to indicate the interface or superclass
+ * this target applies to. Since type targets can appear at any depth of the type tree at this location, the
+ * corresponding type reference is also included.
+ *
+ * <p>
+ * Consider the following example involving a type target using the "Bar" annotation:
+ *
+ * <pre>
+ * class Foo<T> implements List<@Bar T> {}
+ * </pre>
+ *
+ * This example would return a position of 1 (marking the first interface), an enclosing target of the
+ * <code>ClassInfo</code> representing "Foo", and a target type of the type variable "T".
+ *
+ * @author Jason T. Greene
+ */
 public class ClassExtendsTypeTarget extends PositionBasedTypeTarget {
     ClassExtendsTypeTarget(ClassInfo enclosingTarget, int position) {
         super(enclosingTarget, position);

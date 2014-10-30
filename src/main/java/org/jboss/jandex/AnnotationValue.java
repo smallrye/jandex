@@ -148,6 +148,18 @@ public abstract class AnnotationValue {
      */
     public abstract Object value();
 
+
+    /**
+     * Returns the kind of this value. The kind includes all Java primitives, String and Enum types, nested values,
+     * and finally arrays of the above. Since the return type is itself an enumeration, it can be used with
+     * Java switch statements.
+     *
+     * <p>
+     * A special {@link org.jboss.jandex.AnnotationValue.Kind#UNKNOWN} kind is used to refer to components
+     * of zero-length arrays, as the underlying type is not known.
+     *
+     * @return the kind of value
+     */
     public abstract Kind kind();
 
     public Kind componentKind() {

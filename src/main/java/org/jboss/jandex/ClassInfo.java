@@ -161,10 +161,21 @@ public final class ClassInfo implements AnnotationTarget {
         return name.toString();
     }
 
+    /**
+     * Returns the name of the class
+     *
+     * @return the name of the class
+     */
     public final DotName name() {
         return name;
     }
 
+    /**
+     * Returns the access flags for this class. The standard {@link java.lang.reflect.Modifier}
+     * can be used to decode the value.
+     *
+     * @return the access flags
+     */
     public final short flags() {
         return flags;
     }
@@ -173,6 +184,12 @@ public final class ClassInfo implements AnnotationTarget {
         return superClassType == null ? null : superClassType.name();
     }
 
+    /**
+     * Returns an array of interface names implemented by this class. Every call to this method
+     * performs a defensive copy, so {@link #interfaceNames()} should be used instead.
+     *
+     * @return an array of interface names implemented by this class
+     */
     @Deprecated
     public final DotName[] interfaces() {
         DotName[] interfaces = new DotName[interfaceTypes.length];
@@ -182,14 +199,39 @@ public final class ClassInfo implements AnnotationTarget {
         return interfaces;
     }
 
+    /**
+     * Returns a map indexed by annotation name, with a value list of annotation instances.
+     * The annotation instances in this map correspond to both annotations on the class,
+     * and every nested element of the class (fields, types, methods, etc).
+     *
+     * <p>The target of the annotation instance can be used to determine the location of
+     * the annotation usage.</p>
+     *
+     * @return the annotations specified on this class and its elements
+     */
     public final Map<DotName, List<AnnotationInstance>> annotations() {
         return annotations;
     }
 
+    /**
+     * Returns a list of all annotations directly declared on this class.
+     *
+     * @return the list of annotations declared on this class
+     */
     public final Collection<AnnotationInstance> classAnnotations() {
         return new AnnotationTargetFilterCollection<ClassInfo>(annotations, ClassInfo.class);
     }
 
+    /**
+     * Returns a list of all methods declared in this class. This includes constructors
+     * and static initializer blocks which have the special JVM assigned names of "&lt;init&gt;"
+     * and "&lt;clinit&gt;", respectively. It does not, however, include inherited methods.
+     * These must be discovered by traversing the class hierarchy.
+     *
+     * <p>This list may be empty, but never null.</p>
+     *
+     * @return the list of methods declared in this class
+     */
     public final List<MethodInfo> methods() {
         return new MethodInfoGenerator(this, methods);
     }
@@ -198,12 +240,35 @@ public final class ClassInfo implements AnnotationTarget {
         return methods;
     }
 
+    /**
+     * Retrieves a method based on its signature, which includes a method name and an argument list.
+     * The argument list is compared based on the underlying raw type of the type arguments. As an example,
+     * a generic type parameter "T" is equivalent to <code>java.lang.Object</code>, since the raw form
+     * of a type parameter is its upper bound.
+     *
+     * <p>Eligible methods include constructors and static initializer blocks which have the special JVM
+     * assigned names of "&lt;init&gt;" and "&lt;clinit&gt;", respectively. This does not, however, include
+     * inherited methods. These must be discovered by traversing the class hierarchy.</p>
+     *
+     * @param name the name of the method to find
+     * @param parameters the type parameters of the method
+     * @return the located method or null if not found
+     */
     public final MethodInfo method(String name, Type... parameters) {
         MethodInternal key = new MethodInternal(Utils.toUTF8(name), parameters, null, (short) 0);
         int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
         return i >= 0 ? new MethodInfo(this, methods[i]) : null;
     }
 
+    /**
+     * Retrieves the "first" occurrence of a method by the given name. Note that the order of methods
+     * is not defined, and may change in the future. Therefore, this method should not be used when
+     * overloading is possible. It's merely intended to provide a handy shortcut for throw away or test
+     * code.
+     *
+     * @param name the name of the method
+     * @return the first discovered method matching this name, or null if no match is found
+     */
     public final MethodInfo firstMethod(String name) {
         MethodInternal key = new MethodInternal(Utils.toUTF8(name), Type.EMPTY_ARRAY, null, (short) 0);
         int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
@@ -215,6 +280,13 @@ public final class ClassInfo implements AnnotationTarget {
         return method.name().equals(name) ? method : null;
     }
 
+    /**
+     * Retrieves a field by the given name. Only fields declared in this class are available.
+     * Locating inherited fields requires traversing the class hierarchy.
+     *
+     * @param name the name of the field
+     * @return the field
+     */
     public final FieldInfo field(String name) {
         FieldInternal key = new FieldInternal(Utils.toUTF8(name), VoidType.VOID, (short)0);
         int i = Arrays.binarySearch(fields, key, FieldInternal.NAME_COMPARATOR);
@@ -225,6 +297,13 @@ public final class ClassInfo implements AnnotationTarget {
         return new FieldInfo(this, fields[i]);
     }
 
+    /**
+     * Returns a list of all available fields. Only fields declared in this class are available.
+     * Locating inherited fields requires traversing the class hierarchy. This list may be
+     * empty, but never null.
+     *
+     * @return a list of fields
+     */
     public final List<FieldInfo> fields() {
         return new FieldInfoGenerator(this, fields);
     }
@@ -233,6 +312,15 @@ public final class ClassInfo implements AnnotationTarget {
         return fields;
     }
 
+
+    /**
+     * Returns a list of names for all interfaces this class implements. This list may be empty, but never null.
+     *
+     * <p>Note that this information is also available on the <code>Type</code> instances returned by
+     * {@link #interfaceTypes}</p>
+     *
+     * @return the list of names implemented by this class
+     */
     public final List<DotName> interfaceNames() {
         return new AbstractList<DotName>() {
             @Override
@@ -247,6 +335,12 @@ public final class ClassInfo implements AnnotationTarget {
         };
     }
 
+    /**
+     * Returns the list of types in the implements clause of this class. These types may be generic types.
+     * This list may be empty, but never null
+     *
+     * @return the list of types declared in the implements clause of this class
+     */
     public final List<Type> interfaceTypes() {
         return Collections.unmodifiableList(Arrays.asList(interfaceTypes));
     }
@@ -259,10 +353,21 @@ public final class ClassInfo implements AnnotationTarget {
         return interfaceTypes.clone();
     }
 
+    /**
+     * Returns a super type represented by the extends clause of this class. This type might be a generic type.
+     *
+     * @return the super class type definition in the extends clause
+     */
     public final Type superClassType() {
         return superClassType;
     }
 
+    /**
+     * Returns the generic type parameters of this class, if any. These will be returned as resolved type variables,
+     * so if a parameter has a bound on another parameter, that information will be available.
+     *
+     * @return the generic type parameters of this class
+     */
     public final List<Type> typeParameters() {
         return Collections.unmodifiableList(Arrays.asList(typeParameters));
     }
@@ -283,6 +388,12 @@ public final class ClassInfo implements AnnotationTarget {
         return hasNoArgsConstructor;
     }
 
+    /**
+     * Returns the nesting type of this class, which could either be a standard top level class, an inner class,
+     * an anonymous class, or a local class.
+     *
+     * @return the nesting type of this class
+     */
     public NestingType nestingType() {
         if (nestingInfo == null) {
             return NestingType.TOP_LEVEL;
@@ -295,14 +406,32 @@ public final class ClassInfo implements AnnotationTarget {
         return NestingType.ANONYMOUS;
     }
 
+    /**
+     * Returns the source declared name of this class if it is an inner class, or a local class. Otherwise
+     * this method will return null.
+     *
+     * @return the simple name of a local or inner class, or null if this is a top level or anonymous class
+     */
     public String simpleName() {
         return nestingInfo != null ? nestingInfo.simpleName : null;
     }
 
+    /**
+     * Returns the enclosing class if this is an inner class, or null if this is an anonymous, a local, or
+     * a top level class.
+     *
+     * @return the enclosing class if this class is an inner class
+     */
     public DotName enclosingClass() {
         return nestingInfo != null ? nestingInfo.enclosingClass : null;
     }
 
+    /**
+     * Returns the enclosing method of this class if it is a local, or anonymous class. It will return
+     * null if this class is a top level, or an inner class.
+     *
+     * @return
+     */
     public EnclosingMethodInfo enclosingMethod() {
         return nestingInfo != null ? nestingInfo.enclosingMethod : null;
     }

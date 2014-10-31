@@ -20,6 +20,7 @@ package org.jboss.jandex;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -88,6 +89,11 @@ class StrongInternPool<E> implements Cloneable, Serializable {
      */
     private transient int modCount;
 
+    /**
+     * Cache for an index
+     */
+    private transient Index index;
+
     public StrongInternPool(int initialCapacity, float loadFactor) {
         if (initialCapacity < 0)
             throw new IllegalArgumentException("Can not have a negative size table!");
@@ -118,7 +124,19 @@ class StrongInternPool<E> implements Cloneable, Serializable {
     }
 
     private static boolean eq(Object o1, Object o2) {
-        return o1 == o2 || (o1 != null && o1.equals(o2));
+        if (o1 == o2) {
+            return true;
+        }
+
+        if (o1 instanceof Object[] && o2 instanceof Object[]) {
+            return Arrays.equals((Object[])o1, (Object[])o2);
+        }
+
+        if (o1 instanceof byte[] && o2 instanceof byte[]) {
+            return Arrays.equals((byte[])o1, (byte[])o2);
+        }
+
+        return o1 != null && o1.equals(o2);
     }
 
     public StrongInternPool(int initialCapacity) {
@@ -131,7 +149,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
 
     // The normal bit spreader...
     private static final int hash(Object o) {
-        int h = o.hashCode();
+        int h = o instanceof Object[] ? Arrays.hashCode((Object[])o) : o instanceof byte[] ? Arrays.hashCode((byte[])o) : o.hashCode();
         h ^= (h >>> 20) ^ (h >>> 12);
         return h ^ (h >>> 7) ^ (h >>> 4);
     }
@@ -430,7 +448,11 @@ class StrongInternPool<E> implements Cloneable, Serializable {
     }
 
     public Index index() {
-        return new Index();
+        if (index == null || index.modCount != modCount) {
+            index = new Index();
+        }
+
+        return index;
     }
 
     public String toString() {
@@ -451,18 +473,21 @@ class StrongInternPool<E> implements Cloneable, Serializable {
 
     public class Index {
         private int[] offsets;
+        private int modCount;
 
         Index() {
             offsets = new int[table.length];
-            for (int i = 0, c = 0; i < offsets.length; i++) {
+            for (int i = 0, c = 1; i < offsets.length; i++) {
                 if (table[i] != null)
                     offsets[i] = c++;
             }
+            modCount = StrongInternPool.this.modCount;
         }
 
         public int positionOf(E e)
         {
-            return offsets[offset(e)];
+            int offset = offset(e);
+            return offset < 0 ? -1 : offsets[offset];
         }
     }
 

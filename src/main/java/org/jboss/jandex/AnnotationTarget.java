@@ -31,4 +31,40 @@ package org.jboss.jandex;
  */
 public interface AnnotationTarget {
 
+    /**
+     * Specifies the kind of object a target represents.
+     */
+    public enum Kind {
+        /**
+         * An object of type {@link org.jboss.jandex.ClassInfo}
+         */
+        CLASS,
+
+        /**
+         * An object of type {@link org.jboss.jandex.FieldInfo}
+         */
+        FIELD,
+
+        /**
+         * An object of type {@link org.jboss.jandex.MethodInfo}
+         */
+        METHOD,
+
+        /**
+         * An object of type {@link org.jboss.jandex.MethodParameterInfo}
+         */
+        METHOD_PARAMETER,
+
+        /**
+         * An object of type {@link org.jboss.jandex.TypeTarget}
+         */
+        TYPE}
+
+    /**
+     * Returns the kind of object this target represents.
+     *
+     * @return the target kind.
+     */
+    Kind kind();
+
 }

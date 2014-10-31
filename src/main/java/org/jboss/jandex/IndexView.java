@@ -77,7 +77,7 @@ public interface IndexView {
      * be searched when analyzing a jar that is a part of a complex
      * multi-module/classloader environment (like an EE application server).
      * <p/>
-     * The list of implementors may also include other interfaces, in order to get a complete
+     * The list of implementors may also include other methodParameters, in order to get a complete
      * list of all classes that are assignable to a given interface it is necessary to
      * recursively call {@link #getKnownDirectImplementors(DotName)} for every implementing
      * interface found.
@@ -89,11 +89,11 @@ public interface IndexView {
 
     /**
      * Returns all known classes that implement the given interface, directly and indirectly.
-     * This will all return classes that implement sub interfaces of the interface, and
+     * This will all return classes that implement sub methodParameters of the interface, and
      * sub-classes of classes that implement the interface. (In short, it will
      * return every class that is assignable to the interface that is found in the index)
      * <p/>
-     * This will only return classes, not interfaces.
+     * This will only return classes, not methodParameters.
      *
      * @param interfaceName The interface
      * @return All known implementors of the interface

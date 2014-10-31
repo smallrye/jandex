@@ -32,6 +32,7 @@ import java.io.Serializable;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,9 +43,17 @@ import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexReader;
 import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.PrimitiveType;
+import org.jboss.jandex.Type;
 import org.junit.Test;
 
 public class BasicTestCase {
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface FieldAnnotation {
+
+    }
+
     @Retention(RetentionPolicy.RUNTIME)
     public @interface TestAnnotation {
         String name();
@@ -57,6 +66,19 @@ public class BasicTestCase {
         NestedAnnotation[] nestedArray();
     }
 
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public @interface MethodAnnotation1 {}
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public @interface MethodAnnotation2 {}
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public @interface MethodAnnotation3 {}
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public @interface MethodAnnotation4 {}
+
     public @interface NestedAnnotation {
         float value();
     }
@@ -64,6 +86,16 @@ public class BasicTestCase {
     @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f), nestedArray = {
             @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) }, enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
     public class DummyClass implements Serializable {
+        void doSomething(int x, long y, Long foo){}
+        void doSomething(int x, long y){}
+
+        @FieldAnnotation
+        private int x;
+
+        @MethodAnnotation1
+        @MethodAnnotation2
+        @MethodAnnotation4
+        void doSomething(int x, long y, String foo){}
     }
 
     @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f), nestedArray = {
@@ -89,7 +121,7 @@ public class BasicTestCase {
         indexer.index(stream);
         Index index = indexer.complete();
 
-        verifyDummy(index);
+        verifyDummy(index, true);
         index.printSubclasses();
     }
 
@@ -105,7 +137,7 @@ public class BasicTestCase {
 
         index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
 
-        verifyDummy(index);
+        verifyDummy(index, true);
     }
 
     @Test
@@ -132,7 +164,7 @@ public class BasicTestCase {
         assertHasNoArgsConstructor(DummyTopLevelWithoutNoArgsConstructor.class, false);
     }
 
-    private void verifyDummy(Index index) {
+    private void verifyDummy(Index index, boolean v2features) {
         AnnotationInstance instance = index.getAnnotations(DotName.createSimple(TestAnnotation.class.getName())).get(0);
 
         // Verify values
@@ -154,6 +186,25 @@ public class BasicTestCase {
 
         implementors = index.getKnownDirectImplementors(DotName.createSimple(InputStream.class.getName()));
         assertEquals(0, implementors.size());
+
+        if (v2features) {
+            // Verify classAnnotations
+            ClassInfo clazz = (ClassInfo) instance.target();
+            assertTrue(clazz.classAnnotations().contains(instance));
+            assertEquals(1, clazz.classAnnotations().size());
+
+            // Verify method annotations
+            MethodInfo method = clazz.method("doSomething", PrimitiveType.INT, PrimitiveType.LONG, Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS));
+
+
+            assertNotNull(method);
+            assertEquals(3, method.annotations().size());
+            assertEquals(MethodAnnotation1.class.getName(), method.annotation(DotName.createSimple(MethodAnnotation1.class.getName())).name().toString());
+            assertEquals(MethodAnnotation2.class.getName(), method.annotation(DotName.createSimple(MethodAnnotation2.class.getName())).name().toString());
+            assertEquals(MethodAnnotation4.class.getName(), method.annotation(DotName.createSimple(MethodAnnotation4.class.getName())).name().toString());
+            assertFalse(method.hasAnnotation(DotName.createSimple(MethodAnnotation3.class.getName())));
+        }
+
 
         // Verify hasNoArgsConstructor
         assertFalse(index.getClassByName(DotName.createSimple(DummyClass.class.getName())).hasNoArgsConstructor());

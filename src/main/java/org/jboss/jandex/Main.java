@@ -40,6 +40,7 @@ public class Main {
     private boolean jarFile;
     private File outputFile;
     private File source;
+    private Index index;
 
 
     public static void main(String[] args) {
@@ -65,10 +66,9 @@ public class Main {
             }
 
             long start = System.currentTimeMillis();
-            Indexer indexer = new Indexer();
-            Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : JarIndexer.createJarIndex(source, indexer,modify,jarFile,verbose);
-            double time = (System.currentTimeMillis() - start) / 1000.00;
-            System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d bytes)\n", result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(), result.getBytes());
+            index = getIndex(start);
+            outputFile = null;
+            source = null;
         } catch (Exception e) {
             if (!verbose && (e instanceof IllegalArgumentException || e instanceof FileNotFoundException)) {
                 System.err.println(e.getMessage() == null ? e.getClass().getSimpleName() : "ERROR: " + e.getMessage());
@@ -81,6 +81,14 @@ public class Main {
                 printUsage();
             }
         }
+    }
+
+    private Index getIndex(long start) throws IOException {
+        Indexer indexer = new Indexer();
+        Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : JarIndexer.createJarIndex(source, indexer, modify, jarFile, verbose);
+        double time = (System.currentTimeMillis() - start) / 1000.00;
+        System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d bytes)\n", result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(), result.getBytes());
+        return result.getIndex();
     }
 
     private void dumpIndex(File source) throws IOException {
@@ -151,9 +159,19 @@ public class Main {
             System.err.println("ERROR: Could not index " + source.getName() + ": " + message);
             if (verbose)
                 e.printStackTrace(System.err);
+        } finally {
+            safeClose(input);
         }
+    }
 
-        return;
+    private void safeClose(FileInputStream input) {
+        if (input != null) {
+            try {
+                input.close();
+            } catch (Throwable t) {
+                // EAT
+            }
+        }
     }
 
     private static void printUsage() {

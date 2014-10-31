@@ -43,7 +43,7 @@ public final class MethodParameterInfo implements AnnotationTarget {
      * @param parameter the zero based index of this parameter
      * @return the new mock parameter info
      */
-    public static final MethodParameterInfo create(MethodInfo method, short parameter)
+    public static MethodParameterInfo create(MethodInfo method, short parameter)
     {
         return new MethodParameterInfo(method, parameter);
     }
@@ -68,5 +68,10 @@ public final class MethodParameterInfo implements AnnotationTarget {
 
     public String toString() {
         return method + " #" + parameter;
+    }
+
+    @Override
+    public Kind kind() {
+        return Kind.METHOD_PARAMETER;
     }
 }

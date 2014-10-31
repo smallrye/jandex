@@ -18,10 +18,15 @@
 
 package org.jboss.jandex;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
- * Represents a field that was annotated.
+ * Represents a field.
  *
  * <p><b>Thread-Safety</b></p>
  * This class is immutable and can be shared between threads without safe publication.
@@ -30,16 +35,19 @@ import java.lang.reflect.Modifier;
  *
  */
 public final class FieldInfo implements AnnotationTarget {
-    private final String name;
-    private final Type type;
-    private final short flags;
-    private final ClassInfo clazz;
+    private ClassInfo clazz;
+    private FieldInternal internal;
 
-    FieldInfo(ClassInfo clazz, String name, Type type, short flags) {
+    FieldInfo() {
+    }
+
+    FieldInfo(ClassInfo clazz, FieldInternal internal) {
         this.clazz = clazz;
-        this.name = name;
-        this.type = type;
-        this.flags = flags;
+        this.internal = internal;
+    }
+
+    FieldInfo(ClassInfo clazz, byte[] name, Type type, short flags) {
+        this(clazz, new FieldInternal(name, type, flags));
     }
 
     /**
@@ -51,14 +59,14 @@ public final class FieldInfo implements AnnotationTarget {
      * @param flags the field attributes
      * @return a mock field
      */
-    public static final FieldInfo create(ClassInfo clazz, String name, Type type, short flags) {
+    public static FieldInfo create(ClassInfo clazz, String name, Type type, short flags) {
          if (clazz == null)
              throw new IllegalArgumentException("Clazz can't be null");
 
          if (name == null)
              throw new IllegalArgumentException("Name can't be null");
 
-        return new FieldInfo(clazz, name, type, flags);
+        return new FieldInfo(clazz, Utils.toUTF8(name), type, flags);
     }
 
 
@@ -68,7 +76,7 @@ public final class FieldInfo implements AnnotationTarget {
      * @return the local name of the field
      */
     public final String name() {
-        return name;
+        return internal.name();
     }
 
     /**
@@ -81,12 +89,26 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns the Java Type of this field.
+     * Returns the <code>Type</code> declared on this field. This may be an array, a primitive, or a generic
+     * type definition.
      *
-     * @return the type
+     * @return the type of this field
      */
     public final Type type() {
-        return type;
+        return internal.type();
+    }
+
+    public final Kind kind() {
+        return Kind.FIELD;
+    }
+
+    /**
+     * Returns the list of annotation instances declared on this field. It may be empty, but never null.
+     *
+     * @return the list of annotations on this field
+     */
+    public List<AnnotationInstance> annotations() {
+        return internal.annotations();
     }
 
     /**
@@ -95,10 +117,30 @@ public final class FieldInfo implements AnnotationTarget {
      * @return the access flags of this field
      */
     public final short flags() {
-        return flags;
+        return internal.flags();
     }
 
     public String toString() {
-        return type + " " + clazz.name() + "." + name;
+        return internal.toString(clazz);
+    }
+
+    void setType(Type type) {
+        internal.setType(type);
+    }
+
+    void setAnnotations(List<AnnotationInstance> annotations) {
+        internal.setAnnotations(annotations);
+    }
+
+    FieldInternal fieldInternal() {
+        return internal;
+    }
+
+    void setFieldInternal(FieldInternal internal) {
+        this.internal = internal;
+    }
+
+    void setClassInfo(ClassInfo clazz) {
+        this.clazz = clazz;
     }
 }

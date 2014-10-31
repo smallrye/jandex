@@ -39,15 +39,30 @@ import java.util.List;
  */
 public final class AnnotationInstance {
     private static final AnnotationValue[] ANNOTATION_VALUES_TYPE = new AnnotationValue[0];
+    static final InstanceNameComparator NAME_COMPARATOR = new InstanceNameComparator();
+    static final AnnotationInstance[] EMPTY_ARRAY = new AnnotationInstance[0];
 
     private final DotName name;
-    private final AnnotationTarget target;
+    private AnnotationTarget target;
     private final AnnotationValue[] values;
+
+    static class InstanceNameComparator implements Comparator<AnnotationInstance> {
+        public int compare(AnnotationInstance instance, AnnotationInstance instance2) {
+            return instance.name().compareTo(instance2.name());
+        }
+    }
+
+
+    AnnotationInstance(AnnotationInstance instance, AnnotationTarget target) {
+        this.name = instance.name;
+        this.values = instance.values;
+        this.target = target;
+    }
 
     AnnotationInstance(DotName name, AnnotationTarget target, AnnotationValue[] values) {
         this.name = name;
         this.target = target;
-        this.values = values.length > 0 ? values : AnnotationValue.EMPTY_VALUE_ARRAY;
+        this.values = values != null && values.length > 0 ? values : AnnotationValue.EMPTY_VALUE_ARRAY;
     }
 
     /**
@@ -156,17 +171,48 @@ public final class AnnotationInstance {
         return Collections.unmodifiableList(Arrays.asList(values));
     }
 
-    public String toString() {
-        StringBuilder builder = new StringBuilder("@").append(name).append("(");
-        for (int i = 0; i < values.length; i++) {
-            builder.append(values[i]);
-            if (i < values.length - 1)
-                builder.append(",");
+    AnnotationValue[] valueArray() {
+        return values;
+    }
+
+    public String toString(boolean simple) {
+        StringBuilder builder = new StringBuilder("@").append(simple ? name.local() : name);
+
+        if (values.length > 0) {
+            builder.append("(");
+            for (int i = 0; i < values.length; i++) {
+                builder.append(values[i]);
+                if (i < values.length - 1)
+                    builder.append(",");
+            }
+            builder.append(')');
         }
-        builder.append(')');
-        if (target != null)
-            builder.append(" on ").append(target);
 
         return builder.toString();
+    }
+
+    void setTarget(AnnotationTarget target) {
+        if (this.target != null) {
+            throw new IllegalStateException("Attempt to modify target post-initialization");
+        }
+
+        this.target = target;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AnnotationInstance instance = (AnnotationInstance) o;
+
+        return target == instance.target && name.equals(instance.name) && Arrays.equals(values, instance.values);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + Arrays.hashCode(values);
+        return result;
     }
 }

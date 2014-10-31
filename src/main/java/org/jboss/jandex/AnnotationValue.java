@@ -18,6 +18,8 @@
 
 package org.jboss.jandex;
 
+import java.util.Arrays;
+
 /**
  * An annotation value represents a specific name and value combination in the
  * parameter list of an annotation instance. It also can represent a nested
@@ -65,61 +67,64 @@ package org.jboss.jandex;
 public abstract class AnnotationValue {
     static final AnnotationValue[] EMPTY_VALUE_ARRAY = new AnnotationValue[0];
 
+    public enum Kind {BYTE, SHORT, INTEGER, CHARACTER, FLOAT, DOUBLE, LONG,
+                      BOOLEAN, CLASS, STRING, ENUM, ARRAY, NESTED, UNKNOWN}
+
     private final String name;
 
     AnnotationValue(String name) {
         this.name = name;
     }
 
-    public static final AnnotationValue createByteValue(String name, byte b) {
+    public static AnnotationValue createByteValue(String name, byte b) {
         return new ByteValue(name, b);
     }
 
-    public static final AnnotationValue createShortValue(String name, short s) {
+    public static AnnotationValue createShortValue(String name, short s) {
         return new ShortValue(name, s);
     }
 
-    public static final AnnotationValue createIntegerValue(String name, int i) {
+    public static AnnotationValue createIntegerValue(String name, int i) {
         return new IntegerValue(name, i);
     }
 
-    public static final AnnotationValue createCharacterValue(String name, char c) {
+    public static AnnotationValue createCharacterValue(String name, char c) {
         return new CharacterValue(name, c);
     }
 
-    public static final AnnotationValue createFloatValue(String name, float f) {
+    public static AnnotationValue createFloatValue(String name, float f) {
         return new FloatValue(name, f);
     }
 
-    public static final AnnotationValue createDouleValue(String name, double d) {
+    public static AnnotationValue createDouleValue(String name, double d) {
         return new DoubleValue(name, d);
     }
 
-    public static final AnnotationValue createLongalue(String name, long l) {
+    public static AnnotationValue createLongalue(String name, long l) {
         return new LongValue(name, l);
     }
 
-    public static final AnnotationValue createBooleanValue(String name, boolean bool) {
+    public static AnnotationValue createBooleanValue(String name, boolean bool) {
         return new BooleanValue(name, bool);
     }
 
-    public static final AnnotationValue createStringValue(String name, String string) {
+    public static AnnotationValue createStringValue(String name, String string) {
         return new StringValue(name, string);
     }
 
-    public static final AnnotationValue createClassValue(String name, Type type) {
+    public static AnnotationValue createClassValue(String name, Type type) {
         return new ClassValue(name, type);
     }
 
-    public static final AnnotationValue createEnumValue(String name, DotName typeName, String value) {
+    public static AnnotationValue createEnumValue(String name, DotName typeName, String value) {
         return new EnumValue(name, typeName, value);
     }
 
-    public static final AnnotationValue createArrayValue(String name, AnnotationValue[] values) {
+    public static AnnotationValue createArrayValue(String name, AnnotationValue[] values) {
         return new ArrayValue(name, values);
     }
 
-    public static final AnnotationValue createNestedAnnotationValue(String name, AnnotationInstance instance)
+    public static AnnotationValue createNestedAnnotationValue(String name, AnnotationInstance instance)
     {
         return new NestedAnnotation(name, instance);
     }
@@ -139,9 +144,27 @@ public abstract class AnnotationValue {
      * Returns a detyped value that represents the underlying annotation value.
      * It is recommended that the type specific methods be used instead.
      *
-     * @return the underly value
+     * @return the underlying value
      */
     public abstract Object value();
+
+
+    /**
+     * Returns the kind of this value. The kind includes all Java primitives, String and Enum types, nested values,
+     * and finally arrays of the above. Since the return type is itself an enumeration, it can be used with
+     * Java switch statements.
+     *
+     * <p>
+     * A special {@link org.jboss.jandex.AnnotationValue.Kind#UNKNOWN} kind is used to refer to components
+     * of zero-length arrays, as the underlying type is not known.
+     *
+     * @return the kind of value
+     */
+    public abstract Kind kind();
+
+    public Kind componentKind() {
+        throw new IllegalArgumentException("Not an array");
+    }
 
     /**
      * Converts the underlying numerical type to an integer as if it was
@@ -445,6 +468,24 @@ public abstract class AnnotationValue {
         return builder.append(value()).toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        AnnotationValue that = (AnnotationValue) o;
+        return name.equals(that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
     static final class StringValue extends AnnotationValue {
         private final String value;
 
@@ -457,12 +498,37 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public Kind kind() {
+            return Kind.STRING;
+        }
+
         public String toString() {
             StringBuilder builder = new StringBuilder();
             if (super.name.length() > 0)
                 builder.append(super.name).append(" = ");
 
             return builder.append('"').append(value).append('"').toString();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            StringValue that = (StringValue) o;
+            return super.equals(o) && value.equals(that.value);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + value.hashCode();
+            return result;
         }
     }
 
@@ -476,6 +542,11 @@ public abstract class AnnotationValue {
 
         public Byte value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.BYTE;
         }
 
         public int asInt() {
@@ -501,6 +572,26 @@ public abstract class AnnotationValue {
         public double asDouble() {
             return value;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            ByteValue byteValue = (ByteValue) o;
+            return value == byteValue.value && super.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + (int) value;
+            return result;
+        }
     }
 
     static final class CharacterValue extends AnnotationValue {
@@ -515,8 +606,33 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public Kind kind() {
+            return Kind.CHARACTER;
+        }
+
         public char asChar() {
             return value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            CharacterValue that = (CharacterValue) o;
+            return value == that.value && super.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + (int) value;
+            return result;
         }
     }
 
@@ -530,6 +646,11 @@ public abstract class AnnotationValue {
 
         public Double value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.DOUBLE;
         }
 
         public int asInt() {
@@ -555,6 +676,29 @@ public abstract class AnnotationValue {
         public double asDouble() {
             return value;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            DoubleValue that = (DoubleValue) o;
+
+            return Double.compare(that.value, value) == 0 && super.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            long temp;
+            temp = Double.doubleToLongBits(value);
+            result = 31 * result + (int) (temp ^ (temp >>> 32));
+            return result;
+        }
     }
 
     static final class FloatValue extends AnnotationValue {
@@ -567,6 +711,11 @@ public abstract class AnnotationValue {
 
         public Float value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.FLOAT;
         }
 
         public int asInt() {
@@ -593,6 +742,26 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            FloatValue that = (FloatValue) o;
+
+            return Float.compare(that.value, value) == 0 && super.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + (value != +0.0f ? Float.floatToIntBits(value) : 0);
+            return result;
+        }
     }
 
     static final class ShortValue extends AnnotationValue {
@@ -605,6 +774,11 @@ public abstract class AnnotationValue {
 
         public Short value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.SHORT;
         }
 
         public int asInt() {
@@ -631,6 +805,26 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            ShortValue that = (ShortValue) o;
+
+            return value == that.value && super.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + (int) value;
+            return result;
+        }
     }
 
     static final class IntegerValue extends AnnotationValue {
@@ -643,6 +837,11 @@ public abstract class AnnotationValue {
 
         public Integer value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.INTEGER;
         }
 
         public int asInt() {
@@ -669,6 +868,26 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            IntegerValue that = (IntegerValue) o;
+
+            return value == that.value && super.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + value;
+            return result;
+        }
     }
 
     static final class LongValue extends AnnotationValue {
@@ -681,6 +900,11 @@ public abstract class AnnotationValue {
 
         public Long value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.LONG;
         }
 
         public int asInt() {
@@ -707,6 +931,26 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            LongValue longValue = (LongValue) o;
+
+            return value == longValue.value && super.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + (int) (value ^ (value >>> 32));
+            return result;
+        }
     }
 
     static final class BooleanValue extends AnnotationValue {
@@ -719,6 +963,11 @@ public abstract class AnnotationValue {
 
         public Boolean value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.BOOLEAN;
         }
 
         public boolean asBoolean() {
@@ -741,12 +990,40 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public Kind kind() {
+            return Kind.ENUM;
+        }
+
         public String asEnum() {
             return value;
         }
 
         public DotName asEnumType() {
             return typeName;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            EnumValue enumValue = (EnumValue) o;
+
+            return super.equals(o) && typeName.equals(enumValue.typeName) && value.equals(enumValue.value);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + value.hashCode();
+            result = 31 * result + typeName.hashCode();
+            return result;
         }
     }
 
@@ -762,8 +1039,34 @@ public abstract class AnnotationValue {
             return type;
         }
 
+        @Override
+        public Kind kind() {
+            return Kind.CLASS;
+        }
+
         public Type asClass() {
             return type;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            ClassValue that = (ClassValue) o;
+
+            return super.equals(o) && type.equals(that.type);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + type.hashCode();
+            return result;
         }
     }
 
@@ -779,8 +1082,34 @@ public abstract class AnnotationValue {
             return value;
         }
 
+        @Override
+        public Kind kind() {
+            return Kind.NESTED;
+        }
+
         public AnnotationInstance asNested() {
             return value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            NestedAnnotation that = (NestedAnnotation) o;
+
+            return super.equals(o) && value.equals(that.value);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + value.hashCode();
+            return result;
         }
     }
 
@@ -794,6 +1123,16 @@ public abstract class AnnotationValue {
 
         public AnnotationValue[] value() {
             return value;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ARRAY;
+        }
+
+        @Override
+        public Kind componentKind() {
+            return value.length > 0 ? value[0].kind() : Kind.UNKNOWN;
         }
 
         AnnotationValue[] asArray() {
@@ -953,6 +1292,26 @@ public abstract class AnnotationValue {
             }
 
             return array;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            ArrayValue that = (ArrayValue) o;
+            return super.equals(o) && Arrays.equals(value, that.value);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + Arrays.hashCode(value);
+            return result;
         }
     }
 }

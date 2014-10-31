@@ -18,16 +18,28 @@
 
 package org.jboss.jandex;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
- * Represents a Java type declaration that is specified on methods or fields. A
- * type can be any class based type (interface, class, annotation), any
- * primitive, any array, or void.
+ * Represents a Java type declaration usage that is specified on methods, fields, classes,
+ * annotations, or other types. A type can be any class based type (interface, class, annotation),
+ * any primitive, any array, any generic type declaration, or void.
+ *
+ * <p>A type usage may have annotations associated with its declaration. A type is equal to
+ * another type if, and only if, it represents the same exact definition including the annotations
+ * specific to its usage.
+ *
+ * <p>To reduce memory overhead, type instances are often shared between their enclosing classes.
  *
  * @author Jason T. Greene
  */
-public final class Type {
+public abstract class Type {
+    public static final Type[] EMPTY_ARRAY = new Type[0];
+    private static final AnnotationInstance[] EMPTY_ANNOTATIONS = new AnnotationInstance[0];
     private final DotName name;
-    private final Kind kind;
+    private final AnnotationInstance[] annotations;
 
     /**
      * Represents a "kind" of Type.
@@ -49,15 +61,24 @@ public final class Type {
         PRIMITIVE,
 
         /** Used to designate a Java method that returns nothing */
-        VOID;
+        VOID,
+
+        /** A resolved generic type parameter or type argument */
+        TYPE_VARIABLE,
 
         /**
-         * This method exists since the brainiacs that designed java thought
-         * that not only should enums be complex objects instead of simple
-         * integral types like every other sane language, they also should have
-         * the sole mechanism to reverse an ordinal (values() method) perform an
-         * array copy.
+         * An unresolved type parameter or argument. This is merely a placeholder
+         * which occurs during an error condition or incomplete processing. In most
+         * cases, it need not be dealt with.
          */
+        UNRESOLVED_TYPE_VARIABLE,
+
+        /** A generic wildcard type. */
+        WILDCARD_TYPE,
+
+        /** A generic parameterized type */
+        PARAMETERIZED_TYPE;
+
         public static Kind fromOrdinal(int ordinal) {
 
             switch (ordinal) {
@@ -70,30 +91,87 @@ public final class Type {
                 default:
                 case 3:
                     return VOID;
+                case 4:
+                    return TYPE_VARIABLE;
+                case 5:
+                    return UNRESOLVED_TYPE_VARIABLE;
+                case 6:
+                    return WILDCARD_TYPE;
+                case 7:
+                    return PARAMETERIZED_TYPE;
             }
         }
-    };
-
-    Type(DotName name, Kind kind) {
-        this.name = name;
-        this.kind = kind;
     }
 
-    public static final Type create(DotName name, Kind kind) {
+    Type(DotName name, AnnotationInstance[] annotations) {
+        this.name = name;
+        annotations = annotations == null ? EMPTY_ANNOTATIONS : annotations;
+
+        if (annotations.length > 1) {
+            Arrays.sort(annotations, AnnotationInstance.NAME_COMPARATOR);
+        }
+
+        this.annotations = annotations;
+    }
+
+    public static Type create(DotName name, Kind kind) {
         if (name == null)
             throw new IllegalArgumentException("name can not be null!");
 
         if (kind == null)
             throw new IllegalArgumentException("kind can not be null!");
 
-        return new Type(name, kind);
+        String string = name.toString();
+
+        switch (kind) {
+            case ARRAY:
+                int start = string.lastIndexOf('[');
+                if (start < 0) {
+                    throw new IllegalArgumentException("Not a valid array name");
+                }
+                int depth = ++start;
+
+                Type type = PrimitiveType.decode(string.charAt(start));
+                if (type != null) {
+                    return new ArrayType(type, depth);
+                }
+
+                char c = string.charAt(start);
+                switch (c) {
+                    case 'V':
+                        type = VoidType.VOID;
+                        break;
+                    case 'L':
+                        int end = start;
+                        while (string.charAt(++end) != ';') ;
+
+                        type = new ClassType(DotName.createSimple(string.substring(start + 1, end).replace('.', '/')));
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Component type not supported: " + c);
+                }
+
+                return new ArrayType(type, depth);
+            case CLASS:
+                return new ClassType(name);
+            case PRIMITIVE:
+                return PrimitiveType.decode(name.toString());
+            case VOID:
+                return VoidType.VOID;
+            default:
+                throw new IllegalArgumentException("Kind not supported: " + kind);
+        }
     }
 
     /**
-     * Returns the name of this type. Primitives and void are returned as the
+     * Returns the raw name of this type. Primitives and void are returned as the
      * Java reserved word (void, boolean, byte, short, char, int, long, float,
      * double). Arrays are returned using the internal JVM array syntax (see JVM
      * specification). Classes are returned as a normal DotName.
+     *
+     * <p>Generic values are returned as the underlying raw value. For example,
+     * a wildcard such as <code>? extends Number</code>, has a raw type of
+     * <code>Number</code>
      *
      * @return the name of this type
      */
@@ -106,11 +184,172 @@ public final class Type {
      *
      * @return the kind
      */
-    public Kind kind() {
-        return kind;
+    public abstract Kind kind();
+
+    /**
+     * Casts this type to a {@link org.jboss.jandex.ClassType} and returns it if the kind is {@link Kind#CLASS}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not a class
+     */
+    public ClassType asClassType() {
+        throw new IllegalArgumentException("Not a class type!");
+    }
+
+    /**
+     * Casts this type to a {@link org.jboss.jandex.ParameterizedType} and returns it if the kind is
+     * {@link Kind#PARAMETERIZED_TYPE}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not a parameterized type
+     */
+    public ParameterizedType asParameterizedType() {
+        throw new IllegalArgumentException("Not a parameterized type!");
+    }
+
+    /**
+     * Casts this type to a {@link org.jboss.jandex.ParameterizedType} and returns it if the kind is
+     * {@link Kind#TYPE_VARIABLE}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not a type variable
+     */
+    public TypeVariable asTypeVariable() {
+        throw new IllegalArgumentException("Not a type variable!");
+    }
+
+    /**
+     * Casts this type to an {@link org.jboss.jandex.ArrayType} and returns it if the kind is
+     * {@link Kind#ARRAY}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not an array type
+     */
+    public ArrayType asArrayType() {
+        throw new IllegalArgumentException("Not an array type!");
+    }
+
+    /**
+     * Casts this type to a {@link org.jboss.jandex.WildcardType} and returns it if the kind is
+     * {@link Kind#WILDCARD_TYPE}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not a wildcard type
+     */
+    public WildcardType asWildcardType() {
+        throw new IllegalArgumentException("Not a wildcard type!");
+    }
+
+    /**
+     * Casts this type to an {@link org.jboss.jandex.UnresolvedTypeVariable} and returns it if the kind is
+     * {@link Kind#UNRESOLVED_TYPE_VARIABLE}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not an unresolved type
+     */
+    public UnresolvedTypeVariable asUnresolvedTypeVariable() {
+        throw new IllegalArgumentException("Not an unresolved type variable!");
+    }
+
+    /**
+     * Casts this type to a {@link org.jboss.jandex.PrimitiveType} and returns it if the kind is
+     * {@link Kind#PRIMITIVE}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not a primitive type
+     */
+    public PrimitiveType asPrimitiveType() {
+        throw new IllegalArgumentException("Not a primitive type!");
+    }
+
+    /**
+     * Casts this type to a {@link org.jboss.jandex.VoidType} and returns it if the kind is
+     * {@link Kind#VOID}
+     * Throws an exception otherwise.
+     *
+     * @return a <code>ClassType</code>
+     * @throws java.lang.IllegalArgumentException if not a void type
+     */
+    public VoidType asVoidType() {
+        throw new IllegalArgumentException("Not a void type!");
     }
 
     public String toString() {
-        return name.toString();
+        return toString(false);
+    }
+
+    public String toString(boolean simple) {
+        StringBuilder builder = new StringBuilder();
+        appendAnnotations(builder);
+        builder.append(name);
+
+        return builder.toString();
+    }
+
+    void appendAnnotations(StringBuilder builder) {
+        AnnotationInstance[] annotations = this.annotations;
+        if (annotations.length > 0) {
+            for (AnnotationInstance instance : annotations) {
+                builder.append(instance.toString(true)).append(' ');
+            }
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Type type = (Type) o;
+
+        return name.equals(type.name) && Arrays.equals(annotations, type.annotations);
+    }
+
+    /**
+     * Returns the list of annotations declared on this type's usage. In order to allow for
+     * type reuse, the annotation instances returned by this method will have a null annotation target
+     * value. However, this information is not useful, because if it is accessed from this method,
+     * the target is this type.
+     *
+     * @return a list of annotation instances declared on the usage this type represents
+     */
+    public List<AnnotationInstance> annotations() {
+        return Collections.unmodifiableList(Arrays.asList(annotations));
+    }
+
+    AnnotationInstance[] annotationArray() {
+        return annotations;
+    }
+
+    Type addAnnotation(AnnotationInstance annotation) {
+        AnnotationTarget target = annotation.target();
+        if (target != null) {
+            throw new IllegalArgumentException("Invalid target type");
+        }
+
+        AnnotationInstance[] newAnnotations = Arrays.copyOf(annotations, annotations.length + 1);
+        newAnnotations[newAnnotations.length - 1] = annotation;
+        return copyType(newAnnotations);
+    }
+
+    abstract Type copyType(AnnotationInstance[] newAnnotations);
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + Arrays.hashCode(annotations);
+        return result;
     }
 }

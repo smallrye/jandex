@@ -23,6 +23,8 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
+ *  The shared internal representation for MethodInfo objects.
+ *
  * @author Jason T. Greene
  */
 final class MethodInternal {

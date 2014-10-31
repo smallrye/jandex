@@ -20,6 +20,7 @@ package org.jboss.jandex;
 /**
  * Represents a Java array type declaration.
  *
+ * @since 2.0
  * @author Jason T. Greene
  */
 public final class ArrayType extends Type {

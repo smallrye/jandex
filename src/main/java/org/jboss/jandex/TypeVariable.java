@@ -22,6 +22,16 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * Represents a resolved type parameter or type argument. The <code>name()</code> of this type variable
+ * corresponds to the raw type name. For type variables, the raw type name is the first upper bound. The
+ * <code>identifier()</code> specifies the name of the type variable as specified in the source code.
+ * <p>For example, consider the type variable:
+ *
+ * <pre>T extends Number</pre>
+ *
+ * The <code>identifier()</code> is "T", while the <code>name()</code> is "java.lang.Number".
+ *
+ * @since 2.0
  * @author Jason T. Greene
  */
 public final class TypeVariable extends Type {
@@ -44,6 +54,11 @@ public final class TypeVariable extends Type {
         this.bounds = bounds;
     }
 
+    /**
+     * The name
+     *
+     * @return
+     */
     public String identifier() {
         return name;
     }

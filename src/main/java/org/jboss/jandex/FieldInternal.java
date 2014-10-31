@@ -23,6 +23,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * The shared internal representation for FieldInfo objects.
+ *
+ * @author Jason T. Greene
+ */
 final class FieldInternal {
     static final FieldInternal[] EMPTY_ARRAY = new FieldInternal[0];
     private final byte[] name;

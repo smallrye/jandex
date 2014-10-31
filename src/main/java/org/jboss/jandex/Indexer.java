@@ -663,14 +663,14 @@ public final class Indexer {
             }
             case PARAMETERIZED: {
                 ParameterizedType parameterizedType = type.asParameterizedType();
-                Type[] parameters = parameterizedType.parameterArray().clone();
+                Type[] arguments = parameterizedType.argumentsArray().clone();
                 int pos = element.pos;
-                if (pos >= parameters.length) {
-                    throw new IllegalStateException("Type annotation referred to a type parameter that does not exist");
+                if (pos >= arguments.length) {
+                    throw new IllegalStateException("Type annotation referred to a type argument that does not exist");
                 }
 
-                parameters[pos] = resolveTypePath(parameters[pos], typeAnnotationState);
-                return intern(parameterizedType.copyType(parameters));
+                arguments[pos] = resolveTypePath(arguments[pos], typeAnnotationState);
+                return intern(parameterizedType.copyType(arguments));
             }
             case WILDCARD_BOUND: {
                 WildcardType wildcardType = type.asWildcardType();
@@ -769,7 +769,7 @@ public final class Indexer {
             }
             case PARAMETERIZED: {
                 ParameterizedType parameterizedType = type.asParameterizedType();
-                return searchTypePath(parameterizedType.parameterArray()[element.pos], typeAnnotationState);
+                return searchTypePath(parameterizedType.argumentsArray()[element.pos], typeAnnotationState);
             }
             case WILDCARD_BOUND: {
                 return searchTypePath(type.asWildcardType().bound(), typeAnnotationState);

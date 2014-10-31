@@ -26,7 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Represents a field that was annotated.
+ * Represents a field.
  *
  * <p><b>Thread-Safety</b></p>
  * This class is immutable and can be shared between threads without safe publication.
@@ -89,9 +89,10 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns the Java Type of this field.
+     * Returns the <code>Type</code> declared on this field. This may be an array, a primitive, or a generic
+     * type definition.
      *
-     * @return the type
+     * @return the type of this field
      */
     public final Type type() {
         return internal.type();
@@ -101,6 +102,11 @@ public final class FieldInfo implements AnnotationTarget {
         return Kind.FIELD;
     }
 
+    /**
+     * Returns the list of annotation instances declared on this field. It may be empty, but never null.
+     *
+     * @return the list of annotations on this field
+     */
     public List<AnnotationInstance> annotations() {
         return internal.annotations();
     }

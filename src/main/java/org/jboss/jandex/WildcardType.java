@@ -18,6 +18,11 @@
 package org.jboss.jandex;
 
 /**
+ * Represents a generic wildcard. A generic wildcard can have either an upper (extends)
+ * or a lower (super) bound. A wildcard declared without a bound ("?") has a default extends bound
+ * of "java.lang.Object".
+ *
+ * @since 2.0
  * @author Jason T. Greene
  */
 public class WildcardType extends Type {
@@ -39,10 +44,22 @@ public class WildcardType extends Type {
 
     }
 
+    /**
+     * Returns the extends (upper) bound of this wildcard. If this wildcard declares a super (lower)
+     * bound, this method will return null
+     *
+     * @return the extends bound, or null if this wildcard has a super bound
+     */
     public Type extendsBound() {
         return isExtends ? bound : OBJECT;
     }
 
+    /**
+     * Returns the super (lower) bound of this wildcard. If this wildcard declares an extends (upper)
+     * bound, this method will return nnull
+     *
+     * @return the super bound, or null if this wildcard has a extends bound
+     */
     public Type superBound() {
         return isExtends ? null : bound;
     }

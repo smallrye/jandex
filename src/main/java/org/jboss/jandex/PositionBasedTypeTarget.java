@@ -19,6 +19,14 @@
 package org.jboss.jandex;
 
 /**
+ * A common parent for type targets which provide a position. Refer to the
+ * subclass for information on the meaning of the position value.
+ *
+ * @see org.jboss.jandex.ClassExtendsTypeTarget
+ * @see org.jboss.jandex.TypeParameterTypeTarget
+ * @see org.jboss.jandex.TypeParameterBoundTypeTarget
+ * @see org.jboss.jandex.ThrowsTypeTarget
+ *
 * @author Jason T. Greene
 */
 public abstract class PositionBasedTypeTarget extends TypeTarget {

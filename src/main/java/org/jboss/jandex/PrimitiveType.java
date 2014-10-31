@@ -22,6 +22,13 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
+ * Represents a primitive Java type. While a set of constants is provided for easy of use,
+ * instance equality should not be used to compare to them. Instead {@link #equals(Object)}
+ * should be used.
+ *
+ * <p>A primitive is considered equal to another primitive if it specifies the same primitive
+ * enumeration value, and contains an equal set of annotation instances.
+ *
  * @author Jason T. Greene
  */
 public final class PrimitiveType extends Type {
@@ -68,6 +75,11 @@ public final class PrimitiveType extends Type {
         return Kind.PRIMITIVE;
     }
 
+    /**
+     * The type of primitive this primitive type represents
+     *
+     * @return the primitive
+     */
     public Primitive primitive() {
         return primitive;
     }

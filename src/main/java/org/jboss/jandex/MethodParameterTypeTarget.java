@@ -18,6 +18,21 @@
 package org.jboss.jandex;
 
 /**
+ * Represents a type annotation target which occurs within a method parameter type. This class conveys
+ * the enclosing method and the zero-based position of the parameter. Since type targets can appear at
+ * any depth of the type tree at this location, the corresponding type reference is also included.
+ *
+ * <p>
+ * Consider the following example involving a type target using the "Bar" annotation:
+ *
+ * <pre>
+ * public void foo(List<@Bar T> { ... }
+ * </pre>
+ *
+ * <p>This example would be represented as a <code>MethodParameterTypeTarget</code> with an enclosing target
+ * of foo's <code>MethodInfo</code>, and <code>position()</code> would return 0. The "Bar" annotation
+ * would appear on the type variable T.
+ *
  * @author Jason T. Greene
  */
 public class MethodParameterTypeTarget extends PositionBasedTypeTarget {

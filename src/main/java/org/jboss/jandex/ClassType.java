@@ -18,6 +18,8 @@
 package org.jboss.jandex;
 
 /**
+ * Represents a standard raw class name.
+ *
  * @author Jason T. Greene
  */
 public final class ClassType extends Type {

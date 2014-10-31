@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Common utilities
+ *
  * @author Jason T. Greene
  */
 class Utils {

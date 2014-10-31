@@ -24,9 +24,9 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Represents a Java method that was annotated.
+ * Represents a Java method, constructor, or static initializer.
  *
- *  <p><b>Thread-Safety</b></p>
+ * <p><b>Thread-Safety</b></p>
  * This class is immutable and can be shared between threads without safe publication.
  *
  * @author Jason T. Greene
@@ -105,9 +105,10 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns an array containing parameter types in parameter order.
+     * Returns an array containing parameter types in parameter order. This method performs a defensive array
+     * copy per call, and should be avoided. Instead the {@link #parameters()} method should be used.
      *
-     * @return all parameter types
+     * @return an array copy contain parameter types
      */
     @Deprecated
     public final Type[] args() {
@@ -119,9 +120,10 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns a list containing parameter types in parameter order.
+     * Returns a list containing the types of all parameters declared on this method, in parameter order.
+     * This method may return an empty list, but never null.
      *
-     * @return all parameter types
+     * @return all parameter types on this method
      */
     public final List<Type> parameters() {
         return methodInternal.parameters();
@@ -129,7 +131,7 @@ public final class MethodInfo implements AnnotationTarget {
 
     /**
      * Returns this method's return parameter type.
-     * If this method has a void return, a special void type is returned.
+     * If this method has a void return, a special void type is returned. This method will never return null.
      *
      * @return the type of this method's return value
      */
@@ -137,10 +139,23 @@ public final class MethodInfo implements AnnotationTarget {
         return methodInternal.returnType();
     }
 
+    /**
+     * Returns the receiver type of this method (a declaration of the "this" reference), if specified.
+     * This is used to convey annotations on the "this" instance.
+     *
+     * @return the receiver type of this method
+     */
     public final Type receiverType() {
         return methodInternal.receiverType(clazz);
     }
 
+
+    /**
+     * Returns the list of throwable classes declared to be thrown by this method. This method may return an
+     * empty list, but never null.
+     *
+     * @return the list of throwable classes thrown by this method
+     */
     public final List<Type> exceptions() {
         return methodInternal.exceptions();
     }
@@ -149,18 +164,80 @@ public final class MethodInfo implements AnnotationTarget {
         return methodInternal.copyExceptions();
     }
 
+    /**
+     * Returns the generic type parameters defined by this method. This list will contain resolved type variables
+     * which may reference other type parameters, including those declared by the enclosing class of this method.
+     *
+     * @return the list of generic type parameters for this method, or an empty list if none
+     */
     public final List<Type> typeParameters() {
         return methodInternal.typeParameters();
     }
 
+    /**
+     * Returns the annotation instances declared on this method. This includes annotations which are defined
+     * against method parameters, as well as type annotations declared on any usage within the method signature.
+     * The <code>target()</code> of the returned annotation instances may be used to determine the
+     * exact location of ths respective annotation instance.
+     *
+     * <p>
+     * The following is a non-exhaustive list of examples of annotations returned by this method:
+     *
+     * <pre>
+     *     {@literal @}MyMethodAnnotation
+     *     public void foo() {...}
+     *
+     *     public void foo({@literal @}MyParamAnnotation int param) {...}
+     *
+     *     public void foo(List<{@literal @}MyTypeAnnotation> list) {...}
+     *
+     *     public <{@literal @}AnotherTypeAnnotation T> void foo(T t) {...}
+     * </pre>
+     * </p>
+     *
+     * @return the annotation instances declared on this class or its parameters, or an empty list if none
+     */
     public final List<AnnotationInstance> annotations() {
         return methodInternal.annotations();
     }
 
+
+    /**
+     * Retrieves an annotation instance declared on this method, it parameters, or any type within the signature
+     * of the method, by the name of the annotation. If an annotation by that name is not present, null will
+     * be returned.
+     *
+     * <p>
+     * The following is a non-exhaustive list of examples of annotations returned by this method:
+     *
+     * <pre>
+     *     {@literal @}MyMethodAnnotation
+     *     public void foo() {...}
+     *
+     *     public void foo({@literal @}MyParamAnnotation int param) {...}
+     *
+     *     public void foo(List<{@literal @}MyTypeAnnotation> list) {...}
+     *
+     *     public <{@literal @}AnotherTypeAnnotation T> void foo(T t) {...}
+     * </pre>
+     * </p>
+     *
+     * @param name the name of the annotation to locate within the method
+     * @return the annotation if found, otherwise, null
+     */
     public final AnnotationInstance annotation(DotName name) {
         return  methodInternal.annotation(name);
     }
 
+    /**
+     * Returns whether or not the annotation instance with the given name occurs on this method, its parameters
+     * or its signature
+     *
+     * @see #annotations()
+     * @see #annotation(DotName)
+     * @param name the name of the annotation to look for
+     * @return true if the annotation is present, false otherwise
+     */
     public final boolean hasAnnotation(DotName name) {
         return methodInternal.hasAnnotation(name);
     }

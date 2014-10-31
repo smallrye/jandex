@@ -25,8 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author Jason T. Greene
+ * A simple recursive decent generic signature parser.
  *
+ * @author Jason T. Greene
  */
 class GenericSignatureParser {
     /*

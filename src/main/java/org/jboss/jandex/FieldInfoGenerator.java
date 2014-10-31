@@ -19,6 +19,14 @@ package org.jboss.jandex;
 
 import java.util.AbstractList;
 
+
+/**
+ * A list which wraps FieldInternal objects with a FieldInfo, so that
+ * the declaring class' reference can be set. This lazy construction
+ * is used to conserve memory usage.
+ *
+ * @author Jason T. Greene
+ */
 class FieldInfoGenerator extends AbstractList<FieldInfo> {
     private final FieldInternal[] fields;
     private final ClassInfo clazz;

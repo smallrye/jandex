@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * A collection of intern pools.
+ *
  * @author Jason T. Greene
  */
 class NameTable {
@@ -82,16 +84,8 @@ class NameTable {
         return typePool.intern(type);
     }
 
-    int positionOf(Type type) {
-        return typePool.index().positionOf(type);
-    }
-
     Type[] intern(Type[] types) {
         return typeListPool.intern(types);
-    }
-
-    int positionOf(Type[] types) {
-        return typeListPool.index().positionOf(types);
     }
 
     byte[] intern(byte[] bytes) {
@@ -124,14 +118,6 @@ class NameTable {
 
     StrongInternPool<byte[]> bytePool() {
         return bytePool;
-    }
-
-    StrongInternPool<Type> typePool() {
-        return typePool;
-    }
-
-    StrongInternPool<Type[]> typeListPool() {
-        return typeListPool;
     }
 
     StrongInternPool<MethodInternal> methodPool() {

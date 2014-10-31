@@ -61,7 +61,18 @@ public final class ClassInfo implements AnnotationTarget {
     private boolean hasNoArgsConstructor;
     private NestingInfo nestingInfo;
 
-    public enum NestingType {TOP_LEVEL, INNER, LOCAL, ANONYMOUS}
+    public enum NestingType {
+        /** A standard class declared within its own source unit */
+        TOP_LEVEL,
+
+        /** A named class enclosed by another class */
+        INNER,
+
+        /** A named class enclosed within a code block */
+        LOCAL,
+
+        /** An unnamed class enclosed within a code block */
+        ANONYMOUS}
 
     private static final class NestingInfo {
         private DotName enclosingClass;
@@ -69,21 +80,40 @@ public final class ClassInfo implements AnnotationTarget {
         private EnclosingMethodInfo enclosingMethod;
     }
 
+    /**
+     * Provides information on the enclosing method or constructor for a local or anonymous class,
+     * if available.
+     */
     public static final class EnclosingMethodInfo {
         private String name;
         private Type returnType;
         private Type[] parameters;
         private DotName enclosingClass;
 
-
+        /**
+         * The name of the method or constructor
+         *
+         * @return the name of the method or constructor
+         */
         public String name() {
             return name;
         }
 
+        /**
+         * Returns the return type of the method.
+         *
+         * @return the return type
+         */
         public Type returnType() {
             return returnType;
         }
 
+        /**
+         * Returns the list of parameters declared by this method or constructor.
+         * This may be empty, but never null.
+         *
+         * @return the list of parameters.
+         */
         public List<Type> parameters() {
             return Collections.unmodifiableList(Arrays.asList(parameters));
         }
@@ -92,6 +122,11 @@ public final class ClassInfo implements AnnotationTarget {
             return parameters;
         }
 
+        /**
+         * Returns the class name which declares this method or constructor.
+         *
+         * @return the name of the class which declared this method or constructor
+         */
         public DotName enclosingClass() {
             return enclosingClass;
         }
@@ -180,6 +215,14 @@ public final class ClassInfo implements AnnotationTarget {
         return flags;
     }
 
+    /**
+     * Returns the name of the super class declared by the extends clause of this class. This
+     * information is also available from the {@link #superClassType} method. For all classes,
+     * with the one exception of <code>java.lang.Object</code>, which is the one class in the
+     * Java language without a super-type, this method will always return a non-null value.
+     *
+     * @return the name of the super class of this class, or null if this class is <code>java.lang.Object</code>
+     */
     public final DotName superName() {
         return superClassType == null ? null : superClassType.name();
     }
@@ -427,10 +470,12 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns the enclosing method of this class if it is a local, or anonymous class. It will return
-     * null if this class is a top level, or an inner class.
+     * Returns the enclosing method of this class if it is a local, or anonymous class, and it is declared
+     * within the body of a method or constructor. It will return null if this class is a top level, or an inner class.
+     * It will also return null if the local or anonymous class is on an initializer.
      *
-     * @return
+     * @return the enclosing method/constructor, if this class is local or anonymous, and it is within a
+     * method/constructor
      */
     public EnclosingMethodInfo enclosingMethod() {
         return nestingInfo != null ? nestingInfo.enclosingMethod : null;

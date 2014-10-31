@@ -23,9 +23,15 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Represents a Java type declaration that is specified on methods or fields. A
- * type can be any class based type (interface, class, annotation), any
- * primitive, any array, or void.
+ * Represents a Java type declaration usage that is specified on methods, fields, classes,
+ * annotations, or other types. A type can be any class based type (interface, class, annotation),
+ * any primitive, any array, any generic type declaration, or void.
+ *
+ * <p>A type usage may have annotations associated with its declaration. A type is equal to
+ * another type if, and only if, it represents the same exact definition including the annotations
+ * specific to its usage.
+ *
+ * <p>To reduce memory overhead, type instances are often shared between their enclosing classes.
  *
  * @author Jason T. Greene
  */
@@ -311,6 +317,14 @@ public abstract class Type {
         return name.equals(type.name) && Arrays.equals(annotations, type.annotations);
     }
 
+    /**
+     * Returns the list of annotations declared on this type's usage. In order to allow for
+     * type reuse, the annotation instances returned by this method will have a null annotation target
+     * value. However, this information is not useful, because if it is accessed from this method,
+     * the target is this type.
+     *
+     * @return a list of annotation instances declared on the usage this type represents
+     */
     public List<AnnotationInstance> annotations() {
         return Collections.unmodifiableList(Arrays.asList(annotations));
     }

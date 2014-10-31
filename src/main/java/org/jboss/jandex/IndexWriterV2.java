@@ -630,7 +630,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
                 Type owner = parameterizedType.owner();
                 stream.writePackedU32(positionOf(parameterizedType.name()));
                 writeReference(stream, owner, true);
-                writeReferenceOrFull(stream, parameterizedType.parameterArray());
+                writeReferenceOrFull(stream, parameterizedType.argumentsArray());
                 break;
         }
 
@@ -775,7 +775,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
                 ParameterizedType parameterizedType = type.asParameterizedType();
                 addClassName(parameterizedType.name());
                 addType(parameterizedType.owner());
-                addTypeList(parameterizedType.parameterArray());
+                addTypeList(parameterizedType.argumentsArray());
                 break;
             case PRIMITIVE:
             case VOID:

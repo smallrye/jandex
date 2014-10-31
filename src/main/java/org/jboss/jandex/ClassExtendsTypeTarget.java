@@ -23,6 +23,9 @@ package org.jboss.jandex;
  * this target applies to. Since type targets can appear at any depth of the type tree at this location, the
  * corresponding type reference is also included.
  *
+ * <p>The special position 65535 is used to indicate the type usage is on the super type in the extends clause.
+ * All other numbers denote the zero-based offset in the interface list of the implements clause.
+ *
  * <p>
  * Consider the following example involving a type target using the "Bar" annotation:
  *
@@ -33,6 +36,7 @@ package org.jboss.jandex;
  * This example would return a position of 1 (marking the first interface), an enclosing target of the
  * <code>ClassInfo</code> representing "Foo", and a target type of the type variable "T".
  *
+ * @since 2.0
  * @author Jason T. Greene
  */
 public class ClassExtendsTypeTarget extends PositionBasedTypeTarget {

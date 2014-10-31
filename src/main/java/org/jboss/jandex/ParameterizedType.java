@@ -22,31 +22,76 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * Represents a generic parameterized type. The <code>name()</code> corresponds to the raw type,
+ * and the arguments list corresponds to a list of type arguments passed to the parameterized type.
+ *
+ * <p>Additionally, a parameterized type is used to represent an inner class whose enclosing class
+ * is either parameterized or has type annotations. In this case, the <code>owner()</code> method
+ * will specify the type for the enclosing class. It is also possible for such a type to be parameterized
+ * itself.
+ *
+ * <p>For example, the follow declaration would have a name of "java.util.Map", and two
+ * <code>ClassType</code> arguments, the first being "java.lang.String", the second "java.lang.Integer":
+ *
+ * <pre>
+ *     java.util.Map&lt;String, Integer&gt;
+ * </pre>
+ *
+ * <p>Another example shows the case where a parameterized type is used to represent a non-parameterized
+ * class (Y), whose owner (X) is itself parameterized:
+ * <pre>
+ *     Y&lt;String&gt;.X
+ * </pre>
+ *
  * @author Jason T. Greene
  */
 public class ParameterizedType extends Type {
-    private final Type[] parameters;
+    private final Type[] arguments;
     private final Type owner;
     private int hash;
 
-    ParameterizedType(DotName name, Type[] parameters, Type owner) {
-        this(name, parameters, owner, null);
+    ParameterizedType(DotName name, Type[] arguments, Type owner) {
+        this(name, arguments, owner, null);
     }
 
-    ParameterizedType(DotName name, Type[] parameters, Type owner, AnnotationInstance[] annotations) {
+    ParameterizedType(DotName name, Type[] arguments, Type owner, AnnotationInstance[] annotations) {
         super(name, annotations);
-        this.parameters = parameters == null ? EMPTY_ARRAY : parameters;
+        this.arguments = arguments == null ? EMPTY_ARRAY : arguments;
         this.owner = owner;
     }
 
-    public List<Type> parameters() {
-        return Collections.unmodifiableList(Arrays.asList(parameters));
+    /**
+     * Returns the list of arguments passed to this Parameterized type.
+     *
+     * @return the list of type arguments, or empty if none
+     */
+    public List<Type> arguments() {
+        return Collections.unmodifiableList(Arrays.asList(arguments));
     }
 
-    Type[] parameterArray() {
-        return parameters;
+    Type[] argumentsArray() {
+        return arguments;
     }
 
+    /**
+     * Returns the owner (enclosing) type of this parameterized type if the owner is parameterized,
+     * or contains type annotations. The latter may be a <code>ClassType</code>. Otherwise null is
+     * returned.
+     *
+     * <p>Note that this means that inner classes whose enclosing types are not parameterized or
+     * annotated may return null when this method is called.</p>
+     *
+     * <p>The example below shows the case where a parameterized type is used to represent a non-parameterized
+     * class (Y).
+     * <pre>
+     *     Y&lt;String&gt;.X
+     * </pre>
+     *
+     * <p>This example will return a parameterized type for "Y" when X's <code>owner()/code> method
+     * is called.</p>
+     *
+     * @return the owner type if the owner is parameterized or annotated, otherwise null
+     */
     public Type owner() {
         return owner;
     }
@@ -74,11 +119,11 @@ public class ParameterizedType extends Type {
             builder.append(name());
         }
 
-        if (parameters.length > 0) {
+        if (arguments.length > 0) {
             builder.append('<');
-            builder.append(parameters[0]);
-            for (int i = 1; i < parameters.length; i++) {
-                builder.append(", ").append(parameters[i]);
+            builder.append(arguments[0]);
+            for (int i = 1; i < arguments.length; i++) {
+                builder.append(", ").append(arguments[i]);
             }
             builder.append('>');
         }
@@ -88,7 +133,7 @@ public class ParameterizedType extends Type {
 
     @Override
     ParameterizedType copyType(AnnotationInstance[] newAnnotations) {
-        return new ParameterizedType(name(), parameters, owner, newAnnotations);
+        return new ParameterizedType(name(), arguments, owner, newAnnotations);
     }
 
     ParameterizedType copyType(Type[] parameters) {
@@ -96,7 +141,7 @@ public class ParameterizedType extends Type {
     }
 
     ParameterizedType copyType(Type owner) {
-        return new ParameterizedType(name(), parameters, owner, annotationArray());
+        return new ParameterizedType(name(), arguments, owner, annotationArray());
     }
 
     public boolean equals(Object o) {
@@ -111,7 +156,7 @@ public class ParameterizedType extends Type {
         ParameterizedType other = (ParameterizedType) o;
 
         return (owner == other.owner || (owner != null && owner.equals(other.owner)))
-                && Arrays.equals(parameters, other.parameters);
+                && Arrays.equals(arguments, other.arguments);
     }
 
     public int hashCode() {
@@ -121,7 +166,7 @@ public class ParameterizedType extends Type {
         }
 
         hash = super.hashCode();
-        hash = 31 * hash + Arrays.hashCode(parameters);
+        hash = 31 * hash + Arrays.hashCode(arguments);
         hash = 31 * hash + (owner != null ? owner.hashCode() : 0);
         return this.hash = hash;
     }

@@ -142,7 +142,7 @@ public class TypeAnnotationTestCase {
     private void verifyTypeParametersAndArguments(ClassInfo referenceClass, ClassInfo clazz) {
         List<Type> parameters = clazz.typeParameters();
         Type superClass = clazz.superClassType();
-        List<Type> arguments = superClass.asParameterizedType().parameters();
+        List<Type> arguments = superClass.asParameterizedType().arguments();
 
         Type type = parameters.get(0);
         verifyHasAnnotation(nestName(referenceClass, "C"), type);
@@ -258,11 +258,11 @@ public class TypeAnnotationTestCase {
         assertEquals(Type.Kind.PARAMETERIZED_TYPE, type.kind());
         verifyName(nestName(clazz, "O1", "O2", "O3", "Nested"), type);
         pType = type.asParameterizedType();
-        type = pType.parameters().get(0);
+        type = pType.arguments().get(0);
         verifyHasAnnotation(nestName(clazz, "B"), type);
         assertEquals(Type.Kind.CLASS, type.kind());
         verifyName(nestName(clazz, "U"), type);
-        type = pType.parameters().get(1);
+        type = pType.arguments().get(1);
         verifyHasAnnotation(nestName(clazz, "C"), type);
         assertEquals(Type.Kind.CLASS, type.kind());
         verifyName(nestName(clazz, "V"), type);
@@ -275,11 +275,11 @@ public class TypeAnnotationTestCase {
         assertEquals(Type.Kind.PARAMETERIZED_TYPE, type.kind());
         verifyName(nestName(clazz, "O1", "O2"), type);
         pType = type.asParameterizedType();
-        type = pType.parameters().get(0);
+        type = pType.arguments().get(0);
         verifyHasAnnotation(nestName(clazz, "F"), type);
         assertEquals(Type.Kind.CLASS, type.kind());
         verifyName(nestName(clazz, "S"), type);
-        type = pType.parameters().get(1);
+        type = pType.arguments().get(1);
         verifyHasAnnotation(nestName(clazz, "G"), type);
         assertEquals(Type.Kind.CLASS, type.kind());
         verifyName(nestName(clazz, "T"), type);
@@ -295,11 +295,11 @@ public class TypeAnnotationTestCase {
         assertEquals(DotName.createSimple("java.util.Map"), type.name());
         assertEquals(Type.Kind.PARAMETERIZED_TYPE, type.kind());
         pType = type.asParameterizedType();
-        type = pType.parameters().get(0);
+        type = pType.arguments().get(0);
         verifyHasAnnotation(nestName(clazz, "B"), type);
         verifyName("java.lang.Comparable", type);
         assertEquals(Type.Kind.PARAMETERIZED_TYPE, type.kind());
-        type = type.asParameterizedType().parameters().get(0);
+        type = type.asParameterizedType().arguments().get(0);
         verifyHasAnnotation(nestName(clazz, "C"), type);
         assertEquals(Type.Kind.ARRAY, type.kind());
         assertEquals(1, type.asArrayType().dimensions());
@@ -314,11 +314,11 @@ public class TypeAnnotationTestCase {
         type = type.asArrayType().component();
         verifyHasAnnotation(nestName(clazz, "F"), type);
         verifyName("java.lang.Object", type);
-        type = pType.parameters().get(1);
+        type = pType.arguments().get(1);
         verifyHasAnnotation(nestName(clazz, "G"), type);
         verifyName("java.util.List", type);
         assertEquals(Type.Kind.PARAMETERIZED_TYPE, type.kind());
-        type = type.asParameterizedType().parameters().get(0);
+        type = type.asParameterizedType().arguments().get(0);
         verifyHasAnnotation(nestName(clazz, "H"), type);
         verifyName(nestName(clazz, "Document"), type);
     }
@@ -379,16 +379,16 @@ public class TypeAnnotationTestCase {
         assertEquals(DotName.createSimple("java.util.Map"), type.name());
         assertEquals(Type.Kind.PARAMETERIZED_TYPE, type.kind());
         ParameterizedType pType = type.asParameterizedType();
-        type = pType.parameters().get(0);
+        type = pType.arguments().get(0);
         assertEquals(Type.Kind.WILDCARD_TYPE, type.kind());
         verifyHasAnnotation(nestName(clazz, "B"), type);
         type = type.asWildcardType().extendsBound();
         verifyName("java.lang.String", type);
         verifyHasAnnotation(nestName(clazz, "C"), type);
-        type = pType.parameters().get(1);
+        type = pType.arguments().get(1);
         verifyHasAnnotation(nestName(clazz, "D"), type);
         verifyName("java.util.List", type);
-        type = type.asParameterizedType().parameters().get(0);
+        type = type.asParameterizedType().arguments().get(0);
         verifyHasAnnotation(nestName(clazz, "E"), type);
         verifyName("java.lang.Object", type);
     }

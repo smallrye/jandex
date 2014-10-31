@@ -19,6 +19,13 @@ package org.jboss.jandex;
 
 import java.util.AbstractList;
 
+/**
+ * A list which wraps MethodInternal objects with a MethodInfo, so that
+ * the declaring class' reference can be set. This lazy construction
+ * is used to conserve memory usage.
+ *
+ * @author Jason T. Greene
+ */
 class MethodInfoGenerator extends AbstractList<MethodInfo> {
     private final MethodInternal[] methods;
     private final ClassInfo clazz;

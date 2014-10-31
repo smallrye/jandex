@@ -18,7 +18,22 @@
 package org.jboss.jandex;
 
 /**
-* @author Jason T. Greene
+ * Represents a type annotation target which occurs directly on a field type, a method return type, or a method receiver
+ * type. This class conveys the enclosing field or method, and if a method, also differentiates between the receiver and
+ * return value. Since type targets can appear at any depth of the type tree at this location, the
+ * corresponding type reference is also included.
+ *
+ * <p>
+ * Consider the following example involving a type target using the "Bar" annotation:
+ *
+ * <pre>
+ * public List<@Bar T> foo { return foo; }
+ * </pre>
+ *
+ * This example would be represented as an <code>EmptyTypeTarget</code> with an enclosing target of Foo's
+ * <code>MethodInfo</code>, and <code>isReceiver</code> would return false.
+ *
+ * @author Jason T. Greene
 */
 public class EmptyTypeTarget extends TypeTarget {
     private boolean receiver;
@@ -33,6 +48,12 @@ public class EmptyTypeTarget extends TypeTarget {
         this.receiver = receiver;
     }
 
+    /**
+     * Returns whether the type occurs within a method receiver (the "this" reference the method receives).
+     * It will return false if the type occurs within a method return, or a field.
+     *
+     * @return true if occurs within a method receiver, otherwise false
+     */
     public boolean isReceiver() {
         return receiver;
     }

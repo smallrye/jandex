@@ -20,6 +20,8 @@ package org.jboss.jandex;
 import java.io.IOException;
 
 /**
+ * A common base class for index reader implementations.
+ *
  * @author Jason T. Greene
  */
 abstract class IndexReaderImpl {

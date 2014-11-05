@@ -35,6 +35,7 @@ package org.jboss.jandex;
  * would appear on the type variable T when invoking the <code>typeParameters()</code> method on
  * <code>MethodInfo</code>
  *
+ * @since 2.0
  * @author Jason T. Greene
  */
 public class TypeParameterTypeTarget extends PositionBasedTypeTarget {

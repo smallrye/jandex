@@ -411,8 +411,10 @@ public final class ClassInfo implements AnnotationTarget {
      *
      * @return the generic type parameters of this class
      */
-    public final List<Type> typeParameters() {
-        return Collections.unmodifiableList(Arrays.asList(typeParameters));
+    public final List<TypeVariable> typeParameters() {
+        @SuppressWarnings("unchecked")
+        List<TypeVariable> list = (List) Arrays.asList(typeParameters);
+        return Collections.unmodifiableList(list);
     }
 
     final Type[] typeParameterArray() {
@@ -481,7 +483,6 @@ public final class ClassInfo implements AnnotationTarget {
         return nestingInfo != null ? nestingInfo.enclosingMethod : null;
     }
 
-    /** Lazily initialize hasNoArgsConstructor. Can only be called before publication */
     void setHasNoArgsConstructor(boolean hasNoArgsConstructor) {
         this.hasNoArgsConstructor = hasNoArgsConstructor;
     }

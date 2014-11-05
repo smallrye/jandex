@@ -37,6 +37,7 @@ package org.jboss.jandex;
  * and a <code>boundPosition()</code> value of "1". The "Bar" annotation would appear on the
  * type "Serializable" in the bound list of T, on the first type parameter.
  *
+ * @since 2.0
  * @author Jason T. Greene
  */
 public class TypeParameterBoundTypeTarget extends TypeParameterTypeTarget {

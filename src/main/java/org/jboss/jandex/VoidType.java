@@ -21,6 +21,7 @@ package org.jboss.jandex;
 /**
  * Specifies "void" in a method signature.
  *
+ * @since 2.0
  * @author Jason T. Greene
  */
 public class VoidType extends Type {

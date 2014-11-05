@@ -159,9 +159,19 @@ public abstract class AnnotationValue {
      * of zero-length arrays, as the underlying type is not known.
      *
      * @return the kind of value
+     * @since 2.0
      */
     public abstract Kind kind();
 
+    /**
+     * Returns the kind of value that represents the component type of this array if it can be determined.
+     * Otherwise, this method returns {@link Kind#UNKNOWN}. This happens when the annotation value represents
+     * an empty array. If the underlying value is not an array an exception will be thrown.
+     *
+     * @return the kind of component, or {@link Kind#UNKNOWN} if it can not be determined.
+     * @throws java.lang.IllegalArgumentException if not an array
+     * @since 2.0
+     */
     public Kind componentKind() {
         throw new IllegalArgumentException("Not an array");
     }
@@ -468,6 +478,13 @@ public abstract class AnnotationValue {
         return builder.append(value()).toString();
     }
 
+    /**
+     * Compares this annotation value to another annotation value, and returns true if equal.
+     *
+     * @param o the annotation value to compare to.
+     * @return true if equal, false if not
+     * @see Object#equals(Object)
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -481,6 +498,12 @@ public abstract class AnnotationValue {
         return name.equals(that.name);
     }
 
+    /**
+     * Computes a hash code for this annotation value.
+     *
+     * @return the hash code for this annotation value
+     * @see Object#hashCode()
+     */
     @Override
     public int hashCode() {
         return name.hashCode();

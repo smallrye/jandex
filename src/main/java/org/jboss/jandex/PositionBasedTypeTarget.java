@@ -26,8 +26,8 @@ package org.jboss.jandex;
  * @see org.jboss.jandex.TypeParameterTypeTarget
  * @see org.jboss.jandex.TypeParameterBoundTypeTarget
  * @see org.jboss.jandex.ThrowsTypeTarget
- *
-* @author Jason T. Greene
+ * @since 2.0
+ * @author Jason T. Greene
 */
 public abstract class PositionBasedTypeTarget extends TypeTarget {
     private final int position;

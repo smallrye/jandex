@@ -170,7 +170,7 @@ public final class MethodInfo implements AnnotationTarget {
      *
      * @return the list of generic type parameters for this method, or an empty list if none
      */
-    public final List<Type> typeParameters() {
+    public final List<TypeVariable> typeParameters() {
         return methodInternal.typeParameters();
     }
 
@@ -251,6 +251,12 @@ public final class MethodInfo implements AnnotationTarget {
         return methodInternal.flags();
     }
 
+    /**
+     * Returns a string representation describing this field. It is similar although not
+     * necessarily equivalent to a Java source code expression representing this field.
+     *
+     * @return a string representation for this field
+     */
     public String toString() {
         return methodInternal.toString();
     }

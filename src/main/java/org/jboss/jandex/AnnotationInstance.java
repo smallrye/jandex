@@ -52,7 +52,6 @@ public final class AnnotationInstance {
         }
     }
 
-
     AnnotationInstance(AnnotationInstance instance, AnnotationTarget target) {
         this.name = instance.name;
         this.values = instance.values;
@@ -175,6 +174,15 @@ public final class AnnotationInstance {
         return values;
     }
 
+    /**
+     * Returns an optionally simplified string that represents this annotation instance.
+     * If simplified the output is smaller but missing information, such as the package
+     * qualifier.
+     *
+     * @param simple whether to provide a simpler string representation
+     * @return a string representation for this object
+     * @since 2.0
+     */
     public String toString(boolean simple) {
         StringBuilder builder = new StringBuilder("@").append(simple ? name.local() : name);
 
@@ -191,6 +199,16 @@ public final class AnnotationInstance {
         return builder.toString();
     }
 
+    /**
+     * Returns a string representation for this annotation instance. This method is equivalent
+     * to calling {@link #toString(boolean)} with a value of true.
+     *
+     * @return a simple string representation for this annotation instance
+     */
+    public String toString() {
+        return toString(true);
+    }
+
     void setTarget(AnnotationTarget target) {
         if (this.target != null) {
             throw new IllegalStateException("Attempt to modify target post-initialization");
@@ -199,6 +217,17 @@ public final class AnnotationInstance {
         this.target = target;
     }
 
+    /**
+     * Returns whether or not this annotation instance is equivalent to another instance.
+     * An annotation instance is equivalent if its name and values are equal, and it shares
+     * the exact same <code>AnnotationTarget</code> instance. The latter restriction
+     * may be softened in future versions.
+     *
+     * @param o the annotation instance to compare to.
+     * @return true if equal, false if not
+     *
+     * @see Object#equals(Object)
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -209,6 +238,12 @@ public final class AnnotationInstance {
         return target == instance.target && name.equals(instance.name) && Arrays.equals(values, instance.values);
     }
 
+    /**
+     * Returns a hash code representing this object.
+     *
+     * @return the hash code of this object
+     * @see Object#hashCode()
+     */
     @Override
     public int hashCode() {
         int result = name.hashCode();

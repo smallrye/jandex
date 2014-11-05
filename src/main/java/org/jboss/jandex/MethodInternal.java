@@ -81,10 +81,6 @@ final class MethodInternal {
     private AnnotationInstance[] annotations;
     private short flags;
 
-    MethodInternal() {}
-
-
-
     MethodInternal(byte[] name, Type[] parameters, Type returnType, short flags) {
         this.name = name;
         this.parameters = parameters.length == 0 ? Type.EMPTY_ARRAY : parameters;
@@ -200,8 +196,10 @@ final class MethodInternal {
         return exceptions;
     }
 
-    final List<Type> typeParameters() {
-        return Collections.unmodifiableList(Arrays.asList(typeParameters));
+    final List<TypeVariable> typeParameters() {
+        @SuppressWarnings("unchecked") // type parameters will always be TypeVariable[]
+        List<TypeVariable> list = (List) Arrays.asList(typeParameters);
+        return Collections.unmodifiableList(list);
     }
 
     final List<AnnotationInstance> annotations() {

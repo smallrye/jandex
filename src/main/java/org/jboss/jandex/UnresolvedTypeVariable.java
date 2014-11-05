@@ -18,6 +18,10 @@
 package org.jboss.jandex;
 
 /**
+ * Represents a type variable that could not be resolved during indexing. This type will only occur
+ * as a result of a bug, or a non-compliant Java class file. It is provided in order to prevent
+ * failure.
+ *
  * @author Jason T. Greene
  */
 public final class UnresolvedTypeVariable extends Type {
@@ -33,6 +37,16 @@ public final class UnresolvedTypeVariable extends Type {
         this.name = name;
     }
 
+    /**
+     * The identifier of this unresolved type variable as it appears in Java source code.
+     *
+     * <p> The following class has a type parameter, with an identifier of "T":
+     * <pre>
+     *     class Foo<T extends Number> {}
+     * </pre>
+     *
+     * @return the identifier of this type variable
+     */
     public String identifier() {
         return name;
     }

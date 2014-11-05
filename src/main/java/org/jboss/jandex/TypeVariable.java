@@ -55,9 +55,14 @@ public final class TypeVariable extends Type {
     }
 
     /**
-     * The name
+     * The identifier of this type variable as it appears in Java source code.
      *
-     * @return
+     * <p> The following class has a type parameter, with an identifier of "T":
+     * <pre>
+     *     class Foo<T extends Number> {}
+     * </pre>
+     *
+     * @return the identifier of this type variable
      */
     public String identifier() {
         return name;
@@ -81,7 +86,7 @@ public final class TypeVariable extends Type {
         return this;
     }
 
-    public String toString(boolean simple) {
+    String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
         builder.append(name);

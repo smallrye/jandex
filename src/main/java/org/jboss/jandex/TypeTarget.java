@@ -34,7 +34,9 @@ package org.jboss.jandex;
  * @see org.jboss.jandex.MethodParameterTypeTarget
  * @see org.jboss.jandex.ThrowsTypeTarget
  *
-* @author Jason T. Greene
+ * @since 2.0
+ *
+ * @author Jason T. Greene
 */
 public abstract class TypeTarget implements AnnotationTarget {
     private final AnnotationTarget enclosingTarget;

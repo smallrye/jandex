@@ -270,37 +270,6 @@ public final class Indexer {
         this.methods = methods;
     }
 
-    private void detectNoArgsConstructor(DataInputStream data) throws IOException {
-
-        int numFields = data.readUnsignedShort();
-
-        for (int i = 0; i < numFields; i++) {
-            // Flags, name, type
-            skipFully(data, 6);
-            skipAttributes(data);
-        }
-
-        int numMethods = data.readUnsignedShort();
-
-        for (int i = 0; i < numMethods; i++) {
-            // Flags not needed
-            skipFully(data, 2);
-            String name = intern(decodeUtf8Entry(data.readUnsignedShort()));
-            String descriptor = decodeUtf8Entry(data.readUnsignedShort());
-
-            if (INIT_METHOD_NAME.equals(name)) {
-                IntegerHolder pos = new IntegerHolder();
-                Type[] args = parseMethodArgs(descriptor, pos);
-
-                if (args.length == 0) {
-                    currentClass.setHasNoArgsConstructor(true);
-                    return;
-                }
-            }
-            skipAttributes(data);
-        }
-    }
-
     private void processFieldInfo(DataInputStream data) throws IOException {
         int numFields = data.readUnsignedShort();
         List<FieldInfo> fields = numFields > 0 ? new ArrayList<FieldInfo>(numFields) : Collections.<FieldInfo>emptyList();
@@ -316,16 +285,6 @@ public final class Indexer {
             fields.add(field);
         }
         this.fields = fields;
-    }
-
-    private void skipAttributes(DataInputStream data) throws IOException {
-        int numAttrs = data.readUnsignedShort();
-        for (int a = 0; a < numAttrs; a++) {
-            // Constant pool index
-            skipFully(data, 2);
-            long attributeLen = data.readInt() & 0xFFFFFFFFL;
-            skipFully(data, attributeLen);
-        }
     }
 
     private void processAttributes(DataInputStream data, AnnotationTarget target) throws IOException {
@@ -1473,14 +1432,8 @@ public final class Indexer {
             initIndexMaps();
             initClassFields();
 
-            boolean hasAnnotations = processConstantPool(data);
-
+            processConstantPool(data);
             processClassInfo(data);
-//            if (!hasAnnotations) {
-//                detectNoArgsConstructor(data);
-//                return currentClass;
-//            }
-
             processFieldInfo(data);
             processMethodInfo(data);
             processAttributes(data, currentClass);

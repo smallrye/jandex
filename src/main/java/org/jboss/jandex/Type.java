@@ -45,7 +45,6 @@ public abstract class Type {
      * Represents a "kind" of Type.
      *
      * @author Jason T. Greene
-     *
      */
     public enum Kind {
         /** A Java class, interface, or annotation */
@@ -167,7 +166,7 @@ public abstract class Type {
      * Returns the raw name of this type. Primitives and void are returned as the
      * Java reserved word (void, boolean, byte, short, char, int, long, float,
      * double). Arrays are returned using the internal JVM array syntax (see JVM
-     * specification). Classes are returned as a normal DotName.
+     * specification). Classes are returned as a normal <code>DotName</code>.
      *
      * <p>Generic values are returned as the underlying raw value. For example,
      * a wildcard such as <code>? extends Number</code>, has a raw type of
@@ -192,6 +191,7 @@ public abstract class Type {
      *
      * @return a <code>ClassType</code>
      * @throws java.lang.IllegalArgumentException if not a class
+     * @since 2.0
      */
     public ClassType asClassType() {
         throw new IllegalArgumentException("Not a class type!");
@@ -204,6 +204,7 @@ public abstract class Type {
      *
      * @return a <code>ClassType</code>
      * @throws java.lang.IllegalArgumentException if not a parameterized type
+     * @since 2.0
      */
     public ParameterizedType asParameterizedType() {
         throw new IllegalArgumentException("Not a parameterized type!");
@@ -216,6 +217,7 @@ public abstract class Type {
      *
      * @return a <code>ClassType</code>
      * @throws java.lang.IllegalArgumentException if not a type variable
+     * @since 2.0
      */
     public TypeVariable asTypeVariable() {
         throw new IllegalArgumentException("Not a type variable!");
@@ -228,6 +230,7 @@ public abstract class Type {
      *
      * @return a <code>ClassType</code>
      * @throws java.lang.IllegalArgumentException if not an array type
+     * @since 2.0
      */
     public ArrayType asArrayType() {
         throw new IllegalArgumentException("Not an array type!");
@@ -240,6 +243,7 @@ public abstract class Type {
      *
      * @return a <code>ClassType</code>
      * @throws java.lang.IllegalArgumentException if not a wildcard type
+     * @since 2.0
      */
     public WildcardType asWildcardType() {
         throw new IllegalArgumentException("Not a wildcard type!");
@@ -252,6 +256,7 @@ public abstract class Type {
      *
      * @return a <code>ClassType</code>
      * @throws java.lang.IllegalArgumentException if not an unresolved type
+     * @since 2.0
      */
     public UnresolvedTypeVariable asUnresolvedTypeVariable() {
         throw new IllegalArgumentException("Not an unresolved type variable!");
@@ -264,6 +269,7 @@ public abstract class Type {
      *
      * @return a <code>ClassType</code>
      * @throws java.lang.IllegalArgumentException if not a primitive type
+     * @since 2.0
      */
     public PrimitiveType asPrimitiveType() {
         throw new IllegalArgumentException("Not a primitive type!");
@@ -276,16 +282,24 @@ public abstract class Type {
      *
      * @return a <code>ClassType</code>
      * @throws java.lang.IllegalArgumentException if not a void type
+     * @since 2.0
      */
     public VoidType asVoidType() {
         throw new IllegalArgumentException("Not a void type!");
     }
 
+
+    /**
+     * Returns a string representation for this type. It is similar, yet not equivalent
+     * to a Java source code representation.
+     *
+     * @return the string representation.
+     */
     public String toString() {
         return toString(false);
     }
 
-    public String toString(boolean simple) {
+    String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
         builder.append(name);
@@ -302,6 +316,15 @@ public abstract class Type {
         }
     }
 
+    /**
+     * Compares this Type with another type, and returns true if they are equivalent.
+     * A type is equivalent to another type if it is the same kind, and all of its
+     * fields are equal. This includes annotations, which must be equal as well.
+     *
+     * @param o the type to compare to
+     * @return true if equal
+     * @see Object#equals(Object)
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -324,6 +347,7 @@ public abstract class Type {
      * the target is this type.
      *
      * @return a list of annotation instances declared on the usage this type represents
+     * @since 2.0
      */
     public List<AnnotationInstance> annotations() {
         return Collections.unmodifiableList(Arrays.asList(annotations));
@@ -346,6 +370,11 @@ public abstract class Type {
 
     abstract Type copyType(AnnotationInstance[] newAnnotations);
 
+    /**
+     * Computes a hash code representing this type.
+     *
+     * @return the hash code
+     */
     @Override
     public int hashCode() {
         int result = name.hashCode();

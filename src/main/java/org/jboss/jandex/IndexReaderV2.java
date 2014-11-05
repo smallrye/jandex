@@ -71,6 +71,8 @@ final class IndexReaderV2 extends IndexReaderImpl {
     private static final int AVALUE_ARRAY = 12;
     private static final int AVALUE_NESTED = 13;
     private static final int HAS_ENCLOSING_METHOD = 1;
+    private final static byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
+
     private PackedDataInputStream input;
     private byte[][] byteTable;
     private String[] stringTable;
@@ -550,6 +552,10 @@ final class IndexReaderV2 extends IndexReaderImpl {
             MethodInternal method = methodTable[stream.readPackedU32()];
             updateAnnotationTargetInfo(method.annotationArray(), clazz);
             methods[i] = method;
+
+            if (method.parameterArray().length == 0 && Arrays.equals(INIT_METHOD_NAME, method.nameBytes())) {
+                clazz.setHasNoArgsConstructor(true);
+            }
         }
         return methods;
     }

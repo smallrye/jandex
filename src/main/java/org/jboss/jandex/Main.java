@@ -23,14 +23,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 public class Main {
 
@@ -42,6 +34,9 @@ public class Main {
     private File source;
     private Index index;
 
+    private Main()  {
+
+    }
 
     public static void main(String[] args) {
         if (args.length == 0) {
@@ -52,7 +47,6 @@ public class Main {
         Main main = new Main();
         main.execute(args);
     }
-
 
     private void execute(String[] args) {
         boolean printUsage = true;

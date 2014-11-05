@@ -33,6 +33,7 @@ package org.jboss.jandex;
  * of foo's <code>MethodInfo</code>, and <code>position()</code> would return 0. The "Bar" annotation
  * would appear on the type variable T.
  *
+ * @since 2.0
  * @author Jason T. Greene
  */
 public class MethodParameterTypeTarget extends PositionBasedTypeTarget {

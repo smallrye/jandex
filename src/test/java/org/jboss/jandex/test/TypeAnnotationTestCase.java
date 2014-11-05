@@ -39,6 +39,7 @@ import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
+import org.jboss.jandex.TypeVariable;
 import org.junit.Test;
 
 public class TypeAnnotationTestCase {
@@ -140,7 +141,7 @@ public class TypeAnnotationTestCase {
     }
 
     private void verifyTypeParametersAndArguments(ClassInfo referenceClass, ClassInfo clazz) {
-        List<Type> parameters = clazz.typeParameters();
+        List<TypeVariable> parameters = clazz.typeParameters();
         Type superClass = clazz.superClassType();
         List<Type> arguments = superClass.asParameterizedType().arguments();
 

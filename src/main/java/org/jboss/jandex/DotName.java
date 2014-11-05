@@ -173,6 +173,13 @@ public final class DotName implements Comparable<DotName> {
         return string;
     }
 
+    /**
+     * Returns a hash code which is based on the semantic representation of this <code>DotName</code>.
+     * Whether or not a <code>DotName</code> is componentized has no impact on the calculated hash code.
+     *
+     * @return a hash code representing this object
+     * @see Object#hashCode()
+     */
     public int hashCode() {
         int hash = this.hash;
         if (hash != 0)
@@ -192,6 +199,16 @@ public final class DotName implements Comparable<DotName> {
         return this.hash = hash;
     }
 
+    /**
+     * Compares a <code>DotName</code> to another <code>DotName</code> and returns whether this DotName
+     * is lesser than, greater than, or equal to the specified DotName. If this <code>DotName</code> is lesser,
+     * a negative value is returned. If greater, a positive value is returned. If equal, zero is returned.
+     *
+     * @param other the DotName to compare to
+     * @return a negative number if this is less than the specified object, a positive if greater, and zero if equal
+     *
+     * @see Comparable#compareTo(Object)
+     */
     @Override
     public int compareTo(DotName other) {
 
@@ -233,6 +250,16 @@ public final class DotName implements Comparable<DotName> {
         return toString().compareTo(other.toString());
     }
 
+    /**
+     * Compares a DotName to another DotName and returns true if the represent
+     * the same underlying semantic name. In other words, whether or not a
+     * name is componentized or simple has no bearing on the comparison.
+     *
+     * @param o the DotName object to compare to
+     * @return true if equal, false if not
+     *
+     * @see Object#equals(Object)
+     */
     public boolean equals(Object o) {
         if (this == o)
             return true;

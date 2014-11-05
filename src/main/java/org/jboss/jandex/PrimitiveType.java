@@ -29,6 +29,7 @@ import java.util.Map;
  * <p>A primitive is considered equal to another primitive if it specifies the same primitive
  * enumeration value, and contains an equal set of annotation instances.
  *
+ * @since 2.0
  * @author Jason T. Greene
  */
 public final class PrimitiveType extends Type {

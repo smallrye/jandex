@@ -43,6 +43,7 @@ import java.util.List;
  *     Y&lt;String&gt;.X
  * </pre>
  *
+ * @since 2.0
  * @author Jason T. Greene
  */
 public class ParameterizedType extends Type {

@@ -36,6 +36,7 @@ package org.jboss.jandex;
  * type variable T.
  *
  * @author Jason T. Greene
+ * @since 2.0
  */
 public class ThrowsTypeTarget extends PositionBasedTypeTarget {
     ThrowsTypeTarget(MethodInfo enclosingTarget, int position) {

@@ -25,8 +25,8 @@ package org.jboss.jandex;
  * <p>
  * Consider the following example involving a type target using the "Bar" annotation:
  *
- * <pre>
- * public void foo(List<@Bar T> { ... }
+ * <pre class="brush:java; gutter: false;">
+ * public void foo(List&lt;@Bar T&gt; { ... }
  * </pre>
  *
  * <p>This example would be represented as a <code>MethodParameterTypeTarget</code> with an enclosing target
@@ -57,7 +57,7 @@ public class MethodParameterTypeTarget extends PositionBasedTypeTarget {
     }
 
     @Override
-    public MethodParameterTypeTarget asMethodParameter() {
+    public MethodParameterTypeTarget asMethodParameterType() {
         return this;
     }
 }

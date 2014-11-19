@@ -61,6 +61,7 @@ public final class ClassInfo implements AnnotationTarget {
     private boolean hasNoArgsConstructor;
     private NestingInfo nestingInfo;
 
+    /** Describes the form of nesting used by a class */
     public enum NestingType {
         /** A standard class declared within its own source unit */
         TOP_LEVEL,
@@ -175,8 +176,10 @@ public final class ClassInfo implements AnnotationTarget {
      * @param flags the class attributes
      * @param interfaces the methodParameters this class implements
      * @param annotations the annotations on this class
+     * @param hasNoArgsConstructor whether this class has a no arg constructor
      * @return a new mock class representation
      */
+    @Deprecated
     public static ClassInfo create(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
         Type[] interfaceTypes = new Type[interfaces.length];
         for (int i = 0; i < interfaces.length; i++) {
@@ -481,6 +484,31 @@ public final class ClassInfo implements AnnotationTarget {
      */
     public EnclosingMethodInfo enclosingMethod() {
         return nestingInfo != null ? nestingInfo.enclosingMethod : null;
+    }
+
+    @Override
+    public ClassInfo asClass() {
+        return this;
+    }
+
+    @Override
+    public FieldInfo asField() {
+        throw new IllegalArgumentException("Not a field");
+    }
+
+    @Override
+    public MethodInfo asMethod() {
+        throw new IllegalArgumentException("Not a method");
+    }
+
+    @Override
+    public MethodParameterInfo asMethodParameter() {
+        throw new IllegalArgumentException("Not a method parameter");
+    }
+
+    @Override
+    public TypeTarget asType() {
+        throw new IllegalArgumentException("Not a type");
     }
 
     void setHasNoArgsConstructor(boolean hasNoArgsConstructor) {

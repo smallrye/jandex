@@ -29,8 +29,8 @@ package org.jboss.jandex;
  * <p>
  * Consider the following example involving a type target using the "Bar" annotation:
  *
- * <pre>
- * class Foo<T> implements List<@Bar T> {}
+ * <pre class="brush:java; gutter: false;">
+ * class Foo&lt;T&gt; implements List&lt;@Bar T&gt; {}
  * </pre>
  *
  * This example would return a position of 1 (marking the first interface), an enclosing target of the

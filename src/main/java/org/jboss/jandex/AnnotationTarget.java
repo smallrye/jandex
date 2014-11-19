@@ -64,7 +64,48 @@ public interface AnnotationTarget {
      * Returns the kind of object this target represents.
      *
      * @return the target kind.
+     * @since 2.0
      */
     Kind kind();
+
+    /**
+     * Casts and returns this target as a <code>ClassInfo</code> if it is of kind <code>CLASS</code>
+     *
+     * @return this instance cast to a class
+     * @since 2.0
+     */
+    ClassInfo asClass();
+
+    /**
+     * Casts and returns this target as a <code>FieldInfo</code> if it is of kind <code>FIELD</code>
+     *
+     * @return this instance cast to a field
+     * @since 2.0
+     */
+    FieldInfo asField();
+
+    /**
+     * Casts and returns this target as a <code>MethodInfo</code> if it is of kind <code>METHOD</code>
+     *
+     * @return this instance cast to a method
+     * @since 2.0
+     */
+    MethodInfo asMethod();
+
+    /**
+     * Casts and returns this target as a <code>MethodParameterInfo</code> if it is of kind <code>METHOD_PARAMETER</code>
+     *
+     * @return this instance cast to a method parameter
+     * @since 2.0
+     */
+    MethodParameterInfo asMethodParameter();
+
+    /**
+      * Casts and returns this target as a <code>TypeTarget</code> if it is of kind <code>TYPE</code>
+      *
+      * @return this instance cast to a type target
+      * @since 2.0
+      */
+    TypeTarget asType();
 
 }

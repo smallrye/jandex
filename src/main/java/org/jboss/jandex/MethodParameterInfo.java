@@ -76,6 +76,31 @@ public final class MethodParameterInfo implements AnnotationTarget {
     }
 
     @Override
+    public final ClassInfo asClass() {
+        throw new IllegalArgumentException("Not a class");
+    }
+
+    @Override
+    public final FieldInfo asField() {
+        throw new IllegalArgumentException("Not a field");
+    }
+
+    @Override
+    public final MethodInfo asMethod() {
+        throw new IllegalArgumentException("Not a method");
+    }
+
+    @Override
+    public final MethodParameterInfo asMethodParameter() {
+        return this;
+    }
+
+    @Override
+    public final TypeTarget asType() {
+        throw new IllegalArgumentException("Not a type");
+    }
+
+    @Override
     public Kind kind() {
         return Kind.METHOD_PARAMETER;
     }

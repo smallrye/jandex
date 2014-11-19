@@ -26,8 +26,8 @@ package org.jboss.jandex;
  * <p>
  * Consider the following example involving a type target using the "Bar" annotation:
  *
- * <pre>
- * public List<@Bar T> foo { return foo; }
+ * <pre class="brush:java; gutter: false;">
+ * public List&lt;@Bar T&gt; foo { return foo; }
  * </pre>
  *
  * This example would be represented as an <code>EmptyTypeTarget</code> with an enclosing target of Foo's

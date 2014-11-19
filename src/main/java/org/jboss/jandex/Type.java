@@ -113,6 +113,20 @@ public abstract class Type {
         this.annotations = annotations;
     }
 
+    /**
+     * Creates a type instance of the specified kind. Types of kind <code>CLASS</code>,
+     * directly use the specified name. Types of kind <code>ARRAY</code> parse the name
+     * in the Java descriptor format (e.g. "[[[[Ljava/lang/String;"). Types of kind
+     * PRIMITIVE parsed using the primitive descriptor format (e.g. "I" for int).
+     * Types of kind VOID ignore the specified name, and return a void type. All
+     * other types will throw an exception.
+     *
+     * @param name the name to use or parse
+     * @param kind the kind of type to create
+     * @return the type
+     * @throws java.lang.IllegalArgumentException if the kind is no supported
+     *
+     */
     public static Type create(DotName name, Kind kind) {
         if (name == null)
             throw new IllegalArgumentException("name can not be null!");
@@ -120,10 +134,10 @@ public abstract class Type {
         if (kind == null)
             throw new IllegalArgumentException("kind can not be null!");
 
-        String string = name.toString();
 
         switch (kind) {
             case ARRAY:
+                String string = name.toString();
                 int start = string.lastIndexOf('[');
                 if (start < 0) {
                     throw new IllegalArgumentException("Not a valid array name");
@@ -147,7 +161,10 @@ public abstract class Type {
                         type = new ClassType(DotName.createSimple(string.substring(start + 1, end).replace('.', '/')));
                         break;
                     default:
-                        throw new IllegalArgumentException("Component type not supported: " + c);
+                        type = PrimitiveType.decode(string.charAt(start));
+                        if (type == null) {
+                            throw new IllegalArgumentException("Component type not supported: " + c);
+                        }
                 }
 
                 return new ArrayType(type, depth);

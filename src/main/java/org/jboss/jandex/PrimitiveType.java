@@ -55,8 +55,18 @@ public final class PrimitiveType extends Type {
         reverseMap.put("boolean", BOOLEAN);
     }
 
+    /**
+     * Specifies the underlying Java primitive type for a <code>PrimitiveType</code>
+     */
     public enum Primitive {
-        BYTE, CHAR, DOUBLE, FLOAT, INT, LONG, SHORT, BOOLEAN
+        /** Indicates a primitive byte type      */ BYTE,
+        /** Indicates a primitive character type */ CHAR,
+        /** Indicates a primitive double type    */ DOUBLE,
+        /** Indicates a primitive float type     */ FLOAT,
+        /** Indicates a primitive integer type   */ INT,
+        /** Indicates a primitive long type      */ LONG,
+        /** Indicates a primitive short type     */ SHORT,
+        /** Indicates a primitive boolean type   */ BOOLEAN,
     }
 
     private final Primitive primitive;

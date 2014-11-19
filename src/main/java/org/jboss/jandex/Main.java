@@ -24,6 +24,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+/**
+ * Responsible for launching the indexing tool on a java command line.
+ *
+ * @author Jason T. Greene
+ */
 public class Main {
 
     private boolean modify;

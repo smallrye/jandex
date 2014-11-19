@@ -27,7 +27,7 @@ import java.util.List;
  * <code>identifier()</code> specifies the name of the type variable as specified in the source code.
  * <p>For example, consider the type variable:
  *
- * <pre>T extends Number</pre>
+ * <pre class="brush:java">T extends Number</pre>
  *
  * The <code>identifier()</code> is "T", while the <code>name()</code> is "java.lang.Number".
  *
@@ -58,8 +58,8 @@ public final class TypeVariable extends Type {
      * The identifier of this type variable as it appears in Java source code.
      *
      * <p> The following class has a type parameter, with an identifier of "T":
-     * <pre>
-     *     class Foo<T extends Number> {}
+     * <pre class="brush:java; gutter:false;">
+     *     class Foo&lt;T extends Number&gt; {}
      * </pre>
      *
      * @return the identifier of this type variable

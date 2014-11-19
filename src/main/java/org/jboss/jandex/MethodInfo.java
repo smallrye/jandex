@@ -183,17 +183,16 @@ public final class MethodInfo implements AnnotationTarget {
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
      *
-     * <pre>
+     * <pre class="brush:java; gutter: false;">
      *     {@literal @}MyMethodAnnotation
      *     public void foo() {...}
      *
      *     public void foo({@literal @}MyParamAnnotation int param) {...}
      *
-     *     public void foo(List<{@literal @}MyTypeAnnotation> list) {...}
+     *     public void foo(List&lt;{@literal @}MyTypeAnnotation&gt; list) {...}
      *
-     *     public <{@literal @}AnotherTypeAnnotation T> void foo(T t) {...}
+     *     public &lt;{@literal @}AnotherTypeAnnotation T&gt; void foo(T t) {...}
      * </pre>
-     * </p>
      *
      * @return the annotation instances declared on this class or its parameters, or an empty list if none
      */
@@ -210,17 +209,16 @@ public final class MethodInfo implements AnnotationTarget {
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
      *
-     * <pre>
+     * <pre class="brush:java; gutter: false;">
      *     {@literal @}MyMethodAnnotation
      *     public void foo() {...}
      *
      *     public void foo({@literal @}MyParamAnnotation int param) {...}
      *
-     *     public void foo(List<{@literal @}MyTypeAnnotation> list) {...}
+     *     public void foo(List&lt;{@literal @}MyTypeAnnotation&gt; list) {...}
      *
-     *     public <{@literal @}AnotherTypeAnnotation T> void foo(T t) {...}
+     *     public &lt;{@literal @}AnotherTypeAnnotation T&gt; void foo(T t) {...}
      * </pre>
-     * </p>
      *
      * @param name the name of the annotation to locate within the method
      * @return the annotation if found, otherwise, null
@@ -260,6 +258,32 @@ public final class MethodInfo implements AnnotationTarget {
     public String toString() {
         return methodInternal.toString();
     }
+
+    @Override
+    public final ClassInfo asClass() {
+        throw new IllegalArgumentException("Not a class");
+    }
+
+    @Override
+    public final FieldInfo asField() {
+        throw new IllegalArgumentException("Not a field");
+    }
+
+    @Override
+    public final MethodInfo asMethod() {
+        return this;
+    }
+
+    @Override
+    public final MethodParameterInfo asMethodParameter() {
+        throw new IllegalArgumentException("Not a method parameter");
+    }
+
+    @Override
+    public final TypeTarget asType() {
+        throw new IllegalArgumentException("Not a type");
+    }
+
 
     final MethodInternal methodInternal() {
         return methodInternal;

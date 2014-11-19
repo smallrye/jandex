@@ -130,6 +130,31 @@ public final class FieldInfo implements AnnotationTarget {
         return internal.toString(clazz);
     }
 
+    @Override
+    public final ClassInfo asClass() {
+        throw new IllegalArgumentException("Not a class");
+    }
+
+    @Override
+    public final FieldInfo asField() {
+        return this;
+    }
+
+    @Override
+    public final MethodInfo asMethod() {
+        throw new IllegalArgumentException("Not a method");
+    }
+
+    @Override
+    public final MethodParameterInfo asMethodParameter() {
+        throw new IllegalArgumentException("Not a method parameter");
+    }
+
+    @Override
+    public final TypeTarget asType() {
+        throw new IllegalArgumentException("Not a type");
+    }
+
     void setType(Type type) {
         internal.setType(type);
     }

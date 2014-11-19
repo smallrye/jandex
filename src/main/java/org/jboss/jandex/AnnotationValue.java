@@ -40,10 +40,12 @@ import java.util.Arrays;
  *
  * <p>
  * As well as any the following specialty types:
+ * <ul>
  * <li>String</li>
  * <li>Class</li>
  * <li>Enum</li>
- * <li>Nested annotation</li> </ul>
+ * <li>Nested annotation</li>
+ * </ul>
  *
  * <p>
  * In addition a value can be a single-dimension array of any of the above types
@@ -54,6 +56,10 @@ import java.util.Arrays;
  * allow conversion of different types. For example, a byte can be returned as
  * an integer using {@link #asInt()}. Also all value types support a
  * String representation.
+ *
+ * <p>
+ * To determine the underlying type, {@link #kind()} can be used.
+ * </p>
  *
  * <p>
  * <b>Thread-Safety</b>
@@ -67,8 +73,25 @@ import java.util.Arrays;
 public abstract class AnnotationValue {
     static final AnnotationValue[] EMPTY_VALUE_ARRAY = new AnnotationValue[0];
 
-    public enum Kind {BYTE, SHORT, INTEGER, CHARACTER, FLOAT, DOUBLE, LONG,
-                      BOOLEAN, CLASS, STRING, ENUM, ARRAY, NESTED, UNKNOWN}
+    /**
+     * Specifies the kind of annotation value, which can be used to determine the underlying Java type.
+     */
+    public enum Kind {
+        /** Indicates a primitive byte value      */ BYTE,
+        /** Indicates a primitive short value     */ SHORT,
+        /** Indicates a primitive integer value   */ INTEGER,
+        /** Indicates a primitive character value */ CHARACTER,
+        /** Indicates a primitive float value     */ FLOAT,
+        /** Indicates a primitive double value    */ DOUBLE,
+        /** Indicates a primitive long value      */ LONG,
+        /** Indicates a primitive boolean value   */ BOOLEAN,
+        /** Indicates a Java Class value          */ CLASS,
+        /** Indicates a Java String value         */ STRING,
+        /** Indicates a Java Enum value           */ ENUM,
+        /** Indicates an array value              */ ARRAY,
+        /** Indicates a nested annotation value   */ NESTED,
+        /** Indicates the value type is unknown   */ UNKNOWN
+    }
 
     private final String name;
 

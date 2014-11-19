@@ -28,8 +28,8 @@ package org.jboss.jandex;
  * <p>
  * Consider the following example involving a type target using the "Bar" annotation:
  *
- * <pre>
- * public <T extends Number & @Bar Serializable> void foo(List<T>) { ... }
+ * <pre class="brush:java; gutter: false;">
+ * public &lt;T extends Number &amp; @Bar Serializable&gt; void foo(List&lt;T&gt;) { ... }
  * </pre>
  *
  * <p>This example would be represented as a <code>TypeParameterBoundTypeTarget</code> with

@@ -26,8 +26,8 @@ package org.jboss.jandex;
  * <p>
  * Consider the following example involving a type target using the "Bar" annotation:
  *
- * <pre>
- * public void foo(List<T>) throws FooException<@Bar T> { ... }
+ * <pre class="brush:java; gutter: false;">
+ * public void foo(List&lt;T&gt;) throws FooException&lt;@Bar T&gt; { ... }
  * </pre>
  *
  * <p>This example would be represented as a <code>ThrowsTypeTarget</code> with an enclosing target

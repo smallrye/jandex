@@ -61,7 +61,6 @@ public class TypeAnnotationTestCase {
         verifyTypeAnnotations(index);
     }
 
-
     private Index buildIndex() throws IOException {
         Indexer indexer = new Indexer();
         InputStream stream = getClass().getClassLoader().getResourceAsStream("test/TExample.class");

@@ -33,13 +33,13 @@ import java.util.List;
  * <p>For example, the follow declaration would have a name of "java.util.Map", and two
  * <code>ClassType</code> arguments, the first being "java.lang.String", the second "java.lang.Integer":
  *
- * <pre>
+ * <pre class="brush:java; gutter:false">
  *     java.util.Map&lt;String, Integer&gt;
  * </pre>
  *
  * <p>Another example shows the case where a parameterized type is used to represent a non-parameterized
  * class (Y), whose owner (X) is itself parameterized:
- * <pre>
+ * <pre class="brush:java; gutter:false">
  *     Y&lt;String&gt;.X
  * </pre>
  *
@@ -84,11 +84,11 @@ public class ParameterizedType extends Type {
      *
      * <p>The example below shows the case where a parameterized type is used to represent a non-parameterized
      * class (Y).
-     * <pre>
+     * <pre class="brush:java; gutter:false;">
      *     Y&lt;String&gt;.X
      * </pre>
      *
-     * <p>This example will return a parameterized type for "Y" when X's <code>owner()/code> method
+     * <p>This example will return a parameterized type for "Y" when X's <code>owner()</code> method
      * is called.</p>
      *
      * @return the owner type if the owner is parameterized or annotated, otherwise null

@@ -38,7 +38,9 @@ import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.Type;
+import org.jboss.jandex.TypeTarget;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -48,10 +50,60 @@ public class AnnotationInstanceFilterTestCase {
         public Kind kind() {
             return null;
         }
+
+        @Override
+        public ClassInfo asClass() {
+            return null;
+        }
+
+        @Override
+        public FieldInfo asField() {
+            return null;
+        }
+
+        @Override
+        public MethodInfo asMethod() {
+            return null;
+        }
+
+        @Override
+        public MethodParameterInfo asMethodParameter() {
+            return null;
+        }
+
+        @Override
+        public TypeTarget asType() {
+            return null;
+        }
     }
     private static class Miss implements AnnotationTarget{
         @Override
         public Kind kind() {
+            return null;
+        }
+
+        @Override
+        public ClassInfo asClass() {
+            return null;
+        }
+
+        @Override
+        public FieldInfo asField() {
+            return null;
+        }
+
+        @Override
+        public MethodInfo asMethod() {
+            return null;
+        }
+
+        @Override
+        public MethodParameterInfo asMethodParameter() {
+            return null;
+        }
+
+        @Override
+        public TypeTarget asType() {
             return null;
         }
     }

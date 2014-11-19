@@ -51,7 +51,7 @@ public interface IndexView {
      * constructed per jar. It is expected that several indexes will need to be searched
      * when analyzing a jar that is a part of a complex multi-module/classloader
      * environment (like an EE application server).
-     * <p/>
+     * <p>
      * Note that this will only pick up direct subclasses of the class. It will not
      * pick up subclasses of subclasses.
      * @param className the super class of the desired subclasses
@@ -76,7 +76,7 @@ public interface IndexView {
      * are constructed per jar. It is expected that several indexes will need to
      * be searched when analyzing a jar that is a part of a complex
      * multi-module/classloader environment (like an EE application server).
-     * <p/>
+     * <p>
      * The list of implementors may also include other methodParameters, in order to get a complete
      * list of all classes that are assignable to a given interface it is necessary to
      * recursively call {@link #getKnownDirectImplementors(DotName)} for every implementing
@@ -92,7 +92,7 @@ public interface IndexView {
      * This will all return classes that implement sub methodParameters of the interface, and
      * sub-classes of classes that implement the interface. (In short, it will
      * return every class that is assignable to the interface that is found in the index)
-     * <p/>
+     * <p>
      * This will only return classes, not methodParameters.
      *
      * @param interfaceName The interface

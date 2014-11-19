@@ -339,7 +339,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
             }
             case METHOD_PARAMETER: {
                 writeTypeTargetFields(stream, METHOD_PARAMETER_TYPE_TAG, typeTarget);
-                stream.writePackedU32(typeTarget.asMethodParameter().position());
+                stream.writePackedU32(typeTarget.asMethodParameterType().position());
                 break;
             }
             case TYPE_PARAMETER: {

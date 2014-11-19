@@ -102,6 +102,7 @@ public final class DotName implements Comparable<DotName> {
      *        localName, this may be null if there is not one
      * @param localName the local non-null portion of this name, which does not contain
      *        '.'
+     * @param innerClass whether or not this localName is an inner class name, requiring '$' vs '.'
      * @return a componentized DotName.
      */
     public static DotName createComponentized(DotName prefix, String localName, boolean innerClass) {

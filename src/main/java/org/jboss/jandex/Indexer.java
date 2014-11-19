@@ -60,7 +60,7 @@ import java.util.Map;
  * partial searching, which ultimately limits the efficiency of processing them.
  *
  * <p>
- * <b>Thread-Safety</b>>/p> This class is not thread-safe can <b>not<b> be
+ * <b>Thread-Safety</b> This class is not thread-safe can <b>not</b> be
  * shared between threads. The index it produces however is thread-safe.
  *
  * @author Jason T. Greene
@@ -684,7 +684,7 @@ public final class Indexer {
             }
             case METHOD_PARAMETER: {
                 MethodInfo method = (MethodInfo) enclosingTarget;
-                type = method.methodInternal().parameterArray()[target.asMethodParameter().position()];
+                type = method.methodInternal().parameterArray()[target.asMethodParameterType().position()];
                 break;
             }
             case TYPE_PARAMETER: {
@@ -754,7 +754,7 @@ public final class Indexer {
             Type oType = ownerMap.get(currentName);
 
             // Static classes do not count for NESTED path elements
-            if (depth > 0 && /* current.enclosingClass != null && */ !Modifier.isStatic(current.flags)) {
+            if (depth > 0 && !Modifier.isStatic(current.flags)) {
                 --depth;
             }
 
@@ -1416,7 +1416,7 @@ public final class Indexer {
      *
      * @param stream a stream pointing to class file data
      * @return a class index containing all annotations on the passed class stream
-     * @throws IOException
+     * @throws IOException if the class file data is corrupt or the underlying stream fails
      */
     public ClassInfo index(InputStream stream) throws IOException {
         try

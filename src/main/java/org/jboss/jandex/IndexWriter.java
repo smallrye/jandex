@@ -66,9 +66,9 @@ public final class IndexWriter {
      * Writes the specified index to the associated output stream. This may be called multiple times in order
      * to write multiple indexes. The default version of index file is used.
      *
-     * @param index
+     * @param index the index to write to the stream
      * @return the number of bytes written to the stream
-     * @throws IOException
+     * @throws IOException if the underlying stream fails
      */
     public int write(Index index) throws IOException {
         return write(index, IndexWriterV2.MAX_VERSION);

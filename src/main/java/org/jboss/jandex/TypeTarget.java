@@ -42,7 +42,26 @@ public abstract class TypeTarget implements AnnotationTarget {
     private final AnnotationTarget enclosingTarget;
     private Type target;
 
-    public enum Usage {EMPTY, CLASS_EXTENDS, METHOD_PARAMETER, TYPE_PARAMETER, TYPE_PARAMETER_BOUND, THROWS}
+    /** Specifies a form of usage of a type annotation */
+    public enum Usage {
+        /** Indicates a type annotation occurs within a field, method receiver, or method return type */
+        EMPTY,
+
+        /** Indicates a type annotation occurs within class' extends or implements clause */
+        CLASS_EXTENDS,
+
+        /** Indicates a type annotation occurs within a method parameter */
+        METHOD_PARAMETER,
+
+        /** Indicates a type annotation occurs within a method or class type parameter */
+        TYPE_PARAMETER,
+
+        /** Indicates a type annotation occurs within the bound of a method or class type parameter */
+        TYPE_PARAMETER_BOUND,
+
+        /** Indicates a type annotation occurs within the throws clause of a method */
+        THROWS
+    }
 
     TypeTarget(AnnotationTarget enclosingTarget, Type target) {
         this.enclosingTarget = enclosingTarget;
@@ -110,7 +129,7 @@ public abstract class TypeTarget implements AnnotationTarget {
      * @return an instance of <code>MethodParameterTypeTarget</code>
      * @throws java.lang.IllegalArgumentException if this is not a <code>MethodParameterTypeTarget</code>
      */
-    public MethodParameterTypeTarget asMethodParameter() {
+    public MethodParameterTypeTarget asMethodParameterType() {
         throw new IllegalArgumentException("Not a method parameter type target");
     }
 
@@ -145,5 +164,30 @@ public abstract class TypeTarget implements AnnotationTarget {
       */
     public ThrowsTypeTarget asThrows() {
         throw new IllegalArgumentException("Not a throws type target");
+    }
+
+    @Override
+    public final ClassInfo asClass() {
+        throw new IllegalArgumentException("Not a class");
+    }
+
+    @Override
+    public final FieldInfo asField() {
+        throw new IllegalArgumentException("Not a field");
+    }
+
+    @Override
+    public final MethodInfo asMethod() {
+        throw new IllegalArgumentException("Not a method");
+    }
+
+    @Override
+    public final MethodParameterInfo asMethodParameter() {
+        throw new IllegalArgumentException("Not a method parameter");
+    }
+
+    @Override
+    public final TypeTarget asType() {
+        return this;
     }
 }

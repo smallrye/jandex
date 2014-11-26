@@ -106,8 +106,10 @@ The following example demonstrates indexing the Thread and String classes, and s
 
 ```java
 Indexer indexer = new Indexer();
-InputStream stream = getClass().getClassLoader().getResourceAsStream("java/lang/Thread.class");
-InputStream stream = getClass().getClassLoader().getResourceAsStream("java/lang/String.class");
+InputStream stream = getClass().getClassLoader()
+                               .getResourceAsStream("java/lang/Thread.class");
+InputStream stream = getClass().getClassLoader()
+                               .getResourceAsStream("java/lang/String.class");
 indexer.index(stream);
 Index index = indexer.complete();
 DotName deprecated = DotName.createSimple("java.lang.Deprecated");
@@ -136,7 +138,8 @@ The example code, which prints "Comparable<? super T>", followed by "T" is:
 
 ```java
 Indexer indexer = new Indexer();
-InputStream stream = getClass().getClassLoader().getResourceAsStream("java/util/Collections.class");
+InputStream stream = getClass().getClassLoader()
+                               .getResourceAsStream("java/util/Collections.class");
 indexer.index(stream);
 Index index = indexer.complete();
  
@@ -205,7 +208,8 @@ stream = new FileInputStream("/tmp/Test$Label.class");
 indexer.index(stream);
  
 Index index = indexer.complete();
-List<AnnotationInstance> annotations = index.getAnnotations(DotName.createSimple("Test$Label"));
+DotName label DotName.createSimple("Test$Label");
+List<AnnotationInstance> annotations = index.getAnnotations(label);
 for (AnnotationInstance annotation : annotations) {
 if (annotation.target().kind() == AnnotationTarget.Kind.TYPE) {
     TypeTarget typeTarget = annotation.target().asType();

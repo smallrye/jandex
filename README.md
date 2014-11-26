@@ -17,6 +17,25 @@ Jandex is a space efficient Java annotation indexer and offline reflection libra
  * Compatibility with previous API and storage format versions</li>
  * Execution via an API, a command line tool, and ant</li>
 
+## Creating a Persisted Index Using the CLI
+
+The following example demonstrates indexing hibernate core, followed by the entire Java
+JDK using Jandex on the CLI:
+ 
+ ```
+$ java -jar target/jandex-2.0.0.Alpha1.jar hibernate-core-4.0.0.Final.jar
+   Wrote /Users/jason/devel/jandex/hibernate-core-4.0.0.Final-jar.idx in 0.9020 seconds
+         (2722 classes, 20 annotations, 1696 instances, 621565 bytes)
+$ java -jar target/jandex-2.0.0.Alpha1.jar rt.jar
+   Wrote /Users/jason/devel/jandex/rt-jar.idx in 4.2870 seconds
+         (19831 classes, 41 annotations, 1699 instances, 4413790 bytes)
+```
+ The above summary output tells us that this version of hibernate has 2,722 classes, and those classes
+ contained 1,696 annotation declarations, using 20 different annotation types. The resulting index
+ is 606KB uncompressed, which is only 14% of the 4.1MB compressed jar size, or 4% of the uncompressed
+ class file data. If the index is stored in the jar (using the -m option) it can be compressed an additional 47%,
+ leading to a jar growth of only 8%</p>
+ 
 ## Browsing a Class
 
 The following example demonstrates indexing a class and browsing its methods:</p>
@@ -62,25 +81,6 @@ try {
 }
 ```
 
-## Creating a Persisted Index Using the CLI
-
-The following example demonstrates indexing hibernate core, followed by the entire Java
-JDK using Jandex on the CLI:
- 
- ```
-$ java -jar target/jandex-2.0.0.Alpha1.jar hibernate-core-4.0.0.Final.jar
-   Wrote /Users/jason/devel/jandex/hibernate-core-4.0.0.Final-jar.idx in 0.9020 seconds
-         (2722 classes, 20 annotations, 1696 instances, 621565 bytes)
-$ java -jar target/jandex-2.0.0.Alpha1.jar rt.jar
-   Wrote /Users/jason/devel/jandex/rt-jar.idx in 4.2870 seconds
-         (19831 classes, 41 annotations, 1699 instances, 4413790 bytes)
-```
- The above summary output tells us that this version of hibernate has 2,722 classes, and those classes
- contained 1,696 annotation declarations, using 20 different annotation types. The resulting index
- is 606KB uncompressed, which is only 14% of the 4.1MB compressed jar size, or 4% of the uncompressed
- class file data. If the index is stored in the jar (using the -m option) it can be compressed an additional 47%,
- leading to a jar growth of only 8%</p>
- 
 ## Loading a Persisted Index
  
 The following example demonstrates loading the index from the previous example and using that

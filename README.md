@@ -25,7 +25,8 @@ The following example demonstrates indexing a class and browsing its methods:</p
 // Index java.util.Map
 Indexer indexer = new Indexer();
 // Normally a direct file is opened, but class-loader backed streams work as well.
-InputStream stream = getClass().getClassLoader().getResourceAsStream("java/util/Map.class");
+InputStream stream = getClass().getClassLoader()
+                               .getResourceAsStream("java/util/Map.class");
 indexer.index(stream);
 Index index = indexer.complete();
  
@@ -46,7 +47,8 @@ file can later be loaded scanning Java classes:
 // Index java.util.Map
 Indexer indexer = new Indexer();
 // Normally a direct file is opened, but class-loader backed streams work as well.
-InputStream stream = getClass().getClassLoader().getResourceAsStream("java/util/Map.class");
+InputStream stream = getClass().getClassLoader()
+                               .getResourceAsStream("java/util/Map.class");
 indexer.index(stream);
 Index index = indexer.complete();
  

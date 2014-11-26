@@ -17,6 +17,11 @@ Jandex is a space efficient Java annotation indexer and offline reflection libra
  * Compatibility with previous API and storage format versions</li>
  * Execution via an API, a command line tool, and ant</li>
 
+## Downloading Jandex
+
+Jandex artifacts can be [downloaded off of maven central](http://search.maven.org/#browse%7C1278342764).
+ 
+
 ## Creating a Persisted Index Using the CLI
 
 The following example demonstrates indexing hibernate core, followed by the entire Java
@@ -35,6 +40,28 @@ $ java -jar target/jandex-2.0.0.Alpha1.jar rt.jar
  is 606KB uncompressed, which is only 14% of the 4.1MB compressed jar size, or 4% of the uncompressed
  class file data. If the index is stored in the jar (using the -m option) it can be compressed an additional 47%,
  leading to a jar growth of only 8%</p>
+ 
+## Adding the Jandex API to your maven project
+
+Just add the following to your pom:
+```xml
+ <dependency>
+     <groupId>org.jboss</groupId>
+     <artifactId>jandex</artifactId>
+     <version>2.0.0.Beta1</version>
+ </dependency>
+```
+
+## Using the Ant task to index your project
+
+The following ant task can be used with either the maven antrun-plugin or an ant build to build an index
+for your project:
+```
+<taskdef name="jandex" classname="org.jboss.jandex.JandexAntTask" />
+<jandex run="@{jandex}>
+   <fileset dir="${location.to.index.dir}" />
+</jandex>
+```
  
 ## Browsing a Class
 

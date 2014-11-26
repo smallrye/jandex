@@ -100,7 +100,7 @@ for (MethodInfo method : clazz.methods()) {
 }
 ```
  
- # Searching for an Annotation
+## Searching for an Annotation
  
 The following example demonstrates indexing the Thread and String classes, and searching for methods that have been marked with @Deprecated:
 

@@ -81,10 +81,10 @@ $ java -jar target/jandex-2.0.0.Alpha1.jar rt.jar
  class file data. If the index is stored in the jar (using the -m option) it can be compressed an additional 47%,
  leading to a jar growth of only 8%</p>
  
- ## Loading a Persisted Index
+## Loading a Persisted Index
  
- The following example demonstrates loading the index from the previous example and using that
- index to print all methods on <code>java.util.Map</code>:
+The following example demonstrates loading the index from the previous example and using that
+index to print all methods on <code>java.util.Map</code>:
  ```java
 FileInputStream input = new FileInputStream("/tmp/index.idx");
 IndexReader reader = new IndexReader(input);

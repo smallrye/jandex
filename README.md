@@ -20,7 +20,14 @@ Jandex is a space efficient Java annotation indexer and offline reflection libra
 ## Downloading Jandex
 
 Jandex artifacts can be [downloaded off of maven central](http://search.maven.org/#browse%7C1278342764).
+
+## Reporting issues
+
+Issues can be reported in the [Jandex JIRA Project](https://issues.jboss.org/browse/JANDEX), 
  
+## Getting Help
+
+Post to the [WildFly user forums for help] (https://developer.jboss.org/en/wildfly?view=discussions).
 
 ## Creating a Persisted Index Using the CLI
 

@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.jboss</groupId>
     <artifactId>jboss-parent</artifactId>
-    <version>8</version>
+    <version>14</version>
   </parent>
 
   <groupId>org.jboss.jandex</groupId>
@@ -140,7 +140,7 @@
             <dependency>
               <groupId>org.apache.maven.doxia</groupId>
               <artifactId>doxia-module-markdown</artifactId>
-              <version>1.5</version>
+              <version>1.6</version>
             </dependency>
           </dependencies>
           <configuration>
@@ -298,10 +298,12 @@
           <plugin>
             <artifactId>maven-gpg-plugin</artifactId>
           </plugin>
+          <!-- Not currently working; not sure why
           <plugin>
             <groupId>com.github.github</groupId>
             <artifactId>site-maven-plugin</artifactId>
           </plugin>
+          -->
         </plugins>
       </build>
     </profile>

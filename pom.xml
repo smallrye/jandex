@@ -264,13 +264,16 @@
         </plugin>
         <plugin>
           <artifactId>maven-gpg-plugin</artifactId>
-          <version>1.4</version>
+          <version>1.5</version>
           <executions>
             <execution>
               <id>gpg</id>
               <goals>
                 <goal>sign</goal>
               </goals>
+              <configuration>
+                <useAgent>false</useAgent>
+              </configuration>
             </execution>
           </executions>
         </plugin>

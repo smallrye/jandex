@@ -107,16 +107,19 @@ public class JarIndexer {
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
                 if (modify) {
-                    JarEntry clone = (JarEntry) entry.clone();
-                    // Compression level and format can vary across implementations
-                    if (clone.getMethod() != ZipEntry.STORED)
-                        clone.setCompressedSize(-1);
-                    zo.putNextEntry(clone);
-                    final InputStream stream = jar.getInputStream(entry);
-                    try {
-                        copy(stream, zo);
-                    } finally {
-                        safeClose(stream);
+                    if (!"META-INF/jandex.idx".equals(entry.getName())) {
+                        JarEntry clone = (JarEntry) entry.clone();
+                        // Compression level and format can vary across implementations
+                        if (clone.getMethod() != ZipEntry.STORED)
+                            clone.setCompressedSize(-1);
+                        zo.putNextEntry(clone);
+                        final InputStream stream = jar.getInputStream(entry);
+                        try {
+                            copy(stream, zo);
+                        }
+                        finally {
+                            safeClose(stream);
+                        }
                     }
                 }
 

@@ -44,9 +44,15 @@ import java.util.Map;
  * @author Jason T. Greene
  */
 public final class IndexReader {
-    private static final int MAGIC = 0xBABE1F15;
-    private InputStream input;
 
+    /**
+     * The latest index version supported by this version of Jandex.
+     */
+    private static final int CURRENT_VERSION = IndexReaderV2.MAX_VERSION;
+
+    private static final int MAGIC = 0xBABE1F15;
+    private PackedDataInputStream input;
+    private int version = -1;
 
     /**
      * Constructs a new IndedReader using the passed stream. The stream is not
@@ -55,7 +61,7 @@ public final class IndexReader {
      * @param input a stream which points to a jandex index file
      */
     public IndexReader(InputStream input) {
-        this.input = input;
+        this.input = new PackedDataInputStream(new BufferedInputStream(input));
     }
 
     /**
@@ -68,19 +74,14 @@ public final class IndexReader {
      * @throws UnsupportedVersion if the index data is tagged with a version not known to this reader
      */
     public Index read() throws IOException {
-        PackedDataInputStream stream = new PackedDataInputStream(new BufferedInputStream(input));
-        if (stream.readInt() != MAGIC) {
-            stream.close();
-            throw new IllegalArgumentException("Not a jandex index");
+        if(version == -1) {
+            readVersion();
         }
-        byte version = stream.readByte();
-
-        IndexReaderImpl reader = getReader(stream, version);
+        IndexReaderImpl reader = getReader(input, version);
         if (reader == null) {
-            stream.close();
+            input.close();
             throw new UnsupportedVersion("Version: " + version);
         }
-
         return reader.read(version);
     }
 
@@ -92,5 +93,37 @@ public final class IndexReader {
         }
 
         return null;
+    }
+
+    /**
+     * Returns the internal version number of the index that was read. Generally
+     * this will be compared to {@link #CURRENT_VERSION} to make sure that the index
+     * format is up to date.
+     *
+     * @return The internal version number of the index that was read
+     * @throws IOException If the index could not be read
+     */
+    public int getVersion() throws IOException {
+        if(version == -1) {
+            readVersion();
+        }
+        return version;
+    }
+
+    /**
+     * The latest index version supported by this version of Jandex
+     *
+     * @return the latest index version supported by this version of Jandex
+     */
+    public static int getCurrentVersion() {
+        return CURRENT_VERSION;
+    }
+
+    private void readVersion() throws IOException {
+        if (input.readInt() != MAGIC) {
+            input.close();
+            throw new IllegalArgumentException("Not a jandex index");
+        }
+        version = input.readByte();
     }
 }

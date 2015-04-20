@@ -84,7 +84,8 @@ public class Main {
 
     private Index getIndex(long start) throws IOException {
         Indexer indexer = new Indexer();
-        Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : JarIndexer.createJarIndex(source, indexer, modify, jarFile, verbose);
+        Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : JarIndexer.createJarIndex(source, indexer, outputFile, modify, jarFile, verbose);
+
         double time = (System.currentTimeMillis() - start) / 1000.00;
         System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d bytes)\n", result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(), result.getBytes());
         return result.getIndex();
@@ -222,11 +223,11 @@ public class Main {
                     break;
                 case 'o':
                     if (i >= args.length)
-                        throw new IllegalArgumentException("-o reuires an output file name");
+                        throw new IllegalArgumentException("-o requires an output file name");
 
                     String name = args[++i];
                     if (name.length() < 1)
-                        throw new IllegalArgumentException("-o reuires an output file name");
+                        throw new IllegalArgumentException("-o requires an output file name");
 
                     outputFile = new File(name);
                     optionCount++;

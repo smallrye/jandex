@@ -75,6 +75,24 @@ public class JarIndexer {
      *
      * @param jarFile The file to index
      * @param indexer The indexer to use
+     * @param outputFile The index file to write to
+     * @param modify If the original jar should be modified
+     * @param newJar If the new jar should be created
+     * @param verbose If we should print what we are doing to standard out
+     * @return indexing result
+     * @throws IOException for any I/o error
+     */
+    public static Result createJarIndex(File jarFile, Indexer indexer, File outputFile, boolean modify, boolean newJar, boolean verbose) throws IOException {
+        return createJarIndex(jarFile, indexer, outputFile, modify, newJar, verbose, System.out, System.err);
+    }
+
+    /**
+     * Indexes a jar file and saves the result. If the modify flag is set, index is saved to META-INF/jandex.idx.
+     * Otherwise an external file is created with a similar name to the original file,
+     * concatenating <code>.idx</code> suffix.
+     *
+     * @param jarFile The file to index
+     * @param indexer The indexer to use
      * @param modify If the original jar should be modified
      * @param newJar If the new jar should be created
      * @param verbose If we should print what we are doing to the specified info stream
@@ -85,10 +103,30 @@ public class JarIndexer {
      * @throws IOException for any I/o error
      */
     public static Result createJarIndex(File jarFile, Indexer indexer, boolean modify, boolean newJar, boolean verbose, PrintStream infoStream, PrintStream errStream) throws IOException {
+        return createJarIndex(jarFile, indexer, null, modify, newJar, verbose, infoStream, errStream);
+    }
+
+    /**
+     * Indexes a jar file and saves the result. If the modify flag is set, index is saved to META-INF/jandex.idx.
+     * Otherwise an external file is created with a similar name to the original file,
+     * concatenating <code>.idx</code> suffix.
+     *
+     * @param jarFile The file to index
+     * @param indexer The indexer to use
+     * @param outputFile The index file to write to
+     * @param modify If the original jar should be modified
+     * @param newJar If the new jar should be created
+     * @param verbose If we should print what we are doing to the specified info stream
+     * @param infoStream A print stream which will record verbose info, may be null               1
+     * @param errStream A print stream to print errors, must not be null
+     *
+     * @return indexing result
+     * @throws IOException for any I/o error
+     */
+    public static Result createJarIndex(File jarFile, Indexer indexer, File outputFile, boolean modify, boolean newJar, boolean verbose, PrintStream infoStream, PrintStream errStream) throws IOException {
         File tmpCopy = null;
         ZipOutputStream zo = null;
         OutputStream out;
-        File outputFile = null;
 
         JarFile jar = new JarFile(jarFile);
 
@@ -100,7 +138,9 @@ public class JarIndexer {
             outputFile = getIndexFile(jarFile, newJar);
             out = zo = new ZipOutputStream(new FileOutputStream(outputFile));
         } else {
-            outputFile = getIndexFile(jarFile, newJar);
+            if (outputFile == null) {
+                outputFile = getIndexFile(jarFile, newJar);
+            }
             out = new FileOutputStream(outputFile);
         }
 

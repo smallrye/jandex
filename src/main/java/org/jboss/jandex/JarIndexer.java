@@ -43,10 +43,12 @@ public class JarIndexer {
 
         // this method is here so we keep the naming details here, as impl detail
         final String ext = name.substring(p);
+        String pattern = "\\" + ext + "$";
+
         if (newJar)
-            return new File(jarFile.getAbsolutePath().replace(ext, "-jandex" + ext));
+            return new File(jarFile.getAbsolutePath().replaceAll(pattern, "-jandex" + ext));
         else
-            return new File(jarFile.getAbsolutePath().replace(ext, "-" + ext.substring(1)) + ".idx");
+            return new File(jarFile.getAbsolutePath().replaceAll(pattern, "-" + ext.substring(1)) + ".idx");
     }
     
     /**

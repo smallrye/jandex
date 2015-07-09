@@ -59,8 +59,9 @@ public final class ArrayType extends Type {
             builder.append(((PrimitiveType)component).toCode());
         } else {
             // This relies on name() representing the erased type name
-            // FIXME - Revisit whether we need /s or .s
-            builder.append('L').append(component.name().toString().replace('.', '/')).append(';');
+            // For historical 1.x reasons, we follow the Java reflection format
+            // instead of the Java descriptor format.
+            builder.append('L').append(component.name().toString()).append(';');
         }
 
         return DotName.createSimple(builder.toString());

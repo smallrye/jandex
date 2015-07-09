@@ -116,8 +116,9 @@ public abstract class Type {
     /**
      * Creates a type instance of the specified kind. Types of kind <code>CLASS</code>,
      * directly use the specified name. Types of kind <code>ARRAY</code> parse the name
-     * in the Java descriptor format (e.g. "[[[[Ljava/lang/String;"). Types of kind
-     * PRIMITIVE parsed using the primitive descriptor format (e.g. "I" for int).
+     * in the Java reflection format (Java descriptor format changing / to '.',
+     * e.g. "[[[[Ljava.lang.String;"). Types of kind PRIMITIVE parsed using the
+     * primitive descriptor format (e.g. "I" for int).
      * Types of kind VOID ignore the specified name, and return a void type. All
      * other types will throw an exception.
      *
@@ -158,7 +159,7 @@ public abstract class Type {
                         int end = start;
                         while (string.charAt(++end) != ';') ;
 
-                        type = new ClassType(DotName.createSimple(string.substring(start + 1, end).replace('.', '/')));
+                        type = new ClassType(DotName.createSimple(string.substring(start + 1, end)));
                         break;
                     default:
                         type = PrimitiveType.decode(string.charAt(start));
@@ -182,8 +183,8 @@ public abstract class Type {
     /**
      * Returns the raw name of this type. Primitives and void are returned as the
      * Java reserved word (void, boolean, byte, short, char, int, long, float,
-     * double). Arrays are returned using the internal JVM array syntax (see JVM
-     * specification). Classes are returned as a normal <code>DotName</code>.
+     * double). Arrays are returned using the Java reflection array syntax
+     * (e.g. "[[[Ljava.lang.String;") Classes are returned as a normal <code>DotName</code>.
      *
      * <p>Generic values are returned as the underlying raw value. For example,
      * a wildcard such as <code>? extends Number</code>, has a raw type of

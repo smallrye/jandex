@@ -30,5 +30,4 @@ public class DotNameTestCase {
         assertTrue(DotName.createComponentized(DotName.createComponentized(null, "jboss"), "Foo").isComponentized());
         assertFalse(DotName.createSimple("org.jboss.Foo").isComponentized());
     }
-
 }

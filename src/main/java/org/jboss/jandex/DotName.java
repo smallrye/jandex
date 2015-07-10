@@ -113,12 +113,17 @@ public final class DotName implements Comparable<DotName> {
     }
 
     DotName(DotName prefix, String local, boolean noDots, boolean innerClass) {
-        if (local == null)
+        if (local == null) {
             throw new IllegalArgumentException("Local string can not be null");
+        }
+
+        if (prefix != null && !prefix.componentized) {
+            throw new IllegalArgumentException("A componentized DotName must have a componentized prefix, or null");
+        }
 
         this.prefix = prefix;
         this.local = local;
-        this.componentized = (prefix == null || prefix.componentized) && noDots;
+        this.componentized = noDots;
         this.innerClass = innerClass;
     }
 
@@ -152,7 +157,14 @@ public final class DotName implements Comparable<DotName> {
         return componentized;
     }
 
-    boolean isInner() {return innerClass;}
+    /**
+     * Returns whether the local portion of this DotName represents an inner class.
+     *
+     * @return true if local is an inner class name, false otherwise
+     */
+    public boolean isInner() {
+        return innerClass;
+    }
 
     /**
      * Returns the regular fully qualifier class name.

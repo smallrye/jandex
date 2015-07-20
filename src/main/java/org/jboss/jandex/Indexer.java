@@ -126,6 +126,14 @@ public final class Indexer {
             if (skipped < 0)
                 throw new EOFException();
             total += skipped;
+
+            // Skip is not guaranteed to distinguish between EOF and nothing-read
+            if (skipped == 0) {
+                if (s.read() < 0) {
+                    throw new EOFException();
+                }
+                total++;
+            }
         }
     }
 

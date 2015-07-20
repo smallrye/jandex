@@ -123,7 +123,7 @@ public final class Indexer {
 
         while (total < n) {
             skipped = s.skip(n - total);
-            if (skipped < 0)
+            if (skipped <= 0)
                 throw new EOFException();
             total += skipped;
         }

@@ -31,26 +31,23 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * Writes a Jandex index file to a stream. The write process is somewhat more
- * expensive to allow for fast reads and a compact size. For more information on
- * the index content, see the documentation on {@link org.jboss.jandex.Indexer}.
+ * Writes a Jandex index file to a stream. The write process is somewhat more expensive to allow for fast reads and a compact
+ * size. For more information on the index content, see the documentation on {@link org.jboss.jandex.Indexer}.
  *
  * <p>
- * The IndexWriter operates on standard output streams, and also provides
- * suitable buffering.
+ * The IndexWriter operates on standard output streams, and also provides suitable buffering.
  *
  * <p>
  * <b>Thread-Safety</b>
  * </p>
- * IndexWriter is not thread-safe and can not be shared between concurrent
- * threads.
+ * IndexWriter is not thread-safe and can not be shared between concurrent threads.
  *
  * @see org.jboss.jandex.Indexer
  * @see org.jboss.jandex.Index
  * @author Jason T. Greene
  *
  */
-final class IndexWriterV2 extends IndexWriterImpl{
+final class IndexWriterV2 extends IndexWriterImpl {
     static final int MIN_VERSION = 6;
     static final int MAX_VERSION = 6;
 
@@ -83,7 +80,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
     private static final int HAS_ENCLOSING_METHOD = 1;
     private static final int NO_ENCLOSING_METHOD = 0;
 
-
     private final OutputStream out;
 
     private NameTable names;
@@ -91,7 +87,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
     private ReferenceTable<AnnotationInstance> annotationTable;
     private ReferenceTable<Type> typeTable;
     private ReferenceTable<Type[]> typeListTable;
-
 
     static class ReferenceEntry {
         private int index;
@@ -125,13 +120,11 @@ final class IndexWriterV2 extends IndexWriterImpl{
             return entry;
         }
 
-
         int positionOf(T reference) {
             ReferenceEntry entry = getReferenceEntry(reference);
 
             return entry.index;
         }
-
 
         boolean markWritten(T reference) {
             ReferenceEntry entry = getReferenceEntry(reference);
@@ -153,8 +146,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
     }
 
-
-
     /**
      * Constructs an IndexWriter using the specified stream
      *
@@ -164,10 +155,9 @@ final class IndexWriterV2 extends IndexWriterImpl{
         this.out = out;
     }
 
-
     /**
-     * Writes the specified index to the associated output stream. This may be called multiple times in order
-     * to write multiple indexes.
+     * Writes the specified index to the associated output stream. This may be called multiple times in order to write multiple
+     * indexes.
      *
      * @param index the index to write to the stream
      * @param version the index file version
@@ -186,7 +176,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
         stream.writePackedU32(index.annotations.size());
         stream.writePackedU32(index.implementors.size());
         stream.writePackedU32(index.subclasses.size());
-
 
         buildTables(index);
         writeByteTable(stream);
@@ -317,7 +306,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         } else if (target instanceof ClassInfo) {
             stream.writeByte(CLASS_TAG);
         } else if (target instanceof TypeTarget) {
-            writeTypeTarget(stream, (TypeTarget)target);
+            writeTypeTarget(stream, (TypeTarget) target);
         } else if (target == null) {
             stream.writeByte(NULL_TARGET_TAG);
         } else {
@@ -428,7 +417,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
         return i.intValue();
     }
 
-
     private int positionOf(Type type) {
         return typeTable.positionOf(type);
     }
@@ -449,11 +437,10 @@ final class IndexWriterV2 extends IndexWriterImpl{
         return annotationTable.markWritten(annotation);
     }
 
-
     private void writeClasses(PackedDataOutputStream stream, Index index) throws IOException {
         Collection<ClassInfo> classes = index.getKnownClasses();
         stream.writePackedU32(classes.size());
-        for (ClassInfo clazz: classes) {
+        for (ClassInfo clazz : classes) {
             writeClassEntry(stream, clazz);
         }
     }
@@ -486,10 +473,18 @@ final class IndexWriterV2 extends IndexWriterImpl{
         // Annotation length is early to allow eager allocation in reader.
         stream.writePackedU32(clazz.annotations().size());
 
+        if (clazz.fieldArray() == null) {
+            throw new IllegalStateException("Empty fieldArray() for class " + clazz);
+        }
+
         FieldInternal[] fields = clazz.fieldArray();
         stream.writePackedU32(fields.length);
         for (FieldInternal field : fields) {
             stream.writePackedU32(positionOf(field));
+        }
+
+        if (clazz.methodArray() == null) {
+            throw new IllegalStateException("Empty fieldArray() for class " + clazz);
         }
 
         MethodInternal[] methods = clazz.methodArray();
@@ -499,7 +494,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
 
         Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotations().entrySet();
-        for (Entry<DotName, List<AnnotationInstance>> entry :  entrySet) {
+        for (Entry<DotName, List<AnnotationInstance>> entry : entrySet) {
             List<AnnotationInstance> value = entry.getValue();
             stream.writePackedU32(value.size());
             for (AnnotationInstance annotation : value) {
@@ -520,7 +515,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         if (value instanceof AnnotationValue.ByteValue) {
             stream.writeByte(AVALUE_BYTE);
             stream.writeByte(value.asByte() & 0xFF);
-        } else if  (value instanceof AnnotationValue.ShortValue) {
+        } else if (value instanceof AnnotationValue.ShortValue) {
             stream.writeByte(AVALUE_SHORT);
             stream.writePackedU32(value.asShort() & 0xFFFF);
         } else if (value instanceof AnnotationValue.IntegerValue) {
@@ -605,7 +600,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
             case ARRAY:
                 ArrayType arrayType = type.asArrayType();
                 stream.writePackedU32(arrayType.dimensions());
-                writeReference(stream, arrayType.component(), false);  // TODO - full should not be necessary
+                writeReference(stream, arrayType.component(), false); // TODO - full should not be necessary
                 break;
             case PRIMITIVE:
                 stream.writeByte(type.asPrimitiveType().primitive().ordinal());
@@ -672,14 +667,29 @@ final class IndexWriterV2 extends IndexWriterImpl{
         if (name != null) {
             addString(name);
         }
+
+        if(clazz.enclosingMethod() == null) {
+            throw new IllegalStateException("Empty enclosingMethod() for class " + clazz);
+        }
+
         addEnclosingMethod(clazz.enclosingMethod());
+
+        if (clazz.methodArray() == null) {
+            throw new IllegalStateException("Empty methodArray() for class " + clazz);
+        }
+
         addMethodList(clazz.methodArray());
+
+        if (clazz.fieldArray() == null) {
+            throw new IllegalStateException("Empty fieldArray() for class " + clazz);
+        }
+
         addFieldList(clazz.fieldArray());
 
-        for (Entry<DotName, List<AnnotationInstance>> entry :  clazz.annotations().entrySet()) {
+        for (Entry<DotName, List<AnnotationInstance>> entry : clazz.annotations().entrySet()) {
             addClassName(entry.getKey());
 
-            for (AnnotationInstance instance: entry.getValue()) {
+            for (AnnotationInstance instance : entry.getValue()) {
                 addAnnotation(instance);
             }
         }
@@ -813,7 +823,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
     }
 
     private void addClassName(DotName name) {
-        if (! nameTable.containsKey(name)) {
+        if (!nameTable.containsKey(name)) {
             addString(name.local());
             nameTable.put(name, null);
         }

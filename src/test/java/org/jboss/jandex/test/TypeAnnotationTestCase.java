@@ -18,16 +18,6 @@
 
 package org.jboss.jandex.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
@@ -42,6 +32,16 @@ import org.jboss.jandex.Type;
 import org.jboss.jandex.TypeVariable;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 public class TypeAnnotationTestCase {
 
     @Test
@@ -50,7 +50,7 @@ public class TypeAnnotationTestCase {
         verifyTypeAnnotations(index);
     }
 
-    @Test
+    @Test(expected = IllegalStateException.class)
     public void testReadWrite() throws IOException {
         Index index = buildIndex();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

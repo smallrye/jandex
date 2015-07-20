@@ -165,6 +165,8 @@ public final class ClassInfo implements AnnotationTarget {
         this.annotations = Collections.unmodifiableMap(annotations);  // FIXME
         this.hasNoArgsConstructor = hasNoArgsConstructor;
         this.typeParameters = Type.EMPTY_ARRAY;
+        this.methods = MethodInternal.EMPTY_ARRAY;
+        this.fields = FieldInternal.EMPTY_ARRAY;
     }
 
     /**

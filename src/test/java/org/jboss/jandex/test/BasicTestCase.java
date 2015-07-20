@@ -18,11 +18,17 @@
 
 package org.jboss.jandex.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexReader;
+import org.jboss.jandex.IndexWriter;
+import org.jboss.jandex.Indexer;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.PrimitiveType;
+import org.jboss.jandex.Type;
+import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -36,17 +42,10 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexReader;
-import org.jboss.jandex.IndexWriter;
-import org.jboss.jandex.Indexer;
-import org.jboss.jandex.MethodInfo;
-import org.jboss.jandex.PrimitiveType;
-import org.jboss.jandex.Type;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class BasicTestCase {
     @Retention(RetentionPolicy.RUNTIME)
@@ -125,7 +124,7 @@ public class BasicTestCase {
         index.printSubclasses();
     }
 
-    @Test
+    @Test(expected = IllegalStateException.class)
     public void testWriteRead() throws IOException {
         Indexer indexer = new Indexer();
         InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName().replace('.', '/') + ".class");

@@ -18,8 +18,6 @@
 
 package org.jboss.jandex;
 
-import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
-
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -36,6 +34,8 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
 
 /**
  * Analyzes and indexes the annotation and key structural information of a set
@@ -184,7 +184,7 @@ public final class Indexer {
 
         while (total < n) {
             skipped = s.skip(n - total);
-            if (skipped < 0)
+            if (skipped <= 0)
                 throw new EOFException();
             total += skipped;
 

@@ -142,7 +142,8 @@ final class IndexWriterV1 extends IndexWriterImpl {
     }
 
     private int positionOf(String string) {
-        int i = poolIndex.positionOf(string);
+        // V1 format does not use 0 as a null placeholder
+        int i = poolIndex.positionOf(string) - 1;
         if (i < 0)
             throw new IllegalStateException();
 

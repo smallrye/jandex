@@ -295,10 +295,10 @@ final class IndexReaderV1 extends IndexReaderImpl {
 
 
     private void readStringTable(PackedDataInputStream stream) throws IOException {
-        int entries = stream.readPackedU32() + 1;
+        int entries = stream.readPackedU32();
         stringTable = new String[entries];
 
-        for (int i = 1; i < entries; i++) {
+        for (int i = 0; i < entries; i++) {
             stringTable[i] = stream.readUTF();
         }
     }

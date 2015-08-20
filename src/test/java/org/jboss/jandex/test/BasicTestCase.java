@@ -148,7 +148,7 @@ public class BasicTestCase {
         Index index = indexer.complete();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new IndexWriter(baos).write(index, (byte)1);
+        new IndexWriter(baos).write(index, (byte)2);
 
         index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
         assertFalse(index.getClassByName(DotName.createSimple(DummyClass.class.getName())).hasNoArgsConstructor());

@@ -44,7 +44,7 @@ import java.util.Map;
  * @author Jason T. Greene
  */
 final class IndexReaderV1 extends IndexReaderImpl {
-    static final int MIN_VERSION = 1;
+    static final int MIN_VERSION = 2;
     static final int MAX_VERSION = 3;
     private static final byte FIELD_TAG = 1;
     private static final byte METHOD_TAG = 2;
@@ -325,4 +325,9 @@ final class IndexReaderV1 extends IndexReaderImpl {
         }
     }
 
+    int toDataVersion(int version) {
+        // From 1 to 3, every version changed the available data
+
+        return version;
+    }
 }

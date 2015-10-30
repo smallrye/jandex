@@ -151,7 +151,7 @@ public class JandexGoal
             final File dir = fileset.getDirectory();
             if ( !dir.exists() )
             {
-                getLog().error( "[SKIP] Cannot process fileset in directory: " + fileset.getDirectory()
+                getLog().info( "[SKIP] Cannot process fileset in directory: " + fileset.getDirectory()
                                     + ". Directory does not exist!" );
                 continue;
             }

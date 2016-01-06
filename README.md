@@ -59,7 +59,7 @@ Just add the following to your pom:
  <dependency>
      <groupId>org.jboss</groupId>
      <artifactId>jandex</artifactId>
-     <version>2.0.0.Beta1</version>
+     <version>2.0.0.Final</version>
  </dependency>
 ```
 

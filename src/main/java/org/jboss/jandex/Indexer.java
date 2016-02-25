@@ -20,6 +20,8 @@ package org.jboss.jandex;
 
 import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
 
+import org.jboss.jandex.AnnotationTarget.Kind;
+
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -206,7 +208,7 @@ public final class Indexer {
     private ClassInfo currentClass;
     private HashMap<DotName, List<AnnotationInstance>> classAnnotations;
     private ArrayList<AnnotationInstance> elementAnnotations;
-    private List<Object> signatures;
+    private List<TargetedSignature> signatures;
     private Map<DotName, InnerClassInfo> innerClasses;
     private IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>> typeAnnotations;
     private List<MethodInfo> methods;
@@ -245,7 +247,7 @@ public final class Indexer {
     private void initClassFields() {
         elementAnnotations = new ArrayList<AnnotationInstance>();
         signaturePresent = new IdentityHashMap<AnnotationTarget, Object>();
-        signatures = new ArrayList<Object>();
+        signatures = new ArrayList<TargetedSignature>();
         typeAnnotations = new IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>>();
     }
 
@@ -935,8 +937,7 @@ public final class Indexer {
 
     private void processSignature(DataInputStream data, AnnotationTarget target) throws IOException {
         String signature =  decodeUtf8Entry(data.readUnsignedShort());
-        signatures.add(signature);
-        signatures.add(target);
+        signatures.add(new TargetedSignature(signature, target));
         signaturePresent.put(target, null);
     }
 
@@ -948,16 +949,30 @@ public final class Indexer {
     }
 
     private void applySignatures() {
-        for (int i = 0; i < signatures.size(); i += 2) {
-            String elementSignature = (String) signatures.get(i);
-            Object element = signatures.get(i + 1);
+        signatures.sort(new Comparator<TargetedSignature>() {
+            @Override
+            public int compare(TargetedSignature fst, TargetedSignature snd) {
+                Kind fstKind = fst.getTarget().kind();
+                Kind sndKind = snd.getTarget().kind();
+                if (Kind.CLASS == fstKind && Kind.CLASS != sndKind) return -1;
+                if (Kind.CLASS != fstKind && Kind.CLASS == sndKind) return 1;
+                return 0;
+            }
+        });
+        for (TargetedSignature targetedSignature: signatures) {
+            String elementSignature = targetedSignature.getSignature();
+            AnnotationTarget element = targetedSignature.getTarget();
 
-            if (element instanceof FieldInfo) {
-                parseFieldSignature(elementSignature, (FieldInfo)element);
-            } else if (element instanceof MethodInfo) {
-                parseMethodSignature(elementSignature, (MethodInfo) element);
-            } else if (element instanceof ClassInfo) {
-                parseClassSignature(elementSignature, (ClassInfo) element);
+            switch (element.kind()) {
+                case FIELD:
+                    parseFieldSignature(elementSignature, element.asField());
+                    break;
+                case METHOD:
+                    parseMethodSignature(elementSignature, element.asMethod());
+                    break;
+                case CLASS:
+                    parseClassSignature(elementSignature, element.asClass());
+                    break;
             }
         }
     }
@@ -1483,6 +1498,24 @@ public final class Indexer {
             classes = null;
             signatureParser = null;
             names = null;
+        }
+    }
+
+    private static class TargetedSignature {
+        private final String signature;
+        private final AnnotationTarget target;
+
+        TargetedSignature(String signature, AnnotationTarget target) {
+            this.signature = signature;
+            this.target = target;
+        }
+
+        String getSignature() {
+            return signature;
+        }
+
+        AnnotationTarget getTarget() {
+            return target;
         }
     }
 }

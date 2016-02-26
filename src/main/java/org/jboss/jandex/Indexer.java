@@ -948,7 +948,16 @@ public final class Indexer {
     }
 
     private void applySignatures() {
-        for (int i = 0; i < signatures.size(); i += 2) {
+        int end = signatures.size();
+
+        // Class signature is always the last element and should be processed first
+        Object last = end > 1 ? signatures.get(end - 1) : null;
+        if (last instanceof ClassInfo) {
+            parseClassSignature((String)signatures.get(end - 2), (ClassInfo)last);
+            end -= 2;
+        }
+
+        for (int i = 0; i < end; i += 2) {
             String elementSignature = (String) signatures.get(i);
             Object element = signatures.get(i + 1);
 
@@ -956,8 +965,6 @@ public final class Indexer {
                 parseFieldSignature(elementSignature, (FieldInfo)element);
             } else if (element instanceof MethodInfo) {
                 parseMethodSignature(elementSignature, (MethodInfo) element);
-            } else if (element instanceof ClassInfo) {
-                parseClassSignature(elementSignature, (ClassInfo) element);
             }
         }
     }

@@ -98,6 +98,13 @@ public class JandexGoal
     private boolean verbose = false;
 
     /**
+     * The name of the index file. Default's to 'jandex.idx'
+     *
+     * @parameter default-value="jandex.idx"
+     */
+    private String indexName = "jandex.idx";
+
+    /**
      * Skip execution if set.
      *
      * @parameter default-value="false" expression="${jandex.skip}"
@@ -206,7 +213,7 @@ public class JandexGoal
                 }
             }
 
-            final File idx = new File( dir, "META-INF/jandex.idx" );
+            final File idx = new File( dir, "META-INF/"+indexName );
             idx.getParentFile()
                .mkdirs();
 
@@ -265,4 +272,11 @@ public class JandexGoal
         return log;
     }
 
+    public String getIndexName() {
+        return indexName;
+    }
+
+    public void setIndexName(String indexName) {
+        this.indexName = indexName;
+    }
 }

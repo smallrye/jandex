@@ -64,9 +64,9 @@
   </contributors>
   
   <scm>
-    <connection>scm:git:http://github.com/jdcasey/jandex-maven-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jdcasey/jandex-maven-plugin.git</developerConnection>
-    <url>http://github.com/jdcasey/jandex-maven-plugin</url>
+    <connection>scm:git:http://github.com/wildfly/jandex-maven-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:wildfly/jandex-maven-plugin.git</developerConnection>
+    <url>http://github.com/wildfly/jandex-maven-plugin</url>
     <tag>HEAD</tag>
   </scm>
   

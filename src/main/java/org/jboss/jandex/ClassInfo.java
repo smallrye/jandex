@@ -18,8 +18,8 @@
 
 package org.jboss.jandex;
 
+import java.lang.reflect.Modifier;
 import java.util.AbstractList;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -72,6 +72,9 @@ public final class ClassInfo implements AnnotationTarget {
         /** A named class enclosed within a code block */
         LOCAL,
 
+        /** A static named class enclosed by another class */
+        STATIC_NESTED,
+
         /** An unnamed class enclosed within a code block */
         ANONYMOUS}
 
@@ -79,6 +82,7 @@ public final class ClassInfo implements AnnotationTarget {
         private DotName enclosingClass;
         private String simpleName;
         private EnclosingMethodInfo enclosingMethod;
+        private int flags;
     }
 
     /**
@@ -448,7 +452,7 @@ public final class ClassInfo implements AnnotationTarget {
         if (nestingInfo == null) {
             return NestingType.TOP_LEVEL;
         } else if (nestingInfo.enclosingClass != null) {
-            return NestingType.INNER;
+            return Modifier.isStatic(nestingInfo.flags) ? NestingType.STATIC_NESTED : NestingType.INNER;
         } else if (nestingInfo.simpleName != null) {
             return NestingType.LOCAL;
         }
@@ -568,7 +572,7 @@ public final class ClassInfo implements AnnotationTarget {
         this.typeParameters = typeParameters.length == 0 ? Type.EMPTY_ARRAY : typeParameters;
     }
 
-    void setInnerClassInfo(DotName enclosingClass, String simpleName) {
+    void setInnerClassInfo(DotName enclosingClass, String simpleName, int flags) {
         if (enclosingClass == null && simpleName == null) {
             return;
         }
@@ -579,6 +583,7 @@ public final class ClassInfo implements AnnotationTarget {
 
         nestingInfo.enclosingClass = enclosingClass;
         nestingInfo.simpleName = simpleName;
+        nestingInfo.flags = flags;
     }
 
     void setEnclosingMethod(EnclosingMethodInfo enclosingMethod) {

@@ -484,7 +484,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         ClassInfo clazz = new ClassInfo(name, superType, flags, interfaceTypes, annotations);
         clazz.setTypeParameters(typeParameters);
         clazz.setEnclosingMethod(enclosingMethod);
-        clazz.setInnerClassInfo(enclosingClass, simpleName);
+        clazz.setInnerClassInfo(enclosingClass, simpleName, flags);
 
         FieldInternal[] fields = readClassFields(stream, clazz);
         clazz.setFieldArray(fields);

@@ -164,6 +164,14 @@ public class BasicTestCase {
         assertHasNoArgsConstructor(DummyTopLevelWithoutNoArgsConstructor.class, false);
     }
 
+    @Test
+    public void testIsNested() throws IOException {
+        assertIsNested(DummyClass.class, ClassInfo.NestingType.INNER);
+        assertIsNested(NestedA.class, ClassInfo.NestingType.STATIC_NESTED);
+        assertIsNested(NestedB.class, ClassInfo.NestingType.STATIC_NESTED);
+        assertIsNested(NestedC.class, ClassInfo.NestingType.STATIC_NESTED);
+    }
+
     private void verifyDummy(Index index, boolean v2features) {
         AnnotationInstance instance = index.getAnnotations(DotName.createSimple(TestAnnotation.class.getName())).get(0);
 
@@ -218,6 +226,12 @@ public class BasicTestCase {
         } else {
             assertFalse(classInfo.hasNoArgsConstructor());
         }
+    }
+
+    private void assertIsNested(Class<?> clazz, ClassInfo.NestingType nestingType) throws IOException {
+        ClassInfo cInfo = getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
+        assertTrue(cInfo.asClass().name().isInner());
+        assertTrue(cInfo.nestingType().equals(nestingType));
     }
 
     private Index getIndexForClass(Class<?> clazz) throws IOException {

@@ -33,6 +33,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
 
@@ -114,6 +115,9 @@ public class BasicTestCase {
     public static class NestedC implements Serializable {
     }
 
+    public class NestedD implements Serializable {
+    }
+
     @Test
     public void testIndexer() throws IOException {
         Indexer indexer = new Indexer();
@@ -162,6 +166,18 @@ public class BasicTestCase {
         assertHasNoArgsConstructor(NestedC.class, true);
         assertHasNoArgsConstructor(DummyTopLevel.class, true);
         assertHasNoArgsConstructor(DummyTopLevelWithoutNoArgsConstructor.class, false);
+    }
+
+    @Test
+    public void testStaticInner() throws IOException {
+        assertFlagSet(NestedC.class, Modifier.STATIC, true);
+        assertInner(NestedC.class, true);
+
+        assertFlagSet(NestedD.class, Modifier.STATIC, false);
+        assertInner(NestedC.class, true);
+
+        assertInner(BasicTestCase.class, false);
+        assertFlagSet(BasicTestCase.class, Modifier.STATIC, false);
     }
 
     private void verifyDummy(Index index, boolean v2features) {
@@ -218,6 +234,18 @@ public class BasicTestCase {
         } else {
             assertFalse(classInfo.hasNoArgsConstructor());
         }
+    }
+
+    private void assertFlagSet(Class<?> clazz, int flag, boolean result) throws IOException {
+        ClassInfo classInfo = getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
+        assertNotNull(classInfo);
+        assertTrue((classInfo.flags() & flag) == (result ? flag : 0));
+    }
+
+    private void assertInner(Class<?> clazz, boolean result) throws IOException {
+        ClassInfo classInfo = getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
+        assertNotNull(classInfo);
+        assertTrue((classInfo.nestingType() == ClassInfo.NestingType.INNER) == result);
     }
 
     private Index getIndexForClass(Class<?> clazz) throws IOException {

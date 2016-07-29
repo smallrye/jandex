@@ -346,6 +346,7 @@ public final class Indexer {
 
             if (innerClass.equals(target.name())) {
                 target.setInnerClassInfo(outerClass, simpleName);
+                target.setFlags((short)flags);
             }
 
             innerClasses.put(innerClass, new InnerClassInfo(innerClass, outerClass, simpleName, flags));

@@ -442,9 +442,9 @@ public final class ClassInfo implements AnnotationTarget {
      * Returns the nesting type of this class, which could either be a standard top level class, an inner class,
      * an anonymous class, or a local class.
      *
-     * <p>For historical reasons, static nested classes are returned as an inner class. You can differentiate
+     * <p>For historical reasons, static nested classes are returned as <code>INNER</code>. You can differentiate
      * between a non-static nested class (inner class) and a static nested class by calling
-     * {@link java.lang.reflect.Modifier.isStatic()} on the return of{@link #flags} </p>
+     * {@link java.lang.reflect.Modifier#isStatic(int)} on the return of {@link #flags()} </p>
      *
      * @return the nesting type of this class
      */

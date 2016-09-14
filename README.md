@@ -11,7 +11,7 @@ Basic Usage
         <plugin>
           <groupId>org.jboss.jandex</groupId>
           <artifactId>jandex-maven-plugin</artifactId>
-          <version>1.0.3</version>
+          <version>1.0.5</version>
           <executions>
             <execution>
               <id>make-index</id>

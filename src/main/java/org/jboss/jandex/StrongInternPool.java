@@ -148,10 +148,9 @@ class StrongInternPool<E> implements Cloneable, Serializable {
     }
 
     // The normal bit spreader...
-    private static final int hash(Object o) {
+    private static int hash(Object o) {
         int h = o instanceof Object[] ? Arrays.hashCode((Object[])o) : o instanceof byte[] ? Arrays.hashCode((byte[])o) : o.hashCode();
-        h ^= (h >>> 20) ^ (h >>> 12);
-        return h ^ (h >>> 7) ^ (h >>> 4);
+        return ((h << 1 ) - (h << 8));
     }
 
     @SuppressWarnings("unchecked")

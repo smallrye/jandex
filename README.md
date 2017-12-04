@@ -225,7 +225,7 @@ System.out.println(
 ```
 
 
-##Searching for Type Annotations
+## Searching for Type Annotations
 
 A type annotation can also be located by searching for the annotation. The target for a found type annotation is represented as a TypeTarget. The TypeTarget provides a reference to the annotated type, as well as the enclosing target that contains the type. The target itself can be a method, a class, or a field. The usage on that target can be a number of places, including parameters, return types, type parameters, type arguments, class extends values, type bounds and receiver types. Subclasses of TypeTarget provide the necessary information to locate the starting point of the usage.
 

@@ -82,6 +82,8 @@ public final class Indexer {
     private final static int CONSTANT_INVOKEDYNAMIC = 18;
     private final static int CONSTANT_METHODHANDLE = 15;
     private final static int CONSTANT_METHODTYPE = 16;
+    private final static int CONSTANT_MODULE = 19;
+    private final static int CONSTANT_PACKAGE = 20;
 
     // "RuntimeVisibleAnnotations"
     private final static byte[] RUNTIME_ANNOTATIONS = new byte[] {
@@ -1142,10 +1144,10 @@ public final class Indexer {
         list.add(currentClass);
     }
 
-    private boolean isJDK11ToJDK8(DataInputStream stream) throws IOException {
+    private boolean isJDK11OrNewer(DataInputStream stream) throws IOException {
         int minor = stream.readUnsignedShort();
         int major = stream.readUnsignedShort();
-        return (major > 45 && major < 53) || (major == 45 && minor >= 3);
+        return major > 45 || (major == 45 && minor >= 3);
     }
 
     private void verifyMagic(DataInputStream stream) throws IOException {
@@ -1413,6 +1415,10 @@ public final class Indexer {
                     }
                     offset += len;
                     break;
+                case CONSTANT_MODULE:
+                case CONSTANT_PACKAGE:
+                    // ignoring module-info.class files for now
+                    throw new IgnoreModuleInfoException();
                default:
                    throw new IllegalStateException("Unknown tag! pos=" + pos + " poolCount = " + poolCount);
             }
@@ -1442,7 +1448,7 @@ public final class Indexer {
 
             // Retroweaved classes may contain annotations
             // Also, hierarchy info is needed regardless
-            if (!isJDK11ToJDK8(data))
+            if (!isJDK11OrNewer(data))
                 return null;
 
             initIndexMaps();
@@ -1462,6 +1468,9 @@ public final class Indexer {
             currentClass.setFields(fields, names);
 
             return currentClass;
+        } catch (IgnoreModuleInfoException e) {
+            // ignoring module-info.class files for now
+            return null;
         } finally {
             constantPool = null;
             constantPoolOffsets = null;
@@ -1492,5 +1501,9 @@ public final class Indexer {
             signatureParser = null;
             names = null;
         }
+    }
+
+    private static class IgnoreModuleInfoException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
     }
 }

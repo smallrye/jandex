@@ -47,6 +47,19 @@ import java.util.List;
  * @author Jason T. Greene
  */
 public class ParameterizedType extends Type {
+
+    /**
+     * Create a new mock instance.
+     *
+     * @param name
+     * @param arguments
+     * @param owner
+     * @return the mock instance
+     */
+    public static ParameterizedType create(DotName name, Type[] arguments, Type owner) {
+        return new ParameterizedType(name, arguments, owner);
+    }
+
     private final Type[] arguments;
     private final Type owner;
     private int hash;

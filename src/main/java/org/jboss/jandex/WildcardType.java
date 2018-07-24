@@ -32,6 +32,17 @@ public class WildcardType extends Type {
     private final Type bound;
     private int hash;
 
+    /**
+     * Create a new mock instance.
+     *
+     * @param bound
+     * @param isExtends
+     * @return
+     */
+    public static WildcardType create(Type bound, boolean isExtends) {
+        return new WildcardType(bound, isExtends);
+    }
+
 
     WildcardType(Type bound, boolean isExtends) {
         this(bound, isExtends, null);

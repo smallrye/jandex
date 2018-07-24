@@ -83,13 +83,11 @@ final class MethodInternal {
     private short flags;
 
     MethodInternal(byte[] name, Type[] parameters, Type returnType, short flags) {
-        this.name = name;
-        this.parameters = parameters.length == 0 ? Type.EMPTY_ARRAY : parameters;
-        this.returnType = returnType;
-        this.flags = flags;
-        this.annotations = AnnotationInstance.EMPTY_ARRAY;
-        this.exceptions = Type.EMPTY_ARRAY;
-        this.typeParameters = Type.EMPTY_ARRAY;
+        this(name, parameters, returnType, flags, Type.EMPTY_ARRAY);
+    }
+
+    MethodInternal(byte[] name, Type[] parameters, Type returnType, short flags, Type[] typeParameters) {
+        this(name, parameters, returnType, flags, null, typeParameters, Type.EMPTY_ARRAY, AnnotationInstance.EMPTY_ARRAY, null);
     }
 
     MethodInternal(byte[] name, Type[] parameters, Type returnType, short flags,

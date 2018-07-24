@@ -20,7 +20,6 @@ package org.jboss.jandex;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -49,6 +48,10 @@ public final class MethodInfo implements AnnotationTarget {
         this(clazz, new MethodInternal(name, parameters, returnType, flags));
     }
 
+    MethodInfo(ClassInfo clazz, byte[] name, Type[] parameters, Type returnType,  short flags, Type[] typeParameters) {
+        this(clazz, new MethodInternal(name, parameters, returnType, flags, typeParameters));
+    }
+
     /**
       * Construct a new mock Method instance.
       *
@@ -57,9 +60,24 @@ public final class MethodInfo implements AnnotationTarget {
       * @param args a read only array containing the types of each parameter in parameter order
      *  @param returnType the return value type
       * @param flags the method attributes
-      * @return a mock field
+      * @return a mock method
       */
      public static MethodInfo create(ClassInfo clazz, String name, Type[] args, Type returnType, short flags) {
+         return create(clazz, name, args, returnType, flags, null);
+     }
+
+     /**
+      * Construct a new mock Method instance.
+      *
+      * @param clazz
+      * @param name
+      * @param args
+      * @param returnType
+      * @param flags
+      * @param typeParameters
+      * @return a mock method
+      */
+     public static MethodInfo create(ClassInfo clazz, String name, Type[] args, Type returnType, short flags, TypeVariable[] typeParameters) {
          if (clazz == null)
              throw new IllegalArgumentException("Clazz can't be null");
 
@@ -78,7 +96,7 @@ public final class MethodInfo implements AnnotationTarget {
          } catch (UnsupportedEncodingException e) {
              throw new IllegalArgumentException(e);
          }
-         return new MethodInfo(clazz, bytes, args, returnType, flags);
+         return new MethodInfo(clazz, bytes, args, returnType, flags, typeParameters);
      }
 
 

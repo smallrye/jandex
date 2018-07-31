@@ -241,6 +241,17 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     /**
+     * Returns the default annotation value if this method represents an annotation member with a default value.
+     * Otherwise null is returned
+     *
+     * @since 2.1
+     * @return default annotation value if available, otherwise null
+     */
+    public AnnotationValue defaultValue() {
+        return methodInternal.defaultValue();
+    }
+
+    /**
      * Returns the access fields of this method. {@link Modifier} can be used on this value.
      *
      * @return the access flags of this method
@@ -323,5 +334,9 @@ public final class MethodInfo implements AnnotationTarget {
 
     void setAnnotations(List<AnnotationInstance> annotations) {
         methodInternal.setAnnotations(annotations);
+    }
+
+    void setDefaultValue(AnnotationValue defaultValue) {
+        methodInternal.setDefaultValue(defaultValue);
     }
 }

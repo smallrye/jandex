@@ -79,6 +79,7 @@ final class MethodInternal {
     private Type receiverType;
     private Type[] typeParameters;
     private AnnotationInstance[] annotations;
+    private AnnotationValue defaultValue;
     private short flags;
 
     MethodInternal(byte[] name, Type[] parameters, Type returnType, short flags) {
@@ -93,7 +94,7 @@ final class MethodInternal {
 
     MethodInternal(byte[] name, Type[] parameters, Type returnType, short flags,
                    Type receiverType, Type[] typeParameters, Type[] exceptions,
-                   AnnotationInstance[] annotations) {
+                   AnnotationInstance[] annotations, AnnotationValue defaultValue) {
         this.name = name;
         this.parameters = parameters.length == 0 ? Type.EMPTY_ARRAY : parameters;
         this.returnType = returnType;
@@ -102,6 +103,7 @@ final class MethodInternal {
         this.exceptions = exceptions;
         this.typeParameters = typeParameters;
         this.receiverType = receiverType;
+        this.defaultValue = defaultValue;
     }
 
     @Override
@@ -224,6 +226,9 @@ final class MethodInternal {
         return typeParameters;
     }
 
+    final AnnotationValue defaultValue() {
+        return defaultValue;
+    }
 
     final short flags() {
         return flags;
@@ -280,5 +285,9 @@ final class MethodInternal {
             this.annotations = annotations.toArray(new AnnotationInstance[annotations.size()]);
             Arrays.sort(this.annotations, AnnotationInstance.NAME_COMPARATOR);
         }
+    }
+
+    void setDefaultValue(AnnotationValue defaultValue) {
+        this.defaultValue = defaultValue;
     }
 }

@@ -52,7 +52,7 @@ import java.util.TreeMap;
  */
 final class IndexWriterV2 extends IndexWriterImpl{
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 6;
+    static final int MAX_VERSION = 7;
 
     // babelfish (no h)
     private static final int MAGIC = 0xBABE1F15;
@@ -200,7 +200,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
 
         writeTypeTable(stream);
         writeTypeListTable(stream);
-        writeMethodTable(stream);
+        writeMethodTable(stream, version);
         writeFieldTable(stream);
         writeClasses(stream, index);
         stream.flush();
@@ -251,12 +251,12 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
     }
 
-    private void writeMethodTable(PackedDataOutputStream stream) throws IOException {
+    private void writeMethodTable(PackedDataOutputStream stream, int version) throws IOException {
         StrongInternPool<MethodInternal> methodPool = names.methodPool();
         stream.writePackedU32(methodPool.size());
         Iterator<MethodInternal> iterator = methodPool.iterator();
         while (iterator.hasNext()) {
-            writeMethodEntry(stream, iterator.next());
+            writeMethodEntry(stream, version, iterator.next());
         }
     }
 
@@ -281,7 +281,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
     }
 
-    private void writeMethodEntry(PackedDataOutputStream stream, MethodInternal method) throws IOException {
+    private void writeMethodEntry(PackedDataOutputStream stream, int version, MethodInternal method) throws IOException {
         stream.writePackedU32(positionOf(method.nameBytes()));
         stream.writePackedU32(method.flags());
         stream.writePackedU32(positionOf(method.typeParameterArray()));
@@ -290,6 +290,13 @@ final class IndexWriterV2 extends IndexWriterImpl{
         stream.writePackedU32(positionOf(method.returnType()));
         stream.writePackedU32(positionOf(method.parameterArray()));
         stream.writePackedU32(positionOf(method.exceptionArray()));
+        if (version >= 7) {
+            AnnotationValue defaultValue = method.defaultValue();
+            stream.writeByte(defaultValue != null ? 1 : 0);
+            if (defaultValue != null) {
+                writeAnnotationValue(stream, defaultValue);
+            }
+        }
 
         AnnotationInstance[] annotations = method.annotationArray();
         stream.writePackedU32(annotations.length);
@@ -723,9 +730,12 @@ final class IndexWriterV2 extends IndexWriterImpl{
         addTypeList(method.typeParameterArray());
         addTypeList(method.parameterArray());
         addTypeList(method.exceptionArray());
+        AnnotationValue defaultValue = method.defaultValue();
+        if (defaultValue != null) {
+            buildAValueEntries(defaultValue);
+        }
         names.intern(method.nameBytes());
         names.intern(method);
-
     }
 
     private void addEnclosingMethod(ClassInfo.EnclosingMethodInfo enclosingMethod) {

@@ -18,6 +18,7 @@
 
 package org.jboss.jandex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -156,6 +157,106 @@ public final class AnnotationInstance {
      */
     public AnnotationValue value() {
         return value("value");
+    }
+
+
+    /**
+     * Returns a value that corresponds with the specified parameter name,
+     * accounting for its default value. Since an annotation's defaults are
+     * only stored on the annotation's defining class, and not usages of the
+     * annotation, an index containing the Annotation class must be provided
+     * as a parameter. If the index does not contain the defining annotation
+     * class, then an <code>IllegalArgumentException</code> will be thrown to
+     * prevent non-deterministic results.
+     *
+     * <p>
+     * If the parameter was not specified by this instance, then the
+     * annotation's <code>ClassInfo</code> is checked for a default value.
+     * If there is a default, that value is returned. Otherwise null is
+     * returned.
+     * </p>
+     *
+     * @param index the index containing the defining annotation class
+     * @param name the name of the annotation parameter
+     * @return the value of the specified parameter, the default, or null
+     * @throws IllegalArgumentException if index does not contain the defining
+     *                                  annotation class
+     */
+    public AnnotationValue valueWithDefault(IndexView index, String name) {
+        ClassInfo definition = index.getClassByName(this.name);
+        if (definition == null) {
+            throw new IllegalArgumentException("Index did not contain annotation definition: " + this.name);
+        }
+
+        AnnotationValue result = value(name);
+        if (result != null) {
+            return result;
+        }
+
+        MethodInfo method = definition.method(name);
+        return method == null ? null : method.defaultValue();
+    }
+
+    /**
+     * Returns the value that is associated with the special default "value"
+     * parameter, also accounting for a value default. Since an annotation's
+     * defaults are only stored on the annotation's defining class, and not
+     * usages of the annotation, an index containing the Annotation class must
+     * be provided as a parameter. If the index does not contain the defining
+     * annotation class, then an <code>IllegalArgumentException</code> will be
+     * thrown to prevent non-deterministic results.
+     *
+     * <p>
+     * If the "value" parameter was not specified by this instance, then the
+     * annotation's <code>ClassInfo</code> is checked for a default value.
+     * If there is a default, that value is returned. Otherwise null is
+     * returned.
+     * </p>
+     *
+     * @param index the index containing the defining annotation class
+     * @return the "value" value, or its default, or null
+     * @throws IllegalArgumentException if index does not contain the defining
+     *                                  annotation class
+     */
+    public AnnotationValue valueWithDefault(IndexView index) {
+        return valueWithDefault(index, "value");
+    }
+
+
+    /**
+     * Returns a list of all parameter values on this annotation instance,
+     * including default values id defined. Since an annotation's defaults are
+     * only stored on the annotation's defining class, and not usages of the
+     * annotation, an index containing the Annotation class must be provided as
+     * a parameter. If the index does not contain the defining annotation class,
+     * then an <code>IllegalArgumentException</code> will be thrown to prevent
+     * non-deterministic results.
+     *
+     * <p>The order of this list is undefined.</p>
+     *
+     * @return the parameter values of this annotation
+     * @throws IllegalArgumentException if index does not contain the defining
+     *                                  annotation class
+     */
+    public List<AnnotationValue> valuesWithDefaults(IndexView index) {
+        ClassInfo definition = index.getClassByName(this.name);
+        if (definition == null) {
+            throw new IllegalArgumentException("Index did not contain annotation definition: " + this.name);
+        }
+
+        List<MethodInfo> methods = definition.methods();
+        ArrayList<AnnotationValue> result = new ArrayList<AnnotationValue>(methods.size());
+        for (MethodInfo method : methods) {
+            AnnotationValue value = value(method.name());
+            if (value == null) {
+                value = method.defaultValue();
+            }
+            if (value != null) {
+                result.add(value);
+            }
+        }
+
+        return Collections.unmodifiableList(result);
     }
 
     /**

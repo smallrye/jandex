@@ -107,6 +107,12 @@ public final class Indexer {
         0x74, 0x69, 0x6f, 0x6e, 0x73
     };
 
+    // "AnnotationDefault"
+    private final static byte[] ANNOTATION_DEFAULT = new byte[] {
+        0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x65,
+        0x66, 0x61, 0x75, 0x6c, 0x74
+    };
+
     // "Signature"
     private final static byte[] SIGNATURE = new byte[] {
         0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65
@@ -130,6 +136,7 @@ public final class Indexer {
     private final static int RUNTIME_ANNOTATIONS_LEN = RUNTIME_ANNOTATIONS.length;
     private final static int RUNTIME_PARAM_ANNOTATIONS_LEN = RUNTIME_PARAM_ANNOTATIONS.length;
     private final static int RUNTIME_TYPE_ANNOTATIONS_LEN = RUNTIME_TYPE_ANNOTATIONS.length;
+    private final static int ANNOTATION_DEFAULT_LEN = ANNOTATION_DEFAULT.length;
     private final static int SIGNATURE_LEN = SIGNATURE.length;
     private final static int EXCEPTIONS_LEN = EXCEPTIONS.length;
     private final static int INNER_CLASSES_LEN = INNER_CLASSES.length;
@@ -142,6 +149,7 @@ public final class Indexer {
     private final static int HAS_EXCEPTIONS = 5;
     private final static int HAS_INNER_CLASSES = 6;
     private final static int HAS_ENCLOSING_METHOD = 7;
+    private final static int HAS_ANNOTATION_DEFAULT = 8;
 
     private final static byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
 
@@ -322,10 +330,16 @@ public final class Indexer {
                 processInnerClasses(data, (ClassInfo) target);
             } else if (annotationAttribute == HAS_ENCLOSING_METHOD && target instanceof ClassInfo) {
                 processEnclosingMethod(data, (ClassInfo) target);
+            } else if (annotationAttribute == HAS_ANNOTATION_DEFAULT && target instanceof MethodInfo) {
+                processAnnotationDefault(data, (MethodInfo) target);
             } else {
                 skipFully(data, attributeLen);
             }
         }
+    }
+
+    private void processAnnotationDefault(DataInputStream data, MethodInfo target) throws IOException {
+        target.setDefaultValue(processAnnotationElementValue(target.name(), data));
     }
 
     private void processAnnotations(DataInputStream data, AnnotationTarget target) throws IOException {
@@ -1412,6 +1426,8 @@ public final class Indexer {
                         annoAttributes[pos] = HAS_INNER_CLASSES;
                     } else if (len == ENCLOSING_METHOD_LEN && match(buf, offset, ENCLOSING_METHOD)) {
                         annoAttributes[pos] = HAS_ENCLOSING_METHOD;
+                    } else if (len == ANNOTATION_DEFAULT_LEN && match(buf, offset, ANNOTATION_DEFAULT)) {
+                        annoAttributes[pos] = HAS_ANNOTATION_DEFAULT;
                     }
                     offset += len;
                     break;

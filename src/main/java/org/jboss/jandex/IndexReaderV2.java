@@ -45,7 +45,7 @@ import java.util.Map;
  */
 final class IndexReaderV2 extends IndexReaderImpl {
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 6;
+    static final int MAX_VERSION = 7;
     static final int MAX_DATA_VERSION = 4;
     private static final byte NULL_TARGET_TAG = 0;
     private static final byte FIELD_TAG = 1;
@@ -108,7 +108,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
 
             readTypeTable(stream);
             readTypeListTable(stream);
-            readMethodTable(stream);
+            readMethodTable(stream, version);
             readFieldTable(stream);
             return readClasses(stream, annotationsSize, implementorsSize, subclassesSize);
         } finally {
@@ -219,65 +219,68 @@ final class IndexReaderV2 extends IndexReaderImpl {
         AnnotationValue[] values = new AnnotationValue[numValues];
 
         for (int i = 0; i < numValues; i++) {
-
-            String name = stringTable[stream.readPackedU32()];
-            int tag = stream.readByte();
-            AnnotationValue value;
-            switch (tag) {
-                case AVALUE_BYTE:
-                    value = new AnnotationValue.ByteValue(name, stream.readByte());
-                    break;
-                case AVALUE_SHORT:
-                    value = new AnnotationValue.ShortValue(name, (short) stream.readPackedU32());
-                    break;
-                case AVALUE_INT:
-                    value = new AnnotationValue.IntegerValue(name, stream.readPackedU32());
-                    break;
-                case AVALUE_CHAR:
-                    value = new AnnotationValue.CharacterValue(name, (char) stream.readPackedU32());
-                    break;
-                case AVALUE_FLOAT:
-                    value = new AnnotationValue.FloatValue(name, stream.readFloat());
-                    break;
-                case AVALUE_DOUBLE:
-                    value = new AnnotationValue.DoubleValue(name, stream.readDouble());
-                    break;
-                case AVALUE_LONG:
-                    value = new AnnotationValue.LongValue(name, stream.readLong());
-                    break;
-                case AVALUE_BOOLEAN:
-                    value = new AnnotationValue.BooleanValue(name, stream.readBoolean());
-                    break;
-                case AVALUE_STRING:
-                    value = new AnnotationValue.StringValue(name, stringTable[stream.readPackedU32()]);
-                    break;
-                case AVALUE_CLASS:
-                    value = new AnnotationValue.ClassValue(name, typeTable[stream.readPackedU32()]);
-                    break;
-                case AVALUE_ENUM:
-                    value = new AnnotationValue.EnumValue(name, nameTable[stream.readPackedU32()], stringTable[stream.readPackedU32()]);
-                    break;
-                case AVALUE_ARRAY:
-                    value = new AnnotationValue.ArrayValue(name, readAnnotationValues(stream));
-                    break;
-                case AVALUE_NESTED: {
-                    int reference = stream.readPackedU32();
-                    AnnotationInstance nestedInstance = annotationTable[reference];
-                    if (nestedInstance == null) {
-                        nestedInstance = annotationTable[reference] = readAnnotationEntry(stream, null);
-                    }
-
-                    value = new AnnotationValue.NestedAnnotation(name, nestedInstance);
-                    break;
-                }
-                default:
-                    throw new IllegalStateException("Invalid annotation value tag:" + tag);
-            }
-
+            AnnotationValue value = readAnnotationValue(stream);
             values[i] = value;
         }
 
         return values;
+    }
+
+    private AnnotationValue readAnnotationValue(PackedDataInputStream stream) throws IOException {
+        String name = stringTable[stream.readPackedU32()];
+        int tag = stream.readByte();
+        AnnotationValue value;
+        switch (tag) {
+            case AVALUE_BYTE:
+                value = new AnnotationValue.ByteValue(name, stream.readByte());
+                break;
+            case AVALUE_SHORT:
+                value = new AnnotationValue.ShortValue(name, (short) stream.readPackedU32());
+                break;
+            case AVALUE_INT:
+                value = new AnnotationValue.IntegerValue(name, stream.readPackedU32());
+                break;
+            case AVALUE_CHAR:
+                value = new AnnotationValue.CharacterValue(name, (char) stream.readPackedU32());
+                break;
+            case AVALUE_FLOAT:
+                value = new AnnotationValue.FloatValue(name, stream.readFloat());
+                break;
+            case AVALUE_DOUBLE:
+                value = new AnnotationValue.DoubleValue(name, stream.readDouble());
+                break;
+            case AVALUE_LONG:
+                value = new AnnotationValue.LongValue(name, stream.readLong());
+                break;
+            case AVALUE_BOOLEAN:
+                value = new AnnotationValue.BooleanValue(name, stream.readBoolean());
+                break;
+            case AVALUE_STRING:
+                value = new AnnotationValue.StringValue(name, stringTable[stream.readPackedU32()]);
+                break;
+            case AVALUE_CLASS:
+                value = new AnnotationValue.ClassValue(name, typeTable[stream.readPackedU32()]);
+                break;
+            case AVALUE_ENUM:
+                value = new AnnotationValue.EnumValue(name, nameTable[stream.readPackedU32()], stringTable[stream.readPackedU32()]);
+                break;
+            case AVALUE_ARRAY:
+                value = new AnnotationValue.ArrayValue(name, readAnnotationValues(stream));
+                break;
+            case AVALUE_NESTED: {
+                int reference = stream.readPackedU32();
+                AnnotationInstance nestedInstance = annotationTable[reference];
+                if (nestedInstance == null) {
+                    nestedInstance = annotationTable[reference] = readAnnotationEntry(stream, null);
+                }
+
+                value = new AnnotationValue.NestedAnnotation(name, nestedInstance);
+                break;
+            }
+            default:
+                throw new IllegalStateException("Invalid annotation value tag:" + tag);
+        }
+        return value;
     }
 
     private AnnotationInstance readAnnotationEntry(PackedDataInputStream stream, AnnotationTarget caller) throws IOException {
@@ -418,12 +421,12 @@ final class IndexReaderV2 extends IndexReaderImpl {
         throw new IllegalStateException("Invalid tag: " + tag);
     }
 
-    private void readMethodTable(PackedDataInputStream stream) throws IOException {
+    private void readMethodTable(PackedDataInputStream stream, int version) throws IOException {
         // Null holds the first slot
         int size = stream.readPackedU32() + 1;
         methodTable = new MethodInternal[size];
         for (int i = 1; i < size; i++) {
-            methodTable[i] = readMethodEntry(stream);
+            methodTable[i] = readMethodEntry(stream, version);
         }
 
     }
@@ -437,7 +440,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         }
     }
 
-    private MethodInternal readMethodEntry(PackedDataInputStream stream) throws IOException {
+    private MethodInternal readMethodEntry(PackedDataInputStream stream, int version) throws IOException {
         byte[] name = byteTable[stream.readPackedU32()];
         short flags = (short) stream.readPackedU32();
         Type[] typeParameters = typeListTable[stream.readPackedU32()];
@@ -446,12 +449,19 @@ final class IndexReaderV2 extends IndexReaderImpl {
         Type returnType = typeTable[stream.readPackedU32()];
         Type[] parameters = typeListTable[stream.readPackedU32()];
         Type[] exceptions = typeListTable[stream.readPackedU32()];
+        AnnotationValue defaultValue = null;
+        if (version >= 7) {
+            boolean hasDefaultValue = stream.readByte() > 0;
+            if (hasDefaultValue) {
+                defaultValue = readAnnotationValue(stream);
+            }
+        }
 
         MethodInfo methodInfo = new MethodInfo();
         AnnotationInstance[] annotations = readAnnotations(stream, methodInfo);
         MethodInternal methodInternal = new MethodInternal(name, parameters, returnType, flags,
                 receiverType, typeParameters,
-                exceptions, annotations);
+                exceptions, annotations, defaultValue);
         methodInfo.setMethodInternal(methodInternal);
         return methodInternal;
     }

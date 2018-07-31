@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
@@ -59,6 +60,8 @@ public class BasicTestCase {
     public @interface TestAnnotation {
         String name();
         int[] ints();
+        String other() default "something";
+        String override() default "override-me";
 
         long longValue();
         Class<?> klass();
@@ -84,7 +87,7 @@ public class BasicTestCase {
         float value();
     }
 
-    @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f), nestedArray = {
+    @TestAnnotation(name = "Test", override = "somethingelse", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f), nestedArray = {
             @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) }, enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
     public class DummyClass implements Serializable {
         void doSomething(int x, long y, Long foo){}
@@ -123,6 +126,8 @@ public class BasicTestCase {
         Indexer indexer = new Indexer();
         InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName().replace('.', '/') + ".class");
         indexer.index(stream);
+        stream = getClass().getClassLoader().getResourceAsStream(TestAnnotation.class.getName().replace('.', '/') + ".class");
+        indexer.index(stream);
         Index index = indexer.complete();
 
         verifyDummy(index, true);
@@ -133,6 +138,8 @@ public class BasicTestCase {
     public void testWriteRead() throws IOException {
         Indexer indexer = new Indexer();
         InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName().replace('.', '/') + ".class");
+        indexer.index(stream);
+        stream = getClass().getClassLoader().getResourceAsStream(TestAnnotation.class.getName().replace('.', '/') + ".class");
         indexer.index(stream);
         Index index = indexer.complete();
 
@@ -212,6 +219,25 @@ public class BasicTestCase {
             // Verify method annotations
             MethodInfo method = clazz.method("doSomething", PrimitiveType.INT, PrimitiveType.LONG, Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS));
 
+            // Verify default value
+            assertEquals("something", instance.valueWithDefault(index, "other").asString());
+            assertEquals("somethingelse", instance.valueWithDefault(index, "override").asString());
+            assertEquals("override-me", index.getClassByName(instance.name()).method("override").defaultValue().asString());
+
+            List<AnnotationValue> annotationValues = instance.valuesWithDefaults(index);
+            AnnotationValue otherValue = null;
+            AnnotationValue overrideValue = null;
+            for (AnnotationValue value : annotationValues) {
+                if ("other".equals(value.name())) {
+                    otherValue = value;
+                } else if ("override".equals(value.name())) {
+                    overrideValue = value;
+                }
+            }
+
+            assertEquals(9, annotationValues.size());
+            assertEquals("something", otherValue.asString());
+            assertEquals("somethingelse", overrideValue.asString());
 
             assertNotNull(method);
             assertEquals(3, method.annotations().size());
@@ -220,7 +246,6 @@ public class BasicTestCase {
             assertEquals(MethodAnnotation4.class.getName(), method.annotation(DotName.createSimple(MethodAnnotation4.class.getName())).name().toString());
             assertFalse(method.hasAnnotation(DotName.createSimple(MethodAnnotation3.class.getName())));
         }
-
 
         // Verify hasNoArgsConstructor
         assertFalse(index.getClassByName(DotName.createSimple(DummyClass.class.getName())).hasNoArgsConstructor());

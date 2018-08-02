@@ -48,8 +48,8 @@ public final class MethodInfo implements AnnotationTarget {
         this(clazz, new MethodInternal(name, parameters, returnType, flags));
     }
 
-    MethodInfo(ClassInfo clazz, byte[] name, Type[] parameters, Type returnType,  short flags, Type[] typeParameters) {
-        this(clazz, new MethodInternal(name, parameters, returnType, flags, typeParameters));
+    MethodInfo(ClassInfo clazz, byte[] name, Type[] parameters, Type returnType,  short flags, Type[] typeParameters, Type[] exceptions) {
+        this(clazz, new MethodInternal(name, parameters, returnType, flags, typeParameters, exceptions));
     }
 
     /**
@@ -63,7 +63,7 @@ public final class MethodInfo implements AnnotationTarget {
       * @return a mock method
       */
      public static MethodInfo create(ClassInfo clazz, String name, Type[] args, Type returnType, short flags) {
-         return create(clazz, name, args, returnType, flags, null);
+         return create(clazz, name, args, returnType, flags, null, null);
      }
 
      /**
@@ -77,7 +77,7 @@ public final class MethodInfo implements AnnotationTarget {
       * @param typeParameters
       * @return a mock method
       */
-     public static MethodInfo create(ClassInfo clazz, String name, Type[] args, Type returnType, short flags, TypeVariable[] typeParameters) {
+     public static MethodInfo create(ClassInfo clazz, String name, Type[] args, Type returnType, short flags, TypeVariable[] typeParameters, Type[] exceptions) {
          if (clazz == null)
              throw new IllegalArgumentException("Clazz can't be null");
 
@@ -96,7 +96,7 @@ public final class MethodInfo implements AnnotationTarget {
          } catch (UnsupportedEncodingException e) {
              throw new IllegalArgumentException(e);
          }
-         return new MethodInfo(clazz, bytes, args, returnType, flags, typeParameters);
+         return new MethodInfo(clazz, bytes, args, returnType, flags, typeParameters, exceptions);
      }
 
 

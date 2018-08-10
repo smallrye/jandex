@@ -6,7 +6,7 @@
         <maven.compiler.target>1.6</maven.compiler.target>
         <jdk.min.version>1.6</jdk.min.version>
     </properties>
-    
+
     <parent>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-parent</artifactId>
@@ -100,7 +100,7 @@
                             org.apache.tools.ant.types;resolution:=optional,
                             *
                         </Import-Package>
-                        <!-- Without the -nouses BND directive, the org.jboss.jandex export will get the optional 
+                        <!-- Without the -nouses BND directive, the org.jboss.jandex export will get the optional
                         ant packages in a "uses" clause. -->
                         <_nouses>true</_nouses>
                     </instructions>

@@ -38,7 +38,7 @@ import java.util.List;
  * </pre>
  *
  * <p>Another example shows the case where a parameterized type is used to represent a non-parameterized
- * class (Y), whose owner (X) is itself parameterized:
+ * class (X), whose owner (Y) is itself parameterized:
  * <pre class="brush:java; gutter:false">
  *     Y&lt;String&gt;.X
  * </pre>
@@ -47,6 +47,20 @@ import java.util.List;
  * @author Jason T. Greene
  */
 public class ParameterizedType extends Type {
+
+    /**
+     * Create a new mock instance.
+     *
+     * @param name the name of this type
+     * @param arguments an array of types representing arguments to this type
+     * @param owner the enclosing type if annotated or parameterized, otherwise null
+     * @return the mock instance
+     * @since 2.1
+     */
+    public static ParameterizedType create(DotName name, Type[] arguments, Type owner) {
+        return new ParameterizedType(name, arguments, owner);
+    }
+
     private final Type[] arguments;
     private final Type owner;
     private int hash;
@@ -83,7 +97,7 @@ public class ParameterizedType extends Type {
      * annotated may return null when this method is called.</p>
      *
      * <p>The example below shows the case where a parameterized type is used to represent a non-parameterized
-     * class (Y).
+     * class (X).
      * <pre class="brush:java; gutter:false;">
      *     Y&lt;String&gt;.X
      * </pre>

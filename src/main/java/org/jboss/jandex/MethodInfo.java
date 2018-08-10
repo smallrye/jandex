@@ -20,7 +20,6 @@ package org.jboss.jandex;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -49,17 +48,39 @@ public final class MethodInfo implements AnnotationTarget {
         this(clazz, new MethodInternal(name, parameters, returnType, flags));
     }
 
+    MethodInfo(ClassInfo clazz, byte[] name, Type[] parameters, Type returnType,  short flags, Type[] typeParameters, Type[] exceptions) {
+        this(clazz, new MethodInternal(name, parameters, returnType, flags, typeParameters, exceptions));
+    }
+
     /**
-      * Construct a new mock Method instance.
-      *
-      * @param clazz the class declaring the field
-      * @param name the name of the field
-      * @param args a read only array containing the types of each parameter in parameter order
-     *  @param returnType the return value type
-      * @param flags the method attributes
-      * @return a mock field
-      */
+     * Construct a new mock Method instance.
+     *
+     * @param clazz the class declaring the field
+     * @param name the name of the field
+     * @param args a read only array containing the types of each parameter in parameter order
+     * @param returnType the return value type
+     * @param flags the method attributes
+     * @return a mock method
+     */
      public static MethodInfo create(ClassInfo clazz, String name, Type[] args, Type returnType, short flags) {
+         return create(clazz, name, args, returnType, flags, null, null);
+     }
+
+    /**
+     * Construct a new mock Method instance.
+     *
+     * @param clazz the class declaring the field
+     * @param name the name of the field
+     * @param args a read only array containing the types of each parameter in parameter order
+     * @param returnType the return value type
+     * @param flags the method attributes
+     * @param typeParameters the generic type parameters for this method
+     * @param exceptions the exceptions declared as thrown by this method
+     * @return a mock method
+     *
+     * @since 2.1
+     */
+     public static MethodInfo create(ClassInfo clazz, String name, Type[] args, Type returnType, short flags, TypeVariable[] typeParameters, Type[] exceptions) {
          if (clazz == null)
              throw new IllegalArgumentException("Clazz can't be null");
 
@@ -78,7 +99,7 @@ public final class MethodInfo implements AnnotationTarget {
          } catch (UnsupportedEncodingException e) {
              throw new IllegalArgumentException(e);
          }
-         return new MethodInfo(clazz, bytes, args, returnType, flags);
+         return new MethodInfo(clazz, bytes, args, returnType, flags, typeParameters, exceptions);
      }
 
 

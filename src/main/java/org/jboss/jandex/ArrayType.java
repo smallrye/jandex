@@ -28,6 +28,19 @@ public final class ArrayType extends Type {
     private final int dimensions;
     private int hash;
 
+    /**
+     * Create a new mock array type instance with the specified component
+     * and dimensions.
+     *
+     * @param component the array component
+     * @param dimensions the number of dimensions of this array
+     * @return the new mock array type instance
+     * @since 2.1
+     */
+    public static ArrayType create(Type component, int dimensions) {
+        return new ArrayType(component, dimensions);
+    }
+
     ArrayType(Type component, int dimensions) {
         this(component, dimensions, null);
     }

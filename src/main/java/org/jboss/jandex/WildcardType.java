@@ -33,11 +33,13 @@ public class WildcardType extends Type {
     private int hash;
 
     /**
-     * Create a new mock instance.
+     * Create a new mock instance of WildcardType.
      *
-     * @param bound
-     * @param isExtends
-     * @return
+     * @param bound the bound (lower or upper)
+     * @param isExtends true if lower, false if upper (super)
+     * @return thew new mock instance
+     *
+     * @since 2.1
      */
     public static WildcardType create(Type bound, boolean isExtends) {
         return new WildcardType(bound, isExtends);
@@ -57,9 +59,9 @@ public class WildcardType extends Type {
 
     /**
      * Returns the extends (upper) bound of this wildcard. If this wildcard declares a super (lower)
-     * bound, this method will return null
+     * bound, this method will return <code>java.lang.Object</code>
      *
-     * @return the extends bound, or null if this wildcard has a super bound
+     * @return the extends bound, or Object if this wildcard has a super bound
      */
     public Type extendsBound() {
         return isExtends ? bound : OBJECT;

@@ -352,9 +352,7 @@ public final class AnnotationInstance {
     public int hashCode() {
         int result = name.hashCode();
         result = 31 * result + Arrays.hashCode(values);
-        if(target != null) {
-            result = 31 * result + target.hashCode();
-        }
+
         return result;
     }
 }

@@ -292,6 +292,22 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        MethodInfo that = (MethodInfo) o;
+        return clazz.equals(that.clazz) && methodInternal.equals(that.methodInternal);
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * clazz.hashCode() + methodInternal.hashCode();
+    }
+
+    @Override
     public final ClassInfo asClass() {
         throw new IllegalArgumentException("Not a class");
     }

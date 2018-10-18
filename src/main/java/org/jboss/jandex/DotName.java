@@ -51,8 +51,8 @@ public final class DotName implements Comparable<DotName> {
     private final DotName prefix;
     private final String local;
     private int hash;
-    private boolean componentized = false;
-    private boolean innerClass = false;
+    private final boolean componentized;
+    private final boolean innerClass;
 
     static {
         JAVA_NAME = new DotName(null, "java", true, false);

@@ -75,7 +75,7 @@ public final class DotName implements Comparable<DotName> {
      * Constructs a componentized DotName. Each DotName refers to a parent
      * prefix (or null if there is no further prefix) in addition to a local
      * name that has no dot separator. The fully qualified name this DotName
-     * represents is consructed by recursing all parent prefixes and joining all
+     * represents is constructed by recursing all parent prefixes and joining all
      * local name values with the '.' character.
      *
      * @param prefix Another DotName that is the portion to the left of

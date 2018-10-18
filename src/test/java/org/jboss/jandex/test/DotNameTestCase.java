@@ -68,8 +68,11 @@ public class DotNameTestCase {
             while (dots.hasNext()) {
                 Assert.assertTrue(names.hasNext());
                 final String fullname = names.next();
-                Assert.assertEquals(fullname, dots.next().toString());
-                Assert.assertTrue(dotnames.contains(DotName.createSimple(fullname)));
+                DotName instance = dots.next();
+                Assert.assertEquals(fullname, instance.toString());
+                DotName asSimple = DotName.createSimple(fullname);
+                Assert.assertTrue(dotnames.contains(asSimple));
+                sameHashCode(instance, asSimple);
             }
             Assert.assertEquals(dotnames.toString(), strings.toString());
         }
@@ -114,12 +117,54 @@ public class DotNameTestCase {
     }
 
     @Test
+    public void crossTypeDifferences() {
+        DotName simple_perfectmatch = DotName.createSimple("some.case.case.Name");
+        DotName comp_1 = DotName.createComponentized(null, "some");
+        DotName comp_2 = DotName.createComponentized(comp_1, "case");
+        DotName comp_3 = DotName.createComponentized(comp_2, "case");
+        DotName compo_perfectmatch = DotName.createComponentized(comp_3, "Name");
+        definitelyEquals(compo_perfectmatch, simple_perfectmatch);
+        DotName comp_longer = DotName.createComponentized(compo_perfectmatch, "More", true);
+        DotName simple_longer = DotName.createSimple("some.case.case.Name$More");
+        definitelyNotEquals(comp_longer, compo_perfectmatch);
+        definitelyNotEquals(comp_longer, simple_perfectmatch);
+        definitelyNotEquals(simple_longer, simple_perfectmatch);
+        definitelyEquals(simple_longer, comp_longer);
+        definitelyNotEquals(simple_longer, compo_perfectmatch);
+        DotName simple_shorter = DotName.createSimple("case.case.Name");
+        DotName comp_s_1 = DotName.createComponentized(null, "case");
+        DotName comp_s_2 = DotName.createComponentized(comp_s_1, "case");
+        DotName comp_shorter = DotName.createComponentized(comp_s_2, "Name");
+        definitelyEquals(simple_shorter, comp_shorter);
+        definitelyNotEquals(comp_shorter, compo_perfectmatch);
+        definitelyNotEquals(comp_shorter, simple_perfectmatch);
+        definitelyNotEquals(simple_shorter, compo_perfectmatch);
+        definitelyNotEquals(simple_shorter, simple_perfectmatch);
+    }
+
+    private void definitelyEquals(DotName a, DotName b) {
+        Assert.assertEquals(a, b);
+        Assert.assertEquals(b, a);
+        sameHashCode(a, b);
+    }
+
+    private static void sameHashCode(DotName a, DotName b) {
+        Assert.assertEquals(a.hashCode(), b.hashCode());
+    }
+
+    private void definitelyNotEquals(DotName a, DotName b) {
+        Assert.assertFalse("should not be equals", a.equals(b));
+        Assert.assertFalse("should not be equals", b.equals(a));
+    }
+
+    @Test
     public void testSpecialCase() {
         // This specific sequence was highlighting a bug
         DotsContainer c = new DotsContainer();
         c.add(DotName.createSimple("c.ae.dceebebea.dbbbee.cddd$cccaa"));
         c.add(DotName.createSimple("c.aebecacddd.ea.eeebcdc.bceaaa$ddabbabccc"));
         c.add(DotName.createSimple("cacbaa.bcbeacdcc"));
+        c.add(DotName.createSimple(""));
 
         c.add(DotName.createComponentized(DotName.createComponentized(null, "c", false), "b", true));
         c.add(DotName.createComponentized(DotName.createComponentized(null, "c", false), "e", true));

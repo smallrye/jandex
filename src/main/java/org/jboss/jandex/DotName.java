@@ -294,11 +294,39 @@ public final class DotName implements Comparable<DotName> {
             return local.equals(other.local) && innerClass == other.innerClass;
 
         if (!other.componentized && componentized)
-            return toString().equals(other.local);
+            return crossEquals(other, this);
 
         if (other.componentized && !componentized)
-            return other.toString().equals(local);
+            return crossEquals(this, other);
 
         return prefix != null && innerClass == other.innerClass && local.equals(other.local) && prefix.equals(other.prefix);
+    }
+
+    private static boolean crossEquals(final DotName simple, final DotName comp) {
+        final String exactToMatch = simple.local;
+        //We start matching from the end, as that's what we have in componentized mode:
+        int cursor = exactToMatch.length();
+        DotName current = comp;
+        while (current!=null) {
+            final String nextFragment = current.local;
+            final int fragLength = nextFragment.length();
+            if (! exactToMatch.regionMatches(cursor-fragLength, nextFragment, 0, fragLength)) {
+                return false;
+            }
+            //Jump by fragment match, +1 for the separator symbol:
+            cursor = cursor - fragLength - 1;
+            if (cursor==-1) {
+                //Our exactToMatch reference is finished; just verify we consumed comp completely as well::
+                return current.prefix == null;
+            }
+            final char expectNext = current.innerClass ? '$' : '.';
+            if (exactToMatch.charAt(cursor)!= expectNext) {
+                return false;
+            }
+            
+            current=current.prefix;
+        }
+        //And finally, verify we consumed it all:
+        return cursor == -1;
     }
 }

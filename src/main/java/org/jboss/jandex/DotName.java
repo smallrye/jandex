@@ -248,6 +248,15 @@ public final class DotName implements Comparable<DotName> {
             for (int i = 0; i < stop; i++) {
                 DotName thisComp = thisStack.pop();
                 DotName otherComp = otherStack.pop();
+                //Actually important to consider innerClass so to
+                //be consistent with the fallback order strategy which
+                //is based on toString:
+                if (thisComp.innerClass && !otherComp.innerClass) {
+                    return -1;
+                }
+                else if (!thisComp.innerClass && otherComp.innerClass) {
+                    return 1;
+                }
 
                 int comp = thisComp.local.compareTo(otherComp.local);
                 if (comp != 0)

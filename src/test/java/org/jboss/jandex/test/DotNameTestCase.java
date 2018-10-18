@@ -20,14 +20,157 @@ package org.jboss.jandex.test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Iterator;
+import java.util.Random;
+import java.util.TreeSet;
+
 import org.jboss.jandex.DotName;
 import org.junit.Test;
 
+import junit.framework.Assert;
+
+
+/**
+ * Since DotName is often used as a key in collections and implements Comparable,
+ * make sure the #compareTo, hashCode, equals and toString are strictly consistent.
+ * Not actually that trivial since DotName can use multiple different representations
+ * for the same "value".
+ * The implementation is also meant to be efficient, in particular we aim at very low
+ * memory impact.
+ *
+ * @author Sanne Grinovero
+ */
 public class DotNameTestCase {
+
+    // Using a fixed seed for test reproducibility:
+    private static final Random r = new Random(13);
+
+    public static final class DotsContainer {
+        private final TreeSet<DotName> dotnames = new TreeSet<DotName>();
+        private final TreeSet<String> strings = new TreeSet<String>();
+
+        void add(DotName d) {
+            dotnames.add(d);
+            strings.add(d.toString());
+            if (dotnames.size() != strings.size()) {
+                throw new AssertionError("Expectation violated");
+            }
+        }
+
+        int size() {
+            return dotnames.size();
+        }
+
+        void verifyAll() {
+            Assert.assertEquals(strings.size(), dotnames.size());
+            Iterator<DotName> dots = dotnames.iterator();
+            Iterator<String> names = strings.iterator();
+            while (dots.hasNext()) {
+                Assert.assertTrue(names.hasNext());
+                final String fullname = names.next();
+                Assert.assertEquals(fullname, dots.next().toString());
+                Assert.assertTrue(dotnames.contains(DotName.createSimple(fullname)));
+            }
+            Assert.assertEquals(dotnames.toString(), strings.toString());
+        }
+    }
 
     @Test
     public void testIsComponentized() {
         assertTrue(DotName.createComponentized(DotName.createComponentized(null, "jboss"), "Foo").isComponentized());
         assertFalse(DotName.createSimple("org.jboss.Foo").isComponentized());
     }
+
+    @Test
+    public void testForNaturalComparator() {
+        DotsContainer c = new DotsContainer();
+        while (c.size() < 200) {
+            c.add(createRandomDotName());
+        }
+        // Throw in a special case:
+        c.add(DotName.createSimple("a"));
+        // "a" being the simplest case it must come first:
+        Assert.assertEquals("a", c.strings.iterator().next());
+        Assert.assertEquals("a", c.dotnames.iterator().next().toString());
+        // Simple way to verify the comparator of DotName implements
+        c.verifyAll();
+    }
+
+    @Test
+    public void testCollectionsProperties() {
+        for (int i=0; i<500; i++) {
+            DotName componentised = createRandomComponentised();
+            DotName simple = DotName.createSimple(componentised.toString());
+            Assert.assertEquals(simple.hashCode(), componentised.hashCode());
+            Assert.assertEquals(0, simple.compareTo(componentised));
+            Assert.assertEquals(0, componentised.compareTo(simple));
+            Assert.assertTrue(simple.equals(componentised));
+            Assert.assertTrue(componentised.equals(simple));
+            Assert.assertFalse(componentised == simple);
+            Assert.assertFalse(simple.equals(null));
+            Assert.assertFalse(componentised.equals(null));
+            Assert.assertTrue(componentised.toString().equals(simple.toString()));
+        }
+    }
+
+    @Test
+    public void testSpecialCase() {
+        // This specific sequence was highlighting a bug
+        DotsContainer c = new DotsContainer();
+        c.add(DotName.createSimple("c.ae.dceebebea.dbbbee.cddd$cccaa"));
+        c.add(DotName.createSimple("c.aebecacddd.ea.eeebcdc.bceaaa$ddabbabccc"));
+        c.add(DotName.createSimple("cacbaa.bcbeacdcc"));
+
+        c.add(DotName.createComponentized(DotName.createComponentized(null, "c", false), "b", true));
+        c.add(DotName.createComponentized(DotName.createComponentized(null, "c", false), "e", true));
+        c.add(DotName.createComponentized(DotName.createComponentized(null, "c", false), "ae", false));
+        c.verifyAll();
+    }
+
+    private static DotName createRandomDotName() {
+        return r.nextBoolean() ? createRandomComponentised() : createRandomSimple();
+    }
+
+    private static DotName createRandomSimple() {
+        int partsToAppend = r.nextInt(5);
+        final StringBuilder sb = new StringBuilder();
+        sb.append(someRandomChars());
+        while (partsToAppend > 0) {
+            sb.append('.');
+            sb.append(someRandomChars());
+            partsToAppend--;
+        }
+        // Occasionally make it a nested class:
+        if (r.nextBoolean()) {
+            sb.append('$');
+            sb.append(someRandomChars());
+        }
+        return DotName.createSimple(sb.toString());
+    }
+
+    private static String someRandomChars() {
+        final int chars = r.nextInt(10) + 1;
+        final char[] buf = new char[chars];
+        // Good enough for our purposes, and want to avoid symbols:
+        final char[] validOptions = new char[] { 'a', 'b', 'c', 'd', 'e' };
+        for (int i = 0; i < chars; i++) {
+            buf[i] = validOptions[r.nextInt(validOptions.length)];
+        }
+        return new String(buf);
+    }
+
+    private static DotName createRandomComponentised() {
+        int partsToAppend = r.nextInt(5) + 1;
+        DotName current = null;
+        while (partsToAppend > 0) {
+            current = DotName.createComponentized(current, someRandomChars());
+            partsToAppend--;
+        }
+        // Occasionally make it a nested class:
+        if (r.nextBoolean()) {
+            current = DotName.createComponentized(current, someRandomChars(), true);
+        }
+        return current;
+    }
+
 }

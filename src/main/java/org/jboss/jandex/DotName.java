@@ -304,8 +304,17 @@ public final class DotName implements Comparable<DotName> {
 
     private static boolean crossEquals(final DotName simple, final DotName comp) {
         final String exactToMatch = simple.local;
-        //We start matching from the end, as that's what we have in componentized mode:
-        int cursor = exactToMatch.length();
+        // We start matching from the end, as that's what we have in componentized mode:
+        int cursor = 0;
+        int len = exactToMatch.length();
+        for (DotName d = comp; d != null && cursor - 1 <= len; d = d.prefix) {
+            cursor += 1 + d.local.length();
+        }
+
+        if (--cursor != len) {
+            return false;
+        }
+
         DotName current = comp;
         while (current!=null) {
             final String nextFragment = current.local;

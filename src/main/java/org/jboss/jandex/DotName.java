@@ -224,52 +224,25 @@ public final class DotName implements Comparable<DotName> {
      */
     @Override
     public int compareTo(DotName other) {
+        IndexState s1 = new IndexState();
+        IndexState s2 = new IndexState();
 
-        if (componentized && other.componentized) {
-            ArrayDeque<DotName> thisStack = new ArrayDeque<DotName>();
-            ArrayDeque<DotName> otherStack = new ArrayDeque<DotName>();
+        for (;;) {
+            int c1 = nextChar(s1, this);
+            int c2 = nextChar(s2, other);
 
-            DotName curr = this;
-            while (curr != null) {
-                thisStack.push(curr);
-                curr = curr.prefix();
+            if (c1 == -1) {
+                return c2 == -1 ? 0 : -1;
             }
 
-            curr = other;
-            while (curr != null) {
-                otherStack.push(curr);
-                curr = curr.prefix();
+            if (c2 == -1) {
+                return 1;
             }
 
-            int thisSize = thisStack.size();
-            int otherSize = otherStack.size();
-            int stop = Math.min(thisSize, otherSize);
-
-            for (int i = 0; i < stop; i++) {
-                DotName thisComp = thisStack.pop();
-                DotName otherComp = otherStack.pop();
-                //Actually important to consider innerClass so to
-                //be consistent with the fallback order strategy which
-                //is based on toString:
-                if (thisComp.innerClass && !otherComp.innerClass) {
-                    return -1;
-                }
-                else if (!thisComp.innerClass && otherComp.innerClass) {
-                    return 1;
-                }
-
-                int comp = thisComp.local.compareTo(otherComp.local);
-                if (comp != 0)
-                    return comp;
+            if (c1 != c2) {
+                return c1 - c2;
             }
-
-            int diff = thisSize - otherSize;
-            if (diff != 0)
-                return diff;
         }
-
-        // Fallback to string comparison
-        return toString().compareTo(other.toString());
     }
 
     /**
@@ -329,7 +302,7 @@ public final class DotName implements Comparable<DotName> {
                 return current.prefix == null;
             }
             final char expectNext = current.innerClass ? '$' : '.';
-            if (exactToMatch.charAt(cursor)!= expectNext) {
+            if (exactToMatch.charAt(cursor) != expectNext) {
                 return false;
             }
             
@@ -338,4 +311,43 @@ public final class DotName implements Comparable<DotName> {
         //And finally, verify we consumed it all:
         return cursor == -1;
     }
+
+    private static class IndexState {
+        DotName currentPrefix;
+        int offset;
+    }
+
+    private int nextChar(IndexState state, DotName name) {
+        if (state.offset == -1) {
+            return -1;
+        }
+
+        if (!name.componentized) {
+            if (state.offset > name.local.length() - 1) {
+                state.offset = -1;
+                return -1;
+            }
+            return name.local.charAt(state.offset++);
+        }
+
+        DotName p = name, n = name;
+        while (n.prefix != state.currentPrefix) {
+            p = n;
+            n = n.prefix;
+        }
+
+        if (state.offset > n.local.length() - 1) {
+            if (n == name) {
+                state.offset = -1;
+                return -1;
+            } else {
+                state.offset = 0;
+                state.currentPrefix = n;
+                return p.isInner() ? '$' : '.';
+            }
+        }
+
+        return n.local.charAt(state.offset++);
+    }
+
 }

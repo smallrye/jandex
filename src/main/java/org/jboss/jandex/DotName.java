@@ -51,8 +51,8 @@ public final class DotName implements Comparable<DotName> {
     private final DotName prefix;
     private final String local;
     private int hash;
-    private boolean componentized = false;
-    private boolean innerClass = false;
+    private final boolean componentized;
+    private final boolean innerClass;
 
     static {
         JAVA_NAME = new DotName(null, "java", true, false);
@@ -75,7 +75,7 @@ public final class DotName implements Comparable<DotName> {
      * Constructs a componentized DotName. Each DotName refers to a parent
      * prefix (or null if there is no further prefix) in addition to a local
      * name that has no dot separator. The fully qualified name this DotName
-     * represents is consructed by recursing all parent prefixes and joining all
+     * represents is constructed by recursing all parent prefixes and joining all
      * local name values with the '.' character.
      *
      * @param prefix Another DotName that is the portion to the left of
@@ -224,43 +224,25 @@ public final class DotName implements Comparable<DotName> {
      */
     @Override
     public int compareTo(DotName other) {
+        IndexState s1 = new IndexState();
+        IndexState s2 = new IndexState();
 
-        if (componentized && other.componentized) {
-            ArrayDeque<DotName> thisStack = new ArrayDeque<DotName>();
-            ArrayDeque<DotName> otherStack = new ArrayDeque<DotName>();
+        for (;;) {
+            int c1 = nextChar(s1, this);
+            int c2 = nextChar(s2, other);
 
-            DotName curr = this;
-            while (curr != null) {
-                thisStack.push(curr);
-                curr = curr.prefix();
+            if (c1 == -1) {
+                return c2 == -1 ? 0 : -1;
             }
 
-            curr = other;
-            while (curr != null) {
-                otherStack.push(curr);
-                curr = curr.prefix();
+            if (c2 == -1) {
+                return 1;
             }
 
-            int thisSize = thisStack.size();
-            int otherSize = otherStack.size();
-            int stop = Math.min(thisSize, otherSize);
-
-            for (int i = 0; i < stop; i++) {
-                DotName thisComp = thisStack.pop();
-                DotName otherComp = otherStack.pop();
-
-                int comp = thisComp.local.compareTo(otherComp.local);
-                if (comp != 0)
-                    return comp;
+            if (c1 != c2) {
+                return c1 - c2;
             }
-
-            int diff = thisSize - otherSize;
-            if (diff != 0)
-                return diff;
         }
-
-        // Fallback to string comparison
-        return toString().compareTo(other.toString());
     }
 
     /**
@@ -285,11 +267,87 @@ public final class DotName implements Comparable<DotName> {
             return local.equals(other.local) && innerClass == other.innerClass;
 
         if (!other.componentized && componentized)
-            return toString().equals(other.local);
+            return crossEquals(other, this);
 
         if (other.componentized && !componentized)
-            return other.toString().equals(local);
+            return crossEquals(this, other);
 
         return prefix != null && innerClass == other.innerClass && local.equals(other.local) && prefix.equals(other.prefix);
     }
+
+    private static boolean crossEquals(final DotName simple, final DotName comp) {
+        final String exactToMatch = simple.local;
+        // We start matching from the end, as that's what we have in componentized mode:
+        int cursor = 0;
+        int len = exactToMatch.length();
+        for (DotName d = comp; d != null && cursor - 1 <= len; d = d.prefix) {
+            cursor += 1 + d.local.length();
+        }
+
+        if (--cursor != len) {
+            return false;
+        }
+
+        DotName current = comp;
+        while (current!=null) {
+            final String nextFragment = current.local;
+            final int fragLength = nextFragment.length();
+            if (! exactToMatch.regionMatches(cursor-fragLength, nextFragment, 0, fragLength)) {
+                return false;
+            }
+            //Jump by fragment match, +1 for the separator symbol:
+            cursor = cursor - fragLength - 1;
+            if (cursor==-1) {
+                //Our exactToMatch reference is finished; just verify we consumed comp completely as well::
+                return current.prefix == null;
+            }
+            final char expectNext = current.innerClass ? '$' : '.';
+            if (exactToMatch.charAt(cursor) != expectNext) {
+                return false;
+            }
+            
+            current=current.prefix;
+        }
+        //And finally, verify we consumed it all:
+        return cursor == -1;
+    }
+
+    private static class IndexState {
+        DotName currentPrefix;
+        int offset;
+    }
+
+    private int nextChar(IndexState state, DotName name) {
+        if (state.offset == -1) {
+            return -1;
+        }
+
+        if (!name.componentized) {
+            if (state.offset > name.local.length() - 1) {
+                state.offset = -1;
+                return -1;
+            }
+            return name.local.charAt(state.offset++);
+        }
+
+        DotName p = name, n = name;
+        while (n.prefix != state.currentPrefix) {
+            p = n;
+            n = n.prefix;
+        }
+
+        if (state.offset > n.local.length() - 1) {
+            if (n == name) {
+                state.offset = -1;
+                return -1;
+            } else {
+                state.offset = 0;
+                state.currentPrefix = n;
+                return p.isInner() ? '$' : '.';
+            }
+        }
+
+        return n.local.charAt(state.offset++);
+    }
+
 }

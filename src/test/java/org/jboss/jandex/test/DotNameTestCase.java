@@ -73,6 +73,8 @@ public class DotNameTestCase {
                 DotName asSimple = DotName.createSimple(fullname);
                 Assert.assertTrue(dotnames.contains(asSimple));
                 sameHashCode(instance, asSimple);
+                Assert.assertEquals(0, instance.compareTo(asSimple));
+                Assert.assertEquals(0, asSimple.compareTo(instance));
             }
             Assert.assertEquals(dotnames.toString(), strings.toString());
         }
@@ -113,6 +115,8 @@ public class DotNameTestCase {
             Assert.assertFalse(simple.equals(null));
             Assert.assertFalse(componentised.equals(null));
             Assert.assertTrue(componentised.toString().equals(simple.toString()));
+            Assert.assertEquals(0, componentised.compareTo(simple));
+            Assert.assertEquals(0, simple.compareTo(componentised));
         }
     }
 
@@ -145,6 +149,8 @@ public class DotNameTestCase {
     private void definitelyEquals(DotName a, DotName b) {
         Assert.assertEquals(a, b);
         Assert.assertEquals(b, a);
+        Assert.assertEquals(a.compareTo(b),0);
+        Assert.assertEquals(b.compareTo(a),0);
         sameHashCode(a, b);
     }
 
@@ -155,6 +161,9 @@ public class DotNameTestCase {
     private void definitelyNotEquals(DotName a, DotName b) {
         Assert.assertFalse("should not be equals", a.equals(b));
         Assert.assertFalse("should not be equals", b.equals(a));
+        Assert.assertFalse(a.compareTo(b) == 0);
+        Assert.assertFalse(b.compareTo(a) == 0);
+        Assert.assertEquals(b.compareTo(a), -1 * a.compareTo(b));
     }
 
     @Test

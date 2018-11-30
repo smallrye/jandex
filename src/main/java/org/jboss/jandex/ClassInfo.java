@@ -303,7 +303,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the located method or null if not found
      */
     public final MethodInfo method(String name, Type... parameters) {
-        MethodInternal key = new MethodInternal(Utils.toUTF8(name), parameters, null, (short) 0);
+        MethodInternal key = new MethodInternal(Utils.toUTF8(name), MethodInternal.EMPTY_PARAMETER_NAMES, parameters, null, (short) 0);
         int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
         return i >= 0 ? new MethodInfo(this, methods[i]) : null;
     }
@@ -318,7 +318,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the first discovered method matching this name, or null if no match is found
      */
     public final MethodInfo firstMethod(String name) {
-        MethodInternal key = new MethodInternal(Utils.toUTF8(name), Type.EMPTY_ARRAY, null, (short) 0);
+        MethodInternal key = new MethodInternal(Utils.toUTF8(name), MethodInternal.EMPTY_PARAMETER_NAMES, Type.EMPTY_ARRAY, null, (short) 0);
         int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
         if (i < -methods.length) {
             return null;

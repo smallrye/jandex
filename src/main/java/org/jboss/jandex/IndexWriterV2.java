@@ -52,7 +52,7 @@ import java.util.TreeMap;
  */
 final class IndexWriterV2 extends IndexWriterImpl{
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 7;
+    static final int MAX_VERSION = 8;
 
     // babelfish (no h)
     private static final int MAGIC = 0xBABE1F15;
@@ -297,7 +297,13 @@ final class IndexWriterV2 extends IndexWriterImpl{
                 writeAnnotationValue(stream, defaultValue);
             }
         }
-
+        if (version >= 8) {
+            byte[][] parameterNamesBytes = method.parameterNamesBytes();
+            stream.writePackedU32(parameterNamesBytes.length);
+            for (byte[] parameterName : parameterNamesBytes) {
+                stream.writePackedU32(positionOf(parameterName));
+            }
+        }
         AnnotationInstance[] annotations = method.annotationArray();
         stream.writePackedU32(annotations.length);
         for (AnnotationInstance annotation : annotations) {
@@ -733,6 +739,9 @@ final class IndexWriterV2 extends IndexWriterImpl{
         AnnotationValue defaultValue = method.defaultValue();
         if (defaultValue != null) {
             buildAValueEntries(defaultValue);
+        }
+        for (byte[] parameterName : method.parameterNamesBytes()) {
+            names.intern(parameterName);
         }
         names.intern(method.nameBytes());
         names.intern(method);

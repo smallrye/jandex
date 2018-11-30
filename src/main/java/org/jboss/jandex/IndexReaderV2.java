@@ -45,7 +45,7 @@ import java.util.Map;
  */
 final class IndexReaderV2 extends IndexReaderImpl {
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 7;
+    static final int MAX_VERSION = 8;
     static final int MAX_DATA_VERSION = 4;
     private static final byte NULL_TARGET_TAG = 0;
     private static final byte FIELD_TAG = 1;
@@ -456,10 +456,20 @@ final class IndexReaderV2 extends IndexReaderImpl {
                 defaultValue = readAnnotationValue(stream);
             }
         }
+        byte[][] methodParameterBytes = MethodInternal.EMPTY_PARAMETER_NAMES;
+        if (version >= 8) {
+            int size = stream.readPackedU32();
+            if (size > 0 ) {
+                methodParameterBytes = new byte[size][];
+                for (int i = 0; i < size; i++) {
+                    methodParameterBytes[i] = byteTable[stream.readPackedU32()];
+                }
+            }
+        }
 
         MethodInfo methodInfo = new MethodInfo();
         AnnotationInstance[] annotations = readAnnotations(stream, methodInfo);
-        MethodInternal methodInternal = new MethodInternal(name, parameters, returnType, flags,
+        MethodInternal methodInternal = new MethodInternal(name, methodParameterBytes, parameters, returnType, flags,
                 receiverType, typeParameters,
                 exceptions, annotations, defaultValue);
         methodInfo.setMethodInternal(methodInternal);

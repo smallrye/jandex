@@ -133,6 +133,21 @@ public final class Indexer {
         0x45, 0x6e, 0x63, 0x6c, 0x6f, 0x73, 0x69, 0x6e, 0x67, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64
     };
 
+    // "MethodParameters"
+    private final static byte[] METHOD_PARAMETERS = new byte[] {
+        0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73
+    };
+    
+    // "LocalVariableTable"
+    private final static byte[] LOCAL_VARIABLE_TABLE = new byte[] {
+        0x4c, 0x6f, 0x63, 0x61, 0x6c, 0x56, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65
+    };
+    
+    // "Code"
+    private final static byte[] CODE = new byte[] {
+        0x43, 0x6f, 0x64, 0x65
+    };
+    
     private final static int RUNTIME_ANNOTATIONS_LEN = RUNTIME_ANNOTATIONS.length;
     private final static int RUNTIME_PARAM_ANNOTATIONS_LEN = RUNTIME_PARAM_ANNOTATIONS.length;
     private final static int RUNTIME_TYPE_ANNOTATIONS_LEN = RUNTIME_TYPE_ANNOTATIONS.length;
@@ -141,6 +156,9 @@ public final class Indexer {
     private final static int EXCEPTIONS_LEN = EXCEPTIONS.length;
     private final static int INNER_CLASSES_LEN = INNER_CLASSES.length;
     private final static int ENCLOSING_METHOD_LEN = ENCLOSING_METHOD.length;
+    private final static int METHOD_PARAMETERS_LEN = METHOD_PARAMETERS.length;
+    private final static int LOCAL_VARIABLE_TABLE_LEN = LOCAL_VARIABLE_TABLE.length;
+    private final static int CODE_LEN = CODE.length;
 
     private final static int HAS_RUNTIME_ANNOTATION = 1;
     private final static int HAS_RUNTIME_PARAM_ANNOTATION = 2;
@@ -150,6 +168,9 @@ public final class Indexer {
     private final static int HAS_INNER_CLASSES = 6;
     private final static int HAS_ENCLOSING_METHOD = 7;
     private final static int HAS_ANNOTATION_DEFAULT = 8;
+    private final static int HAS_METHOD_PARAMETERS = 9;
+    private final static int HAS_LOCAL_VARIABLE_TABLE = 10;
+    private final static int HAS_CODE = 11;
 
     private final static byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
 
@@ -221,6 +242,8 @@ public final class Indexer {
     private IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>> typeAnnotations;
     private List<MethodInfo> methods;
     private List<FieldInfo> fields;
+    private byte[][] debugParameterNames;
+    private byte[][] methodParameterNames;
 
     // Index lifespan fields
     private Map<DotName, List<AnnotationInstance>> masterAnnotations;
@@ -273,14 +296,21 @@ public final class Indexer {
             Type[] parameters = intern(parseMethodArgs(descriptor, pos));
             Type returnType = parseType(descriptor, pos);
 
-            MethodInfo method = new MethodInfo(currentClass, name, parameters, returnType, flags);
+            MethodInfo method = new MethodInfo(currentClass, name, MethodInternal.EMPTY_PARAMETER_NAMES, parameters, returnType, flags);
 
             if (parameters.length == 0 && Arrays.equals(INIT_METHOD_NAME, name)) {
                 currentClass.setHasNoArgsConstructor(true);
             }
+            methodParameterNames = debugParameterNames = null;
             processAttributes(data, method);
             method.setAnnotations(elementAnnotations);
             elementAnnotations.clear();
+            
+            // Prefer method parameter names over debug info
+            if(methodParameterNames != null)
+                method.methodInternal().setParameterNames(methodParameterNames);
+            else if(debugParameterNames != null)
+                method.methodInternal().setParameterNames(debugParameterNames);
 
             methods.add(method);
         }
@@ -332,6 +362,32 @@ public final class Indexer {
                 processEnclosingMethod(data, (ClassInfo) target);
             } else if (annotationAttribute == HAS_ANNOTATION_DEFAULT && target instanceof MethodInfo) {
                 processAnnotationDefault(data, (MethodInfo) target);
+            } else if (annotationAttribute == HAS_METHOD_PARAMETERS && target instanceof MethodInfo) {
+                processMethodParameters(data, (MethodInfo) target);
+            } else if (annotationAttribute == HAS_CODE && target instanceof MethodInfo) {
+                processCode(data, (MethodInfo) target);
+            } else {
+                skipFully(data, attributeLen);
+            }
+        }
+    }
+
+    private void processCode(DataInputStream data, MethodInfo target) throws IOException {
+        int maxStack = data.readUnsignedShort();
+        int maxLocals = data.readUnsignedShort();
+        long h = data.readUnsignedShort();
+        long l = data.readUnsignedShort();
+        long codeLength = (h << 16) | l;
+        skipFully(data, codeLength);
+        int exceptionTableLength = data.readUnsignedShort();
+        skipFully(data, exceptionTableLength * (2 + 2 + 2 + 2));
+        int numAttrs = data.readUnsignedShort();
+        for (int a = 0; a < numAttrs; a++) {
+            int index = data.readUnsignedShort();
+            long attributeLen = data.readInt() & 0xFFFFFFFFL;
+            byte annotationAttribute = constantPoolAnnoAttrributes[index - 1];
+            if (annotationAttribute == HAS_LOCAL_VARIABLE_TABLE && target instanceof MethodInfo) {
+                processLocalVariableTable(data, (MethodInfo) target);
             } else {
                 skipFully(data, attributeLen);
             }
@@ -367,6 +423,60 @@ public final class Indexer {
 
             innerClasses.put(innerClass, new InnerClassInfo(innerClass, outerClass, simpleName, flags));
         }
+    }
+
+    private void processMethodParameters(DataInputStream data, MethodInfo target) throws IOException {
+        int numParameters = data.readUnsignedByte();
+        byte[][] parameterNames = numParameters > 0 ? new byte[numParameters][] : MethodInternal.EMPTY_PARAMETER_NAMES;
+        int filledParameters = 0;
+        for (int i = 0; i < numParameters; i++) {
+            int nameIndex = data.readUnsignedShort();
+            byte[] parameterName = nameIndex == 0 ? null : decodeUtf8EntryAsBytes(nameIndex);
+            int flags = data.readUnsignedShort();
+            // skip synthetic/mandated params to get the same param name index as annotations/MethodParameter (which do not count them)
+            if((flags & (MethodInternal.SYNTHETIC | MethodInternal.MANDATED)) != 0) {
+                continue;
+            }
+
+            parameterNames[filledParameters++] = parameterName;
+        }
+        
+        byte[][] realParameterNames = filledParameters > 0 ? new byte[filledParameters][] : MethodInternal.EMPTY_PARAMETER_NAMES;
+        if(filledParameters > 0)
+            System.arraycopy(parameterNames, 0, realParameterNames, 0, filledParameters);
+        this.methodParameterNames = realParameterNames;
+    }
+
+    private void processLocalVariableTable(DataInputStream data, MethodInfo target) throws IOException {
+        int numVariables = data.readUnsignedShort();
+        byte[][] variableNames = numVariables > 0 ? new byte[numVariables][] : MethodInternal.EMPTY_PARAMETER_NAMES;
+        int numParameters = 0;
+        for (int i = 0; i < numVariables; i++) {
+            int startPc = data.readUnsignedShort();
+            int length = data.readUnsignedShort();
+            int nameIndex = data.readUnsignedShort();
+            int descriptorIndex = data.readUnsignedShort();
+            int index = data.readUnsignedShort();
+            
+            // parameters have startPc == 0
+            if(startPc != 0)
+                continue;
+            byte[] parameterName = nameIndex == 0 ? null : decodeUtf8EntryAsBytes(nameIndex);
+            // ignore "this"
+            if(index == 0 && parameterName != null && parameterName.length == 4
+                    && parameterName[0] == 0x74
+                    && parameterName[1] == 0x68
+                    && parameterName[2] == 0x69
+                    && parameterName[3] == 0x73)
+                continue;
+            
+            // here we rely on the parameters being in the right order
+            variableNames[numParameters++] = parameterName;
+        }
+        byte[][] parameterNames = numParameters > 0 ? new byte[numParameters][] : MethodInternal.EMPTY_PARAMETER_NAMES;
+        if(numParameters > 0)
+            System.arraycopy(variableNames, 0, parameterNames, 0, numParameters);
+        this.debugParameterNames = parameterNames;
     }
 
     private void processEnclosingMethod(DataInputStream data, ClassInfo target) throws IOException {
@@ -1428,6 +1538,12 @@ public final class Indexer {
                         annoAttributes[pos] = HAS_ENCLOSING_METHOD;
                     } else if (len == ANNOTATION_DEFAULT_LEN && match(buf, offset, ANNOTATION_DEFAULT)) {
                         annoAttributes[pos] = HAS_ANNOTATION_DEFAULT;
+                    } else if (len == METHOD_PARAMETERS_LEN && match(buf, offset, METHOD_PARAMETERS)) {
+                        annoAttributes[pos] = HAS_METHOD_PARAMETERS;
+                    } else if (len == LOCAL_VARIABLE_TABLE_LEN && match(buf, offset, LOCAL_VARIABLE_TABLE)) {
+                        annoAttributes[pos] = HAS_LOCAL_VARIABLE_TABLE;
+                    } else if (len == CODE_LEN && match(buf, offset, CODE)) {
+                        annoAttributes[pos] = HAS_CODE;
                     }
                     offset += len;
                     break;

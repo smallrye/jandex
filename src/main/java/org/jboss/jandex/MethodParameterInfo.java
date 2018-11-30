@@ -67,6 +67,15 @@ public final class MethodParameterInfo implements AnnotationTarget {
     }
 
     /**
+     * Returns the name of this parameter.
+     * 
+     * @return the name of this parameter.
+     */
+    public final String name() {
+        return method.parameterName(parameter);
+    }
+    
+    /**
      * Returns a string representation describing this method parameter
      *
      * @return a string representation of this parameter

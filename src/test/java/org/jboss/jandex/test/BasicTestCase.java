@@ -303,20 +303,32 @@ public class BasicTestCase {
             
             ClassInfo enumClass = index.getClassByName(DotName.createSimple(Enum.class.getName()));
             assertNotNull(enumClass);
-            // synthetic param counts here
+            // synthetic param counts here (for ECJ)
             MethodInfo enumConstructor1 = enumClass.method("<init>", 
                   Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS), PrimitiveType.INT, PrimitiveType.INT);
-            assertNotNull(enumConstructor1);
-            // synthetic param counts here
-            assertEquals(3, enumConstructor1.parameters().size());
+            if(enumConstructor1 == null) {
+                enumConstructor1 = enumClass.method("<init>", PrimitiveType.INT);
+                assertNotNull(enumConstructor1);
+                // synthetic param does not found here
+                assertEquals(1, enumConstructor1.parameters().size());
+            }else {
+                // synthetic param counts here
+                assertEquals(3, enumConstructor1.parameters().size());
+            }
             // synthetic param does not counts here
             assertEquals("noAnnotation", enumConstructor1.parameterName(0));
 
             MethodInfo enumConstructor2 = enumClass.method("<init>", 
                   Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS), PrimitiveType.INT, PrimitiveType.BYTE);
-            assertNotNull(enumConstructor2);
-            // synthetic param counts here
-            assertEquals(3, enumConstructor2.parameters().size());
+            if(enumConstructor2 == null) {
+                enumConstructor2 = enumClass.method("<init>", PrimitiveType.BYTE);
+                assertNotNull(enumConstructor2);
+                // synthetic param does not found here
+                assertEquals(1, enumConstructor2.parameters().size());
+            }else {
+                // synthetic param counts here
+                assertEquals(3, enumConstructor2.parameters().size());
+            }
             // synthetic param does not counts here
             assertEquals("annotated", enumConstructor2.parameterName(0));
             

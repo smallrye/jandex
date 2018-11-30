@@ -463,11 +463,19 @@ public final class Indexer {
                 continue;
             byte[] parameterName = nameIndex == 0 ? null : decodeUtf8EntryAsBytes(nameIndex);
             // ignore "this"
-            if(index == 0 && parameterName != null && parameterName.length == 4
+            if(numParameters == 0 && parameterName != null && parameterName.length == 4
                     && parameterName[0] == 0x74
                     && parameterName[1] == 0x68
                     && parameterName[2] == 0x69
                     && parameterName[3] == 0x73)
+                continue;
+            // ignore "this$*" that javac adds (not ECJ)
+            if(numParameters == 0 && parameterName != null && parameterName.length > 5
+                    && parameterName[0] == 0x74
+                    && parameterName[1] == 0x68
+                    && parameterName[2] == 0x69
+                    && parameterName[3] == 0x73
+                    && parameterName[4] == 0x24)
                 continue;
             
             // here we rely on the parameters being in the right order

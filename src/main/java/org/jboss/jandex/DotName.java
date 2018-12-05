@@ -279,7 +279,7 @@ public final class DotName implements Comparable<DotName> {
         final String exactToMatch = simple.local;
         // We start matching from the end, as that's what we have in componentized mode:
         int cursor = 0;
-        int len = exactToMatch.length();
+        final int len = exactToMatch.length();
         for (DotName d = comp; d != null && cursor - 1 <= len; d = d.prefix) {
             cursor += 1 + d.local.length();
         }

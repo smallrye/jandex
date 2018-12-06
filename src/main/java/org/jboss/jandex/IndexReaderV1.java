@@ -264,7 +264,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
         short flags = stream.readShort();
 
         byte[] bytes = Utils.toUTF8(name);
-        return new MethodInfo(clazz, bytes, parameters, returnType, flags);
+        return new MethodInfo(clazz, bytes, MethodInternal.EMPTY_PARAMETER_NAMES, parameters, returnType, flags);
     }
 
     private void recordAnnotation(Map<DotName, List<AnnotationInstance>> annotations, DotName annotation, AnnotationInstance instance) {

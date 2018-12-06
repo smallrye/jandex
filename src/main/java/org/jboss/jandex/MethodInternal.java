@@ -29,9 +29,11 @@ import java.util.List;
  */
 final class MethodInternal {
     static final int SYNTHETIC = 0x1000;
+    static final int MANDATED  = 0x8000;
     static final int BRIDGE    = 0x0040;
     static final MethodInternal[] EMPTY_ARRAY = new MethodInternal[0];
     static final NameAndParameterComponentComparator NAME_AND_PARAMETER_COMPONENT_COMPARATOR = new NameAndParameterComponentComparator();
+    static final byte[][] EMPTY_PARAMETER_NAMES = new byte[0][];
 
     static class NameAndParameterComponentComparator implements Comparator<MethodInternal> {
         private int compare(byte[] left, byte[] right) {
@@ -73,6 +75,7 @@ final class MethodInternal {
     }
 
     private byte[] name;
+    private byte[][] parameterNames;
     private Type[] parameters;
     private Type returnType;
     private Type[] exceptions;
@@ -82,18 +85,19 @@ final class MethodInternal {
     private AnnotationValue defaultValue;
     private short flags;
 
-    MethodInternal(byte[] name, Type[] parameters, Type returnType, short flags) {
-        this(name, parameters, returnType, flags, Type.EMPTY_ARRAY, Type.EMPTY_ARRAY);
+    MethodInternal(byte[] name, byte[][] parameterNames, Type[] parameters, Type returnType, short flags) {
+        this(name, parameterNames, parameters, returnType, flags, Type.EMPTY_ARRAY, Type.EMPTY_ARRAY);
     }
 
-    MethodInternal(byte[] name, Type[] parameters, Type returnType, short flags, Type[] typeParameters, Type[] exceptions) {
-        this(name, parameters, returnType, flags, null, typeParameters, exceptions, AnnotationInstance.EMPTY_ARRAY, null);
+    MethodInternal(byte[] name, byte[][] parameterNames, Type[] parameters, Type returnType, short flags, Type[] typeParameters, Type[] exceptions) {
+        this(name, parameterNames, parameters, returnType, flags, null, typeParameters, exceptions, AnnotationInstance.EMPTY_ARRAY, null);
     }
 
-    MethodInternal(byte[] name, Type[] parameters, Type returnType, short flags,
+    MethodInternal(byte[] name, byte[][] parameterNames, Type[] parameters, Type returnType, short flags,
                    Type receiverType, Type[] typeParameters, Type[] exceptions,
                    AnnotationInstance[] annotations, AnnotationValue defaultValue) {
         this.name = name;
+        this.parameterNames = parameterNames;
         this.parameters = parameters.length == 0 ? Type.EMPTY_ARRAY : parameters;
         this.returnType = returnType;
         this.flags = flags;
@@ -127,6 +131,9 @@ final class MethodInternal {
         if (!Arrays.equals(name, methodInternal.name)) {
             return false;
         }
+        if (!Arrays.deepEquals(parameterNames, methodInternal.parameterNames)) {
+            return false;
+        }
         if (!Arrays.equals(parameters, methodInternal.parameters)) {
             return false;
         }
@@ -142,6 +149,7 @@ final class MethodInternal {
     @Override
     public int hashCode() {
         int result = Arrays.hashCode(name);
+        result = 31 * result + Arrays.deepHashCode(parameterNames);
         result = 31 * result + Arrays.hashCode(parameters);
         result = 31 * result + returnType.hashCode();
         result = 31 * result + Arrays.hashCode(exceptions);
@@ -156,8 +164,18 @@ final class MethodInternal {
         return Utils.fromUTF8(name);
     }
 
+    final String parameterName(int i) {
+        if(i >= parameterNames.length)
+            return null;
+        return Utils.fromUTF8(parameterNames[i]);
+    }
+
     final byte[] nameBytes() {
         return name;
+    }
+
+    final byte[][] parameterNamesBytes() {
+        return parameterNames;
     }
 
     final Type[] copyParameters() {
@@ -238,6 +256,11 @@ final class MethodInternal {
         builder.append(returnType).append(' ').append(name).append('(');
         for (int i = 0; i < parameters.length; i++) {
             builder.append(parameters[i]);
+            String parameterName = parameterName(i);
+            if(parameterName != null) {
+                builder.append(' ');
+                builder.append(parameterName);
+            }
             if (i + 1 < parameters.length)
                 builder.append(", ");
         }
@@ -262,6 +285,10 @@ final class MethodInternal {
         }
     }
 
+    void setParameterNames(byte[][] parameterNames) {
+        this.parameterNames = parameterNames;
+    }
+    
     void setParameters(Type[] parameters) {
         this.parameters = parameters.length == 0 ? Type.EMPTY_ARRAY : parameters;
     }

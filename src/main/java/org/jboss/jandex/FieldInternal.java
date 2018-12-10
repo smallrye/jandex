@@ -122,6 +122,16 @@ final class FieldInternal {
         return annotations;
     }
 
+    final AnnotationInstance annotation(DotName name) {
+        AnnotationInstance key = new AnnotationInstance(name, null, null);
+        int i = Arrays.binarySearch(annotations, key, AnnotationInstance.NAME_COMPARATOR);
+        return i >= 0 ? annotations[i] : null;
+    }
+
+    final boolean hasAnnotation(DotName name) {
+        return annotation(name) != null;
+    }
+
     final short flags() {
         return flags;
     }

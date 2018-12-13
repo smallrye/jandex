@@ -271,6 +271,24 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
+     * Returns the annotation with the specified name directly declared on this class.
+     *
+     * @param name the annotation name to look for
+     * @return the declared annotation or null if not found
+     */
+    public final AnnotationInstance classAnnotation(DotName name) {
+        List<AnnotationInstance> instances = annotations.get(name);
+        if (instances != null) {
+            for (AnnotationInstance instance : instances) {
+                if (instance.target() == this) {
+                    return instance;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Returns a list of all methods declared in this class. This includes constructors
      * and static initializer blocks which have the special JVM assigned names of "&lt;init&gt;"
      * and "&lt;clinit&gt;", respectively. It does not, however, include inherited methods.

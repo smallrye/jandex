@@ -112,6 +112,29 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     /**
+     * Retrieves an annotation instance declared on this field.
+     * If an annotation by that name is not present, null will be returned.
+     *
+     * @param name the name of the annotation to locate on this field
+     * @return the annotation if found, otherwise, null
+     */
+    public final AnnotationInstance annotation(DotName name) {
+        return  internal.annotation(name);
+    }
+
+    /**
+     * Returns whether or not the annotation instance with the given name occurs on this field
+     *
+     * @see #annotations()
+     * @see #annotation(DotName)
+     * @param name the name of the annotation to look for
+     * @return true if the annotation is present, false otherwise
+     */
+    public final boolean hasAnnotation(DotName name) {
+        return internal.hasAnnotation(name);
+    }
+
+    /**
      * Returns the access fields of this field. {@link Modifier} can be used on this value.
      *
      * @return the access flags of this field

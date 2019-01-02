@@ -141,14 +141,46 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns the name of the given parameter.
+     * Returns the name of the given parameter, omitting synthetic parameters.
      * @param i the parameter index
-     * @return the name of the given parameter, or null.
+     * @return the name of the given parameter, omitting synthetic parameters, or null.
      */
     public final String parameterName(int i) {
         return methodInternal.parameterName(i);
     }
+
+    /**
+     * Returns the type of the given parameter, omitting synthetic parameters. This
+     * does not support local classes.
+     * @param i the parameter index
+     * @return the type of the given parameter, omitting synthetic parameters, or null.
+     * @throws UnsupportedOperationException if this method's container class is a local class or an enum.
+     */
+    public Type realParameter(int parameter) {
+        parameter += syntheticParameterCount();
+        List<Type> parameters = parameters();
+        return parameters.size() > parameter && parameter >= 0 ? parameters.get(parameter) : null;
+    }
+
+    public int syntheticParameterCount() {
+        if(isStaticClassMember())
+            return 0;
+        return 1;
+    }
     
+    private boolean isStaticClassMember() {
+        switch(declaringClass().nestingType()) {
+        case INNER:
+            return Modifier.isStatic(declaringClass().flags());
+        case ANONYMOUS:
+        case LOCAL:
+            throw new UnsupportedOperationException("Anonymous and local types are not supported");
+        case TOP_LEVEL:
+            return true;
+        }
+        return true;
+    }
+
     public final Kind kind() {
         return Kind.METHOD;
     }

@@ -74,7 +74,17 @@ public final class MethodParameterInfo implements AnnotationTarget {
     public final String name() {
         return method.parameterName(parameter);
     }
-    
+
+    /**
+     * Returns the type of this parameter.
+     * 
+     * @return the type of this parameter.
+     * @throws UnsupportedOperationException if this method's container class is a local class or an enum.
+     */
+    public Type type() {
+        return method.realParameter(parameter);
+    }
+
     /**
      * Returns a string representation describing this method parameter
      *

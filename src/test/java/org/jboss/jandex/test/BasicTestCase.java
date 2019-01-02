@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -111,6 +112,17 @@ public class BasicTestCase {
             public Nested(int noAnnotation) {}
             public Nested(@ParameterAnnotation byte annotated) {}
         }
+        
+        void method(final int capture) {
+            class Local{
+                Local(int noAnnotation){}
+                Local(@ParameterAnnotation byte annotated){}
+                
+                int f() {
+                    return capture;
+                }
+            }
+        }
     }
 
     public enum Enum {
@@ -136,29 +148,40 @@ public class BasicTestCase {
     public static class NestedC implements Serializable {
     }
 
+    public static class NestedTest {
+        
+        static {
+            new Object() {};
+        }
+        {
+            new Object() {};
+        }
+        
+        NestedTest(int noAnnotation){}
+        NestedTest(@ParameterAnnotation byte annotated){}
+        
+        static void staticMethod() {
+            class Local{
+                Local(int noAnnotation){}
+                Local(@ParameterAnnotation byte annotated){}
+            }
+        }
+    }
+
     public class NestedD implements Serializable {
     }
 
     @Test
     public void testIndexer() throws IOException {
-        Indexer indexer = new Indexer();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName().replace('.', '/') + ".class");
-        indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(TestAnnotation.class.getName().replace('.', '/') + ".class");
-        indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(DummyClass.Nested.class.getName().replace('.', '/') + ".class");
-        indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(Enum.class.getName().replace('.', '/') + ".class");
-        indexer.index(stream);
-        Index index = indexer.complete();
+        Index index = index();
 
         verifyDummy(index, true);
         index.printSubclasses();
     }
 
-    @Test
-    public void testWriteRead() throws IOException {
+    private Index index() throws IOException {
         Indexer indexer = new Indexer();
+
         InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName().replace('.', '/') + ".class");
         indexer.index(stream);
         stream = getClass().getClassLoader().getResourceAsStream(TestAnnotation.class.getName().replace('.', '/') + ".class");
@@ -167,7 +190,23 @@ public class BasicTestCase {
         indexer.index(stream);
         stream = getClass().getClassLoader().getResourceAsStream(Enum.class.getName().replace('.', '/') + ".class");
         indexer.index(stream);
-        Index index = indexer.complete();
+        stream = getClass().getClassLoader().getResourceAsStream(NestedTest.class.getName().replace('.', '/') + ".class");
+        indexer.index(stream);
+        stream = getClass().getClassLoader().getResourceAsStream("org/jboss/jandex/test/BasicTestCase$NestedTest$1Local.class");
+        indexer.index(stream);
+        stream = getClass().getClassLoader().getResourceAsStream("org/jboss/jandex/test/BasicTestCase$DummyClass$1Local.class");
+        indexer.index(stream);
+        stream = getClass().getClassLoader().getResourceAsStream("org/jboss/jandex/test/BasicTestCase$NestedTest$1.class");
+        indexer.index(stream);
+        stream = getClass().getClassLoader().getResourceAsStream("org/jboss/jandex/test/BasicTestCase$NestedTest$2.class");
+        indexer.index(stream);
+        
+        return indexer.complete();
+    }
+
+    @Test
+    public void testWriteRead() throws IOException {
+        Index index = index();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         new IndexWriter(baos).write(index);
@@ -286,6 +325,7 @@ public class BasicTestCase {
             assertEquals(2, nestedConstructor1.parameters().size());
             // synthetic param does not counts here
             assertEquals("noAnnotation", nestedConstructor1.parameterName(0));
+            assertEquals(PrimitiveType.INT, nestedConstructor1.realParameter(0));
 
             MethodInfo nestedConstructor2 = nested.method("<init>", 
                   Type.create(DotName.createSimple(DummyClass.class.getName()), Type.Kind.CLASS), PrimitiveType.BYTE);
@@ -294,11 +334,13 @@ public class BasicTestCase {
             assertEquals(2, nestedConstructor2.parameters().size());
             // synthetic param does not counts here
             assertEquals("annotated", nestedConstructor2.parameterName(0));
+            assertEquals(PrimitiveType.BYTE, nestedConstructor2.realParameter(0));
             
             AnnotationInstance paramAnnotation = nestedConstructor2.annotation(DotName.createSimple(ParameterAnnotation.class.getName()));
             assertNotNull(paramAnnotation);
             assertEquals(Kind.METHOD_PARAMETER, paramAnnotation.target().kind());
             assertEquals("annotated", paramAnnotation.target().asMethodParameter().name());
+            assertEquals(PrimitiveType.BYTE, paramAnnotation.target().asMethodParameter().type());
             assertEquals(0, paramAnnotation.target().asMethodParameter().position());
             
             ClassInfo enumClass = index.getClassByName(DotName.createSimple(Enum.class.getName()));
@@ -309,7 +351,7 @@ public class BasicTestCase {
             if(enumConstructor1 == null) {
                 enumConstructor1 = enumClass.method("<init>", PrimitiveType.INT);
                 assertNotNull(enumConstructor1);
-                // synthetic param does not found here
+                // synthetic param does not count here
                 assertEquals(1, enumConstructor1.parameters().size());
             }else {
                 // synthetic param counts here
@@ -337,6 +379,46 @@ public class BasicTestCase {
             assertEquals(Kind.METHOD_PARAMETER, paramAnnotation.target().kind());
             assertEquals("annotated", paramAnnotation.target().asMethodParameter().name());
             assertEquals(0, paramAnnotation.target().asMethodParameter().position());
+            
+            // test the synthetic param count
+            
+            // inner
+            assertEquals(1, nestedConstructor1.syntheticParameterCount());
+
+            // static inner
+            ClassInfo staticInner = index.getClassByName(DotName.createSimple(NestedTest.class.getName()));
+            MethodInfo staticInnerConstructor = staticInner.method("<init>", PrimitiveType.BYTE);
+            assertEquals(0, staticInnerConstructor.syntheticParameterCount());
+
+            // local
+            ClassInfo local = index.getClassByName(DotName.createSimple("org.jboss.jandex.test.BasicTestCase$DummyClass$1Local"));
+            MethodInfo localConstructor = local.method("<init>", Type.create(DotName.createSimple(DummyClass.class.getName()), Type.Kind.CLASS), 
+                                                       PrimitiveType.BYTE,
+                                                       // capture param
+                                                       PrimitiveType.INT);
+            try {
+                assertEquals(1, localConstructor.syntheticParameterCount());
+                fail("Exception not thrown");
+            }catch(UnsupportedOperationException x) {}
+
+            // static local
+            ClassInfo staticLocal = index.getClassByName(DotName.createSimple("org.jboss.jandex.test.BasicTestCase$NestedTest$1Local"));
+            MethodInfo staticLocalConstructor = staticLocal.method("<init>", PrimitiveType.BYTE);
+            try {
+                assertEquals(0, staticLocalConstructor.syntheticParameterCount());
+                fail("Exception not thrown");
+            }catch(UnsupportedOperationException x) {}
+
+            // Tests disabled for anon because the code doesn't look like they're supported
+//            // anon
+//            ClassInfo anon = index.getClassByName(DotName.createSimple("org.jboss.jandex.test.BasicTestCase$NestedTest$2"));
+//            MethodInfo anonConstructor = anon.method("<init>", Type.create(DotName.createSimple(NestedTest.class.getName()), Type.Kind.CLASS));
+//            assertEquals(1, anonConstructor.syntheticParameterCount(index));
+//
+//            // static anon
+//            ClassInfo staticAnon = index.getClassByName(DotName.createSimple("org.jboss.jandex.test.BasicTestCase$NestedTest$1"));
+//            MethodInfo staticAnonConstructor = staticAnon.method("<init>");
+//            assertEquals(0, staticAnonConstructor.syntheticParameterCount(index));
         }
 
         // Verify hasNoArgsConstructor

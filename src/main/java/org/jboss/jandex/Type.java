@@ -375,6 +375,16 @@ public abstract class Type {
         return annotations;
     }
 
+    public final AnnotationInstance annotation(DotName name) {
+        AnnotationInstance key = new AnnotationInstance(name, null, null);
+        int i = Arrays.binarySearch(annotations, key, AnnotationInstance.NAME_COMPARATOR);
+        return i >= 0 ? annotations[i] : null;
+    }
+
+    public final boolean hasAnnotation(DotName name) {
+        return annotation(name) != null;
+    }
+
     Type addAnnotation(AnnotationInstance annotation) {
         AnnotationTarget target = annotation.target();
         if (target != null) {

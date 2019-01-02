@@ -590,6 +590,8 @@ final class IndexReaderV2 extends IndexReaderImpl {
                 ((MethodInfo)target).setClassInfo(clazz);
             } else if (target instanceof FieldInfo) {
                 ((FieldInfo)target).setClassInfo(clazz);
+            } else if (target instanceof MethodParameterInfo) {
+                ((MethodParameterInfo)target).method().setClassInfo(clazz);
             }
         }
     }

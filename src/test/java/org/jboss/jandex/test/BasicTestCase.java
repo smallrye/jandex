@@ -204,13 +204,35 @@ public class BasicTestCase {
     @Test
     public void testStaticInner() throws IOException {
         assertFlagSet(NestedC.class, Modifier.STATIC, true);
-        assertInner(NestedC.class, true);
+        assertNesting(NestedC.class, ClassInfo.NestingType.INNER, true);
 
         assertFlagSet(NestedD.class, Modifier.STATIC, false);
-        assertInner(NestedC.class, true);
+        assertNesting(NestedC.class, ClassInfo.NestingType.INNER, true);
 
-        assertInner(BasicTestCase.class, false);
+        assertNesting(BasicTestCase.class, ClassInfo.NestingType.INNER, false);
         assertFlagSet(BasicTestCase.class, Modifier.STATIC, false);
+    }
+
+    @Test
+    public void testAnon() throws IOException {
+        Runnable blah = new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("blah");
+            }
+        };
+
+        assertNesting(blah.getClass(), ClassInfo.NestingType.ANONYMOUS, true);
+    }
+    @Test
+    public void testNamedLocal() throws IOException {
+        class Something {
+            public void run() {
+                System.out.println("blah");
+            }
+        }
+
+        assertNesting(Something.class, ClassInfo.NestingType.LOCAL, true);
     }
 
     private void verifyDummy(Index index, boolean v2features) {
@@ -359,10 +381,10 @@ public class BasicTestCase {
         assertTrue((classInfo.flags() & flag) == (result ? flag : 0));
     }
 
-    private void assertInner(Class<?> clazz, boolean result) throws IOException {
+    private void assertNesting(Class<?> clazz, ClassInfo.NestingType nesting, boolean result) throws IOException {
         ClassInfo classInfo = getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
         assertNotNull(classInfo);
-        assertTrue((classInfo.nestingType() == ClassInfo.NestingType.INNER) == result);
+        assertTrue((classInfo.nestingType() == nesting) == result);
     }
 
     private Index getIndexForClass(Class<?> clazz) throws IOException {

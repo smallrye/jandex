@@ -591,12 +591,14 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     void setInnerClassInfo(DotName enclosingClass, String simpleName) {
-        if (enclosingClass == null && simpleName == null) {
-            return;
-        }
-
+        // Always init since we might have an anonymous type with a
+        // methodless encloser (static block)
         if (nestingInfo == null) {
             nestingInfo = new NestingInfo();
+        }
+
+        if (enclosingClass == null && simpleName == null) {
+            return;
         }
 
         nestingInfo.enclosingClass = enclosingClass;

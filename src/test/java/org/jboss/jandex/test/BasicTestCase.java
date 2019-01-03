@@ -139,6 +139,18 @@ public class BasicTestCase {
     public class NestedD implements Serializable {
     }
 
+    public static class NoEnclosureAnonTest {
+        static Class<?> anonymousStaticClass;
+        Class<?> anonymousInnerClass;
+
+        static {
+            anonymousStaticClass = new Object() {}.getClass();
+        }
+        {
+            anonymousInnerClass = new Object() {}.getClass();
+        }
+    }
+
     @Test
     public void testIndexer() throws IOException {
         Indexer indexer = new Indexer();
@@ -223,7 +235,12 @@ public class BasicTestCase {
         };
 
         assertNesting(blah.getClass(), ClassInfo.NestingType.ANONYMOUS, true);
+
+        NoEnclosureAnonTest nestedTest = new NoEnclosureAnonTest();
+        assertNesting(nestedTest.anonymousInnerClass, ClassInfo.NestingType.ANONYMOUS, true);
+        assertNesting(NoEnclosureAnonTest.anonymousStaticClass, ClassInfo.NestingType.ANONYMOUS, true);
     }
+
     @Test
     public void testNamedLocal() throws IOException {
         class Something {

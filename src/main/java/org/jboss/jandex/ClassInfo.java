@@ -467,7 +467,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the nesting type of this class
      */
     public NestingType nestingType() {
-        if (nestingInfo == null) {
+        if (nestingInfo == null || !name().toString().contains("$")) {
             return NestingType.TOP_LEVEL;
         } else if (nestingInfo.enclosingClass != null) {
             return NestingType.INNER;

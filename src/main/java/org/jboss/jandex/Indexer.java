@@ -417,7 +417,7 @@ public final class Indexer {
             int flags = data.readUnsignedShort();
 
             if (innerClass.equals(target.name())) {
-                target.setInnerClassInfo(outerClass, simpleName);
+                target.setInnerClassInfo(outerClass, simpleName, true);
                 target.setFlags((short)flags);
             }
 

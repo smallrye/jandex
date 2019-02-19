@@ -204,6 +204,45 @@ public class BasicTestCase {
     }
 
     @Test
+    public void testWriteReadNestingVersions() throws IOException {
+        verifyWriteReadNesting(8, ClassInfo.NestingType.TOP_LEVEL);
+        verifyWriteReadNesting(-1, ClassInfo.NestingType.ANONYMOUS);
+    }
+
+    private void verifyWriteReadNesting(int version, ClassInfo.NestingType expectedNoEncloseAnon) throws IOException {
+        Class<?> noEncloseInstance = new NoEnclosureAnonTest().anonymousInnerClass;
+        Class<?> plainAnon = new Object(){}.getClass();
+        class Named {
+        }
+
+        Indexer indexer = new Indexer();
+        indexClass(NestedC.class, indexer);
+        indexClass(BasicTestCase.class, indexer);
+        indexClass(NoEnclosureAnonTest.anonymousStaticClass, indexer);
+        indexClass(noEncloseInstance, indexer);
+        indexClass(plainAnon, indexer);
+        indexClass(Named.class, indexer);
+        Index index = indexer.complete();
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int ignore = (version == -1) ? new IndexWriter(baos).write(index) : new IndexWriter(baos).write(index, version);
+
+        index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
+        assertEquals(ClassInfo.NestingType.INNER, index.getClassByName(DotName.createSimple(NestedC.class.getName())).nestingType());
+        assertEquals(ClassInfo.NestingType.TOP_LEVEL, index.getClassByName(DotName.createSimple(BasicTestCase.class.getName())).nestingType());
+        assertEquals(ClassInfo.NestingType.ANONYMOUS, index.getClassByName(DotName.createSimple(plainAnon.getName())).nestingType());
+        assertEquals(ClassInfo.NestingType.LOCAL, index.getClassByName(DotName.createSimple(Named.class.getName())).nestingType());
+        assertEquals(expectedNoEncloseAnon, index.getClassByName(DotName.createSimple(noEncloseInstance.getName())).nestingType());
+        assertEquals(expectedNoEncloseAnon, index.getClassByName(DotName.createSimple(NoEnclosureAnonTest.anonymousStaticClass.getName())).nestingType());
+    }
+
+    private void indexClass(Class<?> klass, Indexer indexer) throws IOException {
+        InputStream stream;
+        stream = getClass().getClassLoader().getResourceAsStream(klass.getName().replace('.', '/') + ".class");
+        indexer.index(stream);
+    }
+
+    @Test
     public void testHasNoArgsConstructor() throws IOException {
         assertHasNoArgsConstructor(DummyClass.class, false);
         assertHasNoArgsConstructor(NestedA.class, true);

@@ -52,7 +52,7 @@ import java.util.TreeMap;
  */
 final class IndexWriterV2 extends IndexWriterImpl{
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 8;
+    static final int MAX_VERSION = 9;
 
     // babelfish (no h)
     private static final int MAGIC = 0xBABE1F15;
@@ -82,6 +82,8 @@ final class IndexWriterV2 extends IndexWriterImpl{
     private static final int AVALUE_NESTED = 13;
     private static final int HAS_ENCLOSING_METHOD = 1;
     private static final int NO_ENCLOSING_METHOD = 0;
+    private static final int NO_NESTING = 0;
+    private static final int HAS_NESTING = 1;
 
 
     private final OutputStream out;
@@ -202,7 +204,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         writeTypeListTable(stream);
         writeMethodTable(stream, version);
         writeFieldTable(stream);
-        writeClasses(stream, index);
+        writeClasses(stream, index, version);
         stream.flush();
         return stream.size();
     }
@@ -463,15 +465,15 @@ final class IndexWriterV2 extends IndexWriterImpl{
     }
 
 
-    private void writeClasses(PackedDataOutputStream stream, Index index) throws IOException {
+    private void writeClasses(PackedDataOutputStream stream, Index index, int version) throws IOException {
         Collection<ClassInfo> classes = index.getKnownClasses();
         stream.writePackedU32(classes.size());
         for (ClassInfo clazz: classes) {
-            writeClassEntry(stream, clazz);
+            writeClassEntry(stream, clazz, version);
         }
     }
 
-    private void writeClassEntry(PackedDataOutputStream stream, ClassInfo clazz) throws IOException {
+    private void writeClassEntry(PackedDataOutputStream stream, ClassInfo clazz, int version) throws IOException {
         stream.writePackedU32(positionOf(clazz.name()));
         stream.writePackedU32(clazz.flags());
         stream.writePackedU32(clazz.superClassType() == null ? 0 : positionOf(clazz.superClassType()));
@@ -479,21 +481,37 @@ final class IndexWriterV2 extends IndexWriterImpl{
         stream.writePackedU32(positionOf(clazz.typeParameterArray()));
         stream.writePackedU32(positionOf(clazz.interfaceTypeArray()));
 
-        DotName enclosingClass = clazz.enclosingClass();
-        String simpleName = clazz.simpleName();
-
-        stream.writePackedU32(enclosingClass == null ? 0 : positionOf(enclosingClass));
-        stream.writePackedU32(simpleName == null ? 0 : positionOf(simpleName));
-
         ClassInfo.EnclosingMethodInfo enclosingMethod = clazz.enclosingMethod();
-        if (enclosingMethod == null) {
-            stream.writeByte(NO_ENCLOSING_METHOD);
-        } else {
-            stream.writeByte(HAS_ENCLOSING_METHOD);
-            stream.writePackedU32(positionOf(enclosingMethod.name()));
-            stream.writePackedU32(positionOf(enclosingMethod.enclosingClass()));
-            stream.writePackedU32(positionOf(enclosingMethod.returnType()));
-            stream.writePackedU32(positionOf(enclosingMethod.parametersArray()));
+        boolean hasNesting = clazz.nestingType() != ClassInfo.NestingType.TOP_LEVEL;
+
+        if (version >= 9) {
+            int mask = NO_NESTING;
+            if (hasNesting) {
+                mask = (enclosingMethod != null ? HAS_ENCLOSING_METHOD << 1 : 0) | HAS_NESTING;
+            }
+            stream.writeByte(mask);
+        }
+
+        if (hasNesting || version < 9) {
+            DotName enclosingClass = clazz.enclosingClass();
+            String simpleName = clazz.simpleName();
+
+            stream.writePackedU32(enclosingClass == null ? 0 : positionOf(enclosingClass));
+            stream.writePackedU32(simpleName == null ? 0 : positionOf(simpleName));
+
+            if (enclosingMethod == null) {
+                if (version < 9) {
+                    stream.writeByte(NO_ENCLOSING_METHOD);
+                }
+            } else {
+                if (version < 9) {
+                    stream.writeByte(HAS_ENCLOSING_METHOD);
+                }
+                stream.writePackedU32(positionOf(enclosingMethod.name()));
+                stream.writePackedU32(positionOf(enclosingMethod.enclosingClass()));
+                stream.writePackedU32(positionOf(enclosingMethod.returnType()));
+                stream.writePackedU32(positionOf(enclosingMethod.parametersArray()));
+            }
         }
 
         // Annotation length is early to allow eager allocation in reader.

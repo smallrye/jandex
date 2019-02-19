@@ -19,7 +19,6 @@
 package org.jboss.jandex;
 
 import java.util.AbstractList;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -590,14 +589,16 @@ public final class ClassInfo implements AnnotationTarget {
         this.typeParameters = typeParameters.length == 0 ? Type.EMPTY_ARRAY : typeParameters;
     }
 
-    void setInnerClassInfo(DotName enclosingClass, String simpleName) {
-        // Always init since we might have an anonymous type with a
-        // methodless encloser (static block)
-        if (nestingInfo == null) {
+    void setInnerClassInfo(DotName enclosingClass, String simpleName, boolean knownInnerClass) {
+        boolean setValues = enclosingClass != null || simpleName != null;
+
+        // Always init known inner types since we might have an anonymous type
+        // with a method-less encloser (static block).
+        if (nestingInfo == null && (knownInnerClass || setValues)) {
             nestingInfo = new NestingInfo();
         }
 
-        if (enclosingClass == null && simpleName == null) {
+        if (! setValues){
             return;
         }
 

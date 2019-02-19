@@ -45,7 +45,7 @@ import java.util.Map;
  */
 final class IndexReaderV2 extends IndexReaderImpl {
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 8;
+    static final int MAX_VERSION = 9;
     static final int MAX_DATA_VERSION = 4;
     private static final byte NULL_TARGET_TAG = 0;
     private static final byte FIELD_TAG = 1;
@@ -110,7 +110,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             readTypeListTable(stream);
             readMethodTable(stream, version);
             readFieldTable(stream);
-            return readClasses(stream, annotationsSize, implementorsSize, subclassesSize);
+            return readClasses(stream, annotationsSize, implementorsSize, subclassesSize, version);
         } finally {
             byteTable = null;
             stringTable = null;
@@ -489,22 +489,47 @@ final class IndexReaderV2 extends IndexReaderImpl {
     }
 
     private ClassInfo readClassEntry(PackedDataInputStream stream,
-                                     Map<DotName, List<AnnotationInstance>> masterAnnotations) throws IOException {
+                                     Map<DotName, List<AnnotationInstance>> masterAnnotations, int version) throws IOException {
         DotName name  = nameTable[stream.readPackedU32()];
         short flags = (short) stream.readPackedU32();
         Type superType = typeTable[stream.readPackedU32()];
         Type[] typeParameters = typeListTable[stream.readPackedU32()];
         Type[] interfaceTypes = typeListTable[stream.readPackedU32()];
-        DotName enclosingClass = nameTable[stream.readPackedU32()];
-        String simpleName = stringTable[stream.readPackedU32()];
-        ClassInfo.EnclosingMethodInfo enclosingMethod = readEnclosingMethod(stream);
+
+        boolean hasEnclosingMethod = false;
+        boolean hasNesting = false;
+        if (version >= 9) {
+            int nestingMask = stream.readUnsignedByte();
+            if (nestingMask > 0) {
+                hasNesting = true;
+                hasEnclosingMethod = ((nestingMask & 2) == 2);
+            }
+        } else {
+            hasEnclosingMethod = hasNesting = true;
+        }
+
+        DotName enclosingClass = null;
+        ClassInfo.EnclosingMethodInfo enclosingMethod = null;
+        String simpleName = null;
+
+        if (hasNesting) {
+            enclosingClass = nameTable[stream.readPackedU32()];
+            simpleName = stringTable[stream.readPackedU32()];
+            enclosingMethod = hasEnclosingMethod ? readEnclosingMethod(stream, version) : null;
+        }
+
         int size = stream.readPackedU32();
 
         Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>(size);
         ClassInfo clazz = new ClassInfo(name, superType, flags, interfaceTypes, annotations);
         clazz.setTypeParameters(typeParameters);
-        clazz.setEnclosingMethod(enclosingMethod);
-        clazz.setInnerClassInfo(enclosingClass, simpleName);
+
+        if (hasNesting) {
+            clazz.setEnclosingMethod(enclosingMethod);
+            // Version 8 and earlier records inner type info regardless of
+            // whether or not it is an inner type
+            clazz.setInnerClassInfo(enclosingClass, simpleName, version >= 9);
+        }
 
         FieldInternal[] fields = readClassFields(stream, clazz);
         clazz.setFieldArray(fields);
@@ -594,8 +619,8 @@ final class IndexReaderV2 extends IndexReaderImpl {
         }
     }
 
-    private ClassInfo.EnclosingMethodInfo readEnclosingMethod(PackedDataInputStream stream) throws IOException {
-        if (stream.readUnsignedByte() != HAS_ENCLOSING_METHOD) {
+    private ClassInfo.EnclosingMethodInfo readEnclosingMethod(PackedDataInputStream stream, int version) throws IOException {
+        if (version < 9 && stream.readUnsignedByte() != HAS_ENCLOSING_METHOD) {
             return null;
         }
 
@@ -607,7 +632,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
     }
 
     private Index readClasses(PackedDataInputStream stream,
-                              int annotationsSize, int implementorsSize, int subclassesSize) throws IOException {
+                              int annotationsSize, int implementorsSize, int subclassesSize, int version) throws IOException {
         int classesSize = stream.readPackedU32();
         HashMap<DotName, ClassInfo> classes = new HashMap<DotName, ClassInfo>(classesSize);
         HashMap<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>(subclassesSize);
@@ -616,7 +641,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
                 new HashMap<DotName, List<AnnotationInstance>>(annotationsSize);
 
         for (int i = 0; i < classesSize; i++) {
-            ClassInfo clazz = readClassEntry(stream, masterAnnotations);
+            ClassInfo clazz = readClassEntry(stream, masterAnnotations, version);
             addClassToMap(subclasses, clazz.superName(), clazz);
             for (Type interfaceType : clazz.interfaceTypeArray()) {
                 addClassToMap(implementors, interfaceType.name(), clazz);

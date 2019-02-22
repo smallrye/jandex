@@ -265,6 +265,24 @@ public class BasicTestCase {
     }
 
     @Test
+    public void testSimpleName() throws IOException  {
+        class MyLocal{}
+        assertEquals("NestedC", getIndexForClass(NestedC.class)
+                                .getClassByName(DotName.createSimple(NestedC.class.getName())
+                                ).simpleName());
+        assertEquals("BasicTestCase", getIndexForClass(BasicTestCase.class)
+                                        .getClassByName(DotName.createSimple(BasicTestCase.class.getName())
+                                        ).simpleName());
+        assertEquals("MyLocal", getIndexForClass(MyLocal.class)
+                                        .getClassByName(DotName.createSimple(MyLocal.class.getName())
+                                        ).simpleName());
+        Class<?> anon = new Object(){}.getClass();
+        assertEquals(null, getIndexForClass(anon)
+                                        .getClassByName(DotName.createSimple(anon.getName())
+                                        ).simpleName());
+    }
+
+    @Test
     public void testAnon() throws IOException {
         Runnable blah = new Runnable() {
             @Override

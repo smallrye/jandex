@@ -494,7 +494,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
 
         if (hasNesting || version < 9) {
             DotName enclosingClass = clazz.enclosingClass();
-            String simpleName = clazz.simpleName();
+            String simpleName = clazz.nestingSimpleName();
 
             stream.writePackedU32(enclosingClass == null ? 0 : positionOf(enclosingClass));
             stream.writePackedU32(simpleName == null ? 0 : positionOf(simpleName));
@@ -699,7 +699,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         if (enclosingClass != null) {
             addClassName(enclosingClass);
         }
-        String name = clazz.simpleName();
+        String name = clazz.nestingSimpleName();
         if (name != null) {
             addString(name);
         }

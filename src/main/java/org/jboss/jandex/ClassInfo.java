@@ -481,9 +481,13 @@ public final class ClassInfo implements AnnotationTarget {
      * Returns the source declared name of this class if it is an inner class, or a local class. Otherwise
      * this method will return null.
      *
-     * @return the simple name of a local or inner class, or null if this is a top level or anonymous class
+     * @return the simple name of a top-level, local, or inner class, or null if this is an anonymous class
      */
     public String simpleName() {
+        return nestingInfo != null ? nestingInfo.simpleName : name.local();
+    }
+
+    String nestingSimpleName() {
         return nestingInfo != null ? nestingInfo.simpleName : null;
     }
 

@@ -18,8 +18,6 @@
 
 package org.jboss.jandex;
 
-import java.util.ArrayDeque;
-
 /**
  * A DotName represents a dot separated name, typically a Java package or a Java class.
  * It has two possible variants. A simple wrapper based variant allows for fast construction
@@ -102,7 +100,7 @@ public final class DotName implements Comparable<DotName> {
      *        localName, this may be null if there is not one
      * @param localName the local non-null portion of this name, which does not contain
      *        '.'
-     * @param innerClass whether or not this localName is an inner class name, requiring '$' vs '.'
+     * @param innerClass whether or not this localName is an inner class style name, requiring '$' vs '.'
      * @return a componentized DotName.
      */
     public static DotName createComponentized(DotName prefix, String localName, boolean innerClass) {
@@ -138,14 +136,46 @@ public final class DotName implements Comparable<DotName> {
     }
 
     /**
-     * Returns the local portion of this DotName. In simple variants, the entire fully qualified
-     * string is returned. In componentized variants, just the right most portion not including a separator
-     * is returned.
+     * Returns the local portion of this DotName. In simple variants, the entire
+     * fully qualified string is returned. In componentized variants, just the
+     * right most portion not including a separator (either . or $) is returned.
+     *
+     * <p>Use {@link #withoutPackagePrefix()} instead of this method if the
+     * desired value is simply the right most portion (including dollar signs if
+     * present) after a '.' delimiter.
+     * </p>
      *
      * @return the non-null local portion of this DotName
      */
     public String local() {
         return local;
+    }
+
+    /**
+     * Returns the portion of this DotName that does not contain a package prefix.
+     * In the case of an inner class syntax name, the $ portion is included in
+     * the return value.
+     *
+     * @return the portion of the name that is not package prefixed
+     * @since 2.1.1
+     */
+    public String withoutPackagePrefix() {
+        if (componentized) {
+            StringBuilder builder = new StringBuilder();
+            stripPackage(builder);
+            return builder.toString();
+        } else {
+            int index = local.lastIndexOf('.');
+            return index == -1 ? local : index < local.length() - 1 ? local.substring(index + 1) : "";
+        }
+    }
+
+    private void stripPackage(StringBuilder builder) {
+        if (innerClass) {
+            prefix.stripPackage(builder);
+            builder.append('$');
+        }
+        builder.append(local);
     }
 
     /**
@@ -158,9 +188,21 @@ public final class DotName implements Comparable<DotName> {
     }
 
     /**
-     * Returns whether the local portion of this DotName represents an inner class.
+     * Returns whether the local portion of a componentized DotName is separated
+     * by an inner class style delimiter ('$"). This should not be used to test
+     * whether the name truly refers to an inner class, only that the dollar
+     * sign delimits the value. Java class names are allowed to contain dollar
+     * signs, so the local value could simply be a fragment of a class name, and
+     * not an actual inner class. The correct way to determine whether or not a
+     * name refers to an actual inner class is to lookup a ClassInfo in the
+     * index and call and examine the nesting type like so:
      *
-     * @return true if local is an inner class name, false otherwise
+     * <code><pre>
+     *    index.get(name).nestingType() !+ TOP_LEVEL;
+     * </pre></code>
+     *
+     *
+     * @return true if local is an inner class style delimited name, false otherwise
      */
     public boolean isInner() {
         return innerClass;
@@ -179,11 +221,19 @@ public final class DotName implements Comparable<DotName> {
         String string = local;
         if (prefix != null) {
             StringBuilder builder = new StringBuilder();
-            builder.append(prefix.toString(delim)).append(innerClass ? '$' : delim).append(string);
+            buildString(delim, builder);
             string = builder.toString();
         }
 
         return string;
+    }
+
+    private void buildString(char delim, StringBuilder builder) {
+        if (prefix != null) {
+            prefix.buildString(delim, builder);
+            builder.append(innerClass ? '$' : delim);
+        }
+        builder.append(local);
     }
 
     /**

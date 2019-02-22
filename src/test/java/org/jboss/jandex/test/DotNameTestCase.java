@@ -17,6 +17,7 @@
  */
 package org.jboss.jandex.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -84,6 +85,21 @@ public class DotNameTestCase {
     public void testIsComponentized() {
         assertTrue(DotName.createComponentized(DotName.createComponentized(null, "jboss"), "Foo").isComponentized());
         assertFalse(DotName.createSimple("org.jboss.Foo").isComponentized());
+    }
+
+    @Test
+    public void testWithoutPackgePrefix() {
+        DotName foo = DotName.createComponentized(DotName.createComponentized(null, "root"), "thefoo");
+        foo = DotName.createComponentized(foo, "Foo");
+        assertEquals("Foo", foo.withoutPackagePrefix());
+        DotName inner = DotName.createComponentized(foo, "Inner", true);
+        DotName inner2 = DotName.createComponentized(inner, "Inner2", true);
+        assertEquals("Foo$Inner", inner.withoutPackagePrefix());
+        assertEquals("Foo$Inner$Inner2", inner2.withoutPackagePrefix());
+        assertEquals("Inner", inner.local());
+        assertEquals("Inner2", inner2.local());
+        assertEquals("root.thefoo.Foo$Inner$Inner2", inner2.toString());
+        assertEquals("Foo", DotName.createSimple("root.Foo").withoutPackagePrefix());
     }
 
     @Test

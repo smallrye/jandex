@@ -18,10 +18,12 @@
 
 package org.jboss.jandex.test;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -442,11 +444,7 @@ public class BasicTestCase {
     private void assertHasNoArgsConstructor(Class<?> clazz, boolean result) throws IOException {
         ClassInfo classInfo = getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
         assertNotNull(classInfo);
-        if (result) {
-            assertTrue(classInfo.hasNoArgsConstructor());
-        } else {
-            assertFalse(classInfo.hasNoArgsConstructor());
-        }
+        assertThat(classInfo.hasNoArgsConstructor(), is(result));
     }
 
     private void assertFlagSet(Class<?> clazz, int flag, boolean result) throws IOException {
@@ -458,7 +456,7 @@ public class BasicTestCase {
     private void assertNesting(Class<?> clazz, ClassInfo.NestingType nesting, boolean result) throws IOException {
         ClassInfo classInfo = getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
         assertNotNull(classInfo);
-        assertTrue((classInfo.nestingType() == nesting) == result);
+        assertThat(classInfo.nestingType(), result ? is(nesting) : not(nesting));
     }
 
     private Index getIndexForClass(Class<?> clazz) throws IOException {

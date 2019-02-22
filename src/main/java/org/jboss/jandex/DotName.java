@@ -198,7 +198,7 @@ public final class DotName implements Comparable<DotName> {
      * index and call and examine the nesting type like so:
      *
      * <code><pre>
-     *    index.get(name).nestingType() !+ TOP_LEVEL;
+     *    index.get(name).nestingType() != TOP_LEVEL;
      * </pre></code>
      *
      *

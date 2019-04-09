@@ -27,6 +27,15 @@
     </licenses>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>3.0.0-M2</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -88,6 +97,9 @@
                         <manifest>
                             <mainClass>org.jboss.jandex.Main</mainClass>
                         </manifest>
+                        <manifestEntries>
+                            <Automatic-Module-Name>org.jboss.jandex</Automatic-Module-Name>
+                        </manifestEntries>
                     </archive>
                     <instructions>
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>

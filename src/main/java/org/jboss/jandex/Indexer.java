@@ -1572,15 +1572,24 @@ public final class Indexer {
     }
 
     /**
+     * Same as if calling {@link #index(InputStream, boolean, boolean) index(stream, true, true)}
+     */
+    public ClassInfo index(InputStream stream) throws IOException {
+        return index(stream, true, true);
+    }
+
+    /**
      * Analyze and index the class file data present in the passed input stream.
      * Each call adds information to the final complete index; however, to aid in
      * processing a per-class index (ClassInfo) is returned on each call.
      *
      * @param stream a stream pointing to class file data
+     * @param sortMethods if methods should be sorted by name
+     * @param sortFields if fields should be sorted by name
      * @return a class index containing all annotations on the passed class stream
      * @throws IOException if the class file data is corrupt or the underlying stream fails
      */
-    public ClassInfo index(InputStream stream) throws IOException {
+    public ClassInfo index(InputStream stream, boolean sortMethods, boolean sortFields) throws IOException {
         try
         {
             DataInputStream data = new DataInputStream(new BufferedInputStream(stream));
@@ -1604,8 +1613,8 @@ public final class Indexer {
             resolveTypeAnnotations();
             updateTypeTargets();
 
-            currentClass.setMethods(methods, names);
-            currentClass.setFields(fields, names);
+            currentClass.setMethods(methods, names, sortMethods);
+            currentClass.setFields(fields, names, sortFields);
 
             return currentClass;
         } catch (IgnoreModuleInfoException e) {

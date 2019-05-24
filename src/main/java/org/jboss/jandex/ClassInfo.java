@@ -57,6 +57,8 @@ public final class ClassInfo implements AnnotationTarget {
     private Type[] typeParameters;
     private MethodInternal[] methods;
     private FieldInternal[] fields;
+    private boolean areMethodsSorted;
+    private boolean areFieldsSorted;
     private boolean hasNoArgsConstructor;
     private NestingInfo nestingInfo;
 
@@ -321,8 +323,8 @@ public final class ClassInfo implements AnnotationTarget {
      */
     public final MethodInfo method(String name, Type... parameters) {
         MethodInternal key = new MethodInternal(Utils.toUTF8(name), MethodInternal.EMPTY_PARAMETER_NAMES, parameters, null, (short) 0);
-        int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
-        return i >= 0 ? new MethodInfo(this, methods[i]) : null;
+        MethodInternal method = findMethod(key, true);
+        return method == null ? null : new MethodInfo(this, method);
     }
 
     /**
@@ -336,13 +338,25 @@ public final class ClassInfo implements AnnotationTarget {
      */
     public final MethodInfo firstMethod(String name) {
         MethodInternal key = new MethodInternal(Utils.toUTF8(name), MethodInternal.EMPTY_PARAMETER_NAMES, Type.EMPTY_ARRAY, null, (short) 0);
-        int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
-        if (i < -methods.length) {
-            return null;
-        }
+        MethodInternal method = findMethod(key, false);
+        return method == null ? null : new MethodInfo(this, method);
+    }
 
-        MethodInfo method = new MethodInfo(this,i >= 0 ? methods[i] : methods[++i * -1]);
-        return method.name().equals(name) ? method : null;
+    private MethodInternal findMethod(MethodInternal key, boolean exactMatch) {
+        if (areMethodsSorted) {
+            int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
+            if (i >= 0 || !exactMatch && i >= -methods.length && methods[i = -(i + 1)].name().equals(key.name())) {
+                return methods[i];
+            }
+        } else {
+            for (MethodInternal method : methods) {
+                int diff = MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR.compare(method, key);
+                if (diff == 0 || !exactMatch && method.name().equals(key.name())) {
+                    return method;
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -353,13 +367,23 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the field
      */
     public final FieldInfo field(String name) {
-        FieldInternal key = new FieldInternal(Utils.toUTF8(name), VoidType.VOID, (short)0);
-        int i = Arrays.binarySearch(fields, key, FieldInternal.NAME_COMPARATOR);
-        if (i < 0) {
-            return null;
+        FieldInternal key = new FieldInternal(Utils.toUTF8(name), VoidType.VOID, (short) 0);
+        FieldInternal field = null;
+        if (areFieldsSorted) {
+            int i = Arrays.binarySearch(fields, key, FieldInternal.NAME_COMPARATOR);
+            if (i >= 0) {
+                field = fields[i];
+            }
+        } else {
+            for (FieldInternal f : fields) {
+                if (FieldInternal.NAME_COMPARATOR.compare(f, key) == 0) {
+                    field = f;
+                    break;
+                }
+            }
         }
 
-        return new FieldInfo(this, fields[i]);
+        return field == null ? null : new FieldInfo(this, field);
     }
 
     /**
@@ -542,7 +566,8 @@ public final class ClassInfo implements AnnotationTarget {
         this.hasNoArgsConstructor = hasNoArgsConstructor;
     }
 
-    void setFields(List<FieldInfo> fields, NameTable names) {
+    void setFields(List<FieldInfo> fields, NameTable names, boolean sort) {
+        areFieldsSorted = sort;
         if (fields.size() == 0) {
             this.fields = FieldInternal.EMPTY_ARRAY;
             return;
@@ -554,18 +579,23 @@ public final class ClassInfo implements AnnotationTarget {
             fieldInfo.setFieldInternal(internal);
             this.fields[i] = internal;
         }
-        Arrays.sort(this.fields, FieldInternal.NAME_COMPARATOR);
+        if (sort) {
+            Arrays.sort(this.fields, FieldInternal.NAME_COMPARATOR);
+        }
     }
 
     void setFieldArray(FieldInternal[] fields) {
+        // TODO areFieldsSorted = ?;
         this.fields = fields;
     }
 
     void setMethodArray(MethodInternal[] methods) {
+        // TODO areMethodsSorted = ?;
         this.methods = methods;
     }
 
-    void setMethods(List<MethodInfo> methods, NameTable names) {
+    void setMethods(List<MethodInfo> methods, NameTable names, boolean sort) {
+        areMethodsSorted = sort;
         if (methods.size() == 0) {
             this.methods = MethodInternal.EMPTY_ARRAY;
             return;
@@ -578,7 +608,9 @@ public final class ClassInfo implements AnnotationTarget {
             methodInfo.setMethodInternal(internal);
             this.methods[i] = internal;
         }
-        Arrays.sort(this.methods, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
+        if (sort) {
+            Arrays.sort(this.methods, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
+        }
     }
 
     void setSuperClassType(Type superClassType) {

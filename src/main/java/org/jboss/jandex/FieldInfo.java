@@ -18,11 +18,7 @@
 
 package org.jboss.jandex;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -35,6 +31,15 @@ import java.util.List;
  *
  */
 public final class FieldInfo implements AnnotationTarget {
+    /**
+     * On a field, this value indicates that a field is declared as
+     * an element of an enum.
+     *
+     * As defined in {@link java.lang.reflect.Modifier}.
+     *
+     */
+    static final int ENUM = 0x00004000;
+
     private ClassInfo clazz;
     private FieldInternal internal;
 
@@ -132,6 +137,18 @@ public final class FieldInfo implements AnnotationTarget {
      */
     public final boolean hasAnnotation(DotName name) {
         return internal.hasAnnotation(name);
+    }
+
+    /**
+     * Returns whether or not this field is declared as an element of an enum.
+     *
+     * @return true if the field is declared as an element of an enum, false
+     *         otherwise.
+     *
+     * @see java.lang.reflect.Field#isEnumConstant()
+     */
+    public boolean isEnumConstant() {
+        return (flags() & ENUM) != 0;
     }
 
     /**

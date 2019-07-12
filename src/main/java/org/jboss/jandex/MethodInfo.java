@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @author Jason T. Greene
  */
-public final class MethodInfo implements AnnotationTarget {
+public final class MethodInfo implements ContainingAnnotationTarget {
 
     static final String[] EMPTY_PARAMETER_NAMES = new String[0];
     private MethodInternal methodInternal;
@@ -254,6 +254,7 @@ public final class MethodInfo implements AnnotationTarget {
      *
      * @return the annotation instances declared on this class or its parameters, or an empty list if none
      */
+    @Override
     public final List<AnnotationInstance> annotations() {
         return methodInternal.annotations();
     }
@@ -281,6 +282,7 @@ public final class MethodInfo implements AnnotationTarget {
      * @param name the name of the annotation to locate within the method
      * @return the annotation if found, otherwise, null
      */
+    @Override
     public final AnnotationInstance annotation(DotName name) {
         return  methodInternal.annotation(name);
     }
@@ -294,6 +296,7 @@ public final class MethodInfo implements AnnotationTarget {
      * @param name the name of the annotation to look for
      * @return true if the annotation is present, false otherwise
      */
+    @Override
     public final boolean hasAnnotation(DotName name) {
         return methodInternal.hasAnnotation(name);
     }

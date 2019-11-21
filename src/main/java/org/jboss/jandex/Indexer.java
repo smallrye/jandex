@@ -18,8 +18,6 @@
 
 package org.jboss.jandex;
 
-import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
-
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -36,6 +34,8 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
 
 /**
  * Analyzes and indexes the annotation and key structural information of a set
@@ -84,6 +84,7 @@ public final class Indexer {
     private final static int CONSTANT_METHODTYPE = 16;
     private final static int CONSTANT_MODULE = 19;
     private final static int CONSTANT_PACKAGE = 20;
+    private final static int CONSTANT_DYNAMIC = 17;
 
     // "RuntimeVisibleAnnotations"
     private final static byte[] RUNTIME_ANNOTATIONS = new byte[] {
@@ -1483,6 +1484,7 @@ public final class Indexer {
             switch (tag) {
                 case CONSTANT_CLASS:
                 case CONSTANT_STRING:
+                case CONSTANT_METHODTYPE:
                     buf = sizeToFit(buf, 3, offset, poolCount - pos);
                     buf[offset++] = (byte) tag;
                     stream.readFully(buf, offset, 2);
@@ -1493,6 +1495,7 @@ public final class Indexer {
                 case CONSTANT_INTERFACEMETHODREF:
                 case CONSTANT_INTEGER:
                 case CONSTANT_INVOKEDYNAMIC:
+                case CONSTANT_DYNAMIC:
                 case CONSTANT_FLOAT:
                 case CONSTANT_NAMEANDTYPE:
                     buf = sizeToFit(buf, 5, offset, poolCount - pos);
@@ -1513,12 +1516,6 @@ public final class Indexer {
                     buf[offset++] = (byte) tag;
                     stream.readFully(buf, offset, 3);
                     offset += 3;
-                    break;
-                case CONSTANT_METHODTYPE:
-                    buf = sizeToFit(buf, 3, offset, poolCount - pos);
-                    buf[offset++] = (byte) tag;
-                    stream.readFully(buf, offset, 2);
-                    offset += 2;
                     break;
                 case CONSTANT_UTF8:
                     int len = stream.readUnsignedShort();
@@ -1560,7 +1557,8 @@ public final class Indexer {
                     // ignoring module-info.class files for now
                     throw new IgnoreModuleInfoException();
                default:
-                   throw new IllegalStateException("Unknown tag! pos=" + pos + " poolCount = " + poolCount);
+                   throw new IllegalStateException(
+                           String.format("Unknown tag %s! pos = %s poolCount = %s", tag, pos, poolCount));
             }
         }
 

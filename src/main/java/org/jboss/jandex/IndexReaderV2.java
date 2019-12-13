@@ -45,7 +45,7 @@ import java.util.Map;
  */
 final class IndexReaderV2 extends IndexReaderImpl {
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 9;
+    static final int MAX_VERSION = 10;
     static final int MAX_DATA_VERSION = 4;
     private static final byte NULL_TARGET_TAG = 0;
     private static final byte FIELD_TAG = 1;
@@ -534,8 +534,24 @@ final class IndexReaderV2 extends IndexReaderImpl {
         FieldInternal[] fields = readClassFields(stream, clazz);
         clazz.setFieldArray(fields);
 
+        if (version >= 10) {
+            byte[] positions = new byte[stream.readPackedU32()];
+            for (int i = 0; i < positions.length; i++) {
+                positions[i] = (byte) stream.readPackedU32();
+            }
+            clazz.setFieldPositionArray(positions);
+        }
+
         MethodInternal[] methods = readClassMethods(stream, clazz);
         clazz.setMethodArray(methods);
+
+        if (version >= 10) {
+            byte[] positions = new byte[stream.readPackedU32()];
+            for (int i = 0; i < positions.length; i++) {
+                positions[i] = (byte) stream.readPackedU32();
+            }
+            clazz.setMethodPositionArray(positions);
+        }
 
         for (int i = 0; i < size; i++) {
             List<AnnotationInstance> instances = convertToList(readAnnotations(stream, clazz));

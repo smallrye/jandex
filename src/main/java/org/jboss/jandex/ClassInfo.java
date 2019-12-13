@@ -48,16 +48,21 @@ import java.util.Map;
  */
 public final class ClassInfo implements AnnotationTarget {
 
+    private static final int MAX_POSITIONS = 256;
+    private static final byte[] EMPTY_POSITIONS = new byte[0];
+
     private final DotName name;
     private final Map<DotName, List<AnnotationInstance>> annotations;
 
     // Not final to allow lazy initialization, immutable once published
-    private  short flags;
+    private short flags;
     private Type[] interfaceTypes;
     private Type superClassType;
     private Type[] typeParameters;
     private MethodInternal[] methods;
     private FieldInternal[] fields;
+    private byte[] methodPositions = EMPTY_POSITIONS;
+    private byte[] fieldPositions = EMPTY_POSITIONS;
     private boolean hasNoArgsConstructor;
     private NestingInfo nestingInfo;
 
@@ -362,7 +367,11 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the list of methods declared in this class
      */
     public final List<MethodInfo> methods() {
-        return new MethodInfoGenerator(this, methods);
+        return new MethodInfoGenerator(this, methods, EMPTY_POSITIONS);
+    }
+
+    public final List<MethodInfo> unsortedMethods() {
+        return new MethodInfoGenerator(this, methods, methodPositions);
     }
 
     /**
@@ -386,6 +395,10 @@ public final class ClassInfo implements AnnotationTarget {
 
     final MethodInternal[] methodArray() {
         return methods;
+    }
+
+    final byte[] methodPositionArray() {
+        return methodPositions;
     }
 
     /**
@@ -453,13 +466,20 @@ public final class ClassInfo implements AnnotationTarget {
      * @return a list of fields
      */
     public final List<FieldInfo> fields() {
-        return new FieldInfoGenerator(this, fields);
+        return new FieldInfoGenerator(this, fields, EMPTY_POSITIONS);
+    }
+
+    public final List<FieldInfo> unsortedFields() {
+        return new FieldInfoGenerator(this, fields, fieldPositions);
     }
 
     final FieldInternal[] fieldArray() {
         return fields;
     }
 
+    final byte[] fieldPositionArray() {
+        return fieldPositions;
+    }
 
     /**
      * Returns a list of names for all interfaces this class implements. This list may be empty, but never null.
@@ -517,7 +537,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the generic type parameters of this class
      */
     public final List<TypeVariable> typeParameters() {
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         List<TypeVariable> list = (List) Arrays.asList(typeParameters);
         return Collections.unmodifiableList(list);
     }
@@ -626,42 +646,79 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     void setFields(List<FieldInfo> fields, NameTable names) {
-        if (fields.size() == 0) {
+        final int size = fields.size();
+
+        if (size == 0) {
             this.fields = FieldInternal.EMPTY_ARRAY;
             return;
         }
-        this.fields = new FieldInternal[fields.size()];
-        for (int i = 0; i < fields.size(); i++) {
+        this.fields = new FieldInternal[size];
+
+        for (int i = 0; i < size; i++) {
             FieldInfo fieldInfo = fields.get(i);
             FieldInternal internal = names.intern(fieldInfo.fieldInternal());
             fieldInfo.setFieldInternal(internal);
             this.fields[i] = internal;
         }
         Arrays.sort(this.fields, FieldInternal.NAME_COMPARATOR);
+
+        if (size <= MAX_POSITIONS) {
+            this.fieldPositions = new byte[size];
+
+            for (int i = 0; i < size; i++) {
+                FieldInfo origField = fields.get(i);
+                byte[] fieldName = Utils.toUTF8(origField.name());
+                FieldInternal key = new FieldInternal(fieldName, VoidType.VOID, (short)0);
+                this.fieldPositions[i] = (byte) Arrays.binarySearch(this.fields, key, FieldInternal.NAME_COMPARATOR);
+            }
+        }
     }
 
     void setFieldArray(FieldInternal[] fields) {
         this.fields = fields;
     }
 
+    void setFieldPositionArray(byte[] fieldPositions) {
+        this.fieldPositions = fieldPositions;
+    }
+
     void setMethodArray(MethodInternal[] methods) {
         this.methods = methods;
     }
 
+    void setMethodPositionArray(byte[] methodPositions) {
+        this.methodPositions = methodPositions;
+    }
+
     void setMethods(List<MethodInfo> methods, NameTable names) {
-        if (methods.size() == 0) {
+        final int size = methods.size();
+
+        if (size == 0) {
             this.methods = MethodInternal.EMPTY_ARRAY;
             return;
         }
 
-        this.methods = new MethodInternal[methods.size()];
-        for (int i = 0; i < methods.size(); i++) {
+        this.methods = new MethodInternal[size];
+
+        for (int i = 0; i < size; i++) {
             MethodInfo methodInfo = methods.get(i);
             MethodInternal internal = names.intern(methodInfo.methodInternal());
             methodInfo.setMethodInternal(internal);
             this.methods[i] = internal;
         }
         Arrays.sort(this.methods, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
+
+        if (size <= MAX_POSITIONS) {
+            this.methodPositions = new byte[size];
+
+            for (int i = 0; i < size; i++) {
+                MethodInfo origMethod = methods.get(i);
+                byte[] methodName = Utils.toUTF8(origMethod.name());
+                Type[] parameters = origMethod.typeParameterArray();
+                MethodInternal key = new MethodInternal(methodName, MethodInternal.EMPTY_PARAMETER_NAMES, parameters, null, (short) 0);
+                this.methodPositions[i] = (byte) Arrays.binarySearch(this.methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
+            }
+        }
     }
 
     void setSuperClassType(Type superClassType) {

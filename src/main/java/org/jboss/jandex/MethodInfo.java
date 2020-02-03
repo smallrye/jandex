@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @author Jason T. Greene
  */
-public final class MethodInfo implements AnnotationTarget {
+public final class MethodInfo implements AnnotationTarget, Comparable<MethodInfo>{
 
     static final String[] EMPTY_PARAMETER_NAMES = new String[0];
     private MethodInternal methodInternal;
@@ -84,13 +84,13 @@ public final class MethodInfo implements AnnotationTarget {
      public static MethodInfo create(ClassInfo clazz, String name, Type[] args, Type returnType, short flags, TypeVariable[] typeParameters, Type[] exceptions) {
          return create(clazz, name, EMPTY_PARAMETER_NAMES, args, returnType, flags, typeParameters, exceptions);
      }
-     
+
      /**
       * Construct a new mock Method instance.
       *
       * @param clazz the class declaring the field
       * @param name the name of the field
-      * @param parameterNames the names of the method parameter 
+      * @param parameterNames the names of the method parameter
       * @param args a read only array containing the types of each parameter in parameter order
       * @param returnType the return value type
       * @param flags the method attributes
@@ -148,7 +148,7 @@ public final class MethodInfo implements AnnotationTarget {
     public final String parameterName(int i) {
         return methodInternal.parameterName(i);
     }
-    
+
     public final Kind kind() {
         return Kind.METHOD;
     }
@@ -369,6 +369,15 @@ public final class MethodInfo implements AnnotationTarget {
         throw new IllegalArgumentException("Not a type");
     }
 
+    @Override
+    public int compareTo(MethodInfo other) {
+        final int classCompare = this.clazz.compareTo(other.clazz);
+        if (classCompare != 0) {
+            return classCompare;
+        } else {
+            return MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR.compare(this.methodInternal, other.methodInternal);
+        }
+    }
 
     final MethodInternal methodInternal() {
         return methodInternal;

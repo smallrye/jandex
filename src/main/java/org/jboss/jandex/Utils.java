@@ -51,4 +51,5 @@ class Utils {
     static <K, V> Map<K, V> emptyOrWrap(Map<K, V> map) {
         return map.size() == 0 ? Collections.<K, V>emptyMap() : Collections.unmodifiableMap(map);
     }
+
 }

@@ -21,11 +21,12 @@ package org.jboss.jandex;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * An index useful for quickly processing annotations. The index is read-only and supports
@@ -94,14 +95,14 @@ public final class Index implements IndexView {
 
     @Override
     public Collection<ClassInfo> getAllKnownSubclasses(DotName className) {
-        final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
-        final Set<DotName> processedClasses = new HashSet<DotName>();
+        final Set<ClassInfo> allKnown = new LinkedHashSet<ClassInfo>();
+        final Set<DotName> processedClasses = new TreeSet<DotName>();
         getAllKnownSubClasses(className, allKnown, processedClasses);
         return allKnown;
     }
 
      private void getAllKnownSubClasses(DotName className, Set<ClassInfo> allKnown, Set<DotName> processedClasses) {
-        final Set<DotName> subClassesToProcess = new HashSet<DotName>();
+        final Set<DotName> subClassesToProcess = new TreeSet<DotName>();
         subClassesToProcess.add(className);
         while (!subClassesToProcess.isEmpty()) {
             final Iterator<DotName> toProcess = subClassesToProcess.iterator();
@@ -136,9 +137,9 @@ public final class Index implements IndexView {
 
     @Override
     public Set<ClassInfo> getAllKnownImplementors(final DotName interfaceName) {
-        final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
-        final Set<DotName> subInterfacesToProcess = new HashSet<DotName>();
-        final Set<DotName> processedClasses = new HashSet<DotName>();
+        final Set<ClassInfo> allKnown = new LinkedHashSet<ClassInfo>();
+        final Set<DotName> subInterfacesToProcess = new TreeSet<DotName>();
+        final Set<DotName> processedClasses = new TreeSet<DotName>();
         subInterfacesToProcess.add(interfaceName);
         while (!subInterfacesToProcess.isEmpty()) {
             final Iterator<DotName> toProcess = subInterfacesToProcess.iterator();

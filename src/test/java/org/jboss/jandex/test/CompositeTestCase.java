@@ -22,9 +22,10 @@ import static junit.framework.Assert.assertEquals;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -81,7 +82,7 @@ public class CompositeTestCase {
     }
 
     private Index createIndex(DotName name) {
-        Map<DotName,List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
+        Map<DotName,List<AnnotationInstance>> annotations = new TreeMap<DotName, List<AnnotationInstance>>();
         DotName baseName = BASE_NAME;
         ClassInfo classInfo = ClassInfo.create(name, baseName, (short) 0, new DotName[0], annotations, false);
         ClassInfo baseInfo = BASE_INFO;
@@ -93,7 +94,7 @@ public class CompositeTestCase {
 
         Map<DotName, List<ClassInfo>> implementors = Collections.emptyMap();
         Map<DotName, ClassInfo> classes = Collections.singletonMap(name, classInfo);
-        Map<DotName,List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>();
+        Map<DotName,List<ClassInfo>> subclasses = new TreeMap<DotName, List<ClassInfo>>();
         subclasses.put(OBJECT_NAME, Collections.singletonList(baseInfo));
         subclasses.put(baseName, Collections.singletonList(classInfo));
 

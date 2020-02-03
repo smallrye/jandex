@@ -23,10 +23,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Composite annotation index. Represents an aggregation of multiple <code>Index</code> instances.
@@ -78,7 +79,7 @@ public class CompositeIndex implements IndexView {
      * {@inheritDoc}
      */
     public Set<ClassInfo> getKnownDirectSubclasses(final DotName className) {
-        final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
+        final Set<ClassInfo> allKnown = new LinkedHashSet<ClassInfo>();
         for (IndexView index : indexes) {
             final Collection<ClassInfo> list = index.getKnownDirectSubclasses(className);
             if (list != null) {
@@ -92,15 +93,15 @@ public class CompositeIndex implements IndexView {
      * {@inheritDoc}
      */
     public Set<ClassInfo> getAllKnownSubclasses(final DotName className) {
-        final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
-        final Set<DotName> processedClasses = new HashSet<DotName>();
+        final Set<ClassInfo> allKnown = new LinkedHashSet<ClassInfo>();
+        final Set<DotName> processedClasses = new TreeSet<DotName>();
         getAllKnownSubClasses(className, allKnown, processedClasses);
         return allKnown;
     }
 
 
     private void getAllKnownSubClasses(DotName className, Set<ClassInfo> allKnown, Set<DotName> processedClasses) {
-        final Set<DotName> subClassesToProcess = new HashSet<DotName>();
+        final Set<DotName> subClassesToProcess = new TreeSet<DotName>();
         subClassesToProcess.add(className);
         while (!subClassesToProcess.isEmpty()) {
             final Iterator<DotName> toProcess = subClassesToProcess.iterator();
@@ -131,7 +132,7 @@ public class CompositeIndex implements IndexView {
      * {@inheritDoc}
      */
     public Collection<ClassInfo> getKnownDirectImplementors(final DotName className) {
-        final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
+        final Set<ClassInfo> allKnown = new LinkedHashSet<ClassInfo>();
         for (IndexView index : indexes) {
             final Collection<ClassInfo> list = index.getKnownDirectImplementors(className);
             if (list != null) {
@@ -145,9 +146,9 @@ public class CompositeIndex implements IndexView {
      * {@inheritDoc}
      */
     public Set<ClassInfo> getAllKnownImplementors(final DotName interfaceName) {
-        final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
-        final Set<DotName> subInterfacesToProcess = new HashSet<DotName>();
-        final Set<DotName> processedClasses = new HashSet<DotName>();
+        final Set<ClassInfo> allKnown = new LinkedHashSet<ClassInfo>();
+        final Set<DotName> subInterfacesToProcess = new TreeSet<DotName>();
+        final Set<DotName> processedClasses = new TreeSet<DotName>();
         subInterfacesToProcess.add(interfaceName);
         while (!subInterfacesToProcess.isEmpty()) {
             final Iterator<DotName> toProcess = subInterfacesToProcess.iterator();

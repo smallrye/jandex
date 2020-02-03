@@ -18,7 +18,7 @@
 
 package org.jboss.jandex;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -33,7 +33,7 @@ class NameTable {
     private StrongInternPool<byte[]> bytePool = new StrongInternPool<byte[]>();
     private StrongInternPool<MethodInternal> methodPool = new StrongInternPool<MethodInternal>();
     private StrongInternPool<FieldInternal> fieldPool = new StrongInternPool<FieldInternal>();
-    private Map<String, DotName> names = new HashMap<String, DotName>();
+    private Map<String, DotName> names = new LinkedHashMap<String, DotName>();
 
     DotName convertToName(String name) {
         return convertToName(name, '.');

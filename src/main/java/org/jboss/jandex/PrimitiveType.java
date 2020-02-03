@@ -17,7 +17,7 @@
  */
 package org.jboss.jandex;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -42,7 +42,7 @@ public final class PrimitiveType extends Type {
     public static final PrimitiveType SHORT = new PrimitiveType(Primitive.SHORT);
     public static final PrimitiveType BOOLEAN = new PrimitiveType(Primitive.BOOLEAN);
 
-    private static final Map<String, PrimitiveType> reverseMap = new HashMap<String, PrimitiveType>();
+    private static final Map<String, PrimitiveType> reverseMap = new LinkedHashMap<String, PrimitiveType>();
 
     static {
         reverseMap.put("byte", BYTE);

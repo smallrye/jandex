@@ -20,7 +20,7 @@ package org.jboss.jandex;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -118,8 +118,8 @@ class GenericSignatureParser {
     private int pos;
     private NameTable names;
     private Map<String, TypeVariable> typeParameters;
-    private Map<String, TypeVariable> elementTypeParameters = new HashMap<String, TypeVariable>();
-    private Map<String, TypeVariable> classTypeParameters = new HashMap<String, TypeVariable>();
+    private Map<String, TypeVariable> elementTypeParameters = new LinkedHashMap<String, TypeVariable>();
+    private Map<String, TypeVariable> classTypeParameters = new LinkedHashMap<String, TypeVariable>();
 
     GenericSignatureParser(NameTable names) {
         names.intern(DotName.OBJECT_NAME, '/');

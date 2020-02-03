@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Reads a Jandex index file and returns the saved index. See {@link Indexer}
@@ -520,7 +520,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
 
         int size = stream.readPackedU32();
 
-        Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>(size);
+        Map<DotName, List<AnnotationInstance>> annotations = new TreeMap<DotName, List<AnnotationInstance>>();
         ClassInfo clazz = new ClassInfo(name, superType, flags, interfaceTypes, annotations);
         clazz.setTypeParameters(typeParameters);
 
@@ -570,7 +570,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         return Collections.unmodifiableList(Arrays.asList(annotationInstances));
     }
 
-    private void addClassToMap(HashMap<DotName, List<ClassInfo>> map, DotName name, ClassInfo currentClass) {
+    private void addClassToMap(Map<DotName, List<ClassInfo>> map, DotName name, ClassInfo currentClass) {
         List<ClassInfo> list = map.get(name);
         if (list == null) {
             list = new ArrayList<ClassInfo>();
@@ -634,11 +634,11 @@ final class IndexReaderV2 extends IndexReaderImpl {
     private Index readClasses(PackedDataInputStream stream,
                               int annotationsSize, int implementorsSize, int subclassesSize, int version) throws IOException {
         int classesSize = stream.readPackedU32();
-        HashMap<DotName, ClassInfo> classes = new HashMap<DotName, ClassInfo>(classesSize);
-        HashMap<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>(subclassesSize);
-        HashMap<DotName, List<ClassInfo>> implementors = new HashMap<DotName, List<ClassInfo>>(implementorsSize);
-        HashMap<DotName, List<AnnotationInstance>> masterAnnotations =
-                new HashMap<DotName, List<AnnotationInstance>>(annotationsSize);
+        Map<DotName, ClassInfo> classes = new TreeMap<DotName, ClassInfo>();
+        Map<DotName, List<ClassInfo>> subclasses = new TreeMap<DotName, List<ClassInfo>>();
+        Map<DotName, List<ClassInfo>> implementors = new TreeMap<DotName, List<ClassInfo>>();
+        Map<DotName, List<AnnotationInstance>> masterAnnotations =
+                new TreeMap<DotName, List<AnnotationInstance>>();
 
         for (int i = 0; i < classesSize; i++) {
             ClassInfo clazz = readClassEntry(stream, masterAnnotations, version);

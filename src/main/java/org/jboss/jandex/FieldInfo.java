@@ -34,7 +34,7 @@ import java.util.List;
  * @author Jason T. Greene
  *
  */
-public final class FieldInfo implements AnnotationTarget {
+public final class FieldInfo implements AnnotationTarget, Comparable<FieldInfo> {
     private ClassInfo clazz;
     private FieldInternal internal;
 
@@ -176,6 +176,16 @@ public final class FieldInfo implements AnnotationTarget {
     @Override
     public final TypeTarget asType() {
         throw new IllegalArgumentException("Not a type");
+    }
+
+    @Override
+    public int compareTo(FieldInfo other) {
+        final int classCompare = this.clazz.compareTo(other.clazz);
+        if (classCompare != 0) {
+            return classCompare;
+        } else {
+            return FieldInternal.NAME_COMPARATOR.compare(this.internal, other.internal);
+        }
     }
 
     void setType(Type type) {

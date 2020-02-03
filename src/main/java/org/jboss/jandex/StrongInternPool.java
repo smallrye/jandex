@@ -32,7 +32,7 @@ import java.util.NoSuchElementException;
  * so it must be cleared to allow for GC.
  *
  * Note: It is very important to use a smaller load factor than you normally
- * would for HashSet, since the implementation is open-addressed with linear
+ * would for LinkedHashSet, since the implementation is open-addressed with linear
  * probing. With a 50% load-factor a get is expected to return in only 2 probes.
  * However, a 90% load-factor is expected to return in around 50 probes.
  *
@@ -50,7 +50,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
     private static final long serialVersionUID = 10929568968762L;
 
     /**
-     * Same default as HashMap, must be a power of 2
+     * Same default as LinkedHashMap, must be a power of 2
      */
     private static final int DEFAULT_CAPACITY = 8;
 
@@ -443,7 +443,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
     }
 
     public Iterator<E> iterator() {
-        return new IdentityHashSetIterator();
+        return new IdentityLinkedHashSetIterator();
     }
 
     public Index index() {
@@ -490,7 +490,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
         }
     }
 
-    private class IdentityHashSetIterator implements Iterator<E> {
+    private class IdentityLinkedHashSetIterator implements Iterator<E> {
         private int next = 0;
         private int expectedCount = modCount;
         private int current = -1;

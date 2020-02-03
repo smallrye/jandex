@@ -22,9 +22,10 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Reads a Jandex index file and returns the saved index. See {@link org.jboss.jandex.Indexer}
@@ -68,7 +69,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
     private PackedDataInputStream input;
     private DotName[] classTable;
     private String[] stringTable;
-    private HashMap<DotName, List<AnnotationInstance>> masterAnnotations;
+    private Map<DotName, List<AnnotationInstance>> masterAnnotations;
 
 
     /**
@@ -93,7 +94,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
     Index read(int version) throws IOException {
         try {
             PackedDataInputStream stream = this.input;
-            masterAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
+            masterAnnotations = new TreeMap<DotName, List<AnnotationInstance>>();
             readClassTable(stream);
             readStringTable(stream);
             return readClasses(stream, version);
@@ -107,10 +108,10 @@ final class IndexReaderV1 extends IndexReaderImpl {
 
     private Index readClasses(PackedDataInputStream stream, int version) throws IOException {
         int entries = stream.readPackedU32();
-        HashMap<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>();
-        HashMap<DotName, List<ClassInfo>> implementors = new HashMap<DotName, List<ClassInfo>>();
-        HashMap<DotName, ClassInfo> classes = new HashMap<DotName, ClassInfo>();
-        masterAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
+        Map<DotName, List<ClassInfo>> subclasses = new TreeMap<DotName, List<ClassInfo>>();
+        Map<DotName, List<ClassInfo>> implementors = new TreeMap<DotName, List<ClassInfo>>();
+        Map<DotName, ClassInfo> classes = new TreeMap<DotName, ClassInfo>();
+        masterAnnotations = new TreeMap<DotName, List<AnnotationInstance>>();
 
         for (int i = 0; i < entries; i++) {
             DotName name = classTable[stream.readPackedU32()];
@@ -127,7 +128,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
 
             Type[] interfaceTypes = interfaces.toArray(new Type[interfaces.size()]);
 
-            Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
+            Map<DotName, List<AnnotationInstance>> annotations = new TreeMap<DotName, List<AnnotationInstance>>();
             Type superClassType = superName == null ? null : new ClassType(superName);
             ClassInfo clazz = new ClassInfo(name, superClassType, flags, interfaceTypes, annotations, hasNoArgsConstructor);
             classes.put(name, clazz);
@@ -277,7 +278,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
         list.add(instance);
     }
 
-    private void addClassToMap(HashMap<DotName, List<ClassInfo>> map, DotName name, ClassInfo currentClass) {
+    private void addClassToMap(Map<DotName, List<ClassInfo>> map, DotName name, ClassInfo currentClass) {
         List<ClassInfo> list = map.get(name);
         if (list == null) {
             list = new ArrayList<ClassInfo>();

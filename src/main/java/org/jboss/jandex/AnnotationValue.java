@@ -119,11 +119,27 @@ public abstract class AnnotationValue {
         return new FloatValue(name, f);
     }
 
+    /**
+     * @deprecated Use {@link #createDoubleValue(String, double)} instead.
+     */
+    @Deprecated
     public static AnnotationValue createDouleValue(String name, double d) {
+        return createDoubleValue(name, d);
+    }
+
+    public static AnnotationValue createDoubleValue(String name, double d) {
         return new DoubleValue(name, d);
     }
 
+    /**
+     * @deprecated Use {@link #createLongValue(String, long)} instead.
+     */
+    @Deprecated
     public static AnnotationValue createLongalue(String name, long l) {
+        return createLongValue(name, l);
+    }
+
+    public static AnnotationValue createLongValue(String name, long l) {
         return new LongValue(name, l);
     }
 
@@ -474,7 +490,7 @@ public abstract class AnnotationValue {
 
     /**
      * Returns an array of class types representing the underlying class array value.
-     * Each element has the same behavior as @{link {@link #asClass()}
+     * Each element has the same behavior as {@link #asClass()}
      *
      * @return a class array representing this class array value
      * @throws IllegalArgumentException if the value is not a class array
@@ -485,7 +501,7 @@ public abstract class AnnotationValue {
 
     /**
      * Returns an array of nested annotations representing the underlying annotation array value.
-     * Each element has the same behavior as @{link {@link #asNested()}
+     * Each element has the same behavior as {@link #asNested()}
      *
      * @return an annotation array representing this annotation array value
      * @throws IllegalArgumentException if the value is not an annotation array

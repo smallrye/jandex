@@ -98,6 +98,7 @@ public class Main {
         long start = System.currentTimeMillis();
         Index index = reader.read();
         long end = System.currentTimeMillis() - start;
+        System.out.println("Dump index v" + reader.getIndexVersion() + " (current: v" + IndexWriterV2.MAX_VERSION + ") file: " + source);
         index.printAnnotations();
         index.printSubclasses();
 

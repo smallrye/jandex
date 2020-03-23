@@ -23,6 +23,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -49,8 +50,10 @@ import org.jboss.jandex.IndexReader;
 import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.PrimitiveType;
 import org.jboss.jandex.Type;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class BasicTestCase {
@@ -382,22 +385,40 @@ public class BasicTestCase {
             assertNotNull(nestedConstructor1);
             // synthetic param counts here
             assertEquals(2, nestedConstructor1.parameters().size());
+            assertEquals(2, nestedConstructor1.parametersList().size());
             // synthetic param does not counts here
             assertEquals("noAnnotation", nestedConstructor1.parameterName(0));
+
+            List<MethodParameterInfo> nestedInit0ParametersList = nestedConstructor1.parametersList();
+            MethodParameterInfo nestedParamNoAnnotation = nestedInit0ParametersList.get(0);
+            assertEquals("noAnnotation", nestedInit0ParametersList.get(0).name());
+            assertEquals(0, nestedParamNoAnnotation.position());
+            assertEquals(0, nestedParamNoAnnotation.annotations().size());
+            assertNull(nestedParamNoAnnotation.annotation(DotName.createSimple(ParameterAnnotation.class.getName())));
+            assertFalse(nestedParamNoAnnotation.hasAnnotation(DotName.createSimple(ParameterAnnotation.class.getName())));
 
             MethodInfo nestedConstructor2 = nested.method("<init>", 
                   Type.create(DotName.createSimple(DummyClass.class.getName()), Type.Kind.CLASS), PrimitiveType.BYTE);
             assertNotNull(nestedConstructor2);
             // synthetic param counts here
             assertEquals(2, nestedConstructor2.parameters().size());
+            assertEquals(2, nestedConstructor2.parametersList().size());
             // synthetic param does not counts here
             assertEquals("annotated", nestedConstructor2.parameterName(0));
-            
+
             AnnotationInstance paramAnnotation = nestedConstructor2.annotation(DotName.createSimple(ParameterAnnotation.class.getName()));
             assertNotNull(paramAnnotation);
             assertEquals(Kind.METHOD_PARAMETER, paramAnnotation.target().kind());
             assertEquals("annotated", paramAnnotation.target().asMethodParameter().name());
             assertEquals(0, paramAnnotation.target().asMethodParameter().position());
+
+            List<MethodParameterInfo> nestedInit1ParametersList = nestedConstructor2.parametersList();
+            MethodParameterInfo nestedParamAnnotated = nestedInit1ParametersList.get(0);
+            assertEquals("annotated", nestedParamAnnotated.name());
+            assertEquals(0, nestedParamAnnotated.position());
+            assertEquals(1, nestedParamAnnotated.annotations().size());
+            assertNotNull(nestedParamAnnotated.annotation(DotName.createSimple(ParameterAnnotation.class.getName())));
+            assertTrue(nestedParamAnnotated.hasAnnotation(DotName.createSimple(ParameterAnnotation.class.getName())));
             
             ClassInfo enumClass = index.getClassByName(DotName.createSimple(Enum.class.getName()));
             assertNotNull(enumClass);
@@ -409,9 +430,11 @@ public class BasicTestCase {
                 assertNotNull(enumConstructor1);
                 // synthetic param does not found here
                 assertEquals(1, enumConstructor1.parameters().size());
+                assertEquals(1, enumConstructor1.parametersList().size());
             }else {
                 // synthetic param counts here
                 assertEquals(3, enumConstructor1.parameters().size());
+                assertEquals(3, enumConstructor1.parametersList().size());
             }
             // synthetic param does not counts here
             assertEquals("noAnnotation", enumConstructor1.parameterName(0));
@@ -423,9 +446,11 @@ public class BasicTestCase {
                 assertNotNull(enumConstructor2);
                 // synthetic param does not found here
                 assertEquals(1, enumConstructor2.parameters().size());
+                assertEquals(1, enumConstructor2.parametersList().size());
             }else {
                 // synthetic param counts here
                 assertEquals(3, enumConstructor2.parameters().size());
+                assertEquals(3, enumConstructor2.parametersList().size());
             }
             // synthetic param does not counts here
             assertEquals("annotated", enumConstructor2.parameterName(0));

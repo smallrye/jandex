@@ -18,6 +18,10 @@
 
 package org.jboss.jandex;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Represents an individual Java method parameter that was annotated.
  *
@@ -28,24 +32,22 @@ package org.jboss.jandex;
  */
 public final class MethodParameterInfo implements AnnotationTarget {
     private final MethodInfo method;
-    private final short parameter;
+    private final short position;
 
-    MethodParameterInfo(MethodInfo method, short parameter)
-    {
+    MethodParameterInfo(MethodInfo method, short position) {
         this.method = method;
-        this.parameter = parameter;
+        this.position = position;
     }
 
     /**
      * Constructs a new mock method parameter info
      *
      * @param method the method containing this parameter.
-     * @param parameter the zero based index of this parameter
+     * @param position the zero based index of this parameter
      * @return the new mock parameter info
      */
-    public static MethodParameterInfo create(MethodInfo method, short parameter)
-    {
-        return new MethodParameterInfo(method, parameter);
+    public static MethodParameterInfo create(MethodInfo method, short position) {
+        return new MethodParameterInfo(method, position);
     }
 
     /**
@@ -63,7 +65,7 @@ public final class MethodParameterInfo implements AnnotationTarget {
      * @return the position of this parameter
      */
     public final short position() {
-        return parameter;
+        return position;
     }
 
     /**
@@ -72,16 +74,85 @@ public final class MethodParameterInfo implements AnnotationTarget {
      * @return the name of this parameter.
      */
     public final String name() {
-        return method.parameterName(parameter);
+        return method.parameterName(position);
     }
-    
+
+    /**
+     * Returns the {@link AnnotationInstance}s declared on this parameter.
+     *
+     * @return the annotation instances declared on this parameter, or an empty list if none
+     */
+    public final List<AnnotationInstance> annotations() {
+
+        final List<AnnotationInstance> paramAnnotations = new ArrayList<AnnotationInstance>();
+        final List<AnnotationInstance> methodAnnotations = method.annotations();
+
+        for (AnnotationInstance annotation : methodAnnotations) {
+            final AnnotationTarget target = annotation.target();
+            if (target.kind() != AnnotationTarget.Kind.METHOD_PARAMETER) {
+                continue;
+            }
+            if (target.asMethodParameter().position() != position) {
+                continue;
+            }
+            paramAnnotations.add(annotation);
+        }
+
+        if (paramAnnotations.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return Collections.unmodifiableList(paramAnnotations);
+    }
+
+    /**
+     * Retrieves an {@link AnnotationInstance} representing annotation
+     * declared on this parameter. If an annotation by that name is not
+     * present, <code>null</code> will be returned instead.
+     *
+     * @param name the name of the annotation to locate
+     * @return the annotation if found, otherwise, <code>null</code>
+     */
+    public final AnnotationInstance annotation(DotName name) {
+
+        final AnnotationInstance annotation = method.annotation(name);
+
+        if (annotation == null) {
+            return null;
+        }
+
+        final AnnotationTarget target = annotation.target();
+
+        if (target.kind() != AnnotationTarget.Kind.METHOD_PARAMETER) {
+            return null;
+        }
+        if (target.asMethodParameter().position() != position) {
+            return null;
+        }
+
+        return annotation;
+    }
+
+    /**
+     * Check whether or not the {@link AnnotationInstance} with the given
+     * name occurs on this parameter.
+     *
+     * @see #annotations()
+     * @see #annotation(DotName)
+     * @param name the name of the annotation to look for
+     * @return true if the annotation is present, false otherwise
+     */
+    public final boolean hasAnnotation(DotName name) {
+        return annotation(name) != null;
+    }
+
     /**
      * Returns a string representation describing this method parameter
      *
      * @return a string representation of this parameter
      */
     public String toString() {
-        return method + " #" + parameter;
+        return method + " #" + position;
     }
 
     @Override

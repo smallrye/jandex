@@ -20,6 +20,9 @@ package org.jboss.jandex;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -188,6 +191,30 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     /**
+     * Returns a list containing the {@link MethodParameterInfo} instances
+     * describing all parameters declared on this method, in parameter order.
+     * This method may return an empty list, but never null.
+     *
+     * @return a list of {@link MethodParameterInfo} describing all of parameters declared on this method
+     */
+    public final List<MethodParameterInfo> parametersList() {
+
+        final List<Type> paramTypes = methodInternal.parameters();
+
+        if (paramTypes.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        final MethodParameterInfo[] paramArray = new MethodParameterInfo[paramTypes.size()];
+
+        for (short position = 0; position < paramArray.length; position++) {
+            paramArray[position] = new MethodParameterInfo(this, position);
+        }
+
+        return Collections.unmodifiableList(Arrays.asList(paramArray));
+    } 
+
+    /**
      * Returns this method's return parameter type.
      * If this method has a void return, a special void type is returned. This method will never return null.
      *
@@ -252,12 +279,11 @@ public final class MethodInfo implements AnnotationTarget {
      *     public &lt;{@literal @}AnotherTypeAnnotation T&gt; void foo(T t) {...}
      * </pre>
      *
-     * @return the annotation instances declared on this class or its parameters, or an empty list if none
+     * @return the annotation instances declared on this method or its parameters, or an empty list if none
      */
     public final List<AnnotationInstance> annotations() {
         return methodInternal.annotations();
     }
-
 
     /**
      * Retrieves an annotation instance declared on this method, it parameters, or any type within the signature
@@ -296,6 +322,31 @@ public final class MethodInfo implements AnnotationTarget {
      */
     public final boolean hasAnnotation(DotName name) {
         return methodInternal.hasAnnotation(name);
+    }
+
+    /**
+     * Returns the annotation instances declared on this method, without
+     * annotations defined against method parameters.
+     *
+     * @return the annotation instances declared on this method, or an empty list if none
+     */
+    public final List<AnnotationInstance> methodAnnotations() {
+
+        final List<AnnotationInstance> allAnnotations = annotations();
+        final List<AnnotationInstance> methodAnnotations = new ArrayList<AnnotationInstance>();
+
+        for (AnnotationInstance annotation : allAnnotations) {
+            final AnnotationTarget target = annotation.target();
+            if (target.kind() == AnnotationTarget.Kind.METHOD) {
+            	methodAnnotations.add(annotation);
+            }
+        }
+
+        if (methodAnnotations.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return Collections.unmodifiableList(methodAnnotations);
     }
 
     /**

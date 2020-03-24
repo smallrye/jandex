@@ -45,6 +45,7 @@ public final class DotName implements Comparable<DotName> {
     static final DotName JAVA_NAME;
     static final DotName JAVA_LANG_NAME;
     static final DotName OBJECT_NAME;
+    static final DotName ENUM_NAME;
 
     private final DotName prefix;
     private final String local;
@@ -56,6 +57,7 @@ public final class DotName implements Comparable<DotName> {
         JAVA_NAME = new DotName(null, "java", true, false);
         JAVA_LANG_NAME = new DotName(JAVA_NAME, "lang", true, false);
         OBJECT_NAME = new DotName(JAVA_LANG_NAME, "Object", true, false);
+        ENUM_NAME = new DotName(JAVA_LANG_NAME, "Enum", true, false);
     }
 
     /**

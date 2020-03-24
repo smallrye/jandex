@@ -317,6 +317,14 @@ public final class MethodInfo implements AnnotationTarget {
     public final short flags() {
         return methodInternal.flags();
     }
+    
+    /**
+     * 
+     * @return {@code true} if this method is a synthetic method
+     */
+    public final boolean isSynthetic() {
+        return Modifiers.isSynthetic(methodInternal.flags());
+    }
 
     /**
      * Returns a string representation describing this field. It is similar although not

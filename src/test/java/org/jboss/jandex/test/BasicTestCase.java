@@ -459,11 +459,15 @@ public class BasicTestCase {
         assertThat(classInfo.nestingType(), result ? is(nesting) : not(nesting));
     }
 
-    private Index getIndexForClass(Class<?> clazz) throws IOException {
+    static Index getIndexForClass(Class<?> clazz) throws IOException {
         Indexer indexer = new Indexer();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(clazz.getName().replace('.', '/') + ".class");
+        InputStream stream = clazz.getClassLoader().getResourceAsStream(clazz.getName().replace('.', '/') + ".class");
         indexer.index(stream);
         return indexer.complete();
+    }
+    
+    static ClassInfo getClassInfo(Class<?> clazz) throws IOException {
+        return getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
     }
 
 }

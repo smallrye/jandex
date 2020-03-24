@@ -18,7 +18,6 @@
 
 package org.jboss.jandex;
 
-import java.lang.reflect.Modifier;
 import java.util.List;
 
 /**
@@ -31,15 +30,7 @@ import java.util.List;
  *
  */
 public final class FieldInfo implements AnnotationTarget {
-    /**
-     * On a field, this value indicates that a field is declared as
-     * an element of an enum.
-     *
-     * As defined in {@link java.lang.reflect.Modifier}.
-     *
-     */
-    static final int ENUM = 0x00004000;
-
+    
     private ClassInfo clazz;
     private FieldInternal internal;
 
@@ -148,7 +139,7 @@ public final class FieldInfo implements AnnotationTarget {
      * @see java.lang.reflect.Field#isEnumConstant()
      */
     public boolean isEnumConstant() {
-        return (flags() & ENUM) != 0;
+        return (flags() & Modifiers.ENUM) != 0;
     }
 
     /**
@@ -158,6 +149,14 @@ public final class FieldInfo implements AnnotationTarget {
      */
     public final short flags() {
         return internal.flags();
+    }
+    
+    /**
+     * 
+     * @return {@code true} if this field is a synthetic field
+     */
+    public final boolean isSynthetic() {
+        return Modifiers.isSynthetic(internal.flags());
     }
 
     /**

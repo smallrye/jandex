@@ -20,6 +20,7 @@ package org.jboss.jandex;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -236,7 +237,7 @@ public final class MethodInfo implements AnnotationTarget {
      * Returns the annotation instances declared on this method. This includes annotations which are defined
      * against method parameters, as well as type annotations declared on any usage within the method signature.
      * The <code>target()</code> of the returned annotation instances may be used to determine the
-     * exact location of ths respective annotation instance.
+     * exact location of the respective annotation instance.
      *
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
@@ -252,12 +253,11 @@ public final class MethodInfo implements AnnotationTarget {
      *     public &lt;{@literal @}AnotherTypeAnnotation T&gt; void foo(T t) {...}
      * </pre>
      *
-     * @return the annotation instances declared on this class or its parameters, or an empty list if none
+     * @return the annotation instances declared on this method or its parameters, or an empty list if none
      */
     public final List<AnnotationInstance> annotations() {
         return methodInternal.annotations();
     }
-
 
     /**
      * Retrieves an annotation instance declared on this method, it parameters, or any type within the signature
@@ -283,6 +283,62 @@ public final class MethodInfo implements AnnotationTarget {
      */
     public final AnnotationInstance annotation(DotName name) {
         return  methodInternal.annotation(name);
+    }
+    
+    /**
+     * Retrieves annotations declared on this method, by the name of the annotation. This includes annotations which are defined against method parameters, as
+     * well as type annotations declared on any usage within the method signature. The <code>target()</code> of the returned annotation instances may be used to
+     * determine the exact location of the respective annotation instance.
+     * 
+     * If the specified annotation is repeatable (JLS 9.6), the result also contains all values from the container annotation instances. In this case, the
+     * {@link AnnotationInstance#target()} returns the target of the container annotation instance.
+     * 
+     * @param name the name of the annotation
+     * @param index the index used to obtain the annotation class
+     * @return the annotation instances declared on this method or its parameters, or an empty list if none
+     * @throws IllegalArgumentException If the index does not contain the annotation definition or if it does not represent an annotation type
+     */
+    public final List<AnnotationInstance> annotationsWithRepeatable(DotName name, IndexView index) {
+        if (index == null) {
+            throw new IllegalArgumentException("Index must not be null");
+        }
+        // First retrieve directly present annotations
+        List<AnnotationInstance> instances = annotations(name);
+        ClassInfo annotationClass = index.getClassByName(name);
+        if (annotationClass == null) {
+            throw new IllegalArgumentException("Index does not contain the annotation definition: " + name);
+        }
+        if (!annotationClass.isAnnotation()) {
+            throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
+        }
+        AnnotationInstance repeatable = annotationClass.classAnnotation(Index.REPEATABLE);
+        if (repeatable != null) {
+            Type containingType = repeatable.value().asClass();
+            for (AnnotationInstance container : annotations(containingType.name())) {
+                for (AnnotationInstance nestedInstance : container.value().asNestedArray()) {
+                    instances.add(new AnnotationInstance(nestedInstance, container.target()));
+                }
+            }
+        }
+        return instances;
+    }
+
+    /**
+     * Retrieves annotations declared on this method, by the name of the annotation. This includes annotations which are defined against method parameters, as
+     * well as type annotations declared on any usage within the method signature. The <code>target()</code> of the returned annotation instances may be used to
+     * determine the exact location of the respective annotation instance.
+     * 
+     * @param name
+     * @return the annotation instances declared on this method or its parameters, or an empty list if none
+     */
+    public final List<AnnotationInstance> annotations(DotName name) {
+        List<AnnotationInstance> instances = new ArrayList<AnnotationInstance>();
+        for (AnnotationInstance instance : methodInternal.annotationArray()) {
+            if (instance.name().equals(name)) {
+                instances.add(instance);
+            }
+        }
+        return instances;
     }
 
     /**
@@ -376,7 +432,6 @@ public final class MethodInfo implements AnnotationTarget {
     public final TypeTarget asType() {
         throw new IllegalArgumentException("Not a type");
     }
-
 
     final MethodInternal methodInternal() {
         return methodInternal;

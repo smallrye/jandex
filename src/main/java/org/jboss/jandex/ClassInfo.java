@@ -311,6 +311,45 @@ public final class ClassInfo implements AnnotationTarget {
         }
         return null;
     }
+    
+    /**
+     * Retrieves annotation instances declared on this class, by the name of the annotation.
+     * 
+     * If the specified annotation is repeatable (JLS 9.6), then attempt to  result contains the values from the containing annotation.
+     * 
+     * @param name the name of the annotation
+     * @param index the index used to obtain the annotation class
+     * @return the annotation instances declared on this field, or an empty list if none
+     */
+    public final List<AnnotationInstance> classAnnotationsWithRepeatable(DotName name, IndexView index) {
+        AnnotationInstance ret = classAnnotation(name);
+        if (ret != null) {
+            // Annotation present - no need to try to find repeatable annotations
+            return Collections.singletonList(ret);
+        }
+        ClassInfo annotationClass = index.getClassByName(name);
+        if (annotationClass == null) {
+            throw new IllegalArgumentException("Index does not contain the annotation definition: " + name);
+        }
+        if (!annotationClass.isAnnotation()) {
+            throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
+        }
+        AnnotationInstance repeatable = annotationClass.classAnnotation(Index.REPEATABLE);
+        if (repeatable == null) {
+            return Collections.emptyList();
+        }
+        Type containingType = repeatable.value().asClass();
+        AnnotationInstance containing = classAnnotation(containingType.name());
+        if (containing == null) {
+            return Collections.emptyList();
+        }
+        AnnotationInstance[] values = containing.value().asNestedArray();
+        List<AnnotationInstance> instances = new ArrayList<AnnotationInstance>(values.length);
+        for (AnnotationInstance nestedInstance : values) {
+            instances.add(nestedInstance);
+        }
+        return instances;
+    }
 
     /**
      * Returns a list of all methods declared in this class. This includes constructors

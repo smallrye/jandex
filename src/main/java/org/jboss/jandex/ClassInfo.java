@@ -19,6 +19,7 @@
 package org.jboss.jandex;
 
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -299,6 +300,25 @@ public final class ClassInfo implements AnnotationTarget {
      */
     public final List<MethodInfo> methods() {
         return new MethodInfoGenerator(this, methods);
+    }
+
+    /**
+     * Returns a list of all constructors declared in this class (which the JVM names "&lt;init&gt;").
+     * It does not include inherited methods.
+     * These must be discovered by traversing the class hierarchy.
+     *
+     * <p>This list may never be null.</p>
+     *
+     * @return the list of constructors declared in this class
+     */
+    public final List<MethodInfo> constructors() {
+        List<MethodInfo> constructors = new ArrayList<MethodInfo>(1);
+        for (MethodInfo method : methods()) {
+            if ("<init>".equals(method.name())) {
+                constructors.add(method);
+            }
+        }
+        return constructors;
     }
 
     final MethodInternal[] methodArray() {

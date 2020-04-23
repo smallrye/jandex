@@ -18,11 +18,6 @@
 
 package org.jboss.jandex;
 
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -35,6 +30,7 @@ import java.util.List;
  *
  */
 public final class FieldInfo implements AnnotationTarget {
+    
     private ClassInfo clazz;
     private FieldInternal internal;
 
@@ -135,12 +131,32 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     /**
+     * Returns whether or not this field is declared as an element of an enum.
+     *
+     * @return true if the field is declared as an element of an enum, false
+     *         otherwise.
+     *
+     * @see java.lang.reflect.Field#isEnumConstant()
+     */
+    public boolean isEnumConstant() {
+        return (flags() & Modifiers.ENUM) != 0;
+    }
+
+    /**
      * Returns the access fields of this field. {@link Modifier} can be used on this value.
      *
      * @return the access flags of this field
      */
     public final short flags() {
         return internal.flags();
+    }
+    
+    /**
+     * 
+     * @return {@code true} if this field is a synthetic field
+     */
+    public final boolean isSynthetic() {
+        return Modifiers.isSynthetic(internal.flags());
     }
 
     /**

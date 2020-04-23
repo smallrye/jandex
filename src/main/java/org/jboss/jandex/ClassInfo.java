@@ -219,6 +219,30 @@ public final class ClassInfo implements AnnotationTarget {
     public final short flags() {
         return flags;
     }
+    
+    /**
+     * 
+     * @return {@code true} if this class is a synthetic class
+     */
+    public final boolean isSynthetic() {
+        return Modifiers.isSynthetic(flags);
+    }
+
+    /**
+     * 
+     * @return {@code true} if this class was declared as an enum
+     */
+    public final boolean isEnum() {
+        return (flags & Modifiers.ENUM) != 0 && DotName.ENUM_NAME.equals(superName());
+    }
+
+    /**
+     * 
+     * @return {@code true} if this class object represents an annotation type
+     */
+    public final boolean isAnnotation() {
+        return (flags & Modifiers.ANNOTATION) != 0;
+    }
 
     /**
      * Returns the name of the super class declared by the extends clause of this class. This

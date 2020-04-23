@@ -1577,8 +1577,12 @@ public final class Indexer {
      * @param stream a stream pointing to class file data
      * @return a class index containing all annotations on the passed class stream
      * @throws IOException if the class file data is corrupt or the underlying stream fails
+     * @throws IllegalArgumentException if stream is null
      */
     public ClassInfo index(InputStream stream) throws IOException {
+        if (stream == null) {
+            throw new IllegalArgumentException("stream cannot be null");
+        }
         try
         {
             DataInputStream data = new DataInputStream(new BufferedInputStream(stream));

@@ -311,6 +311,12 @@ public class BasicTestCase {
         assertNesting(Something.class, ClassInfo.NestingType.LOCAL, true);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testNullStream() throws IOException {
+        Indexer indexer = new Indexer();
+        indexer.index(null);
+    }
+
     private void verifyDummy(Index index, boolean v2features) {
         AnnotationInstance instance = index.getAnnotations(DotName.createSimple(TestAnnotation.class.getName())).get(0);
 

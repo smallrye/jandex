@@ -25,7 +25,7 @@
 
   <groupId>org.jboss.jandex</groupId>
   <artifactId>jandex-maven-plugin</artifactId>
-  <version>1.0.8</version>
+  <version>1.0.9-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>Jandex wrapper for Maven</name>

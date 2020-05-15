@@ -20,6 +20,6 @@ jobs:
       # Uses sha for added security since tags can be updated
       uses: joschi/setup-jdk@b9cc6eabf7e7e3889766b5cee486f874c9e1bd2d
       with:
-        java-version:  ${{ matrix.java.java-version }}
+        java-version:  ${{ matrix.java-version }}
     - name: Build with Maven
       run: mvn -B package --file pom.xml

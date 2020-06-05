@@ -109,4 +109,16 @@ public interface IndexView {
      * @return a non-null list of annotation instances
      */
     public Collection<AnnotationInstance> getAnnotations(DotName annotationName);
+    
+    /**
+     * Obtains a list of instances for the specified annotation. If the specified annotation is repeatable (JLS 9.6), the result also contains all values from
+     * all instances of the container annotation. In this case, the {@link AnnotationInstance#target()} returns the target of the container annotation instance.
+     * 
+     * @throws IllegalArgumentException If the the defining annotation class is not found
+     * @param annotationName the name of the repeatable annotation
+     * @param index the index containing the annotation class
+     * @return a non-null list of annotation instances
+     * @throws IllegalArgumentException If the index does not contain the annotation definition or if it does not represent an annotation type
+     */
+    public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, IndexView index);
 }

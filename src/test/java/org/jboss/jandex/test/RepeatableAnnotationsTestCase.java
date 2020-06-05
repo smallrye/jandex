@@ -23,9 +23,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.annotation.Repeatable;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,49 +42,14 @@ import org.junit.Test;
 
 public class RepeatableAnnotationsTestCase {
 
-    static final DotName ALPHA_NAME = DotName.createSimple(Alpha.class.getName());
-    static final DotName ALPHA_CONTAINER_NAME = DotName.createSimple(AlphaContainer.class.getName());
-    static final DotName MY_ANNOTATED_NAME = DotName.createSimple(MyAnnotated.class.getName());
+    static final DotName ALPHA_NAME = DotName.createSimple("test.RepeatableAnnotationsExample$Alpha");
+    static final DotName ALPHA_CONTAINER_NAME = DotName.createSimple("test.RepeatableAnnotationsExample$AlphaContainer");
+    static final DotName MY_ANNOTATED_NAME = DotName.createSimple("test.RepeatableAnnotationsExample$MyAnnotated");
 
-    @Repeatable(AlphaContainer.class)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Alpha {
-
-        int value();
-
-    }
-
-    @Retention(RetentionPolicy.RUNTIME)
-    @interface AlphaContainer {
-
-        Alpha[] value();
-
-    }
-
-    @Alpha(0)
-    static class MyAnnotated {
-
-        @Alpha(-1)
-        @Alpha(-2)
-        int myField;
-        
-        @Alpha(-3)
-        int anotherField;
-
-        @Alpha(1)
-        public void foo(@Alpha(11) @Alpha(12) String fooName) {
-        }
-
-        @Alpha(2)
-        @Alpha(3)
-        public void bar(@Alpha(10) String barName) {
-        }
-
-    }
 
     @Test
     public void testIndexView() throws IOException {
-        Index index = getIndexForClass(MyAnnotated.class, Alpha.class);
+        Index index = getIndexForClass(MY_ANNOTATED_NAME, ALPHA_NAME);
         Collection<AnnotationInstance> instances = index.getAnnotationsWithRepeatable(ALPHA_NAME, index);
         assertEquals(10, instances.size());
         assertValues(find(instances, Kind.CLASS, null), 0);
@@ -102,14 +64,14 @@ public class RepeatableAnnotationsTestCase {
 
     @Test
     public void testClassInfo() throws IOException {
-        Index index = getIndexForClass(MyAnnotated.class, Alpha.class);
+        Index index = getIndexForClass(MY_ANNOTATED_NAME, ALPHA_NAME);
         ClassInfo alpha = index.getClassByName(MY_ANNOTATED_NAME);
         assertValues(alpha.classAnnotationsWithRepeatable(ALPHA_NAME, index), 0);
     }
 
     @Test
     public void testMethodInfo() throws IOException {
-        Index index = getIndexForClass(MyAnnotated.class, Alpha.class);
+        Index index = getIndexForClass(MY_ANNOTATED_NAME, ALPHA_NAME);
         ClassInfo alpha = index.getClassByName(MY_ANNOTATED_NAME);
         // MyAnnotated.foo()
         MethodInfo foo = alpha.method("foo", Type.create(DotName.createSimple(String.class.getName()), org.jboss.jandex.Type.Kind.CLASS));
@@ -130,7 +92,7 @@ public class RepeatableAnnotationsTestCase {
 
     @Test
     public void testFieldInfo() throws IOException {
-        Index index = getIndexForClass(MyAnnotated.class, Alpha.class);
+        Index index = getIndexForClass(MY_ANNOTATED_NAME, ALPHA_NAME);
         ClassInfo alpha = index.getClassByName(MY_ANNOTATED_NAME);
         FieldInfo myField = alpha.field("myField");
         assertValues(myField.annotationsWithRepeatable(ALPHA_NAME, index), -1, -2);
@@ -144,9 +106,8 @@ public class RepeatableAnnotationsTestCase {
 
     @Test(expected = IllegalArgumentException.class)
     public void testAnnotationDefinitionNotAvailable() throws IOException {
-        Index index = getIndexForClass(MyAnnotated.class);
+        Index index = getIndexForClass(MY_ANNOTATED_NAME);
         index.getAnnotationsWithRepeatable(ALPHA_NAME, index);
-
     }
 
     private void assertValues(Collection<AnnotationInstance> instances, Integer... values) {
@@ -157,14 +118,14 @@ public class RepeatableAnnotationsTestCase {
         }
     }
 
-    private Index getIndexForClass(Class<?>... classes) throws IOException {
-        Indexer indexer = new Indexer();
-        for (Class<?> clazz : classes) {
-            InputStream stream = getClass().getClassLoader().getResourceAsStream(clazz.getName().replace('.', '/') + ".class");
-            indexer.index(stream);
+    private Index getIndexForClass(DotName... classes) throws IOException {
+            Indexer indexer = new Indexer();
+            for (DotName clazz : classes) {
+                InputStream stream = getClass().getClassLoader().getResourceAsStream(clazz.toString().replace('.', '/') + ".class");
+                indexer.index(stream);
+            }
+            return indexer.complete();
         }
-        return indexer.complete();
-    }
 
     private List<AnnotationInstance> find(Collection<AnnotationInstance> instances, AnnotationTarget.Kind kind, String name) {
         List<AnnotationInstance> ret = new ArrayList<AnnotationInstance>();

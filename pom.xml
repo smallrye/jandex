@@ -131,7 +131,7 @@
         <dependency>
             <groupId>org.jboss.jandex</groupId>
             <artifactId>typeannotation-test</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
             <type>jar</type>
             <scope>test</scope>
         </dependency>
@@ -149,41 +149,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    
-    <profiles>
-        <profile>
-            <id>jdk18</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-                <jdk>[1.8,)</jdk>
-            </activation>
-            <properties>
-                <maven.compiler.source>1.8</maven.compiler.source>
-                <maven.compiler.target>1.8</maven.compiler.target>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-test-source</id>
-                                <phase>generate-test-sources</phase>
-                                <goals>
-                                    <goal>add-test-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>src/test/java8</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-    
 </project>

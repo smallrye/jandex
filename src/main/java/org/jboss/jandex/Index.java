@@ -18,7 +18,6 @@
 
 package org.jboss.jandex;
 
-import java.lang.annotation.Repeatable;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,7 +47,7 @@ public final class Index implements IndexView {
     private static final List<AnnotationInstance> EMPTY_ANNOTATION_LIST = Collections.emptyList();
     private static final List<ClassInfo> EMPTY_CLASSINFO_LIST = Collections.emptyList();
     
-    static final DotName REPEATABLE = DotName.createSimple(Repeatable.class.getName());
+    static final DotName REPEATABLE = DotName.createSimple("java.lang.annotation.Repeatable");
 
     final Map<DotName, List<AnnotationInstance>> annotations;
     final Map<DotName, List<ClassInfo>> subclasses;

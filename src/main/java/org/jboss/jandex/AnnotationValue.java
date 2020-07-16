@@ -1039,7 +1039,7 @@ public abstract class AnnotationValue {
         @Override
         public int hashCode() {
             int result = super.hashCode();
-            result = 31 * result + Boolean.hashCode(value);
+            result = 31 * result + (value ? 1231 : 1237);
             return result;
         }
 

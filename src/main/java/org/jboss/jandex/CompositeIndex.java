@@ -219,5 +219,25 @@ public class CompositeIndex implements IndexView {
         }
         return Collections.unmodifiableCollection(allKnown);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<ClassInfo> getKnownUsers(DotName usedClass) {
+        final List<ClassInfo> users = new ArrayList<ClassInfo>();
+        Set<DotName> processedClasses = new HashSet<DotName>();
+        for (IndexView index : indexes) {
+            final Collection<ClassInfo> set = index.getKnownUsers(usedClass);
+            if (set != null) {
+                for (ClassInfo classInfo : set) {
+                    if(processedClasses.add(classInfo.name())) {
+                        users.add(classInfo);
+                    }
+                }
+            }
+        }
+        return Collections.unmodifiableCollection(users);
+    }
 }
 

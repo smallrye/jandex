@@ -52,13 +52,17 @@ public final class Index implements IndexView {
     final Map<DotName, List<AnnotationInstance>> annotations;
     final Map<DotName, List<ClassInfo>> subclasses;
     final Map<DotName, List<ClassInfo>> implementors;
+    final Map<DotName, List<ClassInfo>> users;
     final Map<DotName, ClassInfo> classes;
 
-    Index(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses, Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
+    Index(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses, 
+          Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes,
+          Map<DotName, List<ClassInfo>> users) {
         this.annotations = Collections.unmodifiableMap(annotations);
         this.classes = Collections.unmodifiableMap(classes);
         this.subclasses = Collections.unmodifiableMap(subclasses);
         this.implementors = Collections.unmodifiableMap(implementors);
+        this.users = Collections.unmodifiableMap(users);
     }
 
 
@@ -74,8 +78,11 @@ public final class Index implements IndexView {
      * @param classes A map to lookup classes by class name
      * @return the index
      */
-    public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses, Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
-        return new Index(annotations, subclasses, implementors, classes);
+    public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses, 
+                               Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes,
+                               Map<DotName, List<ClassInfo>> users) {
+        // FIXME: API?
+        return new Index(annotations, subclasses, implementors, classes, users);
     }
 
     /**
@@ -270,5 +277,14 @@ public final class Index implements IndexView {
             for (ClassInfo clazz : entry.getValue())
                 System.out.println("    " + clazz.name());
         }
+    }
+
+    @Override
+    public List<ClassInfo> getKnownUsers(DotName usedClass) {
+        List<ClassInfo> ret = users.get(usedClass);
+        if(ret == null) {
+            return EMPTY_CLASSINFO_LIST;
+        }
+        return Collections.unmodifiableList(ret);
     }
 }

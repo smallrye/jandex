@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -96,7 +97,8 @@ public class CompositeTestCase {
         Map<DotName,List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>();
         subclasses.put(OBJECT_NAME, Collections.singletonList(baseInfo));
         subclasses.put(baseName, Collections.singletonList(classInfo));
+        Map<DotName, List<ClassInfo>> users = Collections.emptyMap();
 
-        return Index.create(annotations, subclasses, implementors, classes);
+        return Index.create(annotations, subclasses, implementors, classes, users);
     }
 }

@@ -251,6 +251,7 @@ public final class Indexer {
     private Map<DotName, List<ClassInfo>> subclasses;
     private Map<DotName, List<ClassInfo>> implementors;
     private Map<DotName, ClassInfo> classes;
+    private Map<DotName, List<ClassInfo>> users;
     private NameTable names;
     private GenericSignatureParser signatureParser;
 
@@ -267,6 +268,9 @@ public final class Indexer {
 
         if (classes == null)
             classes = new HashMap<DotName, ClassInfo>();
+
+        if (users == null)
+            users = new HashMap<DotName, List<ClassInfo>>();
 
         if (names == null)
             names = new NameTable();
@@ -615,6 +619,24 @@ public final class Indexer {
         }
     }
 
+    private void resolveUsers() {
+        byte[] pool = constantPool;
+        int[] offsets = constantPoolOffsets;
+        
+        for (int offset : offsets) {
+            if (pool[offset] == CONSTANT_CLASS) {
+                int nameIndex = (pool[++offset] & 0xFF) << 8 | (pool[++offset] & 0xFF);
+                DotName usedClass = names.convertToName(decodeUtf8Entry(nameIndex), '/');
+                List<ClassInfo> usersOfClass = users.get(usedClass);
+                if(usersOfClass == null) {
+                    usersOfClass = new ArrayList<ClassInfo>();
+                    users.put(usedClass, usersOfClass);
+                }
+                usersOfClass.add(this.currentClass);
+            }
+        }
+    }
+    
     private void updateTypeTargets() {
         for (Map.Entry<AnnotationTarget, List<TypeAnnotationState>> entry : typeAnnotations.entrySet()) {
             AnnotationTarget key = entry.getKey();
@@ -1605,6 +1627,7 @@ public final class Indexer {
             applySignatures();
             resolveTypeAnnotations();
             updateTypeTargets();
+            resolveUsers();
 
             currentClass.setMethods(methods, names);
             currentClass.setFields(fields, names);
@@ -1635,13 +1658,14 @@ public final class Indexer {
     public Index complete() {
         initIndexMaps();
         try {
-            return Index.create(masterAnnotations, subclasses, implementors, classes);
+            return Index.create(masterAnnotations, subclasses, implementors, classes, users);
         } finally {
             masterAnnotations = null;
             subclasses = null;
             classes = null;
             signatureParser = null;
             names = null;
+            users = null;
         }
     }
 

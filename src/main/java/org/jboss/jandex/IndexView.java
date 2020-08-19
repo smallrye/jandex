@@ -121,4 +121,6 @@ public interface IndexView {
      * @throws IllegalArgumentException If the index does not contain the annotation definition or if it does not represent an annotation type
      */
     public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, IndexView index);
+
+    public Collection<ClassInfo> getKnownUsers(DotName usedClass);
 }

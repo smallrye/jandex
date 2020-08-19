@@ -53,12 +53,16 @@ public final class Index implements IndexView {
     final Map<DotName, List<ClassInfo>> subclasses;
     final Map<DotName, List<ClassInfo>> implementors;
     final Map<DotName, ClassInfo> classes;
+    final Map<DotName, List<ClassInfo>> users;
 
-    Index(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses, Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
+    Index(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
+          Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes,
+          Map<DotName, List<ClassInfo>> users) {
         this.annotations = Collections.unmodifiableMap(annotations);
         this.classes = Collections.unmodifiableMap(classes);
         this.subclasses = Collections.unmodifiableMap(subclasses);
         this.implementors = Collections.unmodifiableMap(implementors);
+        this.users = Collections.unmodifiableMap(users);
     }
 
 
@@ -74,8 +78,28 @@ public final class Index implements IndexView {
      * @param classes A map to lookup classes by class name
      * @return the index
      */
-    public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses, Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
-        return new Index(annotations, subclasses, implementors, classes);
+    public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
+                               Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
+        return new Index(annotations, subclasses, implementors, classes, Collections.<DotName, List<ClassInfo>>emptyMap());
+    }
+
+    /**
+     * Constructs a "mock" Index using the passed values. All passed values MUST NOT BE MODIFIED AFTER THIS CALL.
+     * Otherwise the resulting object would not conform to the contract outlined above. Also, to conform to the
+     * memory efficiency contract this method should be passed componentized DotNames, which all share common root
+     * instances. Of course for testing code this doesn't really matter.
+     *
+     * @param annotations A map to lookup annotation instances by class name
+     * @param subclasses A map to lookup subclasses by super class name
+     * @param implementors A map to lookup implementing classes by interface name
+     * @param classes A map to lookup classes by class name
+     * @param users A map to lookup class users
+     * @return the index
+     */
+    public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
+                               Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes,
+                               Map<DotName, List<ClassInfo>> users) {
+        return new Index(annotations, subclasses, implementors, classes, users);
     }
 
     /**
@@ -270,5 +294,17 @@ public final class Index implements IndexView {
             for (ClassInfo clazz : entry.getValue())
                 System.out.println("    " + clazz.name());
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<ClassInfo> getKnownUsers(DotName className) {
+        List<ClassInfo> ret = users.get(className);
+        if (ret == null) {
+            return EMPTY_CLASSINFO_LIST;
+        }
+        return Collections.unmodifiableList(ret);
     }
 }

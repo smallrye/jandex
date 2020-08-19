@@ -87,7 +87,7 @@ public class Main {
         Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : JarIndexer.createJarIndex(source, indexer, outputFile, modify, jarFile, verbose);
 
         double time = (System.currentTimeMillis() - start) / 1000.00;
-        System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d bytes)\n", result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(), result.getBytes());
+        System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d class usages, %d bytes)\n", result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(), result.getUsages(), result.getBytes());
         return result.getIndex();
     }
 

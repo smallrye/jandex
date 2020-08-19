@@ -121,4 +121,13 @@ public interface IndexView {
      * @throws IllegalArgumentException If the index does not contain the annotation definition or if it does not represent an annotation type
      */
     public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, IndexView index);
+
+    /**
+     * Obtains a list of classes that use the specified class. In other words, a list of classes that include
+     * a reference to the specified class in their constant pool.
+     *
+     * @param className the name of the class to look for
+     * @return a non-null list of classes that use the specified class
+     */
+    public Collection<ClassInfo> getKnownUsers(DotName className);
 }

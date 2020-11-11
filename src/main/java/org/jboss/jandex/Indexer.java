@@ -534,10 +534,12 @@ public final class Indexer {
             }
             case 0x10: // CLASS_EXTENDS
             {
-                if (!(target instanceof ClassInfo)) {
-                    throw new IllegalStateException("Class extends type annotation appeared on a non class target");
+                int position = data.readUnsignedShort();
+
+                // Skip invalid usage (observed bad bytecode on method attributes)
+                if (target instanceof ClassInfo) {
+                    typeTarget = new ClassExtendsTypeTarget((ClassInfo)target, position);
                 }
-                typeTarget = new ClassExtendsTypeTarget((ClassInfo)target, data.readUnsignedShort());
                 break;
             }
             case 0x11: // CLASS_TYPE_PARAMETER_BOUND
@@ -553,18 +555,18 @@ public final class Indexer {
                 break;
             case 0x16: // METHOD_FORMAL_PARAMETER
             {
-                if (!(target instanceof MethodInfo)) {
-                    throw new IllegalStateException("Method parameter type annotation appeared on a non-method target");
+                int position = data.readUnsignedByte();
+                if (target instanceof MethodInfo) {
+                    typeTarget = new MethodParameterTypeTarget((MethodInfo)target, position);
                 }
-                typeTarget = new MethodParameterTypeTarget((MethodInfo)target, data.readUnsignedByte());
                 break;
             }
             case 0x17: // THROWS
             {
-                if (!(target instanceof MethodInfo)) {
-                    throw new IllegalStateException("Throws type annotation appeared on a non-method target");
+                int position = data.readUnsignedShort();
+                if (target instanceof MethodInfo) {
+                    typeTarget = new ThrowsTypeTarget((MethodInfo) target, position);
                 }
-                typeTarget = new ThrowsTypeTarget((MethodInfo) target, data.readUnsignedShort());
                 break;
             }
             // Skip code attribute values, which shouldn't be present
@@ -595,6 +597,10 @@ public final class Indexer {
         }
 
         if (typeTarget == null) {
+            skipTargetPath(data);
+            // eat
+            // TODO - introduce an allocation free annotation skip
+            processAnnotation(data, null);
             return null;
         }
 
@@ -1053,6 +1059,11 @@ public final class Indexer {
         }
 
         return elements;
+    }
+
+    private void skipTargetPath(DataInputStream data) throws IOException {
+           int numElements = data.readUnsignedByte();
+           skipFully(data, numElements * 2);
     }
 
     private void processExceptions(DataInputStream data, MethodInfo target) throws IOException {

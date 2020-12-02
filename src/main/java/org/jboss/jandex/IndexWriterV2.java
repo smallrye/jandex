@@ -525,7 +525,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
 
         if (version >= 10) {
-            writePositions(stream, clazz.fieldPositionArray());
+            stream.writePackedU32(positionOf(clazz.fieldPositionArray()));
         }
 
         MethodInternal[] methods = clazz.methodArray();
@@ -535,7 +535,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
 
         if (version >= 10) {
-            writePositions(stream, clazz.methodPositionArray());
+            stream.writePackedU32(positionOf(clazz.methodPositionArray()));
         }
 
         Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotations().entrySet();
@@ -545,13 +545,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
             for (AnnotationInstance annotation : value) {
                 writeReferenceOrFull(stream, annotation);
             }
-        }
-    }
-
-    private void writePositions(PackedDataOutputStream stream, byte[] positions) throws IOException {
-        stream.writePackedU32(positions.length);
-        for (byte position : positions) {
-            stream.writePackedU32(position & 0xFF);
         }
     }
 
@@ -720,8 +713,12 @@ final class IndexWriterV2 extends IndexWriterImpl{
             addString(name);
         }
         addEnclosingMethod(clazz.enclosingMethod());
+
         addMethodList(clazz.methodArray());
+        names.intern(clazz.methodPositionArray());
+
         addFieldList(clazz.fieldArray());
+        names.intern(clazz.fieldPositionArray());
 
         for (Entry<DotName, List<AnnotationInstance>> entry :  clazz.annotations().entrySet()) {
             addClassName(entry.getKey());

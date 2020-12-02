@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -224,9 +225,9 @@ public final class ClassInfo implements AnnotationTarget {
     public final short flags() {
         return flags;
     }
-    
+
     /**
-     * 
+     *
      * @return {@code true} if this class is a synthetic class
      */
     public final boolean isSynthetic() {
@@ -234,7 +235,7 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
-     * 
+     *
      * @return {@code true} if this class was declared as an enum
      */
     public final boolean isEnum() {
@@ -242,7 +243,7 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
-     * 
+     *
      * @return {@code true} if this class object represents an annotation type
      */
     public final boolean isAnnotation() {
@@ -316,12 +317,12 @@ public final class ClassInfo implements AnnotationTarget {
         }
         return null;
     }
-    
+
     /**
      * Retrieves annotation instances declared on this class, by the name of the annotation.
-     * 
+     *
      * If the specified annotation is repeatable (JLS 9.6), then attempt to  result contains the values from the containing annotation.
-     * 
+     *
      * @param name the name of the annotation
      * @param index the index used to obtain the annotation class
      * @return the annotation instances declared on this field, or an empty list if none
@@ -652,6 +653,7 @@ public final class ClassInfo implements AnnotationTarget {
             this.fields = FieldInternal.EMPTY_ARRAY;
             return;
         }
+
         this.fields = new FieldInternal[size];
 
         for (int i = 0; i < size; i++) {
@@ -660,18 +662,8 @@ public final class ClassInfo implements AnnotationTarget {
             fieldInfo.setFieldInternal(internal);
             this.fields[i] = internal;
         }
-        Arrays.sort(this.fields, FieldInternal.NAME_COMPARATOR);
 
-        if (size <= MAX_POSITIONS) {
-            this.fieldPositions = new byte[size];
-
-            for (int i = 0; i < size; i++) {
-                FieldInfo origField = fields.get(i);
-                byte[] fieldName = Utils.toUTF8(origField.name());
-                FieldInternal key = new FieldInternal(fieldName, VoidType.VOID, (short)0);
-                this.fieldPositions[i] = (byte) Arrays.binarySearch(this.fields, key, FieldInternal.NAME_COMPARATOR);
-            }
-        }
+        this.fieldPositions = sortAndGetPositions(this.fields, FieldInternal.NAME_COMPARATOR, names);
     }
 
     void setFieldArray(FieldInternal[] fields) {
@@ -706,19 +698,46 @@ public final class ClassInfo implements AnnotationTarget {
             methodInfo.setMethodInternal(internal);
             this.methods[i] = internal;
         }
-        Arrays.sort(this.methods, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
 
-        if (size <= MAX_POSITIONS) {
-            this.methodPositions = new byte[size];
+        this.methodPositions = sortAndGetPositions(this.methods, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR, names);
+    }
+
+    /**
+     * Sorts the array of internals using the provided comparator and returns an array
+     * of offsets in the original order of internals.
+     *
+     * @param <T> An internal member type, FieldInternal or MethodInternal
+     * @param internals Array of internal types set on the ClassInfo instance
+     * @param comparator Comparator used to sort internals and locate original positions
+     * @param names NameTable used to intern byte arrays of member positions
+     * @return an array offsets in the array of internals in the order prior to sorting
+     */
+    static <T> byte[] sortAndGetPositions(T[] internals, Comparator<T> comparator, NameTable names) {
+        final int size = internals.length;
+        final boolean storePositions = (size > 1 && size <= MAX_POSITIONS);
+        final T[] keys;
+        final byte[] positions;
+
+        if (storePositions) {
+            keys = Arrays.copyOf(internals, size);
+        } else {
+            keys = null;
+        }
+
+        Arrays.sort(internals, comparator);
+
+        if (storePositions) {
+            positions = new byte[size];
 
             for (int i = 0; i < size; i++) {
-                MethodInfo origMethod = methods.get(i);
-                byte[] methodName = Utils.toUTF8(origMethod.name());
-                Type[] parameters = origMethod.typeParameterArray();
-                MethodInternal key = new MethodInternal(methodName, MethodInternal.EMPTY_PARAMETER_NAMES, parameters, null, (short) 0);
-                this.methodPositions[i] = (byte) Arrays.binarySearch(this.methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
+                int position = Arrays.binarySearch(internals, keys[i], comparator);
+                positions[i] = (byte) position;
             }
+        } else {
+            positions = EMPTY_POSITIONS;
         }
+
+        return names.intern(positions);
     }
 
     void setSuperClassType(Type superClassType) {

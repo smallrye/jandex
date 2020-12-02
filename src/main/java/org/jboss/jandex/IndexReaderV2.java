@@ -535,22 +535,14 @@ final class IndexReaderV2 extends IndexReaderImpl {
         clazz.setFieldArray(fields);
 
         if (version >= 10) {
-            byte[] positions = new byte[stream.readPackedU32()];
-            for (int i = 0; i < positions.length; i++) {
-                positions[i] = (byte) stream.readPackedU32();
-            }
-            clazz.setFieldPositionArray(positions);
+            clazz.setFieldPositionArray(byteTable[stream.readPackedU32()]);
         }
 
         MethodInternal[] methods = readClassMethods(stream, clazz);
         clazz.setMethodArray(methods);
 
         if (version >= 10) {
-            byte[] positions = new byte[stream.readPackedU32()];
-            for (int i = 0; i < positions.length; i++) {
-                positions[i] = (byte) stream.readPackedU32();
-            }
-            clazz.setMethodPositionArray(positions);
+            clazz.setMethodPositionArray(byteTable[stream.readPackedU32()]);
         }
 
         for (int i = 0; i < size; i++) {

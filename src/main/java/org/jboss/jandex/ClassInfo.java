@@ -53,7 +53,7 @@ public final class ClassInfo implements AnnotationTarget {
     private static final byte[] EMPTY_POSITIONS = new byte[0];
 
     private final DotName name;
-    private final Map<DotName, List<AnnotationInstance>> annotations;
+    private Map<DotName, List<AnnotationInstance>> annotations;
 
     // Not final to allow lazy initialization, immutable once published
     private short flags;
@@ -159,16 +159,15 @@ public final class ClassInfo implements AnnotationTarget {
 
     }
 
-    ClassInfo(DotName name, Type superClassType, short flags, Type[] interfaceTypes, Map<DotName, List<AnnotationInstance>> annotations) {
-        this(name, superClassType, flags, interfaceTypes, annotations, false);
+    ClassInfo(DotName name, Type superClassType, short flags, Type[] interfaceTypes) {
+        this(name, superClassType, flags, interfaceTypes, false);
     }
 
-    ClassInfo(DotName name, Type superClassType, short flags, Type[] interfaceTypes, Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
+    ClassInfo(DotName name, Type superClassType, short flags, Type[] interfaceTypes, boolean hasNoArgsConstructor) {
         this.name = name;
         this.superClassType = superClassType;
         this.flags = flags;
         this.interfaceTypes = interfaceTypes.length == 0 ? Type.EMPTY_ARRAY : interfaceTypes;
-        this.annotations = Collections.unmodifiableMap(annotations);  // FIXME
         this.hasNoArgsConstructor = hasNoArgsConstructor;
         this.typeParameters = Type.EMPTY_ARRAY;
         this.methods = MethodInternal.EMPTY_ARRAY;
@@ -195,7 +194,9 @@ public final class ClassInfo implements AnnotationTarget {
         }
 
         ClassType superClassType = superName == null ? null : new ClassType(superName);
-        return new ClassInfo(name, superClassType, flags, interfaceTypes, annotations, hasNoArgsConstructor);
+        ClassInfo clazz = new ClassInfo(name, superClassType, flags, interfaceTypes, hasNoArgsConstructor);
+        clazz.setAnnotations(annotations);
+        return clazz;
     }
 
     @Override
@@ -288,7 +289,11 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the annotations specified on this class and its elements
      */
     public final Map<DotName, List<AnnotationInstance>> annotations() {
-        return annotations;
+        return Collections.unmodifiableMap(annotations);
+    }
+
+    final void setAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {
+        this.annotations = annotations;
     }
 
     /**

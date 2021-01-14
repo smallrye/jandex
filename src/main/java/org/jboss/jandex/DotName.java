@@ -180,6 +180,24 @@ public final class DotName implements Comparable<DotName> {
         builder.append(local);
     }
 
+
+    /**
+     * Returns the package portion of this DotName.
+     *
+     * @return the package name or null if this {@link DotName} has no package prefix
+     * @since 2.3.0
+     */
+    public String packagePrefix() {
+        if (componentized) {
+            if (innerClass) {
+                return prefix.packagePrefix();
+            }
+            return prefix.toString();
+        } else {
+            int index = local.lastIndexOf('.');
+            return index == -1 ? null : local.substring(0, index);
+        }
+    }
     /**
      * Returns whether this DotName is a componentized variant.
      *
@@ -357,7 +375,7 @@ public final class DotName implements Comparable<DotName> {
             if (exactToMatch.charAt(cursor) != expectNext) {
                 return false;
             }
-            
+
             current=current.prefix;
         }
         //And finally, verify we consumed it all:

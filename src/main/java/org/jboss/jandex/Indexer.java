@@ -723,6 +723,10 @@ public final class Indexer {
                 return;
             }
 
+            if (targetsArrayInBridgeMethod(typeAnnotationState, types[index], method)) {
+                return;
+            }
+
             types[index] = resolveTypePath(types[index], typeAnnotationState);
             method.setParameters(intern(types));
         } else if (typeTarget.usage() == TypeTarget.Usage.EMPTY && target instanceof FieldInfo) {
@@ -733,7 +737,11 @@ public final class Indexer {
             if (((EmptyTypeTarget) typeTarget).isReceiver()) {
                 method.setReceiverType(resolveTypePath(method.receiverType(), typeAnnotationState));
             } else {
-                method.setReturnType(resolveTypePath(method.returnType(), typeAnnotationState));
+                Type returnType = method.returnType();
+                if (targetsArrayInBridgeMethod(typeAnnotationState, returnType, method)) {
+                    return;
+                }
+                method.setReturnType(resolveTypePath(returnType, typeAnnotationState));
             }
         } else if (typeTarget.usage() == TypeTarget.Usage.THROWS  && target instanceof MethodInfo) {
             MethodInfo method = (MethodInfo) target;
@@ -747,6 +755,30 @@ public final class Indexer {
             exceptions[position] = resolveTypePath(exceptions[position], typeAnnotationState);
             method.setExceptions(intern(exceptions));
         }
+    }
+
+    private boolean targetsArrayInBridgeMethod(
+            TypeAnnotationState typeAnnotationState, Type type, MethodInfo method) {
+        // javac copies annotations to bridge methods (which is good), however the annotations
+        // might become invalid. For instance, the bridge signature for @Nullable Object[] is
+        // Object (non-array), so usage=ARRAY signature is invalid
+        // We ignore those annotations for the bridge methods.
+        // See https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6695379
+        return type.kind() != Type.Kind.ARRAY && isBridge(method) &&
+                targetsArray(typeAnnotationState);
+    }
+
+    private boolean isBridge(MethodInfo methodInfo) {
+        int bridgeModifiers = Modifiers.SYNTHETIC | 0x40;
+        return (methodInfo.flags() & bridgeModifiers) == bridgeModifiers;
+    }
+
+    private boolean targetsArray(TypeAnnotationState typeAnnotationState) {
+        if (typeAnnotationState.pathElements.size() == 0) {
+            return false;
+        }
+        PathElement pathElement = typeAnnotationState.pathElements.peek();
+        return pathElement != null && pathElement.kind == PathElement.Kind.ARRAY;
     }
 
     private Type resolveTypePath(Type type, TypeAnnotationState typeAnnotationState) {
@@ -825,6 +857,9 @@ public final class Indexer {
                 } else {
                     MethodInfo method = (MethodInfo) enclosingTarget;
                     type = target.asEmpty().isReceiver() ? method.receiverType() : method.returnType();
+                    if (targetsArrayInBridgeMethod(typeAnnotationState, type, method)) {
+                        return;
+                    }
                 }
                 break;
             }
@@ -837,6 +872,9 @@ public final class Indexer {
             case METHOD_PARAMETER: {
                 MethodInfo method = (MethodInfo) enclosingTarget;
                 type = method.methodInternal().parameterArray()[target.asMethodParameterType().position()];
+                if (targetsArrayInBridgeMethod(typeAnnotationState, type, method)) {
+                    return;
+                }
                 break;
             }
             case TYPE_PARAMETER: {

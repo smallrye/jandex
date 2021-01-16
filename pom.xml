@@ -149,6 +149,14 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <profiles>
+        <profile>
+            <id>java8-tests</id>
+            <modules>
+                <module>java8-tests</module>
+            </modules>
+        </profile>
+    </profiles>
     <repositories>
         <repository>
             <id>jboss-public-repository</id>

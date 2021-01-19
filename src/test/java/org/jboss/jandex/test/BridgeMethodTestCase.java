@@ -16,9 +16,8 @@
  * limitations under the License.
  */
 
-package org.jboss.jandex.test.bridge;
+package org.jboss.jandex.test;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
@@ -29,88 +28,63 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
-public class BridgeMethodTest {
-    public static class ArrayWithNullableElementsConsumer
-            implements Consumer<@Nullable Object[]> {
-        @Override
-        public void accept(@Nullable Object[] objects) {
-        }
-    }
+public class BridgeMethodTestCase {
+
+    @Test
+    public void nestedConsumer() throws IOException {
+         verifyMethodSignature(
+                 "test/BridgeMethods$NestedConsumer.class",
+                 "accept",
+                 TypeTarget.Usage.METHOD_PARAMETER, "java.lang.Object",
+                 "@Nullable test.BridgeMethods$NestedConsumer");
+     }
+
 
     @Test
     public void arrayWithNullableElements() throws IOException {
         verifyMethodSignature(
-                ArrayWithNullableElementsConsumer.class,
+                "test/BridgeMethods$ArrayWithNullableElementsConsumer.class",
                 "accept",
                 TypeTarget.Usage.METHOD_PARAMETER, "java.lang.Object",
                 "@Nullable java.lang.Object[]");
     }
 
-    public static class NullableArrayConsumer
-            implements Consumer<Object @Nullable []> {
-        @Override
-        public void accept(Object @Nullable [] objects) {
-        }
-    }
 
     @Test
     public void nullableArray() throws IOException {
         verifyMethodSignature(
-                NullableArrayConsumer.class,
+                "test/BridgeMethods$NullableArrayConsumer.class",
                 "accept",
                 TypeTarget.Usage.METHOD_PARAMETER, "@Nullable java.lang.Object",
                 "java.lang.Object @Nullable []");
     }
 
-    public static class NullableArrayWithNullableElementsConsumer
-            implements Consumer<@Nullable Object @Nullable []> {
-        @Override
-        public void accept(@Nullable Object @Nullable [] objects) {
-        }
-    }
-
     @Test
     public void nullableArrayWithNullableElementsConsumer() throws IOException {
         verifyMethodSignature(
-                NullableArrayWithNullableElementsConsumer.class,
+                "test/BridgeMethods$NullableArrayWithNullableElementsConsumer.class",
                 "accept",
                 TypeTarget.Usage.METHOD_PARAMETER, "@Nullable java.lang.Object",
                 "@Nullable java.lang.Object @Nullable []");
     }
 
-    public static class ArrayWithNullableElementsSupplier
-            implements Supplier<@Nullable Object[]> {
-        @Override
-        public @Nullable Object[] get() {
-            return new Object[0];
-        }
-    }
 
     @Test
     public void arrayWithNullableElementsSupplier() throws IOException {
         verifyMethodSignature(
-                ArrayWithNullableElementsSupplier.class,
+                "test/BridgeMethods$ArrayWithNullableElementsSupplier.class",
                 "get",
                 TypeTarget.Usage.EMPTY,
                 "java.lang.Object",
                 "@Nullable java.lang.Object[]");
     }
 
-    public static class NullableArraySupplier
-            implements Supplier<Object @Nullable []> {
-        @Override
-        public Object @Nullable [] get() {
-            return null;
-        }
-    }
 
     @Test
     public void nullableArraySupplier() throws IOException {
         verifyMethodSignature(
-                NullableArraySupplier.class,
+                "test/BridgeMethods$NullableArraySupplier.class",
                 "get",
                 TypeTarget.Usage.EMPTY,
                 "@Nullable java.lang.Object",
@@ -122,14 +96,12 @@ public class BridgeMethodTest {
         return (methodInfo.flags() & bridgeModifiers) == bridgeModifiers;
     }
 
-    private InputStream getClassBytes(Class<?> klass) {
-        String fileName = klass.getName();
-        fileName = fileName.substring(fileName.lastIndexOf('.') + 1);
-        return klass.getResourceAsStream(fileName + ".class");
+    private InputStream getClassBytes(String klass) {
+        return getClass().getClassLoader().getResourceAsStream(klass);
     }
 
     private void verifyMethodSignature(
-            Class<?> klass,
+            String klass,
             String methodName,
             TypeTarget.Usage usage,
             String expectedBridgeType,

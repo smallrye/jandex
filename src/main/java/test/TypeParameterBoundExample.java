@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 public class TypeParameterBoundExample {
     // extends Runnable produces T::List signature, so
     // @Nullable targets index=1 (optional class bound always counts)
-    public static class ListConsumer<T extends List<?>>
+    public static class ListConsumer<T extends @Nullable List<?>>
             implements Consumer<T> {
         @Override
         public void accept(T t) {
@@ -17,7 +17,7 @@ public class TypeParameterBoundExample {
     }
 
     // extends Runnable produces T:ArrayList signature since ArrayList is class
-    public static class ArrayListConsumer<T extends ArrayList<?>>
+    public static class ArrayListConsumer<T extends @Nullable ArrayList<?>>
             implements Consumer<T> {
         @Override
         public void accept(T t) {
@@ -25,7 +25,15 @@ public class TypeParameterBoundExample {
     }
 
     // extends Runnable produces T:ArrayList signature since ArrayList is class
-    public static class SerializableListConsumer<T extends @Nullable List<?> & Serializable>
+    public static class SerializableListConsumer<T extends @Nullable List<?> & @Untainted Serializable>
+            implements Consumer<T> {
+        @Override
+        public void accept(T t) {
+        }
+    }
+
+    // extends Runnable produces T:ArrayList signature since ArrayList is class
+    public static class SerializableListConsumerDoubleA<T extends @Nullable @Untainted List<?> & @Untainted Serializable>
             implements Consumer<T> {
         @Override
         public void accept(T t) {

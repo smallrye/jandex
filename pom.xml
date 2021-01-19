@@ -39,7 +39,7 @@
     </parent>
     <groupId>org.jboss.jandex</groupId>
     <artifactId>typeannotation-test</artifactId>
-    <version>1.4-SNAPSHOT</version>
+    <version>1.4</version>
     <name>Type Annotation Examples For Testing</name>
 
     <build/>

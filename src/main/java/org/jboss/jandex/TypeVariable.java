@@ -35,8 +35,15 @@ import java.util.List;
  * @author Jason T. Greene
  */
 public final class TypeVariable extends Type {
+    // The lower 31 bits represents the hash code
+    private static final int HASH_MASK = Integer.MAX_VALUE;
+    // The high bit represents the implicit object flag
+    private static final int IMPLICIT_MASK = Integer.MIN_VALUE;
     private final String name;
     private final Type[] bounds;
+
+    // MSB is stolen to represent an implicit object bound (signature with ::Interface)
+    // This is not persisted since bound type targets are adjusted
     private int hash;
 
     TypeVariable(String name) {
@@ -49,9 +56,14 @@ public final class TypeVariable extends Type {
     }
 
     TypeVariable(String name, Type[] bounds, AnnotationInstance[] annotations) {
+        this(name, bounds, annotations, false);
+    }
+
+    TypeVariable(String name, Type[] bounds, AnnotationInstance[] annotations, boolean implicitObjectBound) {
         super(bounds.length > 0 ? bounds[0].name() : DotName.OBJECT_NAME, annotations);
         this.name = name;
         this.bounds = bounds;
+        this.hash = implicitObjectBound ? Integer.MIN_VALUE : 0;
     }
 
     /**
@@ -74,6 +86,10 @@ public final class TypeVariable extends Type {
 
     Type[] boundArray() {
         return bounds;
+    }
+
+    boolean hasImplicitObjectBound() {
+        return (hash & IMPLICIT_MASK) != 0;
     }
 
     @Override
@@ -115,13 +131,12 @@ public final class TypeVariable extends Type {
 
         TypeVariable that = (TypeVariable) o;
 
-        return name.equals(that.name) && Arrays.equals(bounds, that.bounds);
-
+        return name.equals(that.name) && Arrays.equals(bounds, that.bounds) && hasImplicitObjectBound() == that.hasImplicitObjectBound();
     }
 
     @Override
     Type copyType(AnnotationInstance[] newAnnotations) {
-        return new TypeVariable(name, bounds, newAnnotations);
+        return new TypeVariable(name, bounds, newAnnotations, hasImplicitObjectBound());
     }
 
     TypeVariable copyType(int boundIndex, Type bound) {
@@ -131,12 +146,12 @@ public final class TypeVariable extends Type {
 
         Type[] bounds = this.bounds.clone();
         bounds[boundIndex] = bound;
-        return new TypeVariable(name, bounds, annotationArray());
+        return new TypeVariable(name, bounds, annotationArray(), hasImplicitObjectBound());
     }
 
     @Override
     public int hashCode() {
-        int hash = this.hash;
+        int hash = this.hash & HASH_MASK;
         if (hash != 0) {
             return hash;
         }
@@ -144,6 +159,6 @@ public final class TypeVariable extends Type {
         hash = super.hashCode();
         hash = 31 * hash + name.hashCode();
         hash = 31 * hash + Arrays.hashCode(bounds);
-        return this.hash = hash;
+        return this.hash |= (hash & HASH_MASK);
     }
 }

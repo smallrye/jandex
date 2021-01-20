@@ -175,8 +175,6 @@ public final class Indexer {
 
     private final static byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
 
-    private IdentityHashMap<AnnotationTarget, Object> signaturePresent;
-
     private static class InnerClassInfo {
         private InnerClassInfo(DotName innerClass, DotName enclosingClass, String simpleName, int flags) {
             this.innnerClass = innerClass;
@@ -238,6 +236,7 @@ public final class Indexer {
     private ClassInfo currentClass;
     private HashMap<DotName, List<AnnotationInstance>> classAnnotations;
     private ArrayList<AnnotationInstance> elementAnnotations;
+    private IdentityHashMap<AnnotationTarget, Object> signaturePresent;
     private List<Object> signatures;
     private Map<DotName, InnerClassInfo> innerClasses;
     private IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>> typeAnnotations;
@@ -683,6 +682,9 @@ public final class Indexer {
             }
 
             TypeVariable type = types[index].asTypeVariable();
+            if (type.hasImplicitObjectBound()) {
+                bound.adjustDown();
+            }
             int boundIndex = bound.boundPosition();
             if (boundIndex >= type.boundArray().length) {
                 return;

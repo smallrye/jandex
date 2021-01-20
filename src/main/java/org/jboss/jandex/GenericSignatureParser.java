@@ -406,20 +406,20 @@ class GenericSignatureParser {
         // Class bound has an optional reference type
         if (signature.charAt(pos) != ':') {
             bounds.add(parseReferenceType());
-        } else {
-            // Pretend optional reference type is Object
-            // See https://github.com/openjdk/jdk/commit/9d7f8bc9a053595c290ae339b902dc762b848ab9
-            // See https://github.com/wildfly/jandex/issues/99
-            bounds.add(ClassType.OBJECT_TYPE);
         }
 
+        boolean implicitObjectBound = false;
         // Interface bounds are none to many, with a required reference type
         while (signature.charAt(pos) == ':') {
             pos++;
+
+            if (bounds.size() == 0) {
+                implicitObjectBound = true;
+            }
             bounds.add(parseReferenceType());
         }
 
-        TypeVariable type = new TypeVariable(name, bounds.toArray(new Type[bounds.size()]));
+        TypeVariable type = new TypeVariable(name, bounds.toArray(new Type[bounds.size()]), null, implicitObjectBound);
         typeParameters.put(name, type);
         return type;
     }

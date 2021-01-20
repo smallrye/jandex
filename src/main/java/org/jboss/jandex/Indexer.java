@@ -604,9 +604,10 @@ public final class Indexer {
         }
 
         BooleanHolder genericsRequired = new BooleanHolder();
-        ArrayList<PathElement> pathElements = processTargetPath(data, genericsRequired);
+        BooleanHolder bridgeIncompatible = new BooleanHolder();
+        ArrayList<PathElement> pathElements = processTargetPath(data, genericsRequired, bridgeIncompatible);
         AnnotationInstance annotation = processAnnotation(data, typeTarget);
-        return new TypeAnnotationState(typeTarget, annotation, pathElements, genericsRequired.bool);
+        return new TypeAnnotationState(typeTarget, annotation, pathElements, genericsRequired.bool, bridgeIncompatible.bool);
     }
 
     private void resolveTypeAnnotations() {
@@ -715,6 +716,10 @@ public final class Indexer {
             }
         } else if (typeTarget.usage() == TypeTarget.Usage.METHOD_PARAMETER) {
             MethodInfo method = (MethodInfo) target;
+            if (skipBridge(typeAnnotationState, method)) {
+                return;
+            }
+
             MethodParameterTypeTarget parameter = (MethodParameterTypeTarget) typeTarget;
             int index = parameter.position();
             Type[] types = method.copyParameters();
@@ -730,10 +735,15 @@ public final class Indexer {
             field.setType(resolveTypePath(field.type(), typeAnnotationState));
         } else if (typeTarget.usage() == TypeTarget.Usage.EMPTY && target instanceof MethodInfo) {
             MethodInfo method = (MethodInfo) target;
+
             if (((EmptyTypeTarget) typeTarget).isReceiver()) {
                 method.setReceiverType(resolveTypePath(method.receiverType(), typeAnnotationState));
             } else {
-                method.setReturnType(resolveTypePath(method.returnType(), typeAnnotationState));
+                Type returnType = method.returnType();
+                if (skipBridge(typeAnnotationState, method)) {
+                    return;
+                }
+                method.setReturnType(resolveTypePath(returnType, typeAnnotationState));
             }
         } else if (typeTarget.usage() == TypeTarget.Usage.THROWS  && target instanceof MethodInfo) {
             MethodInfo method = (MethodInfo) target;
@@ -747,6 +757,30 @@ public final class Indexer {
             exceptions[position] = resolveTypePath(exceptions[position], typeAnnotationState);
             method.setExceptions(intern(exceptions));
         }
+    }
+
+    private boolean skipBridge(TypeAnnotationState typeAnnotationState, MethodInfo method) {
+        // javac copies annotations to bridge methods (which is good), however type annotations
+        // might become invalid. For instance, the bridge signature for @Nullable Object[] is
+        // Object (non-array), so usage=ARRAY signature is invalid. Other cases include annotated
+        // inner classes.
+        //
+        // We ignore those annotations for the bridge methods.
+        // See https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6695379
+        return typeAnnotationState.bridgeIncompatible && isBridge(method);
+    }
+
+    private boolean isBridge(MethodInfo methodInfo) {
+        int bridgeModifiers = Modifiers.SYNTHETIC | 0x40;
+        return (methodInfo.flags() & bridgeModifiers) == bridgeModifiers;
+    }
+
+    private boolean targetsArray(TypeAnnotationState typeAnnotationState) {
+        if (typeAnnotationState.pathElements.size() == 0) {
+            return false;
+        }
+        PathElement pathElement = typeAnnotationState.pathElements.peek();
+        return pathElement != null && pathElement.kind == PathElement.Kind.ARRAY;
     }
 
     private Type resolveTypePath(Type type, TypeAnnotationState typeAnnotationState) {
@@ -825,6 +859,9 @@ public final class Indexer {
                 } else {
                     MethodInfo method = (MethodInfo) enclosingTarget;
                     type = target.asEmpty().isReceiver() ? method.receiverType() : method.returnType();
+                    if (skipBridge(typeAnnotationState, method)) {
+                        return;
+                    }
                 }
                 break;
             }
@@ -836,7 +873,11 @@ public final class Indexer {
             }
             case METHOD_PARAMETER: {
                 MethodInfo method = (MethodInfo) enclosingTarget;
+                if (skipBridge(typeAnnotationState, method)) {
+                    return;
+                }
                 type = method.methodInternal().parameterArray()[target.asMethodParameterType().position()];
+
                 break;
             }
             case TYPE_PARAMETER: {
@@ -1031,14 +1072,16 @@ public final class Indexer {
         private final TypeTarget target;
         private final AnnotationInstance annotation;
         private final boolean genericsRequired;
+        private final boolean bridgeIncompatible;
         private final PathElementStack pathElements;
 
 
-        public TypeAnnotationState(TypeTarget target, AnnotationInstance annotation, ArrayList<PathElement> pathElements, boolean genericsRequired) {
+        TypeAnnotationState(TypeTarget target, AnnotationInstance annotation, ArrayList<PathElement> pathElements, boolean genericsRequired, boolean bridgeIncompatible) {
             this.target = target;
             this.annotation = annotation;
             this.pathElements = new PathElementStack(pathElements);
             this.genericsRequired = genericsRequired;
+            this.bridgeIncompatible = bridgeIncompatible;
         }
     }
 
@@ -1046,7 +1089,7 @@ public final class Indexer {
         boolean bool;
     }
 
-    private ArrayList<PathElement> processTargetPath(DataInputStream data, BooleanHolder genericsRequired) throws IOException {
+    private ArrayList<PathElement> processTargetPath(DataInputStream data, BooleanHolder genericsRequired, BooleanHolder bridgeIncompatible) throws IOException {
         int numElements = data.readUnsignedByte();
 
         ArrayList<PathElement> elements = new ArrayList<PathElement>(numElements);
@@ -1056,6 +1099,8 @@ public final class Indexer {
             PathElement.Kind kind = PathElement.KINDS[kindIndex];
             if (kind == PathElement.Kind.WILDCARD_BOUND || kind == PathElement.Kind.PARAMETERIZED) {
                 genericsRequired.bool = true;
+            } else if (kind == PathElement.Kind.ARRAY || kind == PathElement.Kind.NESTED) {
+                bridgeIncompatible.bool = true;
             }
             elements.add(new PathElement(kind, pos));
         }

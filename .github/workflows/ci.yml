@@ -58,3 +58,15 @@ jobs:
           enableMavenLocal=true
           jandex.version=1.0.0-dev-SNAPSHOT
           skipJandex=false
+    - name: Prepare failure archive (if run failed)
+      if: failure()
+      shell: bash
+      run: |
+       pwd 
+       tar -czf calcite-work.tgz ../calcite 
+    - name: Upload failure Archive (if run failed)
+      uses: actions/upload-artifact@v1
+      if: failure()
+      with:
+        name: calcite-work
+        path: calcite-work.tgz

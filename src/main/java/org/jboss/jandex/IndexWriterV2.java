@@ -378,7 +378,8 @@ final class IndexWriterV2 extends IndexWriterImpl{
 
     private void writeTypeTargetFields(PackedDataOutputStream stream, byte tag, TypeTarget target) throws IOException {
         stream.writeByte(tag);
-        stream.writePackedU32(positionOf(target.target()));
+        Type type = target.target();
+        stream.writePackedU32(type == null ? 0 : positionOf(type));
     }
 
     private void writeNameTable(PackedDataOutputStream stream) throws IOException {

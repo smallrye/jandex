@@ -72,6 +72,34 @@ public class TypeParameterBoundTestCase {
                 info.typeParameters().get(0).toString());
     }
 
+
+    @Test
+    public void classExtendsOnInner() throws IOException {
+        Indexer indexer = new Indexer();
+        ClassInfo info = indexer.index(getClassBytes("test/TypeParameterBoundExample$IteratorSupplier.class"));
+        Assert.assertEquals("java.util.function.Supplier<java.util.function.Consumer<@Nullable java.lang.Object[]>>",
+                            info.interfaceTypes().get(0).toString());
+    }
+
+    @Test
+    public void classExtendsOnAnonInInner() throws IOException {
+        Indexer indexer = new Indexer();
+        ClassInfo info = indexer.index(getClassBytes("test/TypeParameterBoundExample$IteratorSupplier$1.class"));
+        Assert.assertEquals("java.util.function.Consumer<@Nullable java.lang.Object[]>",
+                           info.interfaceTypes().get(0).toString());
+    }
+
+    @Test
+    public void classExtendsNestAnonExtendsInner() throws IOException {
+        Indexer indexer = new Indexer();
+        ClassInfo info = indexer.index(getClassBytes("test/TypeParameterBoundExample$Nest1$Nest2$Nest3$1$1.class"));
+        Assert.assertEquals("test.TypeParameterBoundExample$Nest1<java.lang.String>.Nest2<java.lang.Object[]>.Nest3<@Nullable java.lang.Integer>",
+                    info.superClassType().toString());
+        info = indexer.index(getClassBytes("test/TypeParameterBoundExample$Nest1$Nest2$Nest3$1$2.class"));
+        Assert.assertEquals("test.TypeParameterBoundExample$Nest1<java.lang.String>.Nest2<@Nullable java.lang.Object[]>.Nest3<java.lang.Integer>",
+                           info.superClassType().toString());
+    }
+
     @Test
     public void serializableListConsumerDA() throws IOException {
         Indexer indexer = new Indexer();

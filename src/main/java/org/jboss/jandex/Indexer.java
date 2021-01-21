@@ -985,8 +985,16 @@ public final class Indexer {
             }
         }
 
+        // UGLY HACK - Java 8 has a compiler bug that inserts bogus extra NESTED values
+        // when the enclosing type is an anonymous class (potentially multiple if there
+        // is multiple nested anonymous classes). Java 11 does not suffer from this issue
+        if (depth > 0 && hasAnonymousEncloser(typeAnnotationState)) {
+            return resolveTypePath(type, typeAnnotationState);
+        }
+
         if (last == null) {
-            throw new IllegalStateException("Required class information is missing");
+            throw new IllegalStateException("Required class information is missing on: "
+                    + typeAnnotationState.target.enclosingTarget().asClass().name().toString());
         }
 
         return last;
@@ -1015,7 +1023,18 @@ public final class Indexer {
             }
         }
 
+        // UGLY HACK - see comment in rebuildNestedType
+        if (hasAnonymousEncloser(typeAnnotationState)) {
+            return searchTypePath(type, typeAnnotationState);
+        }
+
         throw new IllegalStateException("Required class information is missing");
+    }
+
+    private boolean hasAnonymousEncloser(TypeAnnotationState typeAnnotationState) {
+        return typeAnnotationState.target instanceof ClassExtendsTypeTarget
+                && typeAnnotationState.target
+                .enclosingTarget().asClass().nestingType() == ClassInfo.NestingType.ANONYMOUS;
     }
 
     private ArrayDeque<InnerClassInfo> buildClassesQueue(DotName name) {

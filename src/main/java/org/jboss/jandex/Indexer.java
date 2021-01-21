@@ -665,6 +665,13 @@ public final class Indexer {
 
     }
 
+    private static boolean isInnerConstructor(MethodInfo method) {
+        ClassInfo klass = method.declaringClass();
+        return klass.nestingType() != ClassInfo.NestingType.TOP_LEVEL
+                                   && !Modifier.isStatic(klass.flags())
+                                   && "<init>".equals(method.name());
+    }
+
     private void resolveTypeAnnotation(AnnotationTarget target, TypeAnnotationState typeAnnotationState) {
         // Signature is erroneously omitted from bridge methods with generic type annotations
         if (typeAnnotationState.genericsRequired && !signaturePresent.containsKey(target)) {
@@ -684,7 +691,7 @@ public final class Indexer {
 
             TypeVariable type = types[index].asTypeVariable();
             if (type.hasImplicitObjectBound()) {
-                bound.adjustDown();
+                bound.adjustBoundDown();
             }
             int boundIndex = bound.boundPosition();
             if (boundIndex >= type.boundArray().length) {
@@ -721,6 +728,13 @@ public final class Indexer {
             }
 
             MethodParameterTypeTarget parameter = (MethodParameterTypeTarget) typeTarget;
+            // Type annotations refer to FORMAL positions, yet without generics, a descriptor
+            // may contain extra parameters (e.g. in the case of non-static inner class constructors
+            // (to hold the outer class reference))
+            if (isInnerConstructor(method) && !signaturePresent.containsKey(method))  {
+                parameter.adjustUp();
+            }
+
             int index = parameter.position();
             Type[] types = method.copyParameters();
 

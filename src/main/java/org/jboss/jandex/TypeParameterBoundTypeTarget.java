@@ -61,10 +61,10 @@ public class TypeParameterBoundTypeTarget extends TypeParameterTypeTarget {
      * @return the index of the bound this type annotation is within
      */
     public final int boundPosition() {
-        return boundPosition;
+        return boundPosition & 0xFFFF;
     }
 
-    void adjustDown() {
+    void adjustBoundDown() {
        if (!adjusted) {
            boundPosition--;
            adjusted = true;

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class TypeParameterBoundExample {
     // extends Runnable produces T::List signature, so
@@ -37,6 +38,17 @@ public class TypeParameterBoundExample {
             implements Consumer<T> {
         @Override
         public void accept(T t) {
+        }
+    }
+
+    public static class IteratorSupplier implements Supplier<Consumer<@Nullable Object[]>> {
+        @Override
+        public Consumer<@Nullable Object[]> get() {
+            return new Consumer<@Nullable Object[]>() {
+                @Override
+                public void accept(@Nullable Object[] objects) {
+                }
+            };
         }
     }
 }

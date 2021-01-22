@@ -41,7 +41,28 @@ public class TypeParameterBoundExample {
         }
     }
 
-    public static class IteratorSupplier implements Supplier<Consumer<@Nullable Object[]>> {
+
+
+    class Nest1<T> {
+        class Nest2<X> {
+            class Nest3<Y> {
+                public void foo() {
+                    new Consumer<@Nullable Object[]>(){
+                        public void accept(@Nullable Object[] objects) {
+                            new Nest1<String>.Nest2<Object[]>.Nest3<@Nullable Integer>() {
+
+                            };
+                            new Nest1<String>.Nest2<@Nullable Object[]>.Nest3<Integer>() {
+
+                            };
+                        }
+                    };
+                }
+            }
+        }
+    }
+
+    public class IteratorSupplier implements Supplier<Consumer<@Nullable Object[]>> {
         @Override
         public Consumer<@Nullable Object[]> get() {
             return new Consumer<@Nullable Object[]>() {

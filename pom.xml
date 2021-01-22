@@ -131,7 +131,7 @@
         <dependency>
             <groupId>org.jboss.jandex</groupId>
             <artifactId>typeannotation-test</artifactId>
-            <version>1.5</version>
+            <version>1.6</version>
             <type>jar</type>
             <scope>test</scope>
         </dependency>
@@ -158,7 +158,7 @@
                 <enabled>true</enabled>
             </releases>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>
         </repository>
     </repositories>

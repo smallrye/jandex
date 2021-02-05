@@ -613,6 +613,8 @@ final class IndexReaderV2 extends IndexReaderImpl {
             AnnotationTarget target = annotation.target();
             if (target instanceof MethodInfo) {
                 ((MethodInfo)target).setClassInfo(clazz);
+            } else if (target instanceof MethodParameterInfo) {
+                ((MethodParameterInfo)target).method().setClassInfo(clazz);
             } else if (target instanceof FieldInfo) {
                 ((FieldInfo)target).setClassInfo(clazz);
             }

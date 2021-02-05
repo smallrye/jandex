@@ -311,6 +311,12 @@ public class BasicTestCase {
         assertNesting(Something.class, ClassInfo.NestingType.LOCAL, true);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testNullStream() throws IOException {
+        Indexer indexer = new Indexer();
+        indexer.index(null);
+    }
+
     private void verifyDummy(Index index, boolean v2features) {
         AnnotationInstance instance = index.getAnnotations(DotName.createSimple(TestAnnotation.class.getName())).get(0);
 
@@ -459,11 +465,15 @@ public class BasicTestCase {
         assertThat(classInfo.nestingType(), result ? is(nesting) : not(nesting));
     }
 
-    private Index getIndexForClass(Class<?> clazz) throws IOException {
+    static Index getIndexForClass(Class<?> clazz) throws IOException {
         Indexer indexer = new Indexer();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(clazz.getName().replace('.', '/') + ".class");
+        InputStream stream = clazz.getClassLoader().getResourceAsStream(clazz.getName().replace('.', '/') + ".class");
         indexer.index(stream);
         return indexer.complete();
+    }
+    
+    static ClassInfo getClassInfo(Class<?> clazz) throws IOException {
+        return getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
     }
 
 }

@@ -45,6 +45,7 @@ public final class DotName implements Comparable<DotName> {
     static final DotName JAVA_NAME;
     static final DotName JAVA_LANG_NAME;
     static final DotName OBJECT_NAME;
+    static final DotName ENUM_NAME;
 
     private final DotName prefix;
     private final String local;
@@ -56,6 +57,7 @@ public final class DotName implements Comparable<DotName> {
         JAVA_NAME = new DotName(null, "java", true, false);
         JAVA_LANG_NAME = new DotName(JAVA_NAME, "lang", true, false);
         OBJECT_NAME = new DotName(JAVA_LANG_NAME, "Object", true, false);
+        ENUM_NAME = new DotName(JAVA_LANG_NAME, "Enum", true, false);
     }
 
     /**
@@ -178,6 +180,24 @@ public final class DotName implements Comparable<DotName> {
         builder.append(local);
     }
 
+
+    /**
+     * Returns the package portion of this DotName.
+     *
+     * @return the package name or null if this {@link DotName} has no package prefix
+     * @since 2.3.0
+     */
+    public String packagePrefix() {
+        if (componentized) {
+            if (innerClass) {
+                return prefix.packagePrefix();
+            }
+            return prefix.toString();
+        } else {
+            int index = local.lastIndexOf('.');
+            return index == -1 ? null : local.substring(0, index);
+        }
+    }
     /**
      * Returns whether this DotName is a componentized variant.
      *
@@ -355,7 +375,7 @@ public final class DotName implements Comparable<DotName> {
             if (exactToMatch.charAt(cursor) != expectNext) {
                 return false;
             }
-            
+
             current=current.prefix;
         }
         //And finally, verify we consumed it all:

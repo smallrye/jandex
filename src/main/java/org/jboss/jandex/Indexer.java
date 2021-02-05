@@ -18,8 +18,6 @@
 
 package org.jboss.jandex;
 
-import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
-
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -36,6 +34,8 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
 
 /**
  * Analyzes and indexes the annotation and key structural information of a set
@@ -84,6 +84,7 @@ public final class Indexer {
     private final static int CONSTANT_METHODTYPE = 16;
     private final static int CONSTANT_MODULE = 19;
     private final static int CONSTANT_PACKAGE = 20;
+    private final static int CONSTANT_DYNAMIC = 17;
 
     // "RuntimeVisibleAnnotations"
     private final static byte[] RUNTIME_ANNOTATIONS = new byte[] {
@@ -174,8 +175,6 @@ public final class Indexer {
 
     private final static byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
 
-    private IdentityHashMap<AnnotationTarget, Object> signaturePresent;
-
     private static class InnerClassInfo {
         private InnerClassInfo(DotName innerClass, DotName enclosingClass, String simpleName, int flags) {
             this.innnerClass = innerClass;
@@ -237,6 +236,7 @@ public final class Indexer {
     private ClassInfo currentClass;
     private HashMap<DotName, List<AnnotationInstance>> classAnnotations;
     private ArrayList<AnnotationInstance> elementAnnotations;
+    private IdentityHashMap<AnnotationTarget, Object> signaturePresent;
     private List<Object> signatures;
     private Map<DotName, InnerClassInfo> innerClasses;
     private IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>> typeAnnotations;
@@ -533,10 +533,12 @@ public final class Indexer {
             }
             case 0x10: // CLASS_EXTENDS
             {
-                if (!(target instanceof ClassInfo)) {
-                    throw new IllegalStateException("Class extends type annotation appeared on a non class target");
+                int position = data.readUnsignedShort();
+
+                // Skip invalid usage (observed bad bytecode on method attributes)
+                if (target instanceof ClassInfo) {
+                    typeTarget = new ClassExtendsTypeTarget((ClassInfo)target, position);
                 }
-                typeTarget = new ClassExtendsTypeTarget((ClassInfo)target, data.readUnsignedShort());
                 break;
             }
             case 0x11: // CLASS_TYPE_PARAMETER_BOUND
@@ -552,18 +554,18 @@ public final class Indexer {
                 break;
             case 0x16: // METHOD_FORMAL_PARAMETER
             {
-                if (!(target instanceof MethodInfo)) {
-                    throw new IllegalStateException("Method parameter type annotation appeared on a non-method target");
+                int position = data.readUnsignedByte();
+                if (target instanceof MethodInfo) {
+                    typeTarget = new MethodParameterTypeTarget((MethodInfo)target, position);
                 }
-                typeTarget = new MethodParameterTypeTarget((MethodInfo)target, data.readUnsignedByte());
                 break;
             }
             case 0x17: // THROWS
             {
-                if (!(target instanceof MethodInfo)) {
-                    throw new IllegalStateException("Throws type annotation appeared on a non-method target");
+                int position = data.readUnsignedShort();
+                if (target instanceof MethodInfo) {
+                    typeTarget = new ThrowsTypeTarget((MethodInfo) target, position);
                 }
-                typeTarget = new ThrowsTypeTarget((MethodInfo) target, data.readUnsignedShort());
                 break;
             }
             // Skip code attribute values, which shouldn't be present
@@ -594,13 +596,18 @@ public final class Indexer {
         }
 
         if (typeTarget == null) {
+            skipTargetPath(data);
+            // eat
+            // TODO - introduce an allocation free annotation skip
+            processAnnotation(data, null);
             return null;
         }
 
         BooleanHolder genericsRequired = new BooleanHolder();
-        ArrayList<PathElement> pathElements = processTargetPath(data, genericsRequired);
+        BooleanHolder bridgeIncompatible = new BooleanHolder();
+        ArrayList<PathElement> pathElements = processTargetPath(data, genericsRequired, bridgeIncompatible);
         AnnotationInstance annotation = processAnnotation(data, typeTarget);
-        return new TypeAnnotationState(typeTarget, annotation, pathElements, genericsRequired.bool);
+        return new TypeAnnotationState(typeTarget, annotation, pathElements, genericsRequired.bool, bridgeIncompatible.bool);
     }
 
     private void resolveTypeAnnotations() {
@@ -658,6 +665,13 @@ public final class Indexer {
 
     }
 
+    private static boolean isInnerConstructor(MethodInfo method) {
+        ClassInfo klass = method.declaringClass();
+        return klass.nestingType() != ClassInfo.NestingType.TOP_LEVEL
+                                   && !Modifier.isStatic(klass.flags())
+                                   && "<init>".equals(method.name());
+    }
+
     private void resolveTypeAnnotation(AnnotationTarget target, TypeAnnotationState typeAnnotationState) {
         // Signature is erroneously omitted from bridge methods with generic type annotations
         if (typeAnnotationState.genericsRequired && !signaturePresent.containsKey(target)) {
@@ -676,6 +690,9 @@ public final class Indexer {
             }
 
             TypeVariable type = types[index].asTypeVariable();
+            if (type.hasImplicitObjectBound()) {
+                bound.adjustBoundDown();
+            }
             int boundIndex = bound.boundPosition();
             if (boundIndex >= type.boundArray().length) {
                 return;
@@ -706,7 +723,18 @@ public final class Indexer {
             }
         } else if (typeTarget.usage() == TypeTarget.Usage.METHOD_PARAMETER) {
             MethodInfo method = (MethodInfo) target;
+            if (skipBridge(typeAnnotationState, method)) {
+                return;
+            }
+
             MethodParameterTypeTarget parameter = (MethodParameterTypeTarget) typeTarget;
+            // Type annotations refer to FORMAL positions, yet without generics, a descriptor
+            // may contain extra parameters (e.g. in the case of non-static inner class constructors
+            // (to hold the outer class reference))
+            if (isInnerConstructor(method) && !signaturePresent.containsKey(method))  {
+                parameter.adjustUp();
+            }
+
             int index = parameter.position();
             Type[] types = method.copyParameters();
 
@@ -721,10 +749,15 @@ public final class Indexer {
             field.setType(resolveTypePath(field.type(), typeAnnotationState));
         } else if (typeTarget.usage() == TypeTarget.Usage.EMPTY && target instanceof MethodInfo) {
             MethodInfo method = (MethodInfo) target;
+
             if (((EmptyTypeTarget) typeTarget).isReceiver()) {
                 method.setReceiverType(resolveTypePath(method.receiverType(), typeAnnotationState));
             } else {
-                method.setReturnType(resolveTypePath(method.returnType(), typeAnnotationState));
+                Type returnType = method.returnType();
+                if (skipBridge(typeAnnotationState, method)) {
+                    return;
+                }
+                method.setReturnType(resolveTypePath(returnType, typeAnnotationState));
             }
         } else if (typeTarget.usage() == TypeTarget.Usage.THROWS  && target instanceof MethodInfo) {
             MethodInfo method = (MethodInfo) target;
@@ -738,6 +771,30 @@ public final class Indexer {
             exceptions[position] = resolveTypePath(exceptions[position], typeAnnotationState);
             method.setExceptions(intern(exceptions));
         }
+    }
+
+    private boolean skipBridge(TypeAnnotationState typeAnnotationState, MethodInfo method) {
+        // javac copies annotations to bridge methods (which is good), however type annotations
+        // might become invalid. For instance, the bridge signature for @Nullable Object[] is
+        // Object (non-array), so usage=ARRAY signature is invalid. Other cases include annotated
+        // inner classes.
+        //
+        // We ignore those annotations for the bridge methods.
+        // See https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6695379
+        return typeAnnotationState.bridgeIncompatible && isBridge(method);
+    }
+
+    private boolean isBridge(MethodInfo methodInfo) {
+        int bridgeModifiers = Modifiers.SYNTHETIC | 0x40;
+        return (methodInfo.flags() & bridgeModifiers) == bridgeModifiers;
+    }
+
+    private boolean targetsArray(TypeAnnotationState typeAnnotationState) {
+        if (typeAnnotationState.pathElements.size() == 0) {
+            return false;
+        }
+        PathElement pathElement = typeAnnotationState.pathElements.peek();
+        return pathElement != null && pathElement.kind == PathElement.Kind.ARRAY;
     }
 
     private Type resolveTypePath(Type type, TypeAnnotationState typeAnnotationState) {
@@ -816,6 +873,9 @@ public final class Indexer {
                 } else {
                     MethodInfo method = (MethodInfo) enclosingTarget;
                     type = target.asEmpty().isReceiver() ? method.receiverType() : method.returnType();
+                    if (skipBridge(typeAnnotationState, method)) {
+                        return;
+                    }
                 }
                 break;
             }
@@ -827,7 +887,11 @@ public final class Indexer {
             }
             case METHOD_PARAMETER: {
                 MethodInfo method = (MethodInfo) enclosingTarget;
+                if (skipBridge(typeAnnotationState, method)) {
+                    return;
+                }
                 type = method.methodInternal().parameterArray()[target.asMethodParameterType().position()];
+
                 break;
             }
             case TYPE_PARAMETER: {
@@ -921,8 +985,16 @@ public final class Indexer {
             }
         }
 
+        // UGLY HACK - Java 8 has a compiler bug that inserts bogus extra NESTED values
+        // when the enclosing type is an anonymous class (potentially multiple if there
+        // is multiple nested anonymous classes). Java 11 does not suffer from this issue
+        if (depth > 0 && hasAnonymousEncloser(typeAnnotationState)) {
+            return resolveTypePath(type, typeAnnotationState);
+        }
+
         if (last == null) {
-            throw new IllegalStateException("Required class information is missing");
+            throw new IllegalStateException("Required class information is missing on: "
+                    + typeAnnotationState.target.enclosingTarget().asClass().name().toString());
         }
 
         return last;
@@ -951,7 +1023,18 @@ public final class Indexer {
             }
         }
 
+        // UGLY HACK - see comment in rebuildNestedType
+        if (hasAnonymousEncloser(typeAnnotationState)) {
+            return searchTypePath(type, typeAnnotationState);
+        }
+
         throw new IllegalStateException("Required class information is missing");
+    }
+
+    private boolean hasAnonymousEncloser(TypeAnnotationState typeAnnotationState) {
+        return typeAnnotationState.target instanceof ClassExtendsTypeTarget
+                && typeAnnotationState.target
+                .enclosingTarget().asClass().nestingType() == ClassInfo.NestingType.ANONYMOUS;
     }
 
     private ArrayDeque<InnerClassInfo> buildClassesQueue(DotName name) {
@@ -1022,14 +1105,16 @@ public final class Indexer {
         private final TypeTarget target;
         private final AnnotationInstance annotation;
         private final boolean genericsRequired;
+        private final boolean bridgeIncompatible;
         private final PathElementStack pathElements;
 
 
-        public TypeAnnotationState(TypeTarget target, AnnotationInstance annotation, ArrayList<PathElement> pathElements, boolean genericsRequired) {
+        TypeAnnotationState(TypeTarget target, AnnotationInstance annotation, ArrayList<PathElement> pathElements, boolean genericsRequired, boolean bridgeIncompatible) {
             this.target = target;
             this.annotation = annotation;
             this.pathElements = new PathElementStack(pathElements);
             this.genericsRequired = genericsRequired;
+            this.bridgeIncompatible = bridgeIncompatible;
         }
     }
 
@@ -1037,7 +1122,7 @@ public final class Indexer {
         boolean bool;
     }
 
-    private ArrayList<PathElement> processTargetPath(DataInputStream data, BooleanHolder genericsRequired) throws IOException {
+    private ArrayList<PathElement> processTargetPath(DataInputStream data, BooleanHolder genericsRequired, BooleanHolder bridgeIncompatible) throws IOException {
         int numElements = data.readUnsignedByte();
 
         ArrayList<PathElement> elements = new ArrayList<PathElement>(numElements);
@@ -1047,11 +1132,18 @@ public final class Indexer {
             PathElement.Kind kind = PathElement.KINDS[kindIndex];
             if (kind == PathElement.Kind.WILDCARD_BOUND || kind == PathElement.Kind.PARAMETERIZED) {
                 genericsRequired.bool = true;
+            } else if (kind == PathElement.Kind.ARRAY || kind == PathElement.Kind.NESTED) {
+                bridgeIncompatible.bool = true;
             }
             elements.add(new PathElement(kind, pos));
         }
 
         return elements;
+    }
+
+    private void skipTargetPath(DataInputStream data) throws IOException {
+           int numElements = data.readUnsignedByte();
+           skipFully(data, numElements * 2);
     }
 
     private void processExceptions(DataInputStream data, MethodInfo target) throws IOException {
@@ -1483,6 +1575,7 @@ public final class Indexer {
             switch (tag) {
                 case CONSTANT_CLASS:
                 case CONSTANT_STRING:
+                case CONSTANT_METHODTYPE:
                     buf = sizeToFit(buf, 3, offset, poolCount - pos);
                     buf[offset++] = (byte) tag;
                     stream.readFully(buf, offset, 2);
@@ -1493,6 +1586,7 @@ public final class Indexer {
                 case CONSTANT_INTERFACEMETHODREF:
                 case CONSTANT_INTEGER:
                 case CONSTANT_INVOKEDYNAMIC:
+                case CONSTANT_DYNAMIC:
                 case CONSTANT_FLOAT:
                 case CONSTANT_NAMEANDTYPE:
                     buf = sizeToFit(buf, 5, offset, poolCount - pos);
@@ -1513,12 +1607,6 @@ public final class Indexer {
                     buf[offset++] = (byte) tag;
                     stream.readFully(buf, offset, 3);
                     offset += 3;
-                    break;
-                case CONSTANT_METHODTYPE:
-                    buf = sizeToFit(buf, 3, offset, poolCount - pos);
-                    buf[offset++] = (byte) tag;
-                    stream.readFully(buf, offset, 2);
-                    offset += 2;
                     break;
                 case CONSTANT_UTF8:
                     int len = stream.readUnsignedShort();
@@ -1560,7 +1648,8 @@ public final class Indexer {
                     // ignoring module-info.class files for now
                     throw new IgnoreModuleInfoException();
                default:
-                   throw new IllegalStateException("Unknown tag! pos=" + pos + " poolCount = " + poolCount);
+                   throw new IllegalStateException(
+                           String.format("Unknown tag %s! pos = %s poolCount = %s", tag, pos, poolCount));
             }
         }
 
@@ -1579,8 +1668,12 @@ public final class Indexer {
      * @param stream a stream pointing to class file data
      * @return a class index containing all annotations on the passed class stream
      * @throws IOException if the class file data is corrupt or the underlying stream fails
+     * @throws IllegalArgumentException if stream is null
      */
     public ClassInfo index(InputStream stream) throws IOException {
+        if (stream == null) {
+            throw new IllegalArgumentException("stream cannot be null");
+        }
         try
         {
             DataInputStream data = new DataInputStream(new BufferedInputStream(stream));

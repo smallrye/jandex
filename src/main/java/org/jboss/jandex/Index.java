@@ -19,6 +19,7 @@
 package org.jboss.jandex;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -45,6 +46,8 @@ import java.util.Set;
 public final class Index implements IndexView {
     private static final List<AnnotationInstance> EMPTY_ANNOTATION_LIST = Collections.emptyList();
     private static final List<ClassInfo> EMPTY_CLASSINFO_LIST = Collections.emptyList();
+    
+    static final DotName REPEATABLE = DotName.createSimple("java.lang.annotation.Repeatable");
 
     final Map<DotName, List<AnnotationInstance>> annotations;
     final Map<DotName, List<ClassInfo>> subclasses;
@@ -75,7 +78,6 @@ public final class Index implements IndexView {
         return new Index(annotations, subclasses, implementors, classes);
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -83,6 +85,39 @@ public final class Index implements IndexView {
         List<AnnotationInstance> list = annotations.get(annotationName);
         return list == null ? EMPTY_ANNOTATION_LIST: Collections.unmodifiableList(list);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, IndexView index) {
+        ClassInfo annotationClass = index.getClassByName(annotationName);
+        if (annotationClass == null) {
+            throw new IllegalArgumentException("Index does not contain the annotation definition: " + annotationName);
+        }
+        if (!annotationClass.isAnnotation()) {
+            throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
+        }
+        AnnotationInstance repeatable = annotationClass.classAnnotation(REPEATABLE);
+        if (repeatable == null) {
+            // Not a repeatable annotation
+            return getAnnotations(annotationName);
+        }
+        Type containing = repeatable.value().asClass();
+        return getRepeatableAnnotations(annotationName, containing.name());
+    }
+    
+    private Collection<AnnotationInstance> getRepeatableAnnotations(DotName annotationName, DotName containingAnnotationName) {
+        List<AnnotationInstance> instances = new ArrayList<AnnotationInstance>();
+        instances.addAll(getAnnotations(annotationName));
+        for (AnnotationInstance containingInstance : getAnnotations(containingAnnotationName)) {
+            for (AnnotationInstance nestedInstance : containingInstance.value().asNestedArray()) {
+                // We need to set the target of the containing instance
+                instances.add(new AnnotationInstance(nestedInstance.name(), containingInstance.target(), nestedInstance.valueArray()));
+            }
+        }
+        return instances;
+    }
+
 
     /**
      * {@inheritDoc}

@@ -41,16 +41,18 @@ package org.jboss.jandex;
  * @author Jason T. Greene
  */
 public class TypeParameterBoundTypeTarget extends TypeParameterTypeTarget {
-    private int boundPosition;
+    // bound pos is defined as a u1, reuse the extra bytes for the boolean
+    private short boundPosition;
+    private boolean adjusted;
 
     TypeParameterBoundTypeTarget(AnnotationTarget enclosingTarget, int position, int boundPosition) {
         super(enclosingTarget, position);
-        this.boundPosition = boundPosition;
+        this.boundPosition = (short)boundPosition;
     }
 
     TypeParameterBoundTypeTarget(AnnotationTarget enclosingTarget, Type target, int position, int boundPosition) {
         super(enclosingTarget, target, position);
-        this.boundPosition = boundPosition;
+        this.boundPosition = (short)boundPosition;
     }
 
     /**
@@ -59,7 +61,14 @@ public class TypeParameterBoundTypeTarget extends TypeParameterTypeTarget {
      * @return the index of the bound this type annotation is within
      */
     public final int boundPosition() {
-        return boundPosition;
+        return boundPosition & 0xFFFF;
+    }
+
+    void adjustBoundDown() {
+       if (!adjusted) {
+           boundPosition--;
+           adjusted = true;
+       }
     }
 
     @Override

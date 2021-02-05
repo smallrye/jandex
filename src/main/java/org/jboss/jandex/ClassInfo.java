@@ -19,6 +19,7 @@
 package org.jboss.jandex;
 
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -218,6 +219,30 @@ public final class ClassInfo implements AnnotationTarget {
     public final short flags() {
         return flags;
     }
+    
+    /**
+     * 
+     * @return {@code true} if this class is a synthetic class
+     */
+    public final boolean isSynthetic() {
+        return Modifiers.isSynthetic(flags);
+    }
+
+    /**
+     * 
+     * @return {@code true} if this class was declared as an enum
+     */
+    public final boolean isEnum() {
+        return (flags & Modifiers.ENUM) != 0 && DotName.ENUM_NAME.equals(superName());
+    }
+
+    /**
+     * 
+     * @return {@code true} if this class object represents an annotation type
+     */
+    public final boolean isAnnotation() {
+        return (flags & Modifiers.ANNOTATION) != 0;
+    }
 
     /**
      * Returns the name of the super class declared by the extends clause of this class. This
@@ -286,6 +311,45 @@ public final class ClassInfo implements AnnotationTarget {
         }
         return null;
     }
+    
+    /**
+     * Retrieves annotation instances declared on this class, by the name of the annotation.
+     * 
+     * If the specified annotation is repeatable (JLS 9.6), then attempt to  result contains the values from the containing annotation.
+     * 
+     * @param name the name of the annotation
+     * @param index the index used to obtain the annotation class
+     * @return the annotation instances declared on this field, or an empty list if none
+     */
+    public final List<AnnotationInstance> classAnnotationsWithRepeatable(DotName name, IndexView index) {
+        AnnotationInstance ret = classAnnotation(name);
+        if (ret != null) {
+            // Annotation present - no need to try to find repeatable annotations
+            return Collections.singletonList(ret);
+        }
+        ClassInfo annotationClass = index.getClassByName(name);
+        if (annotationClass == null) {
+            throw new IllegalArgumentException("Index does not contain the annotation definition: " + name);
+        }
+        if (!annotationClass.isAnnotation()) {
+            throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
+        }
+        AnnotationInstance repeatable = annotationClass.classAnnotation(Index.REPEATABLE);
+        if (repeatable == null) {
+            return Collections.emptyList();
+        }
+        Type containingType = repeatable.value().asClass();
+        AnnotationInstance containing = classAnnotation(containingType.name());
+        if (containing == null) {
+            return Collections.emptyList();
+        }
+        AnnotationInstance[] values = containing.value().asNestedArray();
+        List<AnnotationInstance> instances = new ArrayList<AnnotationInstance>(values.length);
+        for (AnnotationInstance nestedInstance : values) {
+            instances.add(nestedInstance);
+        }
+        return instances;
+    }
 
     /**
      * Returns a list of all methods declared in this class. This includes constructors
@@ -299,6 +363,25 @@ public final class ClassInfo implements AnnotationTarget {
      */
     public final List<MethodInfo> methods() {
         return new MethodInfoGenerator(this, methods);
+    }
+
+    /**
+     * Returns a list of all constructors declared in this class (which the JVM names "&lt;init&gt;").
+     * It does not include inherited methods.
+     * These must be discovered by traversing the class hierarchy.
+     *
+     * <p>This list may never be null.</p>
+     *
+     * @return the list of constructors declared in this class
+     */
+    public final List<MethodInfo> constructors() {
+        List<MethodInfo> constructors = new ArrayList<MethodInfo>(1);
+        for (MethodInfo method : methods()) {
+            if ("<init>".equals(method.name())) {
+                constructors.add(method);
+            }
+        }
+        return constructors;
     }
 
     final MethodInternal[] methodArray() {

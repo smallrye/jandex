@@ -148,8 +148,9 @@ The following example demonstrates indexing the Thread and String classes, and s
 Indexer indexer = new Indexer();
 InputStream stream = getClass().getClassLoader()
                                .getResourceAsStream("java/lang/Thread.class");
-InputStream stream = getClass().getClassLoader()
-                               .getResourceAsStream("java/lang/String.class");
+indexer.index(stream);
+stream = getClass().getClassLoader()
+                   .getResourceAsStream("java/lang/String.class");
 indexer.index(stream);
 Index index = indexer.complete();
 DotName deprecated = DotName.createSimple("java.lang.Deprecated");

@@ -91,7 +91,9 @@ public abstract class TypeTarget implements AnnotationTarget {
     }
 
     /**
-     * Returns the type which contains the respective annotation.
+     * Returns the type which contains the respective annotation. In some cases this may be null
+     * (e.g. in the case of a bridge method, which erases type information so there is no
+     * target to map to)
      *
      * @return the type containing the respective annotation
      */

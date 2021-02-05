@@ -408,13 +408,18 @@ class GenericSignatureParser {
             bounds.add(parseReferenceType());
         }
 
+        boolean implicitObjectBound = false;
         // Interface bounds are none to many, with a required reference type
         while (signature.charAt(pos) == ':') {
             pos++;
+
+            if (bounds.size() == 0) {
+                implicitObjectBound = true;
+            }
             bounds.add(parseReferenceType());
         }
 
-        TypeVariable type = new TypeVariable(name, bounds.toArray(new Type[bounds.size()]));
+        TypeVariable type = new TypeVariable(name, bounds.toArray(new Type[bounds.size()]), null, implicitObjectBound);
         typeParameters.put(name, type);
         return type;
     }

@@ -30,16 +30,24 @@ package org.jboss.jandex;
  * @author Jason T. Greene
 */
 public abstract class PositionBasedTypeTarget extends TypeTarget {
-    private final int position;
+    private short position; // throws is a u2, everything else is u1
+    private boolean adjusted;
 
     PositionBasedTypeTarget(AnnotationTarget enclosingTarget, int position) {
         super(enclosingTarget);
-        this.position = position;
+        this.position = (short)position;
     }
 
     PositionBasedTypeTarget(AnnotationTarget enclosingTarget, Type target, int position) {
         super(enclosingTarget, target);
-        this.position = position;
+        this.position = (short)position;
+    }
+
+    void adjustUp() {
+        if (!adjusted) {
+            position++;
+            adjusted = true;
+        }
     }
 
     /**
@@ -48,7 +56,7 @@ public abstract class PositionBasedTypeTarget extends TypeTarget {
      * @return the position
      */
     public final int position() {
-        return position;
+        return position & 0xFFFF;
     }
 
 }

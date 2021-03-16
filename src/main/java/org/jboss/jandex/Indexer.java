@@ -138,17 +138,17 @@ public final class Indexer {
     private final static byte[] METHOD_PARAMETERS = new byte[] {
         0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73
     };
-    
+
     // "LocalVariableTable"
     private final static byte[] LOCAL_VARIABLE_TABLE = new byte[] {
         0x4c, 0x6f, 0x63, 0x61, 0x6c, 0x56, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65
     };
-    
+
     // "Code"
     private final static byte[] CODE = new byte[] {
         0x43, 0x6f, 0x64, 0x65
     };
-    
+
     private final static int RUNTIME_ANNOTATIONS_LEN = RUNTIME_ANNOTATIONS.length;
     private final static int RUNTIME_PARAM_ANNOTATIONS_LEN = RUNTIME_PARAM_ANNOTATIONS.length;
     private final static int RUNTIME_TYPE_ANNOTATIONS_LEN = RUNTIME_TYPE_ANNOTATIONS.length;
@@ -305,7 +305,7 @@ public final class Indexer {
             processAttributes(data, method);
             method.setAnnotations(elementAnnotations);
             elementAnnotations.clear();
-            
+
             // Prefer method parameter names over debug info
             if(methodParameterNames != null)
                 method.methodInternal().setParameterNames(methodParameterNames);
@@ -440,7 +440,7 @@ public final class Indexer {
 
             parameterNames[filledParameters++] = parameterName;
         }
-        
+
         byte[][] realParameterNames = filledParameters > 0 ? new byte[filledParameters][] : MethodInternal.EMPTY_PARAMETER_NAMES;
         if(filledParameters > 0)
             System.arraycopy(parameterNames, 0, realParameterNames, 0, filledParameters);
@@ -457,7 +457,7 @@ public final class Indexer {
             int nameIndex = data.readUnsignedShort();
             int descriptorIndex = data.readUnsignedShort();
             int index = data.readUnsignedShort();
-            
+
             // parameters have startPc == 0
             if(startPc != 0)
                 continue;
@@ -477,7 +477,7 @@ public final class Indexer {
                     && parameterName[3] == 0x73
                     && parameterName[4] == 0x24)
                 continue;
-            
+
             // here we rely on the parameters being in the right order
             variableNames[numParameters++] = parameterName;
         }
@@ -1449,14 +1449,14 @@ public final class Indexer {
     }
 
     private long bitsToLong(byte[] pool, int pos) {
-        return ((long)pool[++pos] & 0xFF) << 56 |
-               ((long)pool[++pos] & 0xFF) << 48 |
-               ((long)pool[++pos] & 0xFF) << 40 |
-               ((long)pool[++pos] & 0xFF) << 32 |
-                     (pool[++pos] & 0xFF) << 24 |
-                     (pool[++pos] & 0xFF) << 16 |
-                     (pool[++pos] & 0xFF) << 8  |
-                     (pool[++pos] & 0xFF);
+        return ((long)(pool[++pos] & 0xFF)) << 56 |
+               ((long)(pool[++pos] & 0xFF)) << 48 |
+               ((long)(pool[++pos] & 0xFF)) << 40 |
+               ((long)(pool[++pos] & 0xFF)) << 32 |
+               ((long)(pool[++pos] & 0xFF)) << 24 |
+               ((long)(pool[++pos] & 0xFF)) << 16 |
+               ((long)(pool[++pos] & 0xFF)) << 8  |
+               ((long)(pool[++pos] & 0xFF));
     }
 
     private int decodeIntegerEntry(int index) {

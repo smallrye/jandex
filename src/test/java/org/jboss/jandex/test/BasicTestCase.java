@@ -24,10 +24,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -60,6 +63,7 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.PrimitiveType;
 import org.jboss.jandex.Type;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 
 public class BasicTestCase {
     @Retention(RetentionPolicy.RUNTIME)
@@ -186,6 +190,72 @@ public class BasicTestCase {
 
         verifyDummy(index, true);
         index.printSubclasses();
+    }
+
+    @Test
+    public void testIndexOfDirectory() throws IOException, URISyntaxException {
+        URL testLocation = getClass().getResource(getClass().getSimpleName() + ".class");
+        File testDirectory = new File(testLocation.toURI().resolve("."));
+        int expectedCount = testDirectory.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                return pathname.isFile() && pathname.getName().endsWith(".class");
+            }
+        }).length;
+        Index index = Index.of(testDirectory);
+        assertEquals(expectedCount, index.getKnownClasses().size());
+    }
+
+    @Test
+    public void testIndexOfEmptyDirectory() throws IOException, URISyntaxException {
+        URL testLocation = getClass().getResource(getClass().getSimpleName() + ".class");
+        File testDirectory = new File(testLocation.toURI().resolve("../../../../"));
+        Index index = Index.of(testDirectory);
+        assertEquals(0, index.getKnownClasses().size());
+    }
+
+    @Test
+    public void testIndexOfDirectoryNonClassFile() throws IOException, URISyntaxException {
+        File tempDir = null;
+        File temp = null;
+
+        try {
+            tempDir = File.createTempFile("temp", ".dir");
+            tempDir.delete();
+            tempDir.mkdir();
+            temp = File.createTempFile("dummy", ".tmp", tempDir);
+            Index index = Index.of(temp.getParentFile());
+            assertEquals(0, index.getKnownClasses().size());
+        } finally {
+            if (temp != null) {
+                temp.delete();
+            }
+            if (tempDir != null) {
+                tempDir.delete();
+            }
+        }
+    }
+
+    @Test
+    public void testIndexOfNonDirectory() throws IOException, URISyntaxException {
+        final URL testLocation = getClass().getResource(getClass().getSimpleName() + ".class");
+        final File thisClassFile = new File(testLocation.toURI());
+        assertThrows(IllegalArgumentException.class, new ThrowingRunnable() {
+            @Override
+            public void run() throws Throwable {
+                Index.of(thisClassFile);
+            }
+        });
+    }
+
+    @Test
+    public void testIndexOfNullDirectory() throws IOException, URISyntaxException {
+        assertThrows(IllegalArgumentException.class, new ThrowingRunnable() {
+            @Override
+            public void run() throws Throwable {
+                Index.of((File) null);
+            }
+        });
     }
 
     @Test
@@ -333,6 +403,12 @@ public class BasicTestCase {
     public void testNullStream() throws IOException {
         Indexer indexer = new Indexer();
         indexer.index(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testNullClass() throws IOException {
+        Indexer indexer = new Indexer();
+        indexer.indexClass(null);
     }
 
     private void verifyDummy(Index index, boolean v2features) {
@@ -484,14 +560,9 @@ public class BasicTestCase {
     }
 
     static Index getIndexForClasses(Class<?>... classes) throws IOException {
-        Indexer indexer = new Indexer();
-        for (Class<?> klass : classes) {
-            InputStream stream = klass.getClassLoader().getResourceAsStream(klass.getName().replace('.', '/') + ".class");
-            indexer.index(stream);
-        }
-        return indexer.complete();
+        return Index.of(classes);
     }
-    
+
     static ClassInfo getClassInfo(Class<?> clazz) throws IOException {
         return getIndexForClasses(clazz).getClassByName(DotName.createSimple(clazz.getName()));
     }

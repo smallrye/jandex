@@ -18,8 +18,13 @@
 
 package org.jboss.jandex;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -46,7 +51,7 @@ import java.util.Set;
 public final class Index implements IndexView {
     private static final List<AnnotationInstance> EMPTY_ANNOTATION_LIST = Collections.emptyList();
     private static final List<ClassInfo> EMPTY_CLASSINFO_LIST = Collections.emptyList();
-    
+
     static final DotName REPEATABLE = DotName.createSimple("java.lang.annotation.Repeatable");
 
     final Map<DotName, List<AnnotationInstance>> annotations;
@@ -103,13 +108,69 @@ public final class Index implements IndexView {
     }
 
     /**
+     * Constructs a "mock" Index using the passed classes.
+     *
+     * @param classes An Iterable collection of classes to include in the index
+     * @return the index
+     */
+    public static Index of(Iterable<Class<?>> classes) throws IOException {
+        Indexer indexer = new Indexer();
+
+        for (Class<?> clazz : classes) {
+            indexer.indexClass(clazz);
+        }
+
+        return indexer.complete();
+    }
+
+    /**
+     * Constructs a "mock" Index using the passed classes.
+     *
+     * @param classes Classes to include in the index
+     * @return the index
+     */
+    public static Index of(Class<?>... classes) throws IOException {
+        return of(Arrays.asList(classes));
+    }
+
+    /**
+     * Constructs a "mock" Index containing class files found in the passed directories.
+     *
+     * @param directories Directories containing class files to include in the index
+     * @return the index
+     * @throws IllegalArgumentException if any directories are null or are not a directory
+     */
+    public static Index of(File... directories) throws IOException {
+        Indexer indexer = new Indexer();
+
+        for (File directory : directories) {
+            if (directory == null || !directory.isDirectory()) {
+                throw new IllegalArgumentException("not a directory: " + directory);
+            }
+
+            File[] sources = directory.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    return pathname.isFile() && pathname.getName().endsWith(".class");
+                }
+            });
+
+            for (File source : sources) {
+                indexer.index(new FileInputStream(source));
+            }
+        }
+
+        return indexer.complete();
+    }
+
+    /**
      * {@inheritDoc}
      */
     public List<AnnotationInstance> getAnnotations(DotName annotationName) {
         List<AnnotationInstance> list = annotations.get(annotationName);
         return list == null ? EMPTY_ANNOTATION_LIST: Collections.unmodifiableList(list);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -129,7 +190,7 @@ public final class Index implements IndexView {
         Type containing = repeatable.value().asClass();
         return getRepeatableAnnotations(annotationName, containing.name());
     }
-    
+
     private Collection<AnnotationInstance> getRepeatableAnnotations(DotName annotationName, DotName containingAnnotationName) {
         List<AnnotationInstance> instances = new ArrayList<AnnotationInstance>();
         instances.addAll(getAnnotations(annotationName));

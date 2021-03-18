@@ -1683,6 +1683,25 @@ public final class Indexer {
     }
 
     /**
+     * Analyze and index the class file data present in the passed class.
+     * Each call adds information to the final complete index; however, to aid in
+     * processing a per-class index (ClassInfo) is returned on each call.
+     *
+     * @param clazz a previously-loaded class
+     * @return a class index containing all annotations on the passed class stream
+     * @throws IOException if the class file data is corrupt or the underlying stream fails
+     * @throws IllegalArgumentException if clazz is null
+     */
+    public ClassInfo indexClass(Class<?> clazz) throws IOException {
+        if (clazz == null) {
+            throw new IllegalArgumentException("clazz cannot be null");
+        }
+        String resourceName = clazz.getName().replace('.', '/') + ".class";
+        InputStream resource = clazz.getClassLoader().getResourceAsStream(resourceName);
+        return index(resource);
+    }
+
+    /**
      * Analyze and index the class file data present in the passed input stream.
      * Each call adds information to the final complete index; however, to aid in
      * processing a per-class index (ClassInfo) is returned on each call.

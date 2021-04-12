@@ -236,6 +236,26 @@ public final class FieldInfo implements AnnotationTarget {
         throw new IllegalArgumentException("Not a type");
     }
 
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + clazz.hashCode();
+        result = 31 * result + internal.hashCode();
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        FieldInfo other = (FieldInfo) o;
+        return clazz.equals(other.clazz) && internal.equals(other.internal);
+    }
+
     void setType(Type type) {
         internal.setType(type);
     }

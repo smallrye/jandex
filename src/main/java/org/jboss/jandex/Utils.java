@@ -19,6 +19,7 @@
 package org.jboss.jandex;
 
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -51,4 +52,9 @@ class Utils {
     static <K, V> Map<K, V> emptyOrWrap(Map<K, V> map) {
         return map.size() == 0 ? Collections.<K, V>emptyMap() : Collections.unmodifiableMap(map);
     }
+
+    static <T> List<T> listOfCapacity(int capacity) {
+        return capacity > 0 ? new ArrayList<T>(capacity) : Collections.<T>emptyList();
+    }
+
 }

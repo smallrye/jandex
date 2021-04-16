@@ -192,4 +192,10 @@ public abstract class TypeTarget implements AnnotationTarget {
     public final TypeTarget asType() {
         return this;
     }
+
+    @Override
+    public RecordComponentInfo asRecordComponent() {
+        throw new IllegalArgumentException("Not a record component");
+    }
+
 }

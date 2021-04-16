@@ -58,15 +58,17 @@ public final class Index implements IndexView {
     final Map<DotName, List<ClassInfo>> subclasses;
     final Map<DotName, List<ClassInfo>> implementors;
     final Map<DotName, ClassInfo> classes;
+    final Map<DotName, ModuleInfo> modules;
     final Map<DotName, List<ClassInfo>> users;
 
     Index(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
-          Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes,
+          Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes, Map<DotName, ModuleInfo> modules,
           Map<DotName, List<ClassInfo>> users) {
         this.annotations = Collections.unmodifiableMap(annotations);
         this.classes = Collections.unmodifiableMap(classes);
         this.subclasses = Collections.unmodifiableMap(subclasses);
         this.implementors = Collections.unmodifiableMap(implementors);
+        this.modules = Collections.unmodifiableMap(modules);
         this.users = Collections.unmodifiableMap(users);
     }
 
@@ -85,7 +87,7 @@ public final class Index implements IndexView {
      */
     public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
                                Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
-        return new Index(annotations, subclasses, implementors, classes, Collections.<DotName, List<ClassInfo>>emptyMap());
+        return new Index(annotations, subclasses, implementors, classes, Collections.<DotName, ModuleInfo>emptyMap(), Collections.<DotName, List<ClassInfo>>emptyMap());
     }
 
     /**
@@ -104,7 +106,7 @@ public final class Index implements IndexView {
     public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
                                Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes,
                                Map<DotName, List<ClassInfo>> users) {
-        return new Index(annotations, subclasses, implementors, classes, users);
+        return new Index(annotations, subclasses, implementors, classes, Collections.<DotName, ModuleInfo>emptyMap(), users);
     }
 
     /**
@@ -303,6 +305,22 @@ public final class Index implements IndexView {
      */
     public Collection<ClassInfo> getKnownClasses() {
         return classes.values();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<ModuleInfo> getKnownModules() {
+        return modules.values();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ModuleInfo getModuleByName(DotName moduleName) {
+        return modules.get(moduleName);
     }
 
     /**

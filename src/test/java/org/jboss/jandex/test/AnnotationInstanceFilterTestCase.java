@@ -18,9 +18,6 @@
 
 package org.jboss.jandex.test;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,11 +32,9 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
-import org.jboss.jandex.Index;
-import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
-import org.jboss.jandex.Type;
+import org.jboss.jandex.RecordComponentInfo;
 import org.jboss.jandex.TypeTarget;
 import org.junit.Assert;
 import org.junit.Test;
@@ -75,6 +70,11 @@ public class AnnotationInstanceFilterTestCase {
         public TypeTarget asType() {
             return null;
         }
+
+        @Override
+        public RecordComponentInfo asRecordComponent() {
+            return null;
+        }
     }
     private static class Miss implements AnnotationTarget{
         @Override
@@ -104,6 +104,11 @@ public class AnnotationInstanceFilterTestCase {
 
         @Override
         public TypeTarget asType() {
+            return null;
+        }
+
+        @Override
+        public RecordComponentInfo asRecordComponent() {
             return null;
         }
     }

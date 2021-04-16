@@ -71,6 +71,11 @@ public class TypeAnnotationTestCase {
         indexer.index(stream);
         stream = getClass().getClassLoader().getResourceAsStream("test/VExample$1Fun.class");
         indexer.index(stream);
+        stream = getClass().getClassLoader().getResourceAsStream("test/RecordExample.class");
+        indexer.index(stream);
+        stream = getClass().getClassLoader().getResourceAsStream("test/RecordExample$NestedEmptyRecord.class");
+        indexer.index(stream);
+        ModuleInfoTestCase.indexAvailableModuleInfo(indexer);
 
         return indexer.complete();
     }

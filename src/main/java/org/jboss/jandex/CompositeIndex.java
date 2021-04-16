@@ -73,7 +73,7 @@ public class CompositeIndex implements IndexView {
         }
         return Collections.unmodifiableList(allInstances);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -213,6 +213,33 @@ public class CompositeIndex implements IndexView {
         final List<ClassInfo> allKnown = new ArrayList<ClassInfo>();
         for (IndexView index : indexes) {
             final Collection<ClassInfo> list = index.getKnownClasses();
+            if (list != null) {
+                allKnown.addAll(list);
+            }
+        }
+        return Collections.unmodifiableCollection(allKnown);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ModuleInfo getModuleByName(final DotName moduleName) {
+        for (IndexView index : indexes) {
+            final ModuleInfo info = index.getModuleByName(moduleName);
+            if (info != null) {
+                return info;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Collection<ModuleInfo> getKnownModules() {
+        final List<ModuleInfo> allKnown = new ArrayList<ModuleInfo>();
+        for (IndexView index : indexes) {
+            final Collection<ModuleInfo> list = index.getKnownModules();
             if (list != null) {
                 allKnown.addAll(list);
             }

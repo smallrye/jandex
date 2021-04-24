@@ -73,15 +73,13 @@ public class VExample {
     @Target(value = {ElementType.TYPE_USE})
     @interface M{}
 
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(value = {ElementType.TYPE_USE})
-    @interface U{}
+    abstract class U extends V {}
 
 
 
     class S{}
     class T{}
-    class V{}
+    abstract class V implements CharSequence {}
 
 
 
@@ -91,7 +89,7 @@ public class VExample {
             public Collection<@A ? extends Integer> foo(){return null;}
 
             class O3 {
-                class Nested<@C R extends @H SU, @D SU extends String> extends O2<R, @A S>{
+                class Nested<@C R extends @H SU, @D SU extends CharSequence> extends O2<R, @A S>{
                     @Override
                     public List<@B ? extends @G Integer> foo() { return null;}
                 }

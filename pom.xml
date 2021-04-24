@@ -25,22 +25,37 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    
+
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <jdk.min.version>1.8</jdk.min.version>
+        <maven.compiler.release>16</maven.compiler.release>
+        <version.jar.plugin>3.2.0</version.jar.plugin>
     </properties>
 
     <parent>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-parent</artifactId>
-        <version>11</version>
+        <version>38</version>
     </parent>
+
     <groupId>org.jboss.jandex</groupId>
     <artifactId>typeannotation-test</artifactId>
-    <version>1.6</version>
+    <version>1.7-SNAPSHOT</version>
     <name>Type Annotation Examples For Testing</name>
 
-    <build/>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                   <archive>
+                        <manifest>
+                            <!-- Adds ModuleMainClass attribute to module-info. -->
+                            <mainClass>test.exec.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

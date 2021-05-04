@@ -1336,7 +1336,7 @@ public final class Indexer {
         Type superClassType = superName == null ? null : intern(new ClassType(superName));
 
         this.classAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
-        this.currentClass = new ClassInfo(thisName, superClassType, flags, interfaceTypes, classAnnotations);
+        this.currentClass = new ClassInfo(thisName, superClassType, flags, interfaceTypes);
 
         if (superName != null)
             addSubclass(superName, currentClass);
@@ -1699,6 +1699,7 @@ public final class Indexer {
 
             currentClass.setMethods(methods, names);
             currentClass.setFields(fields, names);
+            currentClass.setAnnotations(classAnnotations);
 
             return currentClass;
         } catch (IgnoreModuleInfoException e) {

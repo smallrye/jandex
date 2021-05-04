@@ -18,9 +18,7 @@
 
 package org.jboss.jandex;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -129,13 +127,14 @@ final class IndexReaderV1 extends IndexReaderImpl {
 
             Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
             Type superClassType = superName == null ? null : new ClassType(superName);
-            ClassInfo clazz = new ClassInfo(name, superClassType, flags, interfaceTypes, annotations, hasNoArgsConstructor);
+            ClassInfo clazz = new ClassInfo(name, superClassType, flags, interfaceTypes, hasNoArgsConstructor);
             classes.put(name, clazz);
             addClassToMap(subclasses, superName, clazz);
             for (Type interfaceName : interfaces) {
                 addClassToMap(implementors, interfaceName.name(), clazz);
             }
             readAnnotations(stream, annotations, clazz);
+            clazz.setAnnotations(annotations);
         }
 
         return Index.create(masterAnnotations, subclasses, implementors, classes);

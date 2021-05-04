@@ -52,7 +52,7 @@ import java.util.TreeMap;
  */
 final class IndexWriterV2 extends IndexWriterImpl{
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 9;
+    static final int MAX_VERSION = 10;
 
     // babelfish (no h)
     private static final int MAGIC = 0xBABE1F15;
@@ -524,10 +524,18 @@ final class IndexWriterV2 extends IndexWriterImpl{
             stream.writePackedU32(positionOf(field));
         }
 
+        if (version >= 10) {
+            stream.writePackedU32(positionOf(clazz.fieldPositionArray()));
+        }
+
         MethodInternal[] methods = clazz.methodArray();
         stream.writePackedU32(methods.length);
         for (MethodInternal method : methods) {
             stream.writePackedU32(positionOf(method));
+        }
+
+        if (version >= 10) {
+            stream.writePackedU32(positionOf(clazz.methodPositionArray()));
         }
 
         Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotations().entrySet();
@@ -705,8 +713,12 @@ final class IndexWriterV2 extends IndexWriterImpl{
             addString(name);
         }
         addEnclosingMethod(clazz.enclosingMethod());
+
         addMethodList(clazz.methodArray());
+        names.intern(clazz.methodPositionArray());
+
         addFieldList(clazz.fieldArray());
+        names.intern(clazz.fieldPositionArray());
 
         for (Entry<DotName, List<AnnotationInstance>> entry :  clazz.annotations().entrySet()) {
             addClassName(entry.getKey());

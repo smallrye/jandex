@@ -407,8 +407,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
     }
 
     private void writeNameTable(PackedDataOutputStream stream) throws IOException {
-        assert nameTable instanceof TreeMap;
-
         stream.writePackedU32(nameTable.size());
 
         // Zero is reserved for null
@@ -730,7 +728,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
                 }
             }
         }
-        nameTable = new TreeMap<DotName, Integer>(nameTable);
     }
 
     private void addClass(ClassInfo clazz) {

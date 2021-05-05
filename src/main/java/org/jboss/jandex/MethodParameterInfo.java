@@ -21,7 +21,9 @@ package org.jboss.jandex;
 /**
  * Represents an individual Java method parameter that was annotated.
  *
- * <p><b>Thread-Safety</b></p>
+ * <p>
+ * <b>Thread-Safety</b>
+ * </p>
  * This class is immutable and can be shared between threads without safe publication.
  *
  * @author Jason T. Greene
@@ -30,8 +32,7 @@ public final class MethodParameterInfo implements AnnotationTarget {
     private final MethodInfo method;
     private final short parameter;
 
-    MethodParameterInfo(MethodInfo method, short parameter)
-    {
+    MethodParameterInfo(MethodInfo method, short parameter) {
         this.method = method;
         this.parameter = parameter;
     }
@@ -43,8 +44,7 @@ public final class MethodParameterInfo implements AnnotationTarget {
      * @param parameter the zero based index of this parameter
      * @return the new mock parameter info
      */
-    public static MethodParameterInfo create(MethodInfo method, short parameter)
-    {
+    public static MethodParameterInfo create(MethodInfo method, short parameter) {
         return new MethodParameterInfo(method, parameter);
     }
 
@@ -74,7 +74,7 @@ public final class MethodParameterInfo implements AnnotationTarget {
     public final String name() {
         return method.parameterName(parameter);
     }
-    
+
     /**
      * Returns a string representation describing this method parameter
      *
@@ -113,4 +113,25 @@ public final class MethodParameterInfo implements AnnotationTarget {
     public Kind kind() {
         return Kind.METHOD_PARAMETER;
     }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 31 * result + method.hashCode();
+        result = 31 * result + (int) parameter;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        MethodParameterInfo other = (MethodParameterInfo) o;
+        return method.equals(other.method) && parameter == other.parameter;
+    }
+
 }

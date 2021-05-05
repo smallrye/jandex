@@ -239,7 +239,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
 
     private AnnotationValue[] readAnnotationValues(PackedDataInputStream stream) throws IOException {
         int numValues = stream.readPackedU32();
-        AnnotationValue[] values = new AnnotationValue[numValues];
+        AnnotationValue[] values = numValues > 0 ? new AnnotationValue[numValues] : AnnotationValue.EMPTY_VALUE_ARRAY;
 
         for (int i = 0; i < numValues; i++) {
             AnnotationValue value = readAnnotationValue(stream);
@@ -543,8 +543,10 @@ final class IndexReaderV2 extends IndexReaderImpl {
 
         int size = stream.readPackedU32();
 
-        Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>(size);
-        ClassInfo clazz = new ClassInfo(name, superType, flags, interfaceTypes, annotations);
+        Map<DotName, List<AnnotationInstance>> annotations = size > 0
+                ? new HashMap<DotName, List<AnnotationInstance>>(size)
+                : Collections.<DotName, List<AnnotationInstance>>emptyMap();
+        ClassInfo clazz = new ClassInfo(name, superType, flags, interfaceTypes);
         clazz.setTypeParameters(typeParameters);
 
         if (hasNesting) {
@@ -557,8 +559,16 @@ final class IndexReaderV2 extends IndexReaderImpl {
         FieldInternal[] fields = readClassFields(stream, clazz);
         clazz.setFieldArray(fields);
 
+        if (version >= 10) {
+            clazz.setFieldPositionArray(byteTable[stream.readPackedU32()]);
+        }
+
         MethodInternal[] methods = readClassMethods(stream, clazz);
         clazz.setMethodArray(methods);
+
+        if (version >= 10) {
+            clazz.setMethodPositionArray(byteTable[stream.readPackedU32()]);
+        }
 
         for (int i = 0; i < size; i++) {
             List<AnnotationInstance> instances = convertToList(readAnnotations(stream, clazz));
@@ -569,7 +579,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             }
         }
 
-
+        clazz.setAnnotations(annotations);
 
         return clazz;
     }
@@ -605,7 +615,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
 
     private FieldInternal[] readClassFields(PackedDataInputStream stream, ClassInfo clazz) throws IOException {
         int len = stream.readPackedU32();
-        FieldInternal[] fields = new FieldInternal[len];
+        FieldInternal[] fields = len > 0 ? new FieldInternal[len] : FieldInternal.EMPTY_ARRAY;
         for (int i = 0; i < len; i++) {
             FieldInternal field = fieldTable[stream.readPackedU32()];
             updateAnnotationTargetInfo(field.annotationArray(), clazz);
@@ -616,7 +626,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
 
     private MethodInternal[] readClassMethods(PackedDataInputStream stream, ClassInfo clazz) throws IOException {
         int len = stream.readPackedU32();
-        MethodInternal[] methods = new MethodInternal[len];
+        MethodInternal[] methods = len > 0 ? new MethodInternal[len] : MethodInternal.EMPTY_ARRAY;
         for (int i = 0; i < len; i++) {
             MethodInternal method = methodTable[stream.readPackedU32()];
             updateAnnotationTargetInfo(method.annotationArray(), clazz);

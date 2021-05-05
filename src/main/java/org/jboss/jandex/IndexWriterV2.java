@@ -91,7 +91,8 @@ final class IndexWriterV2 extends IndexWriterImpl{
     private final OutputStream out;
 
     private NameTable names;
-    private Map<DotName, Integer> nameTable;
+    private HashMap<DotName, Integer> nameTable;
+    private TreeMap<String, DotName> sortedNameTable;
     private ReferenceTable<AnnotationInstance> annotationTable;
     private ReferenceTable<Type> typeTable;
     private ReferenceTable<Type[]> typeListTable;
@@ -412,9 +413,9 @@ final class IndexWriterV2 extends IndexWriterImpl{
 
         // Zero is reserved for null
         int pos = 1;
-        for (Entry<DotName, Integer> entry : nameTable.entrySet()) {
-            entry.setValue(pos++);
-            DotName name = entry.getKey();
+        for (Entry<String, DotName> entry : sortedNameTable.entrySet()) {
+            nameTable.put(entry.getValue(), pos++);
+            DotName name = entry.getValue();
             assert name.isComponentized();
 
             int nameDepth = 0;
@@ -549,10 +550,18 @@ final class IndexWriterV2 extends IndexWriterImpl{
             stream.writePackedU32(positionOf(field));
         }
 
+        if (version >= 10) {
+            stream.writePackedU32(positionOf(clazz.fieldPositionArray()));
+        }
+
         MethodInternal[] methods = clazz.methodArray();
         stream.writePackedU32(methods.length);
         for (MethodInternal method : methods) {
             stream.writePackedU32(positionOf(method));
+        }
+
+        if (version >= 10) {
+            stream.writePackedU32(positionOf(clazz.methodPositionArray()));
         }
 
         Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotations().entrySet();
@@ -700,6 +709,8 @@ final class IndexWriterV2 extends IndexWriterImpl{
 
     private void buildTables(Index index, int version) {
         nameTable = new HashMap<DotName, Integer>();
+        sortedNameTable = new TreeMap<String, DotName>();
+
         annotationTable = new ReferenceTable<AnnotationInstance>();
         typeTable = new ReferenceTable<Type>();
         typeListTable = new ReferenceTable<Type[]>();
@@ -741,8 +752,12 @@ final class IndexWriterV2 extends IndexWriterImpl{
             addString(name);
         }
         addEnclosingMethod(clazz.enclosingMethod());
+
         addMethodList(clazz.methodArray());
+        names.intern(clazz.methodPositionArray());
+
         addFieldList(clazz.fieldArray());
+        names.intern(clazz.fieldPositionArray());
 
         for (Entry<DotName, List<AnnotationInstance>> entry :  clazz.annotations().entrySet()) {
             addClassName(entry.getKey());
@@ -890,6 +905,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         if (! nameTable.containsKey(name)) {
             addString(name.local());
             nameTable.put(name, null);
+            sortedNameTable.put(name.toString(), name);
         }
 
         DotName prefix = name.prefix();

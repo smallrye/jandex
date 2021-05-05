@@ -29,15 +29,18 @@ import java.util.AbstractList;
 class MethodInfoGenerator extends AbstractList<MethodInfo> {
     private final MethodInternal[] methods;
     private final ClassInfo clazz;
+    private final byte[] positions;
 
-    public MethodInfoGenerator(ClassInfo clazz, MethodInternal[] methods) {
+    public MethodInfoGenerator(ClassInfo clazz, MethodInternal[] methods, byte[] positions) {
         this.clazz = clazz;
         this.methods = methods;
+        this.positions = positions;
     }
 
     @Override
     public MethodInfo get(int i) {
-        return new MethodInfo(clazz, methods[i]);
+        MethodInternal method = (positions.length > 0) ? methods[positions[i] & 0xFF] : methods[i];
+        return new MethodInfo(clazz, method);
     }
 
     @Override

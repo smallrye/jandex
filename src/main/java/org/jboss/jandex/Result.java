@@ -33,6 +33,7 @@ public final class Result {
     private final int annotations;
     private final int instances;
     private final int classes;
+    private final int usages;
     private final int bytes;
     private final String name;
     private final File outputFile;
@@ -42,6 +43,11 @@ public final class Result {
         annotations = index.annotations.size();
         instances = countInstances(index);
         classes = index.classes.size();
+        int usages = 0;
+        for (List<ClassInfo> usagesForOneClass : index.users.values()) {
+            usages += usagesForOneClass.size();
+        }
+        this.usages = usages;
         this.bytes = bytes;
         this.name = name;
         this.outputFile = outputFile;
@@ -81,5 +87,9 @@ public final class Result {
 
     public File getOutputFile() {
         return outputFile;
+    }
+
+    public int getUsages() {
+        return usages;
     }
 }

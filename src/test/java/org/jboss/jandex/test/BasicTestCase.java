@@ -36,6 +36,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Modifier;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.List;
 
@@ -150,6 +158,16 @@ public class BasicTestCase {
         }
         {
             anonymousInnerClass = new Object() {}.getClass();
+        }
+    }
+
+    public static class ApiClass {
+        public static void superApi() {}
+    }
+
+    public static class ApiUser {
+        public void f() {
+            ApiClass.superApi();
         }
     }
 
@@ -269,17 +287,17 @@ public class BasicTestCase {
     @Test
     public void testSimpleName() throws IOException  {
         class MyLocal{}
-        assertEquals("NestedC", getIndexForClass(NestedC.class)
+        assertEquals("NestedC", getIndexForClasses(NestedC.class)
                                 .getClassByName(DotName.createSimple(NestedC.class.getName())
                                 ).simpleName());
-        assertEquals("BasicTestCase", getIndexForClass(BasicTestCase.class)
+        assertEquals("BasicTestCase", getIndexForClasses(BasicTestCase.class)
                                         .getClassByName(DotName.createSimple(BasicTestCase.class.getName())
                                         ).simpleName());
-        assertEquals("MyLocal", getIndexForClass(MyLocal.class)
+        assertEquals("MyLocal", getIndexForClasses(MyLocal.class)
                                         .getClassByName(DotName.createSimple(MyLocal.class.getName())
                                         ).simpleName());
         Class<?> anon = new Object(){}.getClass();
-        assertEquals(null, getIndexForClass(anon)
+        assertEquals(null, getIndexForClasses(anon)
                                         .getClassByName(DotName.createSimple(anon.getName())
                                         ).simpleName());
     }
@@ -448,32 +466,110 @@ public class BasicTestCase {
     }
 
     private void assertHasNoArgsConstructor(Class<?> clazz, boolean result) throws IOException {
-        ClassInfo classInfo = getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
+        ClassInfo classInfo = getIndexForClasses(clazz).getClassByName(DotName.createSimple(clazz.getName()));
         assertNotNull(classInfo);
         assertThat(classInfo.hasNoArgsConstructor(), is(result));
     }
 
     private void assertFlagSet(Class<?> clazz, int flag, boolean result) throws IOException {
-        ClassInfo classInfo = getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
+        ClassInfo classInfo = getIndexForClasses(clazz).getClassByName(DotName.createSimple(clazz.getName()));
         assertNotNull(classInfo);
         assertTrue((classInfo.flags() & flag) == (result ? flag : 0));
     }
 
     private void assertNesting(Class<?> clazz, ClassInfo.NestingType nesting, boolean result) throws IOException {
-        ClassInfo classInfo = getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
+        ClassInfo classInfo = getIndexForClasses(clazz).getClassByName(DotName.createSimple(clazz.getName()));
         assertNotNull(classInfo);
         assertThat(classInfo.nestingType(), result ? is(nesting) : not(nesting));
     }
 
-    static Index getIndexForClass(Class<?> clazz) throws IOException {
+    static Index getIndexForClasses(Class<?>... classes) throws IOException {
         Indexer indexer = new Indexer();
-        InputStream stream = clazz.getClassLoader().getResourceAsStream(clazz.getName().replace('.', '/') + ".class");
-        indexer.index(stream);
+        for (Class<?> klass : classes) {
+            InputStream stream = klass.getClassLoader().getResourceAsStream(klass.getName().replace('.', '/') + ".class");
+            indexer.index(stream);
+        }
         return indexer.complete();
     }
     
     static ClassInfo getClassInfo(Class<?> clazz) throws IOException {
-        return getIndexForClass(clazz).getClassByName(DotName.createSimple(clazz.getName()));
+        return getIndexForClasses(clazz).getClassByName(DotName.createSimple(clazz.getName()));
     }
 
+    @Test
+    public void testClassConstantIndexing() throws IOException, URISyntaxException {
+        Index index = getIndexForClasses(DummyClass.class, ApiClass.class, ApiUser.class);
+        DotName apiClassDotName = DotName.createSimple(ApiClass.class.getName());
+        List<ClassInfo> users = index.getKnownUsers(apiClassDotName );
+        assertEquals(2, users.size());
+        ClassInfo apiUserClassInfo = index.getClassByName(DotName.createSimple(ApiUser.class.getName()));
+        assertTrue(users.contains(apiUserClassInfo));
+        ClassInfo apiClassInfo = index.getClassByName(apiClassDotName);
+        assertTrue(users.contains(apiClassInfo));
+
+        Index readIndex = testClassConstantSerialisation(index, -1);
+        List<ClassInfo> readUsers = readIndex.getKnownUsers(apiClassDotName );
+        assertEquals(2, readUsers.size());
+        ClassInfo readApiUserClassInfo = readIndex.getClassByName(DotName.createSimple(ApiUser.class.getName()));
+        assertTrue(readUsers.contains(readApiUserClassInfo));
+        ClassInfo readApiClassInfo = readIndex.getClassByName(apiClassDotName);
+        assertTrue(readUsers.contains(readApiClassInfo));
+
+        Index readOldIndex = testClassConstantSerialisation(index, 9);
+        assertEquals(0, readOldIndex.getKnownUsers(apiClassDotName).size());
+
+        Index allClasses = index(getClass().getProtectionDomain().getCodeSource().getLocation(),
+              Index.class.getProtectionDomain().getCodeSource().getLocation());
+        System.err.println("Indexed "+allClasses.getKnownClasses().size()+" classes");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        System.err.println("V9 size: "+new IndexWriter(baos).write(index, 9));
+        baos = new ByteArrayOutputStream();
+        System.err.println("V10 size: "+new IndexWriter(baos).write(index));
+    }
+
+    private Index index(URL... locations) throws URISyntaxException, IOException {
+        final Indexer indexer = new Indexer();
+        final ClassLoader cl = BasicTestCase.class.getClassLoader();
+
+        for(URL url : locations) {
+            final Path path = Paths.get(url.toURI());
+            Files.walkFileTree(path, new FileVisitor<Path>() {
+
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    String name = file.toString();
+                    if(name.endsWith(".class")) {
+                        InputStream stream = cl.getResourceAsStream(path.relativize(file).toString());
+                        indexer.index(stream);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+
+            });
+        }
+
+        return indexer.complete();
+    }
+
+    private Index testClassConstantSerialisation(Index index, int version) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int ignore = (version == -1) ? new IndexWriter(baos).write(index) : new IndexWriter(baos).write(index, version);
+
+        return new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
+    }
 }

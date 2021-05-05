@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
@@ -190,9 +191,11 @@ final class IndexWriterV2 extends IndexWriterImpl{
         stream.writePackedU32(index.annotations.size());
         stream.writePackedU32(index.implementors.size());
         stream.writePackedU32(index.subclasses.size());
+        if (version >= 10) {
+            stream.writePackedU32(index.users.size());
+        }
 
-
-        buildTables(index);
+        buildTables(index, version);
         writeByteTable(stream);
         writeStringTable(stream);
         writeNameTable(stream);
@@ -204,12 +207,31 @@ final class IndexWriterV2 extends IndexWriterImpl{
 
         writeTypeTable(stream);
         writeTypeListTable(stream);
+        if (version >= 10) {
+            writeUsersTable(stream, index.users);
+        }
         writeMethodTable(stream, version);
         writeFieldTable(stream);
         writeClasses(stream, index, version);
         stream.flush();
         return stream.size();
     }
+
+    private void writeUsersTable(PackedDataOutputStream stream, Map<DotName, List<ClassInfo>> users) throws IOException {
+        for (Entry<DotName, List<ClassInfo>> entry : users.entrySet()) {
+            writeUsersSet(stream, entry.getKey(), entry.getValue());
+        }
+    }
+
+
+    private void writeUsersSet(PackedDataOutputStream stream, DotName user, List<ClassInfo> uses) throws IOException {
+        stream.writePackedU32(positionOf(user));
+        stream.writePackedU32(uses.size());
+        for (ClassInfo use : uses) {
+            stream.writePackedU32(positionOf(use.name()));
+        }
+    }
+
 
     private void writeStringTable(PackedDataOutputStream stream) throws IOException {
         StrongInternPool<String> stringPool = names.stringPool();
@@ -683,9 +705,10 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
     }
 
-    private void buildTables(Index index) {
+    private void buildTables(Index index, int version) {
         nameTable = new HashMap<DotName, Integer>();
         sortedNameTable = new TreeMap<String, DotName>();
+
         annotationTable = new ReferenceTable<AnnotationInstance>();
         typeTable = new ReferenceTable<Type>();
         typeListTable = new ReferenceTable<Type[]>();
@@ -694,6 +717,16 @@ final class IndexWriterV2 extends IndexWriterImpl{
         // Build the stringPool for all strings
         for (ClassInfo clazz : index.getKnownClasses()) {
             addClass(clazz);
+        }
+        if (version >= 10) {
+            if (index.users != null) {
+                for (Entry<DotName, List<ClassInfo>> entry : index.users.entrySet()) {
+                    addClassName(entry.getKey());
+                    for (ClassInfo classInfo : entry.getValue()) {
+                        addClassName(classInfo.name());
+                    }
+                }
+            }
         }
     }
 

@@ -20,6 +20,7 @@ package org.jboss.jandex;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,6 +109,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
         HashMap<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>();
         HashMap<DotName, List<ClassInfo>> implementors = new HashMap<DotName, List<ClassInfo>>();
         HashMap<DotName, ClassInfo> classes = new HashMap<DotName, ClassInfo>();
+        Map<DotName, List<ClassInfo>> users = Collections.emptyMap();
         masterAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
 
         for (int i = 0; i < entries; i++) {
@@ -137,7 +139,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
             clazz.setAnnotations(annotations);
         }
 
-        return Index.create(masterAnnotations, subclasses, implementors, classes);
+        return Index.create(masterAnnotations, subclasses, implementors, classes, users);
     }
 
 

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -89,7 +90,8 @@ final class IndexWriterV2 extends IndexWriterImpl{
     private final OutputStream out;
 
     private NameTable names;
-    private TreeMap<DotName, Integer> nameTable;
+    private HashMap<DotName, Integer> nameTable;
+    private TreeMap<String, DotName> sortedNameTable;
     private ReferenceTable<AnnotationInstance> annotationTable;
     private ReferenceTable<Type> typeTable;
     private ReferenceTable<Type[]> typeListTable;
@@ -387,9 +389,9 @@ final class IndexWriterV2 extends IndexWriterImpl{
 
         // Zero is reserved for null
         int pos = 1;
-        for (Entry<DotName, Integer> entry : nameTable.entrySet()) {
-            entry.setValue(pos++);
-            DotName name = entry.getKey();
+        for (Entry<String, DotName> entry : sortedNameTable.entrySet()) {
+            nameTable.put(entry.getValue(), pos++);
+            DotName name = entry.getValue();
             assert name.isComponentized();
 
             int nameDepth = 0;
@@ -682,7 +684,8 @@ final class IndexWriterV2 extends IndexWriterImpl{
     }
 
     private void buildTables(Index index) {
-        nameTable = new TreeMap<DotName, Integer>();
+        nameTable = new HashMap<DotName, Integer>();
+        sortedNameTable = new TreeMap<String, DotName>();
         annotationTable = new ReferenceTable<AnnotationInstance>();
         typeTable = new ReferenceTable<Type>();
         typeListTable = new ReferenceTable<Type[]>();
@@ -866,6 +869,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         if (! nameTable.containsKey(name)) {
             addString(name.local());
             nameTable.put(name, null);
+            sortedNameTable.put(name.toString(), name);
         }
 
         DotName prefix = name.prefix();

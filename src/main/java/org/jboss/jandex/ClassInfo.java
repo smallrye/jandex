@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -720,13 +721,16 @@ public final class ClassInfo implements AnnotationTarget {
     static <T> byte[] sortAndGetPositions(T[] internals, Comparator<T> comparator, NameTable names) {
         final int size = internals.length;
         final boolean storePositions = (size > 1 && size <= MAX_POSITIONS);
-        final T[] keys;
+        final Map<T, Integer> originalPositions;
         final byte[] positions;
 
         if (storePositions) {
-            keys = Arrays.copyOf(internals, size);
+            originalPositions = new IdentityHashMap<T, Integer>(size);
+            for (int i = 0; i < size; i++) {
+                originalPositions.put(internals[i], Integer.valueOf(i));
+            }
         } else {
-            keys = null;
+            originalPositions = null;
         }
 
         Arrays.sort(internals, comparator);
@@ -735,8 +739,8 @@ public final class ClassInfo implements AnnotationTarget {
             positions = new byte[size];
 
             for (int i = 0; i < size; i++) {
-                int position = Arrays.binarySearch(internals, keys[i], comparator);
-                positions[i] = (byte) position;
+                // `positions` stores the new position at the offset of the original position
+                positions[originalPositions.get(internals[i])] = (byte) i;
             }
         } else {
             positions = EMPTY_POSITIONS;

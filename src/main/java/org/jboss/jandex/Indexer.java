@@ -1236,7 +1236,9 @@ public final class Indexer {
             recordAnnotation(classAnnotations, annotationName, instance);
             recordAnnotation(masterAnnotations, annotationName, instance);
 
-            if (target instanceof FieldInfo || target instanceof MethodInfo || target instanceof MethodParameterInfo) {
+            if (target instanceof FieldInfo || target instanceof MethodInfo || target instanceof MethodParameterInfo
+                    || target instanceof TypeTarget
+                            && ((TypeTarget) target).enclosingTarget().kind() != AnnotationTarget.Kind.CLASS) {
                 elementAnnotations.add(instance);
             }
         }

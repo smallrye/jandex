@@ -611,6 +611,9 @@ final class IndexReaderV2 extends IndexReaderImpl {
         // This update is possible since annotations on a non-null target are unique and not shared
         for (AnnotationInstance annotation : annotations) {
             AnnotationTarget target = annotation.target();
+            if (target instanceof TypeTarget) {
+                target = ((TypeTarget) target).enclosingTarget();
+            }
             if (target instanceof MethodInfo) {
                 ((MethodInfo)target).setClassInfo(clazz);
             } else if (target instanceof MethodParameterInfo) {

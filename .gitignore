@@ -4,3 +4,7 @@ target
 .classpath
 .settings/
 .project
+
+# Intellij IDEA
+.idea
+*.iml

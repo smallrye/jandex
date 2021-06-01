@@ -107,7 +107,7 @@ public class JandexGoal
     /**
      * Skip execution if set.
      *
-     * @parameter default-value="false" expression="${jandex.skip}"
+     * @parameter default-value="false" property="jandex.skip"
      */
     private boolean skip = true;
 
@@ -220,6 +220,7 @@ public class JandexGoal
             FileOutputStream indexOut = null;
             try
             {
+                getLog().info( "Saving Jandex index: " + idx );
                 indexOut = new FileOutputStream( idx );
                 final IndexWriter writer = new IndexWriter( indexOut );
                 final Index index = indexer.complete();
@@ -227,7 +228,7 @@ public class JandexGoal
             }
             catch ( final IOException e )
             {
-                throw new MojoExecutionException( e.getMessage(), e );
+                throw new MojoExecutionException( "Could not save index " + idx, e );
             }
             finally
             {

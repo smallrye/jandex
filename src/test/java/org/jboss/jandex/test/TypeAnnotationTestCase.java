@@ -154,7 +154,7 @@ public class TypeAnnotationTestCase {
         assertEquals("SU", type.asTypeVariable().identifier());
         type = type.asTypeVariable().bounds().get(0);
         assertEquals(Type.Kind.CLASS, type.kind());
-        verifyName("java.lang.String", type);
+        verifyName("java.lang.CharSequence", type);
 
         type = parameters.get(1);
         verifyHasAnnotation(nestName(referenceClass, "D"), type);
@@ -162,7 +162,7 @@ public class TypeAnnotationTestCase {
         assertEquals("SU", type.asTypeVariable().identifier());
         type = type.asTypeVariable().bounds().get(0);
         assertEquals(Type.Kind.CLASS, type.kind());
-        verifyName("java.lang.String", type);
+        verifyName("java.lang.CharSequence", type);
 
         type = arguments.get(0);
         assertEquals(Type.Kind.TYPE_VARIABLE, type.kind());
@@ -174,7 +174,7 @@ public class TypeAnnotationTestCase {
         assertEquals("SU", type.asTypeVariable().identifier());
         type = type.asTypeVariable().bounds().get(0);
         assertEquals(Type.Kind.CLASS, type.kind());
-        verifyName("java.lang.String", type);
+        verifyName("java.lang.CharSequence", type);
 
         type = arguments.get(1);
         verifyHasAnnotation(nestName(referenceClass, "A"), type);

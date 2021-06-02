@@ -1,16 +1,16 @@
 <!--
   Copyright (C) 2013 John Casey.
-  
+
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses />.
 -->
@@ -29,9 +29,9 @@
   <packaging>maven-plugin</packaging>
 
   <name>Jandex wrapper for Maven</name>
-  
+
   <description>This is a Maven plugin used to generate Jandex index files</description>
-  
+
   <licenses>
     <license>
       <name>GNU General Public License, v3</name>
@@ -39,12 +39,12 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-  
+
 	<issueManagement>
     <url>https://github.com/jdcasey/jandex-maven-plugin/issues</url>
     <system>GitHub Issues</system>
   </issueManagement>
-  
+
   <developers>
     <developer>
       <id>jdcasey</id>
@@ -55,23 +55,23 @@
       </roles>
     </developer>
   </developers>
-  
+
   <contributors>
     <contributor>
       <name>Philippe Marschall</name>
       <url>http://github.com/marschall/</url>
     </contributor>
   </contributors>
-  
+
   <scm>
     <connection>scm:git:http://github.com/wildfly/jandex-maven-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:wildfly/jandex-maven-plugin.git</developerConnection>
     <url>http://github.com/wildfly/jandex-maven-plugin</url>
     <tag>HEAD</tag>
   </scm>
-  
+
   <url>http://jdcasey.github.com/${project.artifactId}/${project.version}</url>
-  
+
   <distributionManagement>
     <repository>
       <id>jboss.org</id>
@@ -86,7 +86,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-  
+
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -110,7 +110,7 @@
       <version>2.3.0.Final</version>
     </dependency>
   </dependencies>
-  
+
   <build>
     <pluginManagement>
       <plugins>
@@ -258,6 +258,7 @@
               </goals>
               <configuration>
                 <detectOfflineLinks>false</detectOfflineLinks>
+                <additionalparam>-Xdoclint:none</additionalparam>
               </configuration>
             </execution>
           </executions>
@@ -302,7 +303,7 @@
       </plugin>
     </plugins>
   </build>
-  
+
   <profiles>
     <profile>
       <id>release</id>

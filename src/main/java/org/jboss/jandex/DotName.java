@@ -185,7 +185,7 @@ public final class DotName implements Comparable<DotName> {
      * Returns the package portion of this DotName.
      *
      * @return the package name or null if this {@link DotName} has no package prefix
-     * @since 2.3.0
+     * @since 2.4
      */
     public String packagePrefix() {
         if (componentized) {

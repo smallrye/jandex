@@ -1,54 +1,84 @@
-# This workflow will build a Java project with Maven
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
-
 name: Jandex CI
 
 on:
-  [push, pull_request]
+  push:
+    branches:
+    - master
+    paths-ignore:
+    - '.gitattributes'
+    - '.gitignore'
+    - 'LICENSE.txt'
+    - 'README.md'
+  pull_request:
+    paths-ignore:
+    - '.gitattributes'
+    - '.gitignore'
+    - 'LICENSE.txt'
+    - 'README.md'
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        java-version: [8, 11]
-        os: [ubuntu-latest, windows-latest]
-
+        java:
+        # we want: all LTS versions (that we care about), latest GA, upcoming
+        - 8
+        - 11
+        - 16
+        - 17-ea
+        os:
+        - ubuntu-latest
+        - windows-latest
+        - macos-latest
+    runs-on: ${{ matrix.os }}
+    name: Build with JDK ${{ matrix.java }} (${{ matrix.os }})
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up JDK ${{ matrix.java.name }}
-      # Uses sha for added security since tags can be updated
-      uses: joschi/setup-jdk@ccd4eb6437f6a33d3c033551a6004cc6f3078307
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Set up JDK ${{ matrix.java }}
+      uses: actions/setup-java@v2
       with:
-        java-version: ${{ matrix.java-version }}
+        distribution: temurin
+        java-version: ${{ matrix.java }}
+
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      shell: bash
+      run: mvn -s .github/maven-ci-settings.xml -B verify --file pom.xml
 
   calcite-regression:
-    name: 'regression: Calcite, Java ${{ matrix.java-version }}'
+    name: 'Calcite regression test (JDK ${{ matrix.java }})'
     runs-on: ubuntu-latest
     strategy:
       matrix:
         # javac 8 and 11 might produce slightly different bytecode
-        java-version: [8, 11]
+        java:
+        - 8
+        - 11
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
       with:
         fetch-depth: 50
-    - name: 'Set up JDK 11'
-      # Uses sha for added security since tags can be updated
-      uses: joschi/setup-jdk@ccd4eb6437f6a33d3c033551a6004cc6f3078307
+
+    - name: Set up JDK ${{ matrix.java }}
+      uses: actions/setup-java@v2
       with:
-        java-version: ${{ matrix.java-version }}
+        distribution: temurin
+        java-version: ${{ matrix.java }}
+
     - name: Build with Maven
       run: |
         # Set 1.0.0-dev version to ensure it will be used when building Calcite later
-        mvn -B versions:set -DnewVersion=1.0.0-dev-SNAPSHOT
-        mvn -B versions:commit
-        mvn -B install -DskipTests --file pom.xml
-    - name: 'Clone Calcite'
+        mvn -s .github/maven-ci-settings.xml -B versions:set -DnewVersion=1.0.0-dev-SNAPSHOT
+        mvn -s .github/maven-ci-settings.xml -B versions:commit
+        mvn -s .github/maven-ci-settings.xml -B install -DskipTests --file pom.xml
+
+    - name: Clone Calcite
       run: |
         git clone --branch master --depth 100 https://github.com/apache/calcite.git ../calcite
+
     - name: Verify Calcite bytecode
       uses: burrunan/gradle-cache-action@feb985ecf49f57f54f31920821a50d0394faf122
       with:
@@ -59,13 +89,15 @@ jobs:
           enableMavenLocal=true
           jandex.version=1.0.0-dev-SNAPSHOT
           skipJandex=false
+
     - name: Prepare failure archive (if run failed)
       if: failure()
       shell: bash
       run: |
        pwd 
        tar -czf calcite-work.tgz ../calcite 
-    - name: Upload failure Archive (if run failed)
+
+    - name: Upload failure archive (if run failed)
       uses: actions/upload-artifact@v1
       if: failure()
       with:

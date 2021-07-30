@@ -11,7 +11,7 @@ Basic Usage
         <plugin>
           <groupId>org.jboss.jandex</groupId>
           <artifactId>jandex-maven-plugin</artifactId>
-          <version>1.0.8</version>
+          <version>1.1.0</version>
           <executions>
             <execution>
               <id>make-index</id>
@@ -40,7 +40,7 @@ If you need to process more than one directory of classes, you can specify multi
         <plugin>
           <groupId>org.jboss.jandex</groupId>
           <artifactId>jandex-maven-plugin</artifactId>
-          <version>1.0.8</version>
+          <version>1.1.0</version>
           <executions>
             <execution>
               <id>make-index</id>

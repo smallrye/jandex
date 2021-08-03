@@ -50,6 +50,7 @@ import java.util.Map;
  */
 public final class ClassInfo implements AnnotationTarget {
 
+    private static final int MODULE = 0x8000;
     private static final int MAX_POSITIONS = 256;
     private static final byte[] EMPTY_POSITIONS = new byte[0];
 
@@ -63,8 +64,10 @@ public final class ClassInfo implements AnnotationTarget {
     private Type[] typeParameters;
     private MethodInternal[] methods;
     private FieldInternal[] fields;
+    private RecordComponentInternal[] recordComponents;
     private byte[] methodPositions = EMPTY_POSITIONS;
     private byte[] fieldPositions = EMPTY_POSITIONS;
+    private byte[] recordComponentPositions = EMPTY_POSITIONS;
     private boolean hasNoArgsConstructor;
     private NestingInfo nestingInfo;
 
@@ -80,12 +83,19 @@ public final class ClassInfo implements AnnotationTarget {
         LOCAL,
 
         /** An unnamed class enclosed within a code block */
-        ANONYMOUS}
+        ANONYMOUS
+    }
 
     private static final class NestingInfo {
         private DotName enclosingClass;
         private String simpleName;
         private EnclosingMethodInfo enclosingMethod;
+
+        // non-null if the class is in fact a module descriptor
+        // this field would naturally belong to ClassInfo, but is present here
+        // to make the ClassInfo object smaller in the most common case:
+        // non-nested class that is not a module descriptor
+        private ModuleInfo module;
     }
 
     /**
@@ -250,6 +260,22 @@ public final class ClassInfo implements AnnotationTarget {
      */
     public final boolean isAnnotation() {
         return (flags & Modifiers.ANNOTATION) != 0;
+    }
+
+    /**
+     * @return {@code true} if this class was declared as a record
+     */
+    public final boolean isRecord() {
+        // there's no flag for record classes, but extending java.lang.Record
+        // is prohibited, so this should be fine
+        return DotName.RECORD_NAME.equals(superName());
+    }
+
+    /**
+     * @return {@code true} if this class object represents a Java module descriptor
+     */
+    public final boolean isModule() {
+        return (flags & MODULE) != 0;
     }
 
     /**
@@ -489,6 +515,44 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
+     * Retrieves a record component by the given name.
+     *
+     * @param name the name of the record component
+     * @return the record component
+     */
+    public final RecordComponentInfo recordComponent(String name) {
+        RecordComponentInternal key = new RecordComponentInternal(Utils.toUTF8(name), VoidType.VOID);
+        int i = Arrays.binarySearch(recordComponents, key, RecordComponentInternal.NAME_COMPARATOR);
+        if (i < 0) {
+            return null;
+        }
+        return new RecordComponentInfo(this, recordComponents[i]);
+    }
+
+    /**
+     * Returns a list of all record components declared by this class.
+     * This list may be empty, but never null.
+     *
+     * @return a list of record components
+     */
+    public final List<RecordComponentInfo> recordComponents() {
+        return new RecordComponentInfoGenerator(this, recordComponents, EMPTY_POSITIONS);
+    }
+
+    public final List<RecordComponentInfo> unsortedRecordComponents() {
+        return new RecordComponentInfoGenerator(this, recordComponents, recordComponentPositions);
+    }
+
+    final RecordComponentInternal[] recordComponentArray() {
+        return recordComponents;
+    }
+
+    final byte[] recordComponentPositionArray() {
+        return recordComponentPositions;
+    }
+
+
+    /**
      * Returns a list of names for all interfaces this class implements. This list may be empty, but never null.
      *
      * <p>Note that this information is also available on the <code>Type</code> instances returned by
@@ -576,7 +640,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the nesting type of this class
      */
     public NestingType nestingType() {
-        if (nestingInfo == null) {
+        if (nestingInfo == null || nestingInfo.module != null) {
             return NestingType.TOP_LEVEL;
         } else if (nestingInfo.enclosingClass != null) {
             return NestingType.INNER;
@@ -623,6 +687,15 @@ public final class ClassInfo implements AnnotationTarget {
         return nestingInfo != null ? nestingInfo.enclosingMethod : null;
     }
 
+    /**
+     * Returns the module information from this class if it is a module descriptor, i.e. module-info.
+     *
+     * @return the module descriptor for module classes, otherwise null
+     */
+    public ModuleInfo module() {
+        return nestingInfo != null ? nestingInfo.module : null;
+    }
+
     @Override
     public ClassInfo asClass() {
         return this;
@@ -646,6 +719,11 @@ public final class ClassInfo implements AnnotationTarget {
     @Override
     public TypeTarget asType() {
         throw new IllegalArgumentException("Not a type");
+    }
+
+    @Override
+    public RecordComponentInfo asRecordComponent() {
+        throw new IllegalArgumentException("Not a record component");
     }
 
     void setHasNoArgsConstructor(boolean hasNoArgsConstructor) {
@@ -706,6 +784,34 @@ public final class ClassInfo implements AnnotationTarget {
         }
 
         this.methodPositions = sortAndGetPositions(this.methods, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR, names);
+    }
+
+    void setRecordComponentArray(RecordComponentInternal[] recordComponents) {
+        this.recordComponents = recordComponents;
+    }
+
+    void setRecordComponentPositionArray(byte[] recordComponentPositions) {
+        this.recordComponentPositions = recordComponentPositions;
+    }
+
+    void setRecordComponents(List<RecordComponentInfo> recordComponents, NameTable names) {
+        final int size = recordComponents.size();
+
+        if (size == 0) {
+            this.recordComponents = RecordComponentInternal.EMPTY_ARRAY;
+            return;
+        }
+
+        this.recordComponents = new RecordComponentInternal[size];
+
+        for (int i = 0; i < size; i++) {
+            RecordComponentInfo recordComponentInfo = recordComponents.get(i);
+            RecordComponentInternal internal = names.intern(recordComponentInfo.recordComponentInternal());
+            recordComponentInfo.setRecordComponentInternal(internal);
+            this.recordComponents[i] = internal;
+        }
+
+        this.recordComponentPositions = sortAndGetPositions(this.recordComponents, RecordComponentInternal.NAME_COMPARATOR, names);
     }
 
     /**
@@ -788,6 +894,18 @@ public final class ClassInfo implements AnnotationTarget {
         }
 
         nestingInfo.enclosingMethod = enclosingMethod;
+    }
+
+    void setModule(ModuleInfo module) {
+        if (module == null) {
+            return;
+        }
+
+        if (nestingInfo == null) {
+            nestingInfo = new NestingInfo();
+        }
+
+        nestingInfo.module = module;
     }
 
     void setFlags(short flags) {

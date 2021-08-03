@@ -100,7 +100,6 @@ public final class Indexer {
         0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73
     };
 
-
     // "RuntimeTypeVisibleAnnotations"
     private final static byte[] RUNTIME_TYPE_ANNOTATIONS = new byte[] {
         0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x56, 0x69, 0x73, 0x69, 0x62,
@@ -149,6 +148,30 @@ public final class Indexer {
         0x43, 0x6f, 0x64, 0x65
     };
 
+    // "Module"
+    private final static byte[] MODULE = new byte[] {
+        // M     o     d     u     l     e
+        0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65
+    };
+
+    // "ModulePackages"
+    private final static byte[] MODULE_PACKAGES = new byte[] {
+        // M     o     d     u     l     e     P     a     c     k     a     g     e     s
+        0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x73
+    };
+
+    // "ModuleMainClass"
+    private final static byte[] MODULE_MAIN_CLASS = new byte[] {
+        // M     o     d     u     l     e     M     a     i     n     C     l     a     s     s
+        0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x4d, 0x61, 0x69, 0x6e, 0x43, 0x6c, 0x61, 0x73, 0x73
+    };
+
+    // "Record"
+    private final static byte[] RECORD = new byte[] {
+        // R     e     c     o     r     d
+        0x52, 0x65, 0x63, 0x6f, 0x72, 0x64
+    };
+
     private final static int RUNTIME_ANNOTATIONS_LEN = RUNTIME_ANNOTATIONS.length;
     private final static int RUNTIME_PARAM_ANNOTATIONS_LEN = RUNTIME_PARAM_ANNOTATIONS.length;
     private final static int RUNTIME_TYPE_ANNOTATIONS_LEN = RUNTIME_TYPE_ANNOTATIONS.length;
@@ -160,6 +183,10 @@ public final class Indexer {
     private final static int METHOD_PARAMETERS_LEN = METHOD_PARAMETERS.length;
     private final static int LOCAL_VARIABLE_TABLE_LEN = LOCAL_VARIABLE_TABLE.length;
     private final static int CODE_LEN = CODE.length;
+    private final static int MODULE_LEN = MODULE.length;
+    private final static int MODULE_PACKAGES_LEN = MODULE_PACKAGES.length;
+    private final static int MODULE_MAIN_CLASS_LEN = MODULE_MAIN_CLASS.length;
+    private final static int RECORD_LEN = RECORD.length;
 
     private final static int HAS_RUNTIME_ANNOTATION = 1;
     private final static int HAS_RUNTIME_PARAM_ANNOTATION = 2;
@@ -172,6 +199,10 @@ public final class Indexer {
     private final static int HAS_METHOD_PARAMETERS = 9;
     private final static int HAS_LOCAL_VARIABLE_TABLE = 10;
     private final static int HAS_CODE = 11;
+    private final static int HAS_MODULE = 12;
+    private final static int HAS_MODULE_PACKAGES = 13;
+    private final static int HAS_MODULE_MAIN_CLASS = 14;
+    private final static int HAS_RECORD = 15;
 
     private final static byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
 
@@ -242,6 +273,7 @@ public final class Indexer {
     private IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>> typeAnnotations;
     private List<MethodInfo> methods;
     private List<FieldInfo> fields;
+    private List<RecordComponentInfo> recordComponents;
     private byte[][] debugParameterNames;
     private byte[][] methodParameterNames;
 
@@ -250,6 +282,7 @@ public final class Indexer {
     private Map<DotName, List<ClassInfo>> subclasses;
     private Map<DotName, List<ClassInfo>> implementors;
     private Map<DotName, ClassInfo> classes;
+    private Map<DotName, ModuleInfo> modules;
     private Map<DotName, List<ClassInfo>> users;
     private NameTable names;
     private GenericSignatureParser signatureParser;
@@ -268,6 +301,9 @@ public final class Indexer {
         if (classes == null)
             classes = new HashMap<DotName, ClassInfo>();
 
+        if (modules == null)
+            modules = new HashMap<DotName, ModuleInfo>();
+
         if (users == null)
             users = new HashMap<DotName, List<ClassInfo>>();
 
@@ -284,8 +320,11 @@ public final class Indexer {
         signaturePresent = new IdentityHashMap<AnnotationTarget, Object>();
         signatures = new ArrayList<Object>();
         typeAnnotations = new IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>>();
-    }
 
+        // in bytecode, record components are stored as class attributes,
+        // and if the attribute is missing, processRecordComponents isn't called at all
+        recordComponents = new ArrayList<RecordComponentInfo>();
+    }
 
     private void processMethodInfo(DataInputStream data) throws IOException {
         int numMethods = data.readUnsignedShort();
@@ -339,6 +378,22 @@ public final class Indexer {
         this.fields = fields;
     }
 
+    private void processRecordComponents(DataInputStream data) throws IOException {
+        int numComponents = data.readUnsignedShort();
+        List<RecordComponentInfo> recordComponents = numComponents > 0 ? new ArrayList<RecordComponentInfo>(numComponents) : Collections.<RecordComponentInfo>emptyList();
+        for (int i = 0; i < numComponents; i++) {
+            byte[] name = intern(decodeUtf8EntryAsBytes(data.readUnsignedShort()));
+            Type type = intern(parseType(decodeUtf8Entry(data.readUnsignedShort())));
+            RecordComponentInfo component = new RecordComponentInfo(currentClass, name, type);
+
+            processAttributes(data, component);
+            component.setAnnotations(elementAnnotations);
+            elementAnnotations.clear();
+            recordComponents.add(component);
+        }
+        this.recordComponents = recordComponents;
+    }
+
     private void processAttributes(DataInputStream data, AnnotationTarget target) throws IOException {
         int numAttrs = data.readUnsignedShort();
         for (int a = 0; a < numAttrs; a++) {
@@ -370,10 +425,145 @@ public final class Indexer {
                 processMethodParameters(data, (MethodInfo) target);
             } else if (annotationAttribute == HAS_CODE && target instanceof MethodInfo) {
                 processCode(data, (MethodInfo) target);
+            } else if (annotationAttribute == HAS_MODULE && target instanceof ClassInfo) {
+                processModule(data, (ClassInfo) target);
+            } else if (annotationAttribute == HAS_MODULE_PACKAGES && target instanceof ClassInfo) {
+                processModulePackages(data, (ClassInfo) target);
+            } else if (annotationAttribute == HAS_MODULE_MAIN_CLASS && target instanceof ClassInfo) {
+                processModuleMainClass(data, (ClassInfo) target);
+            } else if (annotationAttribute == HAS_RECORD && target instanceof ClassInfo) {
+                processRecordComponents(data);
             } else {
                 skipFully(data, attributeLen);
             }
         }
+    }
+
+    private void processModule(DataInputStream data, ClassInfo target) throws IOException {
+        if (!target.isModule()) {
+            throw new IllegalStateException("Module attribute appeared in a non-module class file");
+        }
+
+        DotName moduleName = decodeModuleEntry(data.readUnsignedShort());
+        int flags = data.readUnsignedShort();
+        String version = decodeOptionalUtf8Entry(data.readUnsignedShort());
+
+        ModuleInfo module = new ModuleInfo(target, moduleName, (short) flags, version);
+        module.setRequires(processModuleRequires(data));
+        module.setExports(processModuleExports(data));
+        module.setOpens(processModuleOpens(data));
+        module.setUses(processModuleUses(data));
+        module.setProvides(processModuleProvides(data));
+
+        // Store the owning ClassInfo using the module name instead of `module-info`
+        modules.put(moduleName, module);
+    }
+
+    private List<ModuleInfo.RequiredModuleInfo> processModuleRequires(DataInputStream data) throws IOException {
+        int requiresCount = data.readUnsignedShort();
+        List<ModuleInfo.RequiredModuleInfo> requires = Utils.listOfCapacity(requiresCount);
+
+        for (int i = 0; i < requiresCount; i++) {
+            DotName name = decodeModuleEntry(data.readUnsignedShort());
+            int flags = data.readUnsignedShort();
+            String version = decodeOptionalUtf8Entry(data.readUnsignedShort());
+            requires.add(new ModuleInfo.RequiredModuleInfo(name, flags, version));
+        }
+
+        return requires;
+    }
+
+    private List<ModuleInfo.ExportedPackageInfo> processModuleExports(DataInputStream data) throws IOException {
+        int exportsCount = data.readUnsignedShort();
+        List<ModuleInfo.ExportedPackageInfo> exports = Utils.listOfCapacity(exportsCount);
+
+        for (int i = 0; i < exportsCount; i++) {
+            DotName source = decodePackageEntry(data.readUnsignedShort());
+            int flags = data.readUnsignedShort();
+            int targetCount = data.readUnsignedShort();
+            List<DotName> targets = Utils.listOfCapacity(targetCount);
+
+            for (int j = 0; j < targetCount; j++) {
+                targets.add(decodeModuleEntry(data.readUnsignedShort()));
+            }
+
+            exports.add(new ModuleInfo.ExportedPackageInfo(source, flags, targets));
+        }
+
+        return exports;
+    }
+
+    private List<ModuleInfo.OpenedPackageInfo> processModuleOpens(DataInputStream data) throws IOException {
+        int opensCount = data.readUnsignedShort();
+        List<ModuleInfo.OpenedPackageInfo> opens = Utils.listOfCapacity(opensCount);
+
+        for (int i = 0; i < opensCount; i++) {
+            DotName source = decodePackageEntry(data.readUnsignedShort());
+            int flags = data.readUnsignedShort();
+            int targetCount = data.readUnsignedShort();
+            List<DotName> targets = Utils.listOfCapacity(targetCount);
+
+            for (int j = 0; j < targetCount; j++) {
+                targets.add(decodeModuleEntry(data.readUnsignedShort()));
+            }
+
+            opens.add(new ModuleInfo.OpenedPackageInfo(source, flags, targets));
+        }
+
+        return opens;
+    }
+
+    private List<DotName> processModuleUses(DataInputStream data) throws IOException {
+        int usesCount = data.readUnsignedShort();
+        List<DotName> usesServices = Utils.listOfCapacity(usesCount);
+
+        for (int j = 0; j < usesCount; j++) {
+            usesServices.add(decodeClassEntry(data.readUnsignedShort()));
+        }
+
+        return usesServices;
+    }
+
+    private List<ModuleInfo.ProvidedServiceInfo> processModuleProvides(DataInputStream data) throws IOException {
+        int providesCount = data.readUnsignedShort();
+        List<ModuleInfo.ProvidedServiceInfo> provides = Utils.listOfCapacity(providesCount);
+
+        for (int i = 0; i < providesCount; i++) {
+            DotName service = decodeClassEntry(data.readUnsignedShort());
+            int providerCount = data.readUnsignedShort();
+            List<DotName> providers = Utils.listOfCapacity(providerCount);
+
+            for (int j = 0; j < providerCount; j++) {
+                providers.add(decodeClassEntry(data.readUnsignedShort()));
+            }
+
+            provides.add(new ModuleInfo.ProvidedServiceInfo(service, providers));
+        }
+
+        return provides;
+    }
+
+    private void processModulePackages(DataInputStream data, ClassInfo target) throws IOException {
+        if (!target.isModule()) {
+            throw new IllegalStateException("ModulePackages attribute appeared in a non-module class file");
+        }
+
+        int packagesCount = data.readUnsignedShort();
+        List<DotName> packages = Utils.listOfCapacity(packagesCount);
+
+        for (int j = 0; j < packagesCount; j++) {
+            packages.add(decodePackageEntry(data.readUnsignedShort()));
+        }
+
+        target.module().setPackages(packages);
+    }
+
+    private void processModuleMainClass(DataInputStream data, ClassInfo target) throws IOException {
+        if (!target.isModule()) {
+            throw new IllegalStateException("ModuleMainClass attribute appeared in a non-module class file");
+        }
+
+        target.module().setMainClass(decodeClassEntry(data.readUnsignedShort()));
     }
 
     private void processCode(DataInputStream data, MethodInfo target) throws IOException {
@@ -781,6 +971,9 @@ public final class Indexer {
                 }
                 method.setReturnType(resolveTypePath(returnType, typeAnnotationState));
             }
+        } else if (typeTarget.usage() == TypeTarget.Usage.EMPTY && target instanceof RecordComponentInfo) {
+            RecordComponentInfo recordComponent = (RecordComponentInfo) target;
+            recordComponent.setType(resolveTypePath(recordComponent.type(), typeAnnotationState));
         } else if (typeTarget.usage() == TypeTarget.Usage.THROWS  && target instanceof MethodInfo) {
             MethodInfo method = (MethodInfo) target;
             int position = ((ThrowsTypeTarget)typeTarget).position();
@@ -892,6 +1085,8 @@ public final class Indexer {
             case EMPTY: {
                 if (enclosingTarget instanceof FieldInfo) {
                     type = ((FieldInfo)enclosingTarget).type();
+                } else if (enclosingTarget instanceof RecordComponentInfo) {
+                    type = ((RecordComponentInfo)enclosingTarget).type();
                 } else {
                     MethodInfo method = (MethodInfo) enclosingTarget;
                     type = target.asEmpty().isReceiver() ? method.receiverType() : method.returnType();
@@ -1211,9 +1406,11 @@ public final class Indexer {
             Object element = signatures.get(i + 1);
 
             if (element instanceof FieldInfo) {
-                parseFieldSignature(elementSignature, (FieldInfo)element);
+                parseFieldSignature(elementSignature, (FieldInfo) element);
             } else if (element instanceof MethodInfo) {
                 parseMethodSignature(elementSignature, (MethodInfo) element);
+            } else if (element instanceof RecordComponentInfo) {
+                parseRecordComponentSignature(elementSignature, (RecordComponentInfo) element);
             }
         }
     }
@@ -1231,6 +1428,12 @@ public final class Indexer {
         if (methodSignature.throwables().length > 0) {
             method.setExceptions(methodSignature.throwables());
         }
+    }
+
+    private void parseRecordComponentSignature(String signature, RecordComponentInfo recordComponent) {
+        // per JVM Specification, signatures stored for records must be field signatures
+        Type type = signatureParser.parseFieldSignature(signature);
+        recordComponent.setType(type);
     }
 
     private AnnotationInstance processAnnotation(DataInputStream data, AnnotationTarget target) throws IOException {
@@ -1259,6 +1462,7 @@ public final class Indexer {
             recordAnnotation(masterAnnotations, annotationName, instance);
 
             if (target instanceof FieldInfo || target instanceof MethodInfo || target instanceof MethodParameterInfo
+                    || target instanceof RecordComponentInfo
                     || target instanceof TypeTarget
                             && ((TypeTarget) target).enclosingTarget().kind() != AnnotationTarget.Kind.CLASS) {
                 elementAnnotations.add(instance);
@@ -1343,7 +1547,6 @@ public final class Indexer {
 
     }
 
-
     private void processClassInfo(DataInputStream data) throws IOException {
         short flags = (short) data.readUnsignedShort();
         DotName thisName = decodeClassEntry(data.readUnsignedShort());
@@ -1369,7 +1572,9 @@ public final class Indexer {
             addImplementor(interfaces.get(i).name(), currentClass);
         }
 
-        classes.put(currentClass.name(), currentClass);
+        if (!currentClass.isModule()) {
+            classes.put(currentClass.name(), currentClass);
+        }
     }
 
     private void addSubclass(DotName superName, ClassInfo currentClass) {
@@ -1407,16 +1612,34 @@ public final class Indexer {
 
     }
 
-    private DotName decodeClassEntry(int classInfoIndex) {
+    private DotName decodeClassEntry(int index) {
+        return index == 0 ? null : decodeDotNameEntry(index, CONSTANT_CLASS, "Class_info", '/');
+    }
+
+    private DotName decodeModuleEntry(int index) {
+        return index == 0 ? null : decodeDotNameEntry(index, CONSTANT_MODULE, "Module_info", '.');
+    }
+
+    private DotName decodePackageEntry(int index) {
+        return index == 0 ? null : decodeDotNameEntry(index, CONSTANT_PACKAGE, "Package_info", '/');
+    }
+
+    private DotName decodeDotNameEntry(int index, int constantType, String typeName, char delim) {
         byte[] pool = constantPool;
         int[] offsets = constantPoolOffsets;
 
-        int pos = offsets[classInfoIndex - 1];
-        if (pool[pos] != CONSTANT_CLASS)
-            throw new IllegalStateException("Constant pool entry is not a class info type: " + classInfoIndex + ":" + pos);
+        int pos = offsets[index - 1];
+
+        if (pool[pos] != constantType) {
+            throw new IllegalStateException(String.format("Constant pool entry is not a %s type: %d:%d", typeName, index, pos));
+        }
 
         int nameIndex = (pool[++pos] & 0xFF) << 8 | (pool[++pos] & 0xFF);
-        return names.convertToName(decodeUtf8Entry(nameIndex), '/');
+        return names.convertToName(decodeUtf8Entry(nameIndex), delim);
+    }
+
+    private String decodeOptionalUtf8Entry(int index) {
+        return index == 0 ? null : decodeUtf8Entry(index);
     }
 
     private String decodeUtf8Entry(int index) {
@@ -1600,6 +1823,8 @@ public final class Indexer {
                 case CONSTANT_CLASS:
                 case CONSTANT_STRING:
                 case CONSTANT_METHODTYPE:
+                case CONSTANT_MODULE:
+                case CONSTANT_PACKAGE:
                     buf = sizeToFit(buf, 3, offset, poolCount - pos);
                     buf[offset++] = (byte) tag;
                     stream.readFully(buf, offset, 2);
@@ -1664,13 +1889,17 @@ public final class Indexer {
                         annoAttributes[pos] = HAS_LOCAL_VARIABLE_TABLE;
                     } else if (len == CODE_LEN && match(buf, offset, CODE)) {
                         annoAttributes[pos] = HAS_CODE;
+                    } else if (len == MODULE_LEN && match(buf, offset, MODULE)) {
+                        annoAttributes[pos] = HAS_MODULE;
+                    } else if (len == MODULE_PACKAGES_LEN && match(buf, offset, MODULE_PACKAGES)) {
+                        annoAttributes[pos] = HAS_MODULE_PACKAGES;
+                    } else if (len == MODULE_MAIN_CLASS_LEN && match(buf, offset, MODULE_MAIN_CLASS)) {
+                        annoAttributes[pos] = HAS_MODULE_MAIN_CLASS;
+                    } else if (len == RECORD_LEN && match(buf, offset, RECORD)) {
+                        annoAttributes[pos] = HAS_RECORD;
                     }
                     offset += len;
                     break;
-                case CONSTANT_MODULE:
-                case CONSTANT_PACKAGE:
-                    // ignoring module-info.class files for now
-                    throw new IgnoreModuleInfoException();
                default:
                    throw new IllegalStateException(
                            String.format("Unknown tag %s! pos = %s poolCount = %s", tag, pos, poolCount));
@@ -1743,12 +1972,10 @@ public final class Indexer {
 
             currentClass.setMethods(methods, names);
             currentClass.setFields(fields, names);
+            currentClass.setRecordComponents(recordComponents, names);
             currentClass.setAnnotations(classAnnotations);
 
             return currentClass;
-        } catch (IgnoreModuleInfoException e) {
-            // ignoring module-info.class files for now
-            return null;
         } finally {
             constantPool = null;
             constantPoolOffsets = null;
@@ -1771,18 +1998,16 @@ public final class Indexer {
     public Index complete() {
         initIndexMaps();
         try {
-            return Index.create(masterAnnotations, subclasses, implementors, classes, users);
+            return new Index(masterAnnotations, subclasses, implementors, classes, modules, users);
         } finally {
             masterAnnotations = null;
             subclasses = null;
             classes = null;
             signatureParser = null;
             names = null;
+            modules = null;
             users = null;
         }
     }
 
-    private static class IgnoreModuleInfoException extends RuntimeException {
-        private static final long serialVersionUID = 1L;
-    }
 }

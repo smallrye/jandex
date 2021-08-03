@@ -250,6 +250,7 @@ final class MethodInternal {
         return flags;
     }
 
+    @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         String name = name();

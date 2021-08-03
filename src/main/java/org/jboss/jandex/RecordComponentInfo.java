@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2013 Red Hat, Inc., and individual contributors
+ * Copyright 2021 Red Hat, Inc., and individual contributors
  * as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,93 +18,102 @@
 
 package org.jboss.jandex;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Represents a field.
+ * Represents an individual Java record component that was annotated.
  *
  * <p>
  * <b>Thread-Safety</b>
  * </p>
  * This class is immutable and can be shared between threads without safe publication.
  *
- * @author Jason T. Greene
- *
  */
-public final class FieldInfo implements AnnotationTarget {
-    
+public final class RecordComponentInfo implements AnnotationTarget {
     private ClassInfo clazz;
-    private FieldInternal internal;
+    private RecordComponentInternal internal;
 
-    FieldInfo() {
+    RecordComponentInfo() {
     }
 
-    FieldInfo(ClassInfo clazz, FieldInternal internal) {
+    RecordComponentInfo(ClassInfo clazz, RecordComponentInternal internal) {
         this.clazz = clazz;
         this.internal = internal;
     }
 
-    FieldInfo(ClassInfo clazz, byte[] name, Type type, short flags) {
-        this(clazz, new FieldInternal(name, type, flags));
+    RecordComponentInfo(ClassInfo clazz, byte[] name, Type type) {
+        this(clazz, new RecordComponentInternal(name, type));
     }
 
     /**
-     * Construct a new mock Field instance.
+     * Constructs a new mock record component info
      *
-     * @param clazz the class declaring the field
-     * @param name the name of the field
-     * @param type the Java field type
-     * @param flags the field attributes
-     * @return a mock field
+     * @param clazz the (record) class declaring this record component
+     * @param name the name of this record component
+     * @param type the type of this record component
+     * @return the new mock record component info
      */
-    public static FieldInfo create(ClassInfo clazz, String name, Type type, short flags) {
+    public static RecordComponentInfo create(ClassInfo clazz, String name, Type type) {
         if (clazz == null)
             throw new IllegalArgumentException("Clazz can't be null");
 
         if (name == null)
             throw new IllegalArgumentException("Name can't be null");
 
-        return new FieldInfo(clazz, Utils.toUTF8(name), type, flags);
+        return new RecordComponentInfo(clazz, Utils.toUTF8(name), type);
     }
 
     /**
-     * Returns the local name of the field
+     * Returns the (record) class declaring this record component.
      *
-     * @return the local name of the field
-     */
-    public final String name() {
-        return internal.name();
-    }
-
-    /**
-     * Returns the class which declared the field
-     *
-     * @return the declaring class
+     * @return the (record) class declaring this record component
      */
     public final ClassInfo declaringClass() {
         return clazz;
     }
 
     /**
-     * Returns the <code>Type</code> declared on this field. This may be an array, a primitive, or a generic type definition.
+     * Returns the component field corresponding to this record component.
      *
-     * @return the type of this field
+     * @return the component field
      */
-    public final Type type() {
-        return internal.type();
-    }
-
-    public final Kind kind() {
-        return Kind.FIELD;
+    public final FieldInfo field() {
+        return clazz.field(internal.name());
     }
 
     /**
-     * Returns the list of annotation instances declared on this field. It may be empty, but never null.
+     * Returns the accessor method corresponding to this record component.
      *
-     * @return the list of annotations on this field
+     * @return the accessor method
+     */
+    public final MethodInfo accessor() {
+        return clazz.method(internal.name());
+    }
+
+    /**
+     * Returns the name of this record component.
+     *
+     * @return the name of this record component
+     */
+    public final String name() {
+        return internal.name();
+    }
+
+    /**
+     * Returns the type of this record component.
+     *
+     * @return the type of this record component
+     */
+    public Type type() {
+        return internal.type();
+    }
+
+    /**
+     * Returns the list of annotation instances declared on this record component. It may be empty, but never null.
+     *
+     * @return the list of annotations on this record component
      */
     public List<AnnotationInstance> annotations() {
         return internal.annotations();
@@ -122,9 +131,9 @@ public final class FieldInfo implements AnnotationTarget {
 
     /**
      * Retrieves annotation instances declared on this field, by the name of the annotation.
-     * 
+     *
      * If the specified annotation is repeatable (JLS 9.6), the result also contains all values from the container annotation instance.
-     * 
+     *
      * @param name the name of the annotation
      * @param index the index used to obtain the annotation class
      * @return the annotation instances declared on this field, or an empty list if none
@@ -173,42 +182,12 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns whether or not this field is declared as an element of an enum.
+     * Returns a string representation describing this record component.
      *
-     * @return true if the field is declared as an element of an enum, false
-     *         otherwise.
-     *
-     * @see java.lang.reflect.Field#isEnumConstant()
-     */
-    public boolean isEnumConstant() {
-        return (flags() & Modifiers.ENUM) != 0;
-    }
-
-    /**
-     * Returns the access fields of this field. {@link Modifier} can be used on this value.
-     *
-     * @return the access flags of this field
-     */
-    public final short flags() {
-        return internal.flags();
-    }
-    
-    /**
-     * 
-     * @return {@code true} if this field is a synthetic field
-     */
-    public final boolean isSynthetic() {
-        return Modifiers.isSynthetic(internal.flags());
-    }
-
-    /**
-     * Returns a string representation describing this field. It is similar although not necessarily equivalent to a Java source code expression representing
-     * this field.
-     *
-     * @return a string representation for this field
+     * @return a string representation of this record component
      */
     public String toString() {
-        return internal.toString(clazz);
+        return name();
     }
 
     @Override
@@ -218,7 +197,7 @@ public final class FieldInfo implements AnnotationTarget {
 
     @Override
     public final FieldInfo asField() {
-        return this;
+        throw new IllegalArgumentException("Not a field");
     }
 
     @Override
@@ -238,7 +217,12 @@ public final class FieldInfo implements AnnotationTarget {
 
     @Override
     public RecordComponentInfo asRecordComponent() {
-        throw new IllegalArgumentException("Not a record component");
+        return this;
+    }
+
+    @Override
+    public Kind kind() {
+        return Kind.RECORD_COMPONENT;
     }
 
     @Override
@@ -257,7 +241,7 @@ public final class FieldInfo implements AnnotationTarget {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        FieldInfo other = (FieldInfo) o;
+        RecordComponentInfo other = (RecordComponentInfo) o;
         return clazz.equals(other.clazz) && internal.equals(other.internal);
     }
 
@@ -269,11 +253,11 @@ public final class FieldInfo implements AnnotationTarget {
         internal.setAnnotations(annotations);
     }
 
-    FieldInternal fieldInternal() {
+    RecordComponentInternal recordComponentInternal() {
         return internal;
     }
 
-    void setFieldInternal(FieldInternal internal) {
+    void setRecordComponentInternal(RecordComponentInternal internal) {
         this.internal = internal;
     }
 

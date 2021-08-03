@@ -110,6 +110,11 @@ public final class MethodParameterInfo implements AnnotationTarget {
     }
 
     @Override
+    public RecordComponentInfo asRecordComponent() {
+        throw new IllegalArgumentException("Not a record component");
+    }
+
+    @Override
     public Kind kind() {
         return Kind.METHOD_PARAMETER;
     }

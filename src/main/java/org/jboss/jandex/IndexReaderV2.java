@@ -61,6 +61,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
     private static final byte TYPE_PARAMETER_BOUND_TAG = 8;
     private static final byte METHOD_PARAMETER_TYPE_TAG = 9;
     private static final byte THROWS_TYPE_TAG = 10;
+    private static final byte RECORD_COMPONENT_TAG = 11;
     private static final int AVALUE_BYTE = 1;
     private static final int AVALUE_SHORT = 2;
     private static final int AVALUE_INT = 3;
@@ -86,6 +87,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
     private AnnotationInstance[] annotationTable;
     private MethodInternal[] methodTable;
     private FieldInternal[] fieldTable;
+    private RecordComponentInternal[] recordComponentTable;
     private HashMap<DotName, Set<DotName>> users;
 
 
@@ -120,6 +122,9 @@ final class IndexReaderV2 extends IndexReaderImpl {
             }
             readMethodTable(stream, version);
             readFieldTable(stream);
+            if (version >= 10) {
+                readRecordComponentTable(stream);
+            }
             return readClasses(stream, annotationsSize, implementorsSize, subclassesSize, version);
         } finally {
             byteTable = null;
@@ -130,6 +135,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             annotationTable = null;
             methodTable = null;
             fieldTable = null;
+            recordComponentTable = null;
             users = null;
         }
     }
@@ -403,6 +409,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             case CLASS_TAG:
             case FIELD_TAG:
             case METHOD_TAG:
+            case RECORD_COMPONENT_TAG:
                 return caller;
             case METHOD_PARAMATER_TAG: {
                 short parameter = (short)stream.readPackedU32();
@@ -463,6 +470,15 @@ final class IndexReaderV2 extends IndexReaderImpl {
         }
     }
 
+    private void readRecordComponentTable(PackedDataInputStream stream) throws IOException {
+        // Null holds the first slot
+        int size = stream.readPackedU32() + 1;
+        recordComponentTable = new RecordComponentInternal[size];
+        for (int i = 1; i < size; i++) {
+            recordComponentTable[i] = readRecordComponentEntry(stream);
+        }
+    }
+
     private MethodInternal readMethodEntry(PackedDataInputStream stream, int version) throws IOException {
         byte[] name = byteTable[stream.readPackedU32()];
         short flags = (short) stream.readPackedU32();
@@ -509,6 +525,17 @@ final class IndexReaderV2 extends IndexReaderImpl {
         FieldInternal fieldInternal = new FieldInternal(name, type, flags, annotations);
         fieldInfo.setFieldInternal(fieldInternal);
         return fieldInternal;
+    }
+
+    private RecordComponentInternal readRecordComponentEntry(PackedDataInputStream stream) throws IOException {
+        byte[] name = byteTable[stream.readPackedU32()];
+        Type type = typeTable[stream.readPackedU32()];
+
+        RecordComponentInfo recordComponentInfo = new RecordComponentInfo();
+        AnnotationInstance[] annotations = readAnnotations(stream, recordComponentInfo);
+        RecordComponentInternal recordComponentInternal = new RecordComponentInternal(name, type, annotations);
+        recordComponentInfo.setRecordComponentInternal(recordComponentInternal);
+        return recordComponentInternal;
     }
 
     private ClassInfo readClassEntry(PackedDataInputStream stream,
@@ -570,6 +597,12 @@ final class IndexReaderV2 extends IndexReaderImpl {
             clazz.setMethodPositionArray(byteTable[stream.readPackedU32()]);
         }
 
+        if (version >= 10) {
+            RecordComponentInternal[] recordComponents = readClassRecordComponents(stream, clazz);
+            clazz.setRecordComponentArray(recordComponents);
+            clazz.setRecordComponentPositionArray(byteTable[stream.readPackedU32()]);
+        }
+
         for (int i = 0; i < size; i++) {
             List<AnnotationInstance> instances = convertToList(readAnnotations(stream, clazz));
             if (instances.size() > 0) {
@@ -582,6 +615,86 @@ final class IndexReaderV2 extends IndexReaderImpl {
         clazz.setAnnotations(annotations);
 
         return clazz;
+    }
+
+    private ModuleInfo readModuleEntry(PackedDataInputStream stream, ClassInfo moduleInfoClass) throws IOException {
+        DotName moduleName  = nameTable[stream.readPackedU32()];
+        short moduleFlags = (short) stream.readPackedU32();
+        String moduleVersion = stringTable[stream.readPackedU32()];
+        DotName mainClass = nameTable[stream.readPackedU32()];
+
+        ModuleInfo module = new ModuleInfo(moduleInfoClass, moduleName, moduleFlags, moduleVersion);
+        module.setMainClass(mainClass);
+
+        // requires
+        int requiredCount = stream.readPackedU32();
+        List<ModuleInfo.RequiredModuleInfo> requires = Utils.listOfCapacity(requiredCount);
+
+        for (int i = 0; i < requiredCount; i++) {
+            DotName name  = nameTable[stream.readPackedU32()];
+            short flags = (short) stream.readPackedU32();
+            String version = stringTable[stream.readPackedU32()];
+            requires.add(new ModuleInfo.RequiredModuleInfo(name, flags, version));
+        }
+
+        module.setRequires(requires);
+
+        // exports
+        int exportedCount = stream.readPackedU32();
+        List<ModuleInfo.ExportedPackageInfo> exports = Utils.listOfCapacity(exportedCount);
+
+        for (int i = 0; i < exportedCount; i++) {
+            DotName source  = nameTable[stream.readPackedU32()];
+            short flags = (short) stream.readPackedU32();
+            List<DotName> targets = readDotNames(stream);
+            exports.add(new ModuleInfo.ExportedPackageInfo(source, flags, targets));
+        }
+
+        module.setExports(exports);
+
+        // uses
+        module.setUses(readDotNames(stream));
+
+        // opens
+        int openedCount = stream.readPackedU32();
+        List<ModuleInfo.OpenedPackageInfo> opens = Utils.listOfCapacity(openedCount);
+
+        for (int i = 0; i < openedCount; i++) {
+            DotName source  = nameTable[stream.readPackedU32()];
+            short flags = (short) stream.readPackedU32();
+            List<DotName> targets = readDotNames(stream);
+            opens.add(new ModuleInfo.OpenedPackageInfo(source, flags, targets));
+        }
+
+        module.setOpens(opens);
+
+        // provides
+        int providedCount = stream.readPackedU32();
+        List<ModuleInfo.ProvidedServiceInfo> provides = Utils.listOfCapacity(providedCount);
+
+        for (int i = 0; i < providedCount; i++) {
+            DotName service  = nameTable[stream.readPackedU32()];
+            List<DotName> providers = readDotNames(stream);
+            provides.add(new ModuleInfo.ProvidedServiceInfo(service, providers));
+        }
+
+        module.setProvides(provides);
+
+        // packages
+        module.setPackages(readDotNames(stream));
+
+        return module;
+    }
+
+    private List<DotName> readDotNames(PackedDataInputStream stream) throws IOException {
+        int size = stream.readPackedU32();
+        List<DotName> names = Utils.listOfCapacity(size);
+
+        for (int i = 0; i < size; i++) {
+            names.add(nameTable[stream.readPackedU32()]);
+        }
+
+        return names;
     }
 
     private void addToMaster(Map<DotName, List<AnnotationInstance>> masterAnnotations, DotName name,
@@ -624,6 +737,17 @@ final class IndexReaderV2 extends IndexReaderImpl {
         return fields;
     }
 
+    private RecordComponentInternal[] readClassRecordComponents(PackedDataInputStream stream, ClassInfo clazz) throws IOException {
+        int len = stream.readPackedU32();
+        RecordComponentInternal[] recordComponents = len > 0 ? new RecordComponentInternal[len] : RecordComponentInternal.EMPTY_ARRAY;
+        for (int i = 0; i < len; i++) {
+            RecordComponentInternal recordComponent = recordComponentTable[stream.readPackedU32()];
+            updateAnnotationTargetInfo(recordComponent.annotationArray(), clazz);
+            recordComponents[i] = recordComponent;
+        }
+        return recordComponents;
+    }
+
     private MethodInternal[] readClassMethods(PackedDataInputStream stream, ClassInfo clazz) throws IOException {
         int len = stream.readPackedU32();
         MethodInternal[] methods = len > 0 ? new MethodInternal[len] : MethodInternal.EMPTY_ARRAY;
@@ -653,6 +777,8 @@ final class IndexReaderV2 extends IndexReaderImpl {
                 ((MethodParameterInfo)target).method().setClassInfo(clazz);
             } else if (target instanceof FieldInfo) {
                 ((FieldInfo)target).setClassInfo(clazz);
+            } else if (target instanceof RecordComponentInfo) {
+                ((RecordComponentInfo) target).setClassInfo(clazz);
             }
         }
     }
@@ -700,7 +826,28 @@ final class IndexReaderV2 extends IndexReaderImpl {
             users = Collections.emptyMap();
         }
 
-        return new Index(masterAnnotations, subclasses, implementors, classes, users);
+        Map<DotName, ModuleInfo> modules = (version >= 10) ?
+            readModules(stream, masterAnnotations, version) : Collections.<DotName, ModuleInfo>emptyMap();
+
+        return new Index(masterAnnotations, subclasses, implementors, classes, modules, users);
+    }
+
+    private Map<DotName, ModuleInfo> readModules(PackedDataInputStream stream,
+                                                 Map<DotName, List<AnnotationInstance>> masterAnnotations,
+                                                 int version) throws IOException {
+
+        int modulesSize = stream.readPackedU32();
+        Map<DotName, ModuleInfo> modules = modulesSize > 0 ?
+            new HashMap<DotName, ModuleInfo>(modulesSize) :
+                Collections.<DotName, ModuleInfo>emptyMap();
+
+        for (int i = 0; i < modulesSize; i++) {
+            ClassInfo clazz = readClassEntry(stream, masterAnnotations, version);
+            ModuleInfo module = readModuleEntry(stream, clazz);
+            modules.put(module.name(), module);
+        }
+
+        return modules;
     }
 
     int toDataVersion(int version) {

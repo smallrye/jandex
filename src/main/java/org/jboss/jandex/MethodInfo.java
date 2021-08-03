@@ -433,6 +433,11 @@ public final class MethodInfo implements AnnotationTarget {
         throw new IllegalArgumentException("Not a type");
     }
 
+    @Override
+    public RecordComponentInfo asRecordComponent() {
+        throw new IllegalArgumentException("Not a record component");
+    }
+
     final MethodInternal methodInternal() {
         return methodInternal;
     }

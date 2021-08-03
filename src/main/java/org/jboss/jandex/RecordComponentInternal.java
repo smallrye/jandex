@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2013 Red Hat, Inc., and individual contributors
+ * Copyright 2021 Red Hat, Inc., and individual contributors
  * as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,45 +24,40 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * The shared internal representation for FieldInfo objects.
- *
- * @author Jason T. Greene
+ * The shared internal representation for RecordComponentInfo objects.
  */
-final class FieldInternal {
-    static final FieldInternal[] EMPTY_ARRAY = new FieldInternal[0];
+final class RecordComponentInternal {
+    static final RecordComponentInternal[] EMPTY_ARRAY = new RecordComponentInternal[0];
     private final byte[] name;
     private Type type;
-    private final short flags;
     private AnnotationInstance[] annotations;
 
     static final NameComparator NAME_COMPARATOR = new NameComparator();
 
-    static class NameComparator implements Comparator<FieldInternal> {
-
+    static class NameComparator implements Comparator<RecordComponentInternal> {
         private int compare(byte[] left, byte[] right) {
-               for (int i = 0, j = 0; i < left.length && j < right.length; i++, j++) {
-                   int a = (left[i] & 0xff);
-                   int b = (right[j] & 0xff);
-                   if (a != b) {
-                       return a - b;
-                   }
-               }
-               return left.length - right.length;
-           }
+            for (int i = 0, j = 0; i < left.length && j < right.length; i++, j++) {
+                int a = (left[i] & 0xff);
+                int b = (right[j] & 0xff);
+                if (a != b) {
+                    return a - b;
+                }
+            }
+            return left.length - right.length;
+        }
 
-        public int compare(FieldInternal instance, FieldInternal instance2) {
+        public int compare(RecordComponentInternal instance, RecordComponentInternal instance2) {
             return compare(instance.name, instance2.name); //instance.name.compareTo(instance2.name);
         }
     }
 
-    FieldInternal(byte[] name, Type type, short flags) {
-        this(name, type, flags, AnnotationInstance.EMPTY_ARRAY);
+    RecordComponentInternal(byte[] name, Type type) {
+        this(name, type, AnnotationInstance.EMPTY_ARRAY);
     }
 
-    FieldInternal(byte[] name, Type type, short flags, AnnotationInstance[] annotations) {
+    RecordComponentInternal(byte[] name, Type type, AnnotationInstance[] annotations) {
         this.name = name;
         this.type = type;
-        this.flags = flags;
         this.annotations = annotations;
     }
 
@@ -75,11 +70,8 @@ final class FieldInternal {
             return false;
         }
 
-        FieldInternal that = (FieldInternal) o;
+        RecordComponentInternal that = (RecordComponentInternal) o;
 
-        if (flags != that.flags) {
-            return false;
-        }
         if (!Arrays.equals(annotations, that.annotations)) {
             return false;
         }
@@ -97,7 +89,6 @@ final class FieldInternal {
     public int hashCode() {
         int result = Arrays.hashCode(name);
         result = 31 * result + type.hashCode();
-        result = 31 * result + (int) flags;
         result = 31 * result + Arrays.hashCode(annotations);
         return result;
     }
@@ -130,10 +121,6 @@ final class FieldInternal {
 
     final boolean hasAnnotation(DotName name) {
         return annotation(name) != null;
-    }
-
-    final short flags() {
-        return flags;
     }
 
     @Override

@@ -69,6 +69,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
     private static final byte TYPE_PARAMETER_BOUND_TAG = 8;
     private static final byte METHOD_PARAMETER_TYPE_TAG = 9;
     private static final byte THROWS_TYPE_TAG = 10;
+    private static final byte RECORD_COMPONENT_TAG = 11;
     private static final int AVALUE_BYTE = 1;
     private static final int AVALUE_SHORT = 2;
     private static final int AVALUE_INT = 3;
@@ -212,7 +213,15 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
         writeMethodTable(stream, version);
         writeFieldTable(stream);
+        if (version >= 10) {
+            writeRecordComponentTable(stream);
+        }
         writeClasses(stream, index, version);
+
+        if (version >= 10) {
+            writeModules(stream, index, version);
+        }
+
         stream.flush();
         return stream.size();
     }
@@ -295,12 +304,32 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
     }
 
+    private void writeRecordComponentTable(PackedDataOutputStream stream) throws IOException {
+        StrongInternPool<RecordComponentInternal> recordComponentPool = names.recordComponentPool();
+        stream.writePackedU32(recordComponentPool.size());
+        Iterator<RecordComponentInternal> iterator = recordComponentPool.iterator();
+        while (iterator.hasNext()) {
+            writeRecordComponentEntry(stream, iterator.next());
+        }
+    }
+
     private void writeFieldEntry(PackedDataOutputStream stream, FieldInternal field) throws IOException {
         stream.writePackedU32(positionOf(field.nameBytes()));
         stream.writePackedU32(field.flags());
         stream.writePackedU32(positionOf(field.type()));
 
         AnnotationInstance[] annotations = field.annotationArray();
+        stream.writePackedU32(annotations.length);
+        for (AnnotationInstance annotation : annotations) {
+            writeReferenceOrFull(stream, annotation);
+        }
+    }
+
+    private void writeRecordComponentEntry(PackedDataOutputStream stream, RecordComponentInternal recordComponent) throws IOException {
+        stream.writePackedU32(positionOf(recordComponent.nameBytes()));
+        stream.writePackedU32(positionOf(recordComponent.type()));
+
+        AnnotationInstance[] annotations = recordComponent.annotationArray();
         stream.writePackedU32(annotations.length);
         for (AnnotationInstance annotation : annotations) {
             writeReferenceOrFull(stream, annotation);
@@ -357,6 +386,8 @@ final class IndexWriterV2 extends IndexWriterImpl{
             stream.writeByte(CLASS_TAG);
         } else if (target instanceof TypeTarget) {
             writeTypeTarget(stream, (TypeTarget)target);
+        } else if (target instanceof RecordComponentInfo) {
+            stream.writeByte(RECORD_COMPONENT_TAG);
         } else if (target == null) {
             stream.writeByte(NULL_TARGET_TAG);
         } else {
@@ -460,6 +491,14 @@ final class IndexWriterV2 extends IndexWriterImpl{
         return pos;
     }
 
+    private int positionOf(RecordComponentInternal recordComponent) {
+        int pos = names.positionOf(recordComponent);
+        if (pos < 1) {
+            throw new IllegalStateException("Intern tables incomplete");
+        }
+        return pos;
+    }
+
     private int positionOf(DotName className) {
         Integer i = nameTable.get(className);
         if (i == null)
@@ -495,6 +534,17 @@ final class IndexWriterV2 extends IndexWriterImpl{
         stream.writePackedU32(classes.size());
         for (ClassInfo clazz: classes) {
             writeClassEntry(stream, clazz, version);
+        }
+    }
+
+    private void writeModules(PackedDataOutputStream stream, Index index, int version) throws IOException {
+        Collection<ModuleInfo> modules = index.getKnownModules();
+        stream.writePackedU32(modules.size());
+        addClassName(DotName.createSimple("module-info"));
+
+        for (ModuleInfo module : modules) {
+            writeClassEntry(stream, module.moduleInfoClass(), version);
+            writeModuleEntry(stream, module, version);
         }
     }
 
@@ -562,6 +612,16 @@ final class IndexWriterV2 extends IndexWriterImpl{
             stream.writePackedU32(positionOf(clazz.methodPositionArray()));
         }
 
+        if (version >= 10) {
+            RecordComponentInternal[] recordComponents = clazz.recordComponentArray();
+            stream.writePackedU32(recordComponents.length);
+            for (RecordComponentInternal recordComponent : recordComponents) {
+                stream.writePackedU32(positionOf(recordComponent));
+            }
+
+            stream.writePackedU32(positionOf(clazz.recordComponentPositionArray()));
+        }
+
         Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotations().entrySet();
         for (Entry<DotName, List<AnnotationInstance>> entry :  entrySet) {
             List<AnnotationInstance> value = entry.getValue();
@@ -569,6 +629,66 @@ final class IndexWriterV2 extends IndexWriterImpl{
             for (AnnotationInstance annotation : value) {
                 writeReferenceOrFull(stream, annotation);
             }
+        }
+    }
+
+    private void writeModuleEntry(PackedDataOutputStream stream, ModuleInfo module, int version) throws IOException {
+        stream.writePackedU32(positionOf(module.name()));
+        stream.writePackedU32(module.flags());
+        stream.writePackedU32(module.version() == null ? 0 : positionOf(module.version()));
+        stream.writePackedU32(module.mainClass() == null ? 0 : positionOf(module.mainClass()));
+
+        // requires
+        List<ModuleInfo.RequiredModuleInfo> requires = module.requiresList();
+        stream.writePackedU32(requires.size());
+
+        for (ModuleInfo.RequiredModuleInfo required : requires) {
+            stream.writePackedU32(positionOf(required.name()));
+            stream.writePackedU32(required.flags());
+            stream.writePackedU32(required.version() == null ? 0 : positionOf(required.version()));
+        }
+
+        // exports
+        List<ModuleInfo.ExportedPackageInfo> exports = module.exportsList();
+        stream.writePackedU32(exports.size());
+
+        for (ModuleInfo.ExportedPackageInfo exported : exports) {
+            stream.writePackedU32(positionOf(exported.source()));
+            stream.writePackedU32(exported.flags());
+            writeDotNames(stream, exported.targetsList());
+        }
+
+        // uses
+        writeDotNames(stream, module.usesList());
+
+        // opens
+        List<ModuleInfo.OpenedPackageInfo> opens = module.opensList();
+        stream.writePackedU32(opens.size());
+
+        for (ModuleInfo.OpenedPackageInfo opened : opens) {
+            stream.writePackedU32(positionOf(opened.source()));
+            stream.writePackedU32(opened.flags());
+            writeDotNames(stream, opened.targetsList());
+        }
+
+        // provides
+        List<ModuleInfo.ProvidedServiceInfo> provides = module.providesList();
+        stream.writePackedU32(provides.size());
+
+        for (ModuleInfo.ProvidedServiceInfo provided : provides) {
+            stream.writePackedU32(positionOf(provided.service()));
+            writeDotNames(stream, provided.providersList());
+        }
+
+        // packages
+        writeDotNames(stream, module.packagesList());
+    }
+
+    private void writeDotNames(PackedDataOutputStream stream, List<DotName> names) throws IOException {
+        stream.writePackedU32(names.size());
+
+        for (DotName name : names) {
+            stream.writePackedU32(positionOf(name));
         }
     }
 
@@ -718,7 +838,13 @@ final class IndexWriterV2 extends IndexWriterImpl{
         for (ClassInfo clazz : index.getKnownClasses()) {
             addClass(clazz);
         }
+
         if (version >= 10) {
+            for (ModuleInfo module : index.getKnownModules()) {
+                addClass(module.moduleInfoClass());
+                addModule(module);
+            }
+
             if (index.users != null) {
                 for (Entry<DotName, List<ClassInfo>> entry : index.users.entrySet()) {
                     addClassName(entry.getKey());
@@ -756,6 +882,9 @@ final class IndexWriterV2 extends IndexWriterImpl{
         addFieldList(clazz.fieldArray());
         names.intern(clazz.fieldPositionArray());
 
+        addRecordComponentList(clazz.recordComponentArray());
+        names.intern(clazz.recordComponentPositionArray());
+
         for (Entry<DotName, List<AnnotationInstance>> entry :  clazz.annotations().entrySet()) {
             addClassName(entry.getKey());
 
@@ -763,6 +892,39 @@ final class IndexWriterV2 extends IndexWriterImpl{
                 addAnnotation(instance);
             }
         }
+    }
+
+    private void addModule(ModuleInfo module) {
+        addClassName(module.name());
+        addNullableString(module.version());
+        DotName mainClass = module.mainClass();
+        if (mainClass != null) {
+            addClassName(mainClass);
+        }
+
+        for (ModuleInfo.RequiredModuleInfo required : module.requires()) {
+            addClassName(required.name());
+            addNullableString(required.version());
+        }
+
+        for (ModuleInfo.ExportedPackageInfo exported : module.exports()) {
+            addClassName(exported.source());
+            addClassNames(exported.targets());
+        }
+
+        for (ModuleInfo.OpenedPackageInfo opened : module.opens()) {
+            addClassName(opened.source());
+            addClassNames(opened.targets());
+        }
+
+        addClassNames(module.uses());
+
+        for (ModuleInfo.ProvidedServiceInfo provided : module.provides()) {
+            addClassName(provided.service());
+            addClassNames(provided.providers());
+        }
+
+        addClassNames(module.packages());
     }
 
     private void addAnnotation(AnnotationInstance instance) {
@@ -813,6 +975,19 @@ final class IndexWriterV2 extends IndexWriterImpl{
         names.intern(method.nameBytes());
         names.intern(method);
     }
+
+    private void addRecordComponentList(RecordComponentInternal[] recordComponents) {
+        for (RecordComponentInternal recordComponent : recordComponents) {
+            deepIntern(recordComponent);
+        }
+    }
+
+    private void deepIntern(RecordComponentInternal recordComponent) {
+        addType(recordComponent.type());
+        names.intern(recordComponent.nameBytes());
+        names.intern(recordComponent);
+    }
+
 
     private void addEnclosingMethod(ClassInfo.EnclosingMethodInfo enclosingMethod) {
         if (enclosingMethod == null) {
@@ -894,8 +1069,21 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
     }
 
+    private String addNullableString(String name) {
+        if (name != null) {
+            return addString(name);
+        }
+        return null;
+    }
+
     private String addString(String name) {
         return names.intern(name);
+    }
+
+    private void addClassNames(List<DotName> names) {
+        for (DotName name : names) {
+            addClassName(name);
+        }
     }
 
     private void addClassName(DotName name) {

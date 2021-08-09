@@ -143,6 +143,9 @@ final class MethodInternal {
         if (!returnType.equals(methodInternal.returnType)) {
             return false;
         }
+        if (defaultValue != null ? !defaultValue.equals(methodInternal.defaultValue) : methodInternal.defaultValue != null) {
+            return false;
+        }
         return Arrays.equals(typeParameters, methodInternal.typeParameters);
     }
 
@@ -157,6 +160,7 @@ final class MethodInternal {
         result = 31 * result + Arrays.hashCode(typeParameters);
         result = 31 * result + Arrays.hashCode(annotations);
         result = 31 * result + (int) flags;
+        result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
         return result;
     }
 

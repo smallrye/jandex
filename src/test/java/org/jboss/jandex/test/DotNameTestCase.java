@@ -19,18 +19,19 @@ package org.jboss.jandex.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.TreeSet;
 
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
+import org.junit.Assert;
 import org.junit.Test;
-
-import junit.framework.Assert;
-
 
 /**
  * Since DotName is often used as a key in collections and implements Comparable,
@@ -210,6 +211,26 @@ public class DotNameTestCase {
         c.add(DotName.createComponentized(DotName.createComponentized(null, "c", false), "e", true));
         c.add(DotName.createComponentized(DotName.createComponentized(null, "c", false), "ae", false));
         c.verifyAll();
+    }
+
+
+    @Test
+    public void testTrailingDelimiter() throws IOException {
+        DotName org = DotName.createComponentized(null, "org");
+        DotName jboss = DotName.createComponentized(org, "jboss");
+        DotName jandex = DotName.createComponentized(jboss, "jandex");
+        DotName test = DotName.createComponentized(jandex, "test");
+        DotName indexerTestCase = DotName.createComponentized(test, getClass().getSimpleName());
+        DotName testName = DotName.createComponentized(indexerTestCase, Test$.class.getSimpleName(), true);
+
+        Index index = Index.of(Test$.class);
+        assertEquals(testName, index.getKnownClasses().iterator().next().name());
+        assertNotNull(index.getClassByName(DotName.createSimple(Test$.class.getName())));
+        assertNotNull(index.getClassByName(testName));
+    }
+
+    public static class Test$ {
+
     }
 
     private static DotName createRandomDotName() {

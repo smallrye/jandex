@@ -110,9 +110,9 @@ public final class Index implements IndexView {
     }
 
     /**
-     * Constructs a "mock" Index using the passed classes.
+     * Constructs an Index of the passed classes.
      *
-     * @param classes An Iterable collection of classes to include in the index
+     * @param classes Classes to index
      * @return the index
      */
     public static Index of(Iterable<Class<?>> classes) throws IOException {
@@ -126,9 +126,9 @@ public final class Index implements IndexView {
     }
 
     /**
-     * Constructs a "mock" Index using the passed classes.
+     * Constructs an Index of the passed classes.
      *
-     * @param classes Classes to include in the index
+     * @param classes Classes to index
      * @return the index
      */
     public static Index of(Class<?>... classes) throws IOException {
@@ -136,11 +136,12 @@ public final class Index implements IndexView {
     }
 
     /**
-     * Constructs a "mock" Index containing class files found in the passed directories.
+     * Constructs an Index of class files found in the passed directories.
+     * The directories are <i>not</i> scanned recursively.
      *
-     * @param directories Directories containing class files to include in the index
+     * @param directories Directories containing class files to index
      * @return the index
-     * @throws IllegalArgumentException if any directories are null or are not a directory
+     * @throws IllegalArgumentException if any passed {@code File} is null or not a directory
      */
     public static Index of(File... directories) throws IOException {
         Indexer indexer = new Indexer();

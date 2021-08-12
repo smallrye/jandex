@@ -56,7 +56,8 @@ class NameTable {
     }
 
     private int lastIndexOf(String name, char delim1, char delim2) {
-        int pos = name.length();
+        // Begin at second last position to avoid empty local name
+        int pos = name.length() - 1;
         while (--pos >= 0) {
             char c = name.charAt(pos);
             if (c == delim1 || c == delim2) {

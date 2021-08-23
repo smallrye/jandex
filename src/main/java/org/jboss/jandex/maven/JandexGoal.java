@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.maven.plugin.Mojo;
@@ -165,6 +166,15 @@ public class JandexGoal
 
             final DirectoryScanner scanner = new DirectoryScanner();
             scanner.setBasedir( dir );
+            // order files to get reproducible result
+            scanner.setFilenameComparator( new Comparator<String>()
+            {
+                @Override
+                public int compare( String s1, String s2 )
+                {
+                    return s1.compareTo( s2 );
+                }
+            } );
 
             if ( fileset.isUseDefaultExcludes() )
             {

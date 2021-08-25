@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -9,11 +9,11 @@
     </parent>
 
     <groupId>io.smallrye</groupId>
-    <artifactId>jandex</artifactId>
+    <artifactId>jandex-parent</artifactId>
     <version>3.0.0-SNAPSHOT</version>
-    <packaging>bundle</packaging>
+    <packaging>pom</packaging>
 
-    <name>Java Annotation Indexer</name>
+    <name>Jandex: Parent</name>
 
     <properties>
         <version.ant>1.10.11</version.ant>
@@ -38,114 +38,34 @@
         <tag>HEAD</tag>
     </scm>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant</artifactId>
-            <version>${version.ant}</version>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
+    <modules>
+        <module>core</module>
+    </modules>
 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${version.junit}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
-            <version>${version.bytebuddy}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.jandex</groupId>
-            <artifactId>typeannotation-test</artifactId>
-            <version>${version.jandex-typeannotation-test}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.ant</groupId>
+                <artifactId>ant</artifactId>
+                <version>${version.ant}</version>
+            </dependency>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <showDeprecation>true</showDeprecation>
-                    <showWarnings>true</showWarnings>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <doclet>org.jboss.apiviz.APIviz</doclet>
-                    <docletArtifact>
-                        <groupId>org.jboss.apiviz</groupId>
-                        <artifactId>apiviz</artifactId>
-                        <version>${version.apiviz}</version>
-                    </docletArtifact>
-                    <useStandardDocletOptions>true</useStandardDocletOptions>
-                    <charset>UTF-8</charset>
-                    <encoding>UTF-8</encoding>
-                    <docencoding>UTF-8</docencoding>
-                    <breakiterator>true</breakiterator>
-                    <version>true</version>
-                    <author>true</author>
-                    <keywords>true</keywords>
-                    <additionalparam>
-                        -sourceclasspath ${project.build.outputDirectory}
-                    </additionalparam>
-                    <docfilessubdirs>true</docfilessubdirs>
-                    <top><![CDATA[
-                         <script src="doc-files/addSyntax.js" type="text/javascript"></script>
-                         <script src="doc-files/shCore.js" type="text/javascript"></script>
-                         <script src="doc-files/shBrushJava.js" type="text/javascript"></script>
-                    ]]></top>
-                    <footer><![CDATA[
-                         <script type="text/javascript">
-                           SyntaxHighlighter.defaults["auto-links"] = false;
-                           SyntaxHighlighter.defaults["tab-size"] = 2;
-                           SyntaxHighlighter.defaults["toolbar"] = false;
-                           SyntaxHighlighter.all();
-                         </script>
-                    ]]></footer>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <version>${version.maven-bundle-plugin}</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <archive>
-                        <index>true</index>
-                        <manifest>
-                            <mainClass>org.jboss.jandex.Main</mainClass>
-                        </manifest>
-                        <manifestEntries>
-                            <Automatic-Module-Name>org.jboss.jandex</Automatic-Module-Name>
-                        </manifestEntries>
-                    </archive>
-                    <instructions>
-                        <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Version>${project.version}</Bundle-Version>
-                        <Export-Package>
-                            org.jboss.jandex;version="${project.version}"
-                        </Export-Package>
-                        <Import-Package>
-                            org.apache.tools.ant;resolution:=optional,
-                            org.apache.tools.ant.types;resolution:=optional,
-                            *
-                        </Import-Package>
-                        <!-- Without the -nouses BND directive, the org.jboss.jandex export will get the optional
-                        ant packages in a "uses" clause. -->
-                        <_nouses>true</_nouses>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${version.junit}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>${version.bytebuddy}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.jandex</groupId>
+                <artifactId>typeannotation-test</artifactId>
+                <version>${version.jandex-typeannotation-test}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
 </project>

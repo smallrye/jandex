@@ -1,7 +1,9 @@
 .classpath
 .project
 .settings
+
 .idea
-jandex.iml
+*.iml
+
 target
 *~

@@ -45,7 +45,6 @@ public class WildcardType extends Type {
         return new WildcardType(bound, isExtends);
     }
 
-
     WildcardType(Type bound, boolean isExtends) {
         this(bound, isExtends, null);
     }

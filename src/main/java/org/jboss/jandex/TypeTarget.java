@@ -23,9 +23,11 @@ package org.jboss.jandex;
  * target is provided, as well as other usage specific information to determine the
  * starting point for locating the type.
  *
- * <p>It is expected that callers will traverse the full tree from the specified
+ * <p>
+ * It is expected that callers will traverse the full tree from the specified
  * starting point, since this context is important in interpreting the meaning
- * of the type annotation</p>
+ * of the type annotation
+ * </p>
  *
  * @see org.jboss.jandex.EmptyTypeTarget
  * @see org.jboss.jandex.ClassExtendsTypeTarget
@@ -37,7 +39,7 @@ package org.jboss.jandex;
  * @since 2.0
  *
  * @author Jason T. Greene
-*/
+ */
 public abstract class TypeTarget implements AnnotationTarget {
     private final AnnotationTarget enclosingTarget;
     private Type target;
@@ -158,12 +160,12 @@ public abstract class TypeTarget implements AnnotationTarget {
     }
 
     /**
-      * Casts and returns this type target as a <code>ThrowsTypeTarget</code>. If this type target
-      * is not a <code>ThrowsTypeTarget</code>, then an exception will be thrown.
-      *
-      * @return an instance of <code>ThrowsTypeTarget</code>
-      * @throws java.lang.IllegalArgumentException if this is not a <code>TypeParameterBoundTypeTarget</code>
-      */
+     * Casts and returns this type target as a <code>ThrowsTypeTarget</code>. If this type target
+     * is not a <code>ThrowsTypeTarget</code>, then an exception will be thrown.
+     *
+     * @return an instance of <code>ThrowsTypeTarget</code>
+     * @throws java.lang.IllegalArgumentException if this is not a <code>TypeParameterBoundTypeTarget</code>
+     */
     public ThrowsTypeTarget asThrows() {
         throw new IllegalArgumentException("Not a throws type target");
     }

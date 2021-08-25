@@ -90,7 +90,6 @@ final class IndexReaderV2 extends IndexReaderImpl {
     private RecordComponentInternal[] recordComponentTable;
     private HashMap<DotName, Set<DotName>> users;
 
-
     IndexReaderV2(PackedDataInputStream input) {
         this.input = input;
     }
@@ -291,7 +290,8 @@ final class IndexReaderV2 extends IndexReaderImpl {
                 value = new AnnotationValue.ClassValue(name, typeTable[stream.readPackedU32()]);
                 break;
             case AVALUE_ENUM:
-                value = new AnnotationValue.EnumValue(name, nameTable[stream.readPackedU32()], stringTable[stream.readPackedU32()]);
+                value = new AnnotationValue.EnumValue(name, nameTable[stream.readPackedU32()],
+                        stringTable[stream.readPackedU32()]);
                 break;
             case AVALUE_ARRAY:
                 value = new AnnotationValue.ArrayValue(name, readAnnotationValues(stream));
@@ -342,7 +342,6 @@ final class IndexReaderV2 extends IndexReaderImpl {
 
         return types;
     }
-
 
     private Type readTypeEntry(PackedDataInputStream stream) throws IOException {
         Type.Kind kind = Type.Kind.fromOrdinal(stream.readUnsignedByte());
@@ -412,8 +411,8 @@ final class IndexReaderV2 extends IndexReaderImpl {
             case RECORD_COMPONENT_TAG:
                 return caller;
             case METHOD_PARAMETER_TAG: {
-                short parameter = (short)stream.readPackedU32();
-                return new MethodParameterInfo((MethodInfo)caller, parameter);
+                short parameter = (short) stream.readPackedU32();
+                return new MethodParameterInfo((MethodInfo) caller, parameter);
             }
             case EMPTY_TYPE_TAG: {
                 Type target = typeTable[stream.readPackedU32()];
@@ -498,7 +497,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         byte[][] methodParameterBytes = MethodInternal.EMPTY_PARAMETER_NAMES;
         if (version >= 8) {
             int size = stream.readPackedU32();
-            if (size > 0 ) {
+            if (size > 0) {
                 methodParameterBytes = new byte[size][];
                 for (int i = 0; i < size; i++) {
                     methodParameterBytes[i] = byteTable[stream.readPackedU32()];
@@ -539,8 +538,8 @@ final class IndexReaderV2 extends IndexReaderImpl {
     }
 
     private ClassInfo readClassEntry(PackedDataInputStream stream,
-                                     Map<DotName, List<AnnotationInstance>> masterAnnotations, int version) throws IOException {
-        DotName name  = nameTable[stream.readPackedU32()];
+            Map<DotName, List<AnnotationInstance>> masterAnnotations, int version) throws IOException {
+        DotName name = nameTable[stream.readPackedU32()];
         short flags = (short) stream.readPackedU32();
         Type superType = typeTable[stream.readPackedU32()];
         Type[] typeParameters = typeListTable[stream.readPackedU32()];
@@ -572,7 +571,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
 
         Map<DotName, List<AnnotationInstance>> annotations = size > 0
                 ? new HashMap<DotName, List<AnnotationInstance>>(size)
-                : Collections.<DotName, List<AnnotationInstance>>emptyMap();
+                : Collections.<DotName, List<AnnotationInstance>> emptyMap();
         ClassInfo clazz = new ClassInfo(name, superType, flags, interfaceTypes);
         clazz.setTypeParameters(typeParameters);
 
@@ -618,7 +617,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
     }
 
     private ModuleInfo readModuleEntry(PackedDataInputStream stream, ClassInfo moduleInfoClass) throws IOException {
-        DotName moduleName  = nameTable[stream.readPackedU32()];
+        DotName moduleName = nameTable[stream.readPackedU32()];
         short moduleFlags = (short) stream.readPackedU32();
         String moduleVersion = stringTable[stream.readPackedU32()];
         DotName mainClass = nameTable[stream.readPackedU32()];
@@ -631,7 +630,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         List<ModuleInfo.RequiredModuleInfo> requires = Utils.listOfCapacity(requiredCount);
 
         for (int i = 0; i < requiredCount; i++) {
-            DotName name  = nameTable[stream.readPackedU32()];
+            DotName name = nameTable[stream.readPackedU32()];
             short flags = (short) stream.readPackedU32();
             String version = stringTable[stream.readPackedU32()];
             requires.add(new ModuleInfo.RequiredModuleInfo(name, flags, version));
@@ -644,7 +643,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         List<ModuleInfo.ExportedPackageInfo> exports = Utils.listOfCapacity(exportedCount);
 
         for (int i = 0; i < exportedCount; i++) {
-            DotName source  = nameTable[stream.readPackedU32()];
+            DotName source = nameTable[stream.readPackedU32()];
             short flags = (short) stream.readPackedU32();
             List<DotName> targets = readDotNames(stream);
             exports.add(new ModuleInfo.ExportedPackageInfo(source, flags, targets));
@@ -660,7 +659,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         List<ModuleInfo.OpenedPackageInfo> opens = Utils.listOfCapacity(openedCount);
 
         for (int i = 0; i < openedCount; i++) {
-            DotName source  = nameTable[stream.readPackedU32()];
+            DotName source = nameTable[stream.readPackedU32()];
             short flags = (short) stream.readPackedU32();
             List<DotName> targets = readDotNames(stream);
             opens.add(new ModuleInfo.OpenedPackageInfo(source, flags, targets));
@@ -673,7 +672,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         List<ModuleInfo.ProvidedServiceInfo> provides = Utils.listOfCapacity(providedCount);
 
         for (int i = 0; i < providedCount; i++) {
-            DotName service  = nameTable[stream.readPackedU32()];
+            DotName service = nameTable[stream.readPackedU32()];
             List<DotName> providers = readDotNames(stream);
             provides.add(new ModuleInfo.ProvidedServiceInfo(service, providers));
         }
@@ -698,7 +697,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
     }
 
     private void addToMaster(Map<DotName, List<AnnotationInstance>> masterAnnotations, DotName name,
-                             List<AnnotationInstance> annotations) {
+            List<AnnotationInstance> annotations) {
         List<AnnotationInstance> entry = masterAnnotations.get(name);
         if (entry == null) {
             masterAnnotations.put(name, new ArrayList<AnnotationInstance>(annotations));
@@ -737,9 +736,11 @@ final class IndexReaderV2 extends IndexReaderImpl {
         return fields;
     }
 
-    private RecordComponentInternal[] readClassRecordComponents(PackedDataInputStream stream, ClassInfo clazz) throws IOException {
+    private RecordComponentInternal[] readClassRecordComponents(PackedDataInputStream stream, ClassInfo clazz)
+            throws IOException {
         int len = stream.readPackedU32();
-        RecordComponentInternal[] recordComponents = len > 0 ? new RecordComponentInternal[len] : RecordComponentInternal.EMPTY_ARRAY;
+        RecordComponentInternal[] recordComponents = len > 0 ? new RecordComponentInternal[len]
+                : RecordComponentInternal.EMPTY_ARRAY;
         for (int i = 0; i < len; i++) {
             RecordComponentInternal recordComponent = recordComponentTable[stream.readPackedU32()];
             updateAnnotationTargetInfo(recordComponent.annotationArray(), clazz);
@@ -772,11 +773,11 @@ final class IndexReaderV2 extends IndexReaderImpl {
                 target = ((TypeTarget) target).enclosingTarget();
             }
             if (target instanceof MethodInfo) {
-                ((MethodInfo)target).setClassInfo(clazz);
+                ((MethodInfo) target).setClassInfo(clazz);
             } else if (target instanceof MethodParameterInfo) {
-                ((MethodParameterInfo)target).method().setClassInfo(clazz);
+                ((MethodParameterInfo) target).method().setClassInfo(clazz);
             } else if (target instanceof FieldInfo) {
-                ((FieldInfo)target).setClassInfo(clazz);
+                ((FieldInfo) target).setClassInfo(clazz);
             } else if (target instanceof RecordComponentInfo) {
                 ((RecordComponentInfo) target).setClassInfo(clazz);
             }
@@ -796,13 +797,13 @@ final class IndexReaderV2 extends IndexReaderImpl {
     }
 
     private Index readClasses(PackedDataInputStream stream,
-                              int annotationsSize, int implementorsSize, int subclassesSize, int version) throws IOException {
+            int annotationsSize, int implementorsSize, int subclassesSize, int version) throws IOException {
         int classesSize = stream.readPackedU32();
         HashMap<DotName, ClassInfo> classes = new HashMap<DotName, ClassInfo>(classesSize);
         HashMap<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>(subclassesSize);
         HashMap<DotName, List<ClassInfo>> implementors = new HashMap<DotName, List<ClassInfo>>(implementorsSize);
-        HashMap<DotName, List<AnnotationInstance>> masterAnnotations =
-                new HashMap<DotName, List<AnnotationInstance>>(annotationsSize);
+        HashMap<DotName, List<AnnotationInstance>> masterAnnotations = new HashMap<DotName, List<AnnotationInstance>>(
+                annotationsSize);
 
         for (int i = 0; i < classesSize; i++) {
             ClassInfo clazz = readClassEntry(stream, masterAnnotations, version);
@@ -826,20 +827,19 @@ final class IndexReaderV2 extends IndexReaderImpl {
             users = Collections.emptyMap();
         }
 
-        Map<DotName, ModuleInfo> modules = (version >= 10) ?
-            readModules(stream, masterAnnotations, version) : Collections.<DotName, ModuleInfo>emptyMap();
+        Map<DotName, ModuleInfo> modules = (version >= 10) ? readModules(stream, masterAnnotations, version)
+                : Collections.<DotName, ModuleInfo> emptyMap();
 
         return new Index(masterAnnotations, subclasses, implementors, classes, modules, users);
     }
 
     private Map<DotName, ModuleInfo> readModules(PackedDataInputStream stream,
-                                                 Map<DotName, List<AnnotationInstance>> masterAnnotations,
-                                                 int version) throws IOException {
+            Map<DotName, List<AnnotationInstance>> masterAnnotations,
+            int version) throws IOException {
 
         int modulesSize = stream.readPackedU32();
-        Map<DotName, ModuleInfo> modules = modulesSize > 0 ?
-            new HashMap<DotName, ModuleInfo>(modulesSize) :
-                Collections.<DotName, ModuleInfo>emptyMap();
+        Map<DotName, ModuleInfo> modules = modulesSize > 0 ? new HashMap<DotName, ModuleInfo>(modulesSize)
+                : Collections.<DotName, ModuleInfo> emptyMap();
 
         for (int i = 0; i < modulesSize; i++) {
             ClassInfo clazz = readClassEntry(stream, masterAnnotations, version);

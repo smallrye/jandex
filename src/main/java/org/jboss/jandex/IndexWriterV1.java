@@ -161,11 +161,10 @@ final class IndexWriterV1 extends IndexWriterImpl {
         return i.intValue();
     }
 
-
     private void writeClasses(PackedDataOutputStream stream, Index index, int version) throws IOException {
         Collection<ClassInfo> classes = index.getKnownClasses();
         stream.writePackedU32(classes.size());
-        for (ClassInfo clazz: classes) {
+        for (ClassInfo clazz : classes) {
             stream.writePackedU32(positionOf(clazz.name()));
             stream.writePackedU32(clazz.superName() == null ? 0 : positionOf(clazz.superName()));
             stream.writeShort(clazz.flags());
@@ -177,12 +176,12 @@ final class IndexWriterV1 extends IndexWriterImpl {
 
             DotName[] interfaces = clazz.interfaces();
             stream.writePackedU32(interfaces.length);
-            for (DotName intf: interfaces)
+            for (DotName intf : interfaces)
                 stream.writePackedU32(positionOf(intf));
 
             Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotations().entrySet();
             stream.writePackedU32(entrySet.size());
-            for (Entry<DotName, List<AnnotationInstance>> entry :  entrySet) {
+            for (Entry<DotName, List<AnnotationInstance>> entry : entrySet) {
                 stream.writePackedU32(positionOf(entry.getKey()));
 
                 List<AnnotationInstance> instances = entry.getValue();
@@ -200,7 +199,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
                         stream.writeByte(METHOD_TAG);
                         stream.writePackedU32(positionOf(method.name()));
                         stream.writePackedU32(method.args().length);
-                        for (int i = 0; i < method.args().length; i ++) {
+                        for (int i = 0; i < method.args().length; i++) {
                             writeType(stream, method.args()[i]);
                         }
                         writeType(stream, method.returnType());
@@ -211,7 +210,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
                         stream.writeByte(METHOD_PARAMETER_TAG);
                         stream.writePackedU32(positionOf(method.name()));
                         stream.writePackedU32(method.args().length);
-                        for (int i = 0; i < method.args().length; i ++) {
+                        for (int i = 0; i < method.args().length; i++) {
                             writeType(stream, method.args()[i]);
                         }
                         writeType(stream, method.returnType());
@@ -219,7 +218,8 @@ final class IndexWriterV1 extends IndexWriterImpl {
                         stream.writePackedU32(param.position());
                     } else if (target instanceof ClassInfo) {
                         stream.writeByte(CLASS_TAG);
-                    } else throw new IllegalStateException("Unknown target");
+                    } else
+                        throw new IllegalStateException("Unknown target");
 
                     Collection<AnnotationValue> values = instance.values();
                     writeAnnotationValues(stream, values);
@@ -240,7 +240,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
         if (value instanceof AnnotationValue.ByteValue) {
             stream.writeByte(AVALUE_BYTE);
             stream.writeByte(value.asByte() & 0xFF);
-        } else if  (value instanceof AnnotationValue.ShortValue) {
+        } else if (value instanceof AnnotationValue.ShortValue) {
             stream.writeByte(AVALUE_SHORT);
             stream.writePackedU32(value.asShort() & 0xFFFF);
         } else if (value instanceof AnnotationValue.IntegerValue) {
@@ -300,18 +300,18 @@ final class IndexWriterV1 extends IndexWriterImpl {
         classTable = new TreeMap<DotName, Integer>();
 
         // Build the pool for all strings
-        for (ClassInfo clazz: index.getKnownClasses()) {
+        for (ClassInfo clazz : index.getKnownClasses()) {
             addClassName(clazz.name());
             if (clazz.superName() != null)
                 addClassName(clazz.superName());
 
-            for (DotName intf: clazz.interfaces())
+            for (DotName intf : clazz.interfaces())
                 addClassName(intf);
 
-            for (Entry<DotName, List<AnnotationInstance>> entry :  clazz.annotations().entrySet()) {
+            for (Entry<DotName, List<AnnotationInstance>> entry : clazz.annotations().entrySet()) {
                 addClassName(entry.getKey());
 
-                for (AnnotationInstance instance: entry.getValue()) {
+                for (AnnotationInstance instance : entry.getValue()) {
                     AnnotationTarget target = instance.target();
                     if (target instanceof FieldInfo) {
                         FieldInfo field = (FieldInfo) target;
@@ -325,8 +325,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
                             addClassName(type.name());
 
                         addClassName(method.returnType().name());
-                    }
-                    else if (target instanceof MethodParameterInfo) {
+                    } else if (target instanceof MethodParameterInfo) {
                         MethodParameterInfo param = (MethodParameterInfo) target;
                         intern(param.method().name());
                         for (Type type : param.method().args())
@@ -338,7 +337,6 @@ final class IndexWriterV1 extends IndexWriterImpl {
                     for (AnnotationValue value : instance.values())
                         buildAValueEntries(index, value);
                 }
-
 
             }
         }
@@ -377,7 +375,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
     private void addClassName(DotName name) {
         name = downgradeName(name);
 
-        if (! classTable.containsKey(name))
+        if (!classTable.containsKey(name))
             classTable.put(name, null);
 
         DotName prefix = name.prefix();
@@ -394,7 +392,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
             }
 
             builder.insert(0, n.local()).insert(0, '$');
-            if (! n.prefix().isInner()) {
+            if (!n.prefix().isInner()) {
                 builder.insert(0, n.prefix().local());
                 name = new DotName(n.prefix().prefix(), builder.toString(), true, false);
             }

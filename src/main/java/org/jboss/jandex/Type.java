@@ -27,11 +27,13 @@ import java.util.List;
  * annotations, or other types. A type can be any class based type (interface, class, annotation),
  * any primitive, any array, any generic type declaration, or void.
  *
- * <p>A type usage may have annotations associated with its declaration. A type is equal to
+ * <p>
+ * A type usage may have annotations associated with its declaration. A type is equal to
  * another type if, and only if, it represents the same exact definition including the annotations
  * specific to its usage.
  *
- * <p>To reduce memory overhead, type instances are often shared between their enclosing classes.
+ * <p>
+ * To reduce memory overhead, type instances are often shared between their enclosing classes.
  *
  * @author Jason T. Greene
  */
@@ -135,7 +137,6 @@ public abstract class Type {
         if (kind == null)
             throw new IllegalArgumentException("kind can not be null!");
 
-
         switch (kind) {
             case ARRAY:
                 String string = name.toString();
@@ -157,7 +158,8 @@ public abstract class Type {
                         break;
                     case 'L':
                         int end = start;
-                        while (string.charAt(++end) != ';') ;
+                        while (string.charAt(++end) != ';')
+                            ;
 
                         type = new ClassType(DotName.createSimple(string.substring(start + 1, end)));
                         break;
@@ -186,7 +188,8 @@ public abstract class Type {
      * double). Arrays are returned using the Java reflection array syntax
      * (e.g. "[[[Ljava.lang.String;") Classes are returned as a normal <code>DotName</code>.
      *
-     * <p>Generic values are returned as the underlying raw value. For example,
+     * <p>
+     * Generic values are returned as the underlying raw value. For example,
      * a wildcard such as <code>? extends Number</code>, has a raw type of
      * <code>Number</code>
      *
@@ -305,7 +308,6 @@ public abstract class Type {
     public VoidType asVoidType() {
         throw new IllegalArgumentException("Not a void type!");
     }
-
 
     /**
      * Returns a string representation for this type. It is similar, yet not equivalent

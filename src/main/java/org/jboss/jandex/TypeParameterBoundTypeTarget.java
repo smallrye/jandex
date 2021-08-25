@@ -32,7 +32,8 @@ package org.jboss.jandex;
  * public &lt;T extends Number &amp; @Bar Serializable&gt; void foo(List&lt;T&gt;) { ... }
  * </pre>
  *
- * <p>This example would be represented as a <code>TypeParameterBoundTypeTarget</code> with
+ * <p>
+ * This example would be represented as a <code>TypeParameterBoundTypeTarget</code> with
  * an enclosing target of foo's <code>MethodInfo</code>, a <code>position()</code> value of "0"
  * and a <code>boundPosition()</code> value of "1". The "Bar" annotation would appear on the
  * type "Serializable" in the bound list of T, on the first type parameter.
@@ -47,12 +48,12 @@ public class TypeParameterBoundTypeTarget extends TypeParameterTypeTarget {
 
     TypeParameterBoundTypeTarget(AnnotationTarget enclosingTarget, int position, int boundPosition) {
         super(enclosingTarget, position);
-        this.boundPosition = (short)boundPosition;
+        this.boundPosition = (short) boundPosition;
     }
 
     TypeParameterBoundTypeTarget(AnnotationTarget enclosingTarget, Type target, int position, int boundPosition) {
         super(enclosingTarget, target, position);
-        this.boundPosition = (short)boundPosition;
+        this.boundPosition = (short) boundPosition;
     }
 
     /**
@@ -65,10 +66,10 @@ public class TypeParameterBoundTypeTarget extends TypeParameterTypeTarget {
     }
 
     void adjustBoundDown() {
-       if (!adjusted) {
-           boundPosition--;
-           adjusted = true;
-       }
+        if (!adjusted) {
+            boundPosition--;
+            adjusted = true;
+        }
     }
 
     @Override

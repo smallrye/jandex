@@ -30,7 +30,8 @@ package org.jboss.jandex;
  * public &lt;@Bar T&gt; void foo(List&lt;T&gt;) { ... }
  * </pre>
  *
- * <p>This example would be represented as a <code>TypeParameterTypeTarget</code> with an enclosing target
+ * <p>
+ * This example would be represented as a <code>TypeParameterTypeTarget</code> with an enclosing target
  * of foo's <code>MethodInfo</code>, and <code>position()</code> would return 0. The "Bar" annotation
  * would appear on the type variable T when invoking the <code>typeParameters()</code> method on
  * <code>MethodInfo</code>

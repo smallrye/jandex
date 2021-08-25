@@ -57,7 +57,7 @@ class AnnotationTargetFilterCollection<T extends AnnotationTarget> extends Abstr
 
                 while (true) {
                     if (nextList == null || !nextList.hasNext()) {
-                        if (! mapIterator.hasNext()) {
+                        if (!mapIterator.hasNext()) {
                             return;
                         }
 
@@ -73,7 +73,6 @@ class AnnotationTargetFilterCollection<T extends AnnotationTarget> extends Abstr
                     }
                 }
             }
-
 
             @Override
             public boolean hasNext() {

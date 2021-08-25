@@ -25,7 +25,9 @@ import java.util.List;
 /**
  * Represents a module descriptor entry in an index.
  *
- * <p><b>Thread-Safety</b></p>
+ * <p>
+ * <b>Thread-Safety</b>
+ * </p>
  * This class is immutable and can be shared between threads without safe publication.
  *
  */

@@ -62,6 +62,7 @@ public interface AnnotationTarget {
 
         /**
          * An object of type {@link org.jboss.jandex.RecordComponentInfo}
+         * 
          * @since 2.4
          */
         RECORD_COMPONENT
@@ -108,11 +109,11 @@ public interface AnnotationTarget {
     MethodParameterInfo asMethodParameter();
 
     /**
-      * Casts and returns this target as a <code>TypeTarget</code> if it is of kind <code>TYPE</code>
-      *
-      * @return this instance cast to a type target
-      * @since 2.0
-      */
+     * Casts and returns this target as a <code>TypeTarget</code> if it is of kind <code>TYPE</code>
+     *
+     * @return this instance cast to a type target
+     * @since 2.0
+     */
     TypeTarget asType();
 
     /**

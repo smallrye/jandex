@@ -18,20 +18,21 @@
 
 package org.jboss.jandex;
 
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
-import org.apache.tools.ant.types.FileSet;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Task;
+import org.apache.tools.ant.types.FileSet;
+
 /**
  * Ant Task that indexes jars, and saves the resulting index
+ *
  * @author Stuart Douglas
  */
-public class JandexAntTask  extends Task {
+public class JandexAntTask extends Task {
 
     private final List<FileSet> filesets = new ArrayList<FileSet>();
 
@@ -52,14 +53,15 @@ public class JandexAntTask  extends Task {
             throw new BuildException("Specifying both modify and newJar does not make sense.");
         }
         Indexer indexer = new Indexer();
-        for(FileSet fileset : filesets) {
+        for (FileSet fileset : filesets) {
             String[] files = fileset.getDirectoryScanner(getProject()).getIncludedFiles();
-            for(String file : files) {
+            for (String file : files) {
                 if (file.endsWith(".jar")) {
                     try {
-                        JarIndexer.createJarIndex(new File(fileset.getDir().getAbsolutePath() + "/" +file), indexer, modify, newJar,verbose);
+                        JarIndexer.createJarIndex(new File(fileset.getDir().getAbsolutePath() + "/" + file), indexer, modify,
+                                newJar, verbose);
                     } catch (IOException e) {
-                       throw new BuildException(e);
+                        throw new BuildException(e);
                     }
                 }
             }

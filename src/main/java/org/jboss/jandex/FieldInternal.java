@@ -40,15 +40,15 @@ final class FieldInternal {
     static class NameComparator implements Comparator<FieldInternal> {
 
         private int compare(byte[] left, byte[] right) {
-               for (int i = 0, j = 0; i < left.length && j < right.length; i++, j++) {
-                   int a = (left[i] & 0xff);
-                   int b = (right[j] & 0xff);
-                   if (a != b) {
-                       return a - b;
-                   }
-               }
-               return left.length - right.length;
-           }
+            for (int i = 0, j = 0; i < left.length && j < right.length; i++, j++) {
+                int a = (left[i] & 0xff);
+                int b = (right[j] & 0xff);
+                if (a != b) {
+                    return a - b;
+                }
+            }
+            return left.length - right.length;
+        }
 
         public int compare(FieldInternal instance, FieldInternal instance2) {
             return compare(instance.name, instance2.name); //instance.name.compareTo(instance2.name);
@@ -150,9 +150,9 @@ final class FieldInternal {
     }
 
     void setAnnotations(List<AnnotationInstance> annotations) {
-         if (annotations.size() > 0) {
-             this.annotations = annotations.toArray(new AnnotationInstance[annotations.size()]);
-             Arrays.sort(this.annotations, AnnotationInstance.NAME_COMPARATOR);
-         }
-     }
+        if (annotations.size() > 0) {
+            this.annotations = annotations.toArray(new AnnotationInstance[annotations.size()]);
+            Arrays.sort(this.annotations, AnnotationInstance.NAME_COMPARATOR);
+        }
+    }
 }

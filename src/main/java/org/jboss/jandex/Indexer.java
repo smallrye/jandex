@@ -18,6 +18,8 @@
 
 package org.jboss.jandex;
 
+import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
+
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -34,8 +36,6 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
 
 /**
  * Analyzes and indexes the annotation and key structural information of a set
@@ -88,88 +88,88 @@ public final class Indexer {
 
     // "RuntimeVisibleAnnotations"
     private final static byte[] RUNTIME_ANNOTATIONS = new byte[] {
-        0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x56, 0x69, 0x73, 0x69, 0x62,
-        0x6c, 0x65, 0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-        0x73
+            0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x56, 0x69, 0x73, 0x69, 0x62,
+            0x6c, 0x65, 0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+            0x73
     };
 
     // "RuntimeVisibleParameterAnnotations"
     private final static byte[] RUNTIME_PARAM_ANNOTATIONS = new byte[] {
-        0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x56, 0x69, 0x73, 0x69, 0x62,
-        0x6c, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x41,
-        0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73
+            0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x56, 0x69, 0x73, 0x69, 0x62,
+            0x6c, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x41,
+            0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73
     };
 
     // "RuntimeTypeVisibleAnnotations"
     private final static byte[] RUNTIME_TYPE_ANNOTATIONS = new byte[] {
-        0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x56, 0x69, 0x73, 0x69, 0x62,
-        0x6c, 0x65, 0x54, 0x79, 0x70, 0x65, 0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61,
-        0x74, 0x69, 0x6f, 0x6e, 0x73
+            0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x56, 0x69, 0x73, 0x69, 0x62,
+            0x6c, 0x65, 0x54, 0x79, 0x70, 0x65, 0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61,
+            0x74, 0x69, 0x6f, 0x6e, 0x73
     };
 
     // "AnnotationDefault"
     private final static byte[] ANNOTATION_DEFAULT = new byte[] {
-        0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x65,
-        0x66, 0x61, 0x75, 0x6c, 0x74
+            0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x65,
+            0x66, 0x61, 0x75, 0x6c, 0x74
     };
 
     // "Signature"
     private final static byte[] SIGNATURE = new byte[] {
-        0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65
+            0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65
     };
 
     // "Exceptions"
     private final static byte[] EXCEPTIONS = new byte[] {
-        0x45, 0x78, 0x63, 0x65, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73
+            0x45, 0x78, 0x63, 0x65, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73
     };
 
     // "InnerClasses"
     private final static byte[] INNER_CLASSES = new byte[] {
-        0x49, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73
+            0x49, 0x6e, 0x6e, 0x65, 0x72, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73
     };
 
     // "EnclosingMethod"
     private final static byte[] ENCLOSING_METHOD = new byte[] {
-        0x45, 0x6e, 0x63, 0x6c, 0x6f, 0x73, 0x69, 0x6e, 0x67, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64
+            0x45, 0x6e, 0x63, 0x6c, 0x6f, 0x73, 0x69, 0x6e, 0x67, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64
     };
 
     // "MethodParameters"
     private final static byte[] METHOD_PARAMETERS = new byte[] {
-        0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73
+            0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73
     };
 
     // "LocalVariableTable"
     private final static byte[] LOCAL_VARIABLE_TABLE = new byte[] {
-        0x4c, 0x6f, 0x63, 0x61, 0x6c, 0x56, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65
+            0x4c, 0x6f, 0x63, 0x61, 0x6c, 0x56, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65
     };
 
     // "Code"
     private final static byte[] CODE = new byte[] {
-        0x43, 0x6f, 0x64, 0x65
+            0x43, 0x6f, 0x64, 0x65
     };
 
     // "Module"
     private final static byte[] MODULE = new byte[] {
-        // M     o     d     u     l     e
-        0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65
+            // M     o     d     u     l     e
+            0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65
     };
 
     // "ModulePackages"
     private final static byte[] MODULE_PACKAGES = new byte[] {
-        // M     o     d     u     l     e     P     a     c     k     a     g     e     s
-        0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x73
+            // M     o     d     u     l     e     P     a     c     k     a     g     e     s
+            0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x73
     };
 
     // "ModuleMainClass"
     private final static byte[] MODULE_MAIN_CLASS = new byte[] {
-        // M     o     d     u     l     e     M     a     i     n     C     l     a     s     s
-        0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x4d, 0x61, 0x69, 0x6e, 0x43, 0x6c, 0x61, 0x73, 0x73
+            // M     o     d     u     l     e     M     a     i     n     C     l     a     s     s
+            0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x4d, 0x61, 0x69, 0x6e, 0x43, 0x6c, 0x61, 0x73, 0x73
     };
 
     // "Record"
     private final static byte[] RECORD = new byte[] {
-        // R     e     c     o     r     d
-        0x52, 0x65, 0x63, 0x6f, 0x72, 0x64
+            // R     e     c     o     r     d
+            0x52, 0x65, 0x63, 0x6f, 0x72, 0x64
     };
 
     private final static int RUNTIME_ANNOTATIONS_LEN = RUNTIME_ANNOTATIONS.length;
@@ -259,7 +259,6 @@ public final class Indexer {
         }
     }
 
-
     // Class lifespan fields
     private byte[] constantPool;
     private int[] constantPoolOffsets;
@@ -286,7 +285,6 @@ public final class Indexer {
     private Map<DotName, List<ClassInfo>> users;
     private NameTable names;
     private GenericSignatureParser signatureParser;
-
 
     private void initIndexMaps() {
         if (masterAnnotations == null)
@@ -328,7 +326,8 @@ public final class Indexer {
 
     private void processMethodInfo(DataInputStream data) throws IOException {
         int numMethods = data.readUnsignedShort();
-        List<MethodInfo> methods = numMethods > 0 ? new ArrayList<MethodInfo>(numMethods) : Collections.<MethodInfo>emptyList();
+        List<MethodInfo> methods = numMethods > 0 ? new ArrayList<MethodInfo>(numMethods)
+                : Collections.<MethodInfo> emptyList();
 
         for (int i = 0; i < numMethods; i++) {
             short flags = (short) data.readUnsignedShort();
@@ -339,7 +338,8 @@ public final class Indexer {
             Type[] parameters = intern(parseMethodArgs(descriptor, pos));
             Type returnType = parseType(descriptor, pos);
 
-            MethodInfo method = new MethodInfo(currentClass, name, MethodInternal.EMPTY_PARAMETER_NAMES, parameters, returnType, flags);
+            MethodInfo method = new MethodInfo(currentClass, name, MethodInternal.EMPTY_PARAMETER_NAMES, parameters, returnType,
+                    flags);
 
             if (parameters.length == 0 && Arrays.equals(INIT_METHOD_NAME, name)) {
                 currentClass.setHasNoArgsConstructor(true);
@@ -350,9 +350,9 @@ public final class Indexer {
             elementAnnotations.clear();
 
             // Prefer method parameter names over debug info
-            if(methodParameterNames != null)
+            if (methodParameterNames != null)
                 method.methodInternal().setParameterNames(methodParameterNames);
-            else if(debugParameterNames != null)
+            else if (debugParameterNames != null)
                 method.methodInternal().setParameterNames(debugParameterNames);
 
             methods.add(method);
@@ -363,7 +363,7 @@ public final class Indexer {
 
     private void processFieldInfo(DataInputStream data) throws IOException {
         int numFields = data.readUnsignedShort();
-        List<FieldInfo> fields = numFields > 0 ? new ArrayList<FieldInfo>(numFields) : Collections.<FieldInfo>emptyList();
+        List<FieldInfo> fields = numFields > 0 ? new ArrayList<FieldInfo>(numFields) : Collections.<FieldInfo> emptyList();
         for (int i = 0; i < numFields; i++) {
             short flags = (short) data.readUnsignedShort();
             byte[] name = intern(decodeUtf8EntryAsBytes(data.readUnsignedShort()));
@@ -380,7 +380,8 @@ public final class Indexer {
 
     private void processRecordComponents(DataInputStream data) throws IOException {
         int numComponents = data.readUnsignedShort();
-        List<RecordComponentInfo> recordComponents = numComponents > 0 ? new ArrayList<RecordComponentInfo>(numComponents) : Collections.<RecordComponentInfo>emptyList();
+        List<RecordComponentInfo> recordComponents = numComponents > 0 ? new ArrayList<RecordComponentInfo>(numComponents)
+                : Collections.<RecordComponentInfo> emptyList();
         for (int i = 0; i < numComponents; i++) {
             byte[] name = intern(decodeUtf8EntryAsBytes(data.readUnsignedShort()));
             Type type = intern(parseType(decodeUtf8Entry(data.readUnsignedShort())));
@@ -601,7 +602,7 @@ public final class Indexer {
     private void processInnerClasses(DataInputStream data, ClassInfo target) throws IOException {
         int numClasses = data.readUnsignedShort();
         innerClasses = numClasses > 0 ? new HashMap<DotName, InnerClassInfo>(numClasses)
-                                      : Collections.<DotName, InnerClassInfo>emptyMap();
+                : Collections.<DotName, InnerClassInfo> emptyMap();
         for (int i = 0; i < numClasses; i++) {
             DotName innerClass = decodeClassEntry(data.readUnsignedShort());
             int outerIndex = data.readUnsignedShort();
@@ -612,7 +613,7 @@ public final class Indexer {
 
             if (innerClass.equals(target.name())) {
                 target.setInnerClassInfo(outerClass, simpleName, true);
-                target.setFlags((short)flags);
+                target.setFlags((short) flags);
             }
 
             innerClasses.put(innerClass, new InnerClassInfo(innerClass, outerClass, simpleName, flags));
@@ -628,15 +629,16 @@ public final class Indexer {
             byte[] parameterName = nameIndex == 0 ? null : decodeUtf8EntryAsBytes(nameIndex);
             int flags = data.readUnsignedShort();
             // skip synthetic/mandated params to get the same param name index as annotations/MethodParameter (which do not count them)
-            if((flags & (MethodInternal.SYNTHETIC | MethodInternal.MANDATED)) != 0) {
+            if ((flags & (MethodInternal.SYNTHETIC | MethodInternal.MANDATED)) != 0) {
                 continue;
             }
 
             parameterNames[filledParameters++] = parameterName;
         }
 
-        byte[][] realParameterNames = filledParameters > 0 ? new byte[filledParameters][] : MethodInternal.EMPTY_PARAMETER_NAMES;
-        if(filledParameters > 0)
+        byte[][] realParameterNames = filledParameters > 0 ? new byte[filledParameters][]
+                : MethodInternal.EMPTY_PARAMETER_NAMES;
+        if (filledParameters > 0)
             System.arraycopy(parameterNames, 0, realParameterNames, 0, filledParameters);
         this.methodParameterNames = realParameterNames;
     }
@@ -653,18 +655,18 @@ public final class Indexer {
             int index = data.readUnsignedShort();
 
             // parameters have startPc == 0
-            if(startPc != 0)
+            if (startPc != 0)
                 continue;
             byte[] parameterName = nameIndex == 0 ? null : decodeUtf8EntryAsBytes(nameIndex);
             // ignore "this"
-            if(numParameters == 0 && parameterName != null && parameterName.length == 4
+            if (numParameters == 0 && parameterName != null && parameterName.length == 4
                     && parameterName[0] == 0x74
                     && parameterName[1] == 0x68
                     && parameterName[2] == 0x69
                     && parameterName[3] == 0x73)
                 continue;
             // ignore "this$*" that javac adds (not ECJ)
-            if(numParameters == 0 && parameterName != null && parameterName.length > 5
+            if (numParameters == 0 && parameterName != null && parameterName.length > 5
                     && parameterName[0] == 0x74
                     && parameterName[1] == 0x68
                     && parameterName[2] == 0x69
@@ -676,7 +678,7 @@ public final class Indexer {
             variableNames[numParameters++] = parameterName;
         }
         byte[][] parameterNames = numParameters > 0 ? new byte[numParameters][] : MethodInternal.EMPTY_PARAMETER_NAMES;
-        if(numParameters > 0)
+        if (numParameters > 0)
             System.arraycopy(variableNames, 0, parameterNames, 0, numParameters);
         this.debugParameterNames = parameterNames;
     }
@@ -699,7 +701,6 @@ public final class Indexer {
         target.setEnclosingMethod(method);
     }
 
-
     private void processTypeAnnotations(DataInputStream data, AnnotationTarget target) throws IOException {
         int numAnnotations = data.readUnsignedShort();
         List<TypeAnnotationState> annotations = new ArrayList<TypeAnnotationState>(numAnnotations);
@@ -713,7 +714,6 @@ public final class Indexer {
 
         typeAnnotations.put(target, annotations);
     }
-
 
     private TypeAnnotationState processTypeAnnotation(DataInputStream data, AnnotationTarget target) throws IOException {
         int targetType = data.readUnsignedByte();
@@ -731,7 +731,7 @@ public final class Indexer {
 
                 // Skip invalid usage (observed bad bytecode on method attributes)
                 if (target instanceof ClassInfo) {
-                    typeTarget = new ClassExtendsTypeTarget((ClassInfo)target, position);
+                    typeTarget = new ClassExtendsTypeTarget((ClassInfo) target, position);
                 }
                 break;
             }
@@ -750,7 +750,7 @@ public final class Indexer {
             {
                 int position = data.readUnsignedByte();
                 if (target instanceof MethodInfo) {
-                    typeTarget = new MethodParameterTypeTarget((MethodInfo)target, position);
+                    typeTarget = new MethodParameterTypeTarget((MethodInfo) target, position);
                 }
                 break;
             }
@@ -846,9 +846,9 @@ public final class Indexer {
 
     private static Type[] getTypeParameters(AnnotationTarget target) {
         if (target instanceof ClassInfo) {
-            return ((ClassInfo)target).typeParameterArray();
+            return ((ClassInfo) target).typeParameterArray();
         } else if (target instanceof MethodInfo) {
-            return ((MethodInfo)target).typeParameterArray();
+            return ((MethodInfo) target).typeParameterArray();
         }
 
         throw new IllegalStateException("Type annotation referred to type parameters on an invalid target: " + target);
@@ -856,9 +856,9 @@ public final class Indexer {
 
     private static Type[] copyTypeParameters(AnnotationTarget target) {
         if (target instanceof ClassInfo) {
-            return ((ClassInfo)target).typeParameterArray().clone();
+            return ((ClassInfo) target).typeParameterArray().clone();
         } else if (target instanceof MethodInfo) {
-            return ((MethodInfo)target).typeParameterArray().clone();
+            return ((MethodInfo) target).typeParameterArray().clone();
         }
 
         throw new IllegalStateException("Type annotation referred to type parameters on an invalid target: " + target);
@@ -866,10 +866,10 @@ public final class Indexer {
 
     private void setTypeParameters(AnnotationTarget target, Type[] typeParameters) {
         if (target instanceof ClassInfo) {
-            ((ClassInfo)target).setTypeParameters(typeParameters);
+            ((ClassInfo) target).setTypeParameters(typeParameters);
             return;
         } else if (target instanceof MethodInfo) {
-            ((MethodInfo)target).setTypeParameters(typeParameters);
+            ((MethodInfo) target).setTypeParameters(typeParameters);
             return;
         }
 
@@ -880,8 +880,8 @@ public final class Indexer {
     private static boolean isInnerConstructor(MethodInfo method) {
         ClassInfo klass = method.declaringClass();
         return klass.nestingType() != ClassInfo.NestingType.TOP_LEVEL
-                                   && !Modifier.isStatic(klass.flags())
-                                   && "<init>".equals(method.name());
+                && !Modifier.isStatic(klass.flags())
+                && "<init>".equals(method.name());
     }
 
     private void resolveTypeAnnotation(AnnotationTarget target, TypeAnnotationState typeAnnotationState) {
@@ -943,7 +943,7 @@ public final class Indexer {
             // Type annotations refer to FORMAL positions, yet without generics, a descriptor
             // may contain extra parameters (e.g. in the case of non-static inner class constructors
             // (to hold the outer class reference))
-            if (isInnerConstructor(method) && !signaturePresent.containsKey(method))  {
+            if (isInnerConstructor(method) && !signaturePresent.containsKey(method)) {
                 parameter.adjustUp();
             }
 
@@ -974,9 +974,9 @@ public final class Indexer {
         } else if (typeTarget.usage() == TypeTarget.Usage.EMPTY && target instanceof RecordComponentInfo) {
             RecordComponentInfo recordComponent = (RecordComponentInfo) target;
             recordComponent.setType(resolveTypePath(recordComponent.type(), typeAnnotationState));
-        } else if (typeTarget.usage() == TypeTarget.Usage.THROWS  && target instanceof MethodInfo) {
+        } else if (typeTarget.usage() == TypeTarget.Usage.THROWS && target instanceof MethodInfo) {
             MethodInfo method = (MethodInfo) target;
-            int position = ((ThrowsTypeTarget)typeTarget).position();
+            int position = ((ThrowsTypeTarget) typeTarget).position();
             Type[] exceptions = method.copyExceptions();
 
             if (position >= exceptions.length) {
@@ -1017,7 +1017,7 @@ public final class Indexer {
         PathElement element = elements.pop();
         if (element == null) {
             type = intern(type.addAnnotation(new AnnotationInstance(typeAnnotationState.annotation, null)));
-            typeAnnotationState.target.setTarget(type);       // FIXME
+            typeAnnotationState.target.setTarget(type); // FIXME
             // Clone the instance with a null target so that it can be interned
             return type;
         }
@@ -1070,7 +1070,6 @@ public final class Indexer {
         return depth;
     }
 
-
     private void updateTypeTarget(AnnotationTarget enclosingTarget, TypeAnnotationState typeAnnotationState) {
         // Signature is erroneously omitted from bridge methods with generic type annotations
         if (typeAnnotationState.genericsRequired && !signaturePresent.containsKey(enclosingTarget)) {
@@ -1084,9 +1083,9 @@ public final class Indexer {
         switch (target.usage()) {
             case EMPTY: {
                 if (enclosingTarget instanceof FieldInfo) {
-                    type = ((FieldInfo)enclosingTarget).type();
+                    type = ((FieldInfo) enclosingTarget).type();
                 } else if (enclosingTarget instanceof RecordComponentInfo) {
-                    type = ((RecordComponentInfo)enclosingTarget).type();
+                    type = ((RecordComponentInfo) enclosingTarget).type();
                 } else {
                     MethodInfo method = (MethodInfo) enclosingTarget;
                     type = target.asEmpty().isReceiver() ? method.receiverType() : method.returnType();
@@ -1118,11 +1117,11 @@ public final class Indexer {
             case TYPE_PARAMETER_BOUND: {
                 TypeParameterBoundTypeTarget boundTarget = target.asTypeParameterBound();
                 type = getTypeParameters(enclosingTarget)[boundTarget.position()]
-                           .asTypeVariable().boundArray()[boundTarget.boundPosition()];
+                        .asTypeVariable().boundArray()[boundTarget.boundPosition()];
                 break;
             }
             case THROWS: {
-                type = ((MethodInfo)enclosingTarget).methodInternal().exceptionArray()[target.asThrows().position()];
+                type = ((MethodInfo) enclosingTarget).methodInternal().exceptionArray()[target.asThrows().position()];
                 break;
             }
             default:
@@ -1166,7 +1165,6 @@ public final class Indexer {
         throw new IllegalStateException("Unknown path element");
     }
 
-
     private Type rebuildNestedType(Type type, int depth, TypeAnnotationState typeAnnotationState) {
         DotName name = type.name();
         Map<DotName, Type> ownerMap = buildOwnerMap(type);
@@ -1184,11 +1182,10 @@ public final class Indexer {
 
             if (last != null) {
                 last = intern(oType != null ? convertParameterized(oType).copyType(last)
-                                            : new ParameterizedType(currentName, null, last));
+                        : new ParameterizedType(currentName, null, last));
             } else if (oType != null) {
                 last = oType;
             }
-
 
             if (depth == 0) {
                 if (last == null) {
@@ -1250,8 +1247,7 @@ public final class Indexer {
 
     private boolean hasAnonymousEncloser(TypeAnnotationState typeAnnotationState) {
         return typeAnnotationState.target instanceof ClassExtendsTypeTarget
-                && typeAnnotationState.target
-                .enclosingTarget().asClass().nestingType() == ClassInfo.NestingType.ANONYMOUS;
+                && typeAnnotationState.target.enclosingTarget().asClass().nestingType() == ClassInfo.NestingType.ANONYMOUS;
     }
 
     private ArrayDeque<InnerClassInfo> buildClassesQueue(DotName name) {
@@ -1278,7 +1274,13 @@ public final class Indexer {
     }
 
     private static class PathElement {
-        private static enum Kind {ARRAY, NESTED, WILDCARD_BOUND, PARAMETERIZED}
+        private static enum Kind {
+            ARRAY,
+            NESTED,
+            WILDCARD_BOUND,
+            PARAMETERIZED
+        }
+
         private static Kind[] KINDS = Kind.values();
         private Kind kind;
         private int pos;
@@ -1325,8 +1327,8 @@ public final class Indexer {
         private final boolean bridgeIncompatible;
         private final PathElementStack pathElements;
 
-
-        TypeAnnotationState(TypeTarget target, AnnotationInstance annotation, ArrayList<PathElement> pathElements, boolean genericsRequired, boolean bridgeIncompatible) {
+        TypeAnnotationState(TypeTarget target, AnnotationInstance annotation, ArrayList<PathElement> pathElements,
+                boolean genericsRequired, boolean bridgeIncompatible) {
             this.target = target;
             this.annotation = annotation;
             this.pathElements = new PathElementStack(pathElements);
@@ -1339,7 +1341,8 @@ public final class Indexer {
         boolean bool;
     }
 
-    private ArrayList<PathElement> processTargetPath(DataInputStream data, BooleanHolder genericsRequired, BooleanHolder bridgeIncompatible) throws IOException {
+    private ArrayList<PathElement> processTargetPath(DataInputStream data, BooleanHolder genericsRequired,
+            BooleanHolder bridgeIncompatible) throws IOException {
         int numElements = data.readUnsignedByte();
 
         ArrayList<PathElement> elements = new ArrayList<PathElement>(numElements);
@@ -1359,8 +1362,8 @@ public final class Indexer {
     }
 
     private void skipTargetPath(DataInputStream data) throws IOException {
-           int numElements = data.readUnsignedByte();
-           skipFully(data, numElements * 2);
+        int numElements = data.readUnsignedByte();
+        skipFully(data, numElements * 2);
     }
 
     private void processExceptions(DataInputStream data, MethodInfo target) throws IOException {
@@ -1378,7 +1381,7 @@ public final class Indexer {
     }
 
     private void processSignature(DataInputStream data, AnnotationTarget target) throws IOException {
-        String signature =  decodeUtf8Entry(data.readUnsignedShort());
+        String signature = decodeUtf8Entry(data.readUnsignedShort());
         signatures.add(signature);
         signatures.add(target);
         signaturePresent.put(target, null);
@@ -1397,7 +1400,7 @@ public final class Indexer {
         // Class signature is always the last element and should be processed first
         Object last = end > 1 ? signatures.get(end - 1) : null;
         if (last instanceof ClassInfo) {
-            parseClassSignature((String)signatures.get(end - 2), (ClassInfo)last);
+            parseClassSignature((String) signatures.get(end - 2), (ClassInfo) last);
             end -= 2;
         }
 
@@ -1474,7 +1477,7 @@ public final class Indexer {
     }
 
     private void recordAnnotation(Map<DotName, List<AnnotationInstance>> classAnnotations, DotName annotation,
-                                  AnnotationInstance instance) {
+            AnnotationInstance instance) {
         List<AnnotationInstance> list = classAnnotations.get(annotation);
         if (list == null) {
             list = new ArrayList<AnnotationInstance>();
@@ -1504,13 +1507,13 @@ public final class Indexer {
         int tag = data.readUnsignedByte();
         switch (tag) {
             case 'B':
-                return new AnnotationValue.ByteValue(name, (byte)decodeIntegerEntry(data.readUnsignedShort()));
+                return new AnnotationValue.ByteValue(name, (byte) decodeIntegerEntry(data.readUnsignedShort()));
             case 'C':
-                return new AnnotationValue.CharacterValue(name, (char)decodeIntegerEntry(data.readUnsignedShort()));
+                return new AnnotationValue.CharacterValue(name, (char) decodeIntegerEntry(data.readUnsignedShort()));
             case 'I':
                 return new AnnotationValue.IntegerValue(name, decodeIntegerEntry(data.readUnsignedShort()));
             case 'S':
-                return new AnnotationValue.ShortValue(name, (short)decodeIntegerEntry(data.readUnsignedShort()));
+                return new AnnotationValue.ShortValue(name, (short) decodeIntegerEntry(data.readUnsignedShort()));
 
             case 'Z':
                 return new AnnotationValue.BooleanValue(name, decodeIntegerEntry(data.readUnsignedShort()) > 0);
@@ -1607,7 +1610,7 @@ public final class Indexer {
         byte[] buf = new byte[4];
 
         stream.readFully(buf);
-        if (buf[0] != (byte)0xCA || buf[1] != (byte)0xFE || buf[2] != (byte)0xBA || buf[3] != (byte)0xBE)
+        if (buf[0] != (byte) 0xCA || buf[1] != (byte) 0xFE || buf[2] != (byte) 0xBA || buf[3] != (byte) 0xBE)
             throw new IOException("Invalid Magic");
 
     }
@@ -1692,18 +1695,18 @@ public final class Indexer {
     }
 
     private int bitsToInt(byte[] pool, int pos) {
-        return (pool[++pos] & 0xFF) << 24 | (pool[++pos] & 0xFF) << 16 | (pool[++pos] & 0xFF) << 8  | (pool[++pos] & 0xFF);
+        return (pool[++pos] & 0xFF) << 24 | (pool[++pos] & 0xFF) << 16 | (pool[++pos] & 0xFF) << 8 | (pool[++pos] & 0xFF);
     }
 
     private long bitsToLong(byte[] pool, int pos) {
-        return ((long)(pool[++pos] & 0xFF)) << 56 |
-               ((long)(pool[++pos] & 0xFF)) << 48 |
-               ((long)(pool[++pos] & 0xFF)) << 40 |
-               ((long)(pool[++pos] & 0xFF)) << 32 |
-               ((long)(pool[++pos] & 0xFF)) << 24 |
-               ((long)(pool[++pos] & 0xFF)) << 16 |
-               ((long)(pool[++pos] & 0xFF)) << 8  |
-               ((long)(pool[++pos] & 0xFF));
+        return ((long) (pool[++pos] & 0xFF)) << 56 |
+                ((long) (pool[++pos] & 0xFF)) << 48 |
+                ((long) (pool[++pos] & 0xFF)) << 40 |
+                ((long) (pool[++pos] & 0xFF)) << 32 |
+                ((long) (pool[++pos] & 0xFF)) << 24 |
+                ((long) (pool[++pos] & 0xFF)) << 16 |
+                ((long) (pool[++pos] & 0xFF)) << 8 |
+                ((long) (pool[++pos] & 0xFF));
     }
 
     private int decodeIntegerEntry(int index) {
@@ -1717,7 +1720,6 @@ public final class Indexer {
         return bitsToInt(pool, pos);
     }
 
-
     private long decodeLongEntry(int index) {
         byte[] pool = constantPool;
         int[] offsets = constantPoolOffsets;
@@ -1728,7 +1730,6 @@ public final class Indexer {
 
         return bitsToLong(pool, pos);
     }
-
 
     private float decodeFloatEntry(int index) {
         byte[] pool = constantPool;
@@ -1755,10 +1756,12 @@ public final class Indexer {
     private static String convertClassFieldDescriptor(String descriptor) {
         if (descriptor.charAt(0) != 'L')
             throw new IllegalArgumentException("Non class descriptor: " + descriptor);
-        return descriptor.substring(1, descriptor.length() -1 ).replace('/', '.');
+        return descriptor.substring(1, descriptor.length() - 1).replace('/', '.');
     }
 
-    private static class IntegerHolder { private int i; };
+    private static class IntegerHolder {
+        private int i;
+    };
 
     private Type[] parseMethodArgs(String descriptor, IntegerHolder pos) {
         if (descriptor.charAt(pos.i) != '(')
@@ -1789,23 +1792,27 @@ public final class Indexer {
 
         DotName name;
         switch (c) {
-            case 'V': return VoidType.VOID;
+            case 'V':
+                return VoidType.VOID;
             case 'L': {
                 int end = start;
-                while (descriptor.charAt(++end) != ';');
+                while (descriptor.charAt(++end) != ';')
+                    ;
                 name = names.convertToName(descriptor.substring(start + 1, end), '/');
                 pos.i = end;
                 return names.intern(new ClassType(name));
             }
             case '[': {
                 int end = start;
-                while (descriptor.charAt(++end) == '[');
+                while (descriptor.charAt(++end) == '[')
+                    ;
                 int depth = end - start;
                 pos.i = end;
                 type = parseType(descriptor, pos);
                 return names.intern(new ArrayType(type, depth));
             }
-            default: throw new IllegalArgumentException("Invalid descriptor: " + descriptor + " pos " + start);
+            default:
+                throw new IllegalArgumentException("Invalid descriptor: " + descriptor + " pos " + start);
         }
     }
 
@@ -1900,9 +1907,9 @@ public final class Indexer {
                     }
                     offset += len;
                     break;
-               default:
-                   throw new IllegalStateException(
-                           String.format("Unknown tag %s! pos = %s poolCount = %s", tag, pos, poolCount));
+                default:
+                    throw new IllegalStateException(
+                            String.format("Unknown tag %s! pos = %s poolCount = %s", tag, pos, poolCount));
             }
         }
 
@@ -1946,8 +1953,7 @@ public final class Indexer {
         if (stream == null) {
             throw new IllegalArgumentException("stream cannot be null");
         }
-        try
-        {
+        try {
             DataInputStream data = new DataInputStream(new BufferedInputStream(stream));
             verifyMagic(data);
 

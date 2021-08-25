@@ -18,26 +18,23 @@
 
 package org.jboss.jandex.test;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexReader;
-import org.jboss.jandex.IndexWriter;
-import org.jboss.jandex.Indexer;
-import org.jboss.jandex.Type;
-import org.jboss.jandex.TypeParameterBoundTypeTarget;
-import org.jboss.jandex.TypeVariable;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexReader;
+import org.jboss.jandex.IndexWriter;
+import org.jboss.jandex.Indexer;
+import org.jboss.jandex.TypeParameterBoundTypeTarget;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class TypeParameterBoundTestCase {
 
@@ -50,8 +47,6 @@ public class TypeParameterBoundTestCase {
                 info.typeParameters().get(0).toString());
     }
 
-
-
     @Test
     public void arrayListConsumer() throws IOException {
         Indexer indexer = new Indexer();
@@ -60,8 +55,6 @@ public class TypeParameterBoundTestCase {
                 "T extends @Nullable java.util.ArrayList",
                 info.typeParameters().get(0).toString());
     }
-
-
 
     @Test
     public void serializableListConsumer() throws IOException {
@@ -72,13 +65,12 @@ public class TypeParameterBoundTestCase {
                 info.typeParameters().get(0).toString());
     }
 
-
     @Test
     public void classExtendsOnInner() throws IOException {
         Indexer indexer = new Indexer();
         ClassInfo info = indexer.index(getClassBytes("test/TypeParameterBoundExample$IteratorSupplier.class"));
         Assert.assertEquals("java.util.function.Supplier<java.util.function.Consumer<@Nullable java.lang.Object[]>>",
-                            info.interfaceTypes().get(0).toString());
+                info.interfaceTypes().get(0).toString());
     }
 
     @Test
@@ -86,18 +78,20 @@ public class TypeParameterBoundTestCase {
         Indexer indexer = new Indexer();
         ClassInfo info = indexer.index(getClassBytes("test/TypeParameterBoundExample$IteratorSupplier$1.class"));
         Assert.assertEquals("java.util.function.Consumer<@Nullable java.lang.Object[]>",
-                           info.interfaceTypes().get(0).toString());
+                info.interfaceTypes().get(0).toString());
     }
 
     @Test
     public void classExtendsNestAnonExtendsInner() throws IOException {
         Indexer indexer = new Indexer();
         ClassInfo info = indexer.index(getClassBytes("test/TypeParameterBoundExample$Nest1$Nest2$Nest3$1$1.class"));
-        Assert.assertEquals("test.TypeParameterBoundExample$Nest1<java.lang.String>.Nest2<java.lang.Object[]>.Nest3<@Nullable java.lang.Integer>",
-                    info.superClassType().toString());
+        Assert.assertEquals(
+                "test.TypeParameterBoundExample$Nest1<java.lang.String>.Nest2<java.lang.Object[]>.Nest3<@Nullable java.lang.Integer>",
+                info.superClassType().toString());
         info = indexer.index(getClassBytes("test/TypeParameterBoundExample$Nest1$Nest2$Nest3$1$2.class"));
-        Assert.assertEquals("test.TypeParameterBoundExample$Nest1<java.lang.String>.Nest2<@Nullable java.lang.Object[]>.Nest3<java.lang.Integer>",
-                           info.superClassType().toString());
+        Assert.assertEquals(
+                "test.TypeParameterBoundExample$Nest1<java.lang.String>.Nest2<@Nullable java.lang.Object[]>.Nest3<java.lang.Integer>",
+                info.superClassType().toString());
     }
 
     @Test
@@ -125,7 +119,7 @@ public class TypeParameterBoundTestCase {
                 info.typeParameters().get(0).toString());
 
         List<AnnotationInstance> annotationInstances = info.annotations().get(DotName.createSimple("test.Nullable"));
-        Assert.assertEquals(0,  annotationInstances.get(0).target().asType().asTypeParameterBound().boundPosition());
+        Assert.assertEquals(0, annotationInstances.get(0).target().asType().asTypeParameterBound().boundPosition());
 
         annotationInstances = info.annotations().get(DotName.createSimple("test.Untainted"));
         ArrayList<Integer> list = new ArrayList<Integer>();

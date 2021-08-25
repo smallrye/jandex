@@ -29,7 +29,7 @@ public final class UnresolvedTypeVariable extends Type {
     private int hash;
 
     UnresolvedTypeVariable(String name) {
-        this (name, null);
+        this(name, null);
     }
 
     UnresolvedTypeVariable(String name, AnnotationInstance[] annotations) {
@@ -40,9 +40,12 @@ public final class UnresolvedTypeVariable extends Type {
     /**
      * The identifier of this unresolved type variable as it appears in Java source code.
      *
-     * <p> The following class has a type parameter, with an identifier of "T":
+     * <p>
+     * The following class has a type parameter, with an identifier of "T":
+     *
      * <pre class="brush:java; gutter: false;">
-     *     class Foo&lt;T extends Number&gt; {}
+     * class Foo&lt;T extends Number&gt; {
+     * }
      * </pre>
      *
      * @return the identifier of this type variable

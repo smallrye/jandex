@@ -1,15 +1,16 @@
 package org.jboss.jandex.test.util;
 
-import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexReader;
-
-import javax.management.JMException;
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+
+import javax.management.JMException;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
+import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexReader;
 
 public class LoadIndexAndDumpHeap {
     public static void main(String[] args) throws IOException, JMException {
@@ -36,7 +37,7 @@ public class LoadIndexAndDumpHeap {
     private static void dumpHeap(String filePath, boolean live) throws JMException {
         MBeanServer jmx = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = new ObjectName("com.sun.management:type=HotSpotDiagnostic");
-        jmx.invoke(name, "dumpHeap", new Object[]{filePath, live},
-                new String[]{String.class.getName(), boolean.class.getName()});
+        jmx.invoke(name, "dumpHeap", new Object[] { filePath, live },
+                new String[] { String.class.getName(), boolean.class.getName() });
     }
 }

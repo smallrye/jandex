@@ -29,7 +29,8 @@ package org.jboss.jandex;
  * public void foo(List&lt;@Bar T&gt; { ... }
  * </pre>
  *
- * <p>This example would be represented as a <code>MethodParameterTypeTarget</code> with an enclosing target
+ * <p>
+ * This example would be represented as a <code>MethodParameterTypeTarget</code> with an enclosing target
  * of foo's <code>MethodInfo</code>, and <code>position()</code> would return 0. The "Bar" annotation
  * would appear on the type variable T.
  *

@@ -40,7 +40,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class AnnotationInstanceFilterTestCase {
-    private static class Hit implements AnnotationTarget{
+    private static class Hit implements AnnotationTarget {
         @Override
         public Kind kind() {
             return null;
@@ -76,7 +76,8 @@ public class AnnotationInstanceFilterTestCase {
             return null;
         }
     }
-    private static class Miss implements AnnotationTarget{
+
+    private static class Miss implements AnnotationTarget {
         @Override
         public Kind kind() {
             return null;
@@ -120,16 +121,17 @@ public class AnnotationInstanceFilterTestCase {
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i < 9; i++) {
                 DotName foo = DotName.createSimple("foo" + j);
-                record(map, foo, AnnotationInstance.create(foo, i % 3 == 0 ? new Hit() : new Miss(), Collections.<AnnotationValue>emptyList()));
+                record(map, foo, AnnotationInstance.create(foo, i % 3 == 0 ? new Hit() : new Miss(),
+                        Collections.<AnnotationValue> emptyList()));
             }
             for (int i = 0; i < 9; i++) {
                 DotName foo = DotName.createSimple("allHits" + j);
-                record(map, foo, AnnotationInstance.create(foo, new Hit(), Collections.<AnnotationValue>emptyList()));
+                record(map, foo, AnnotationInstance.create(foo, new Hit(), Collections.<AnnotationValue> emptyList()));
             }
 
             for (int i = 0; i < 9; i++) {
                 DotName foo = DotName.createSimple("allMisses" + j);
-                record(map, foo, AnnotationInstance.create(foo, new Miss(), Collections.<AnnotationValue>emptyList()));
+                record(map, foo, AnnotationInstance.create(foo, new Miss(), Collections.<AnnotationValue> emptyList()));
             }
         }
 
@@ -138,7 +140,9 @@ public class AnnotationInstanceFilterTestCase {
 
     }
 
-    private void verify(Map<DotName, List<AnnotationInstance>> map, Class<?> clazz, int expected) throws NoSuchMethodException, ClassNotFoundException, InstantiationException, IllegalAccessException, java.lang.reflect.InvocationTargetException {
+    private void verify(Map<DotName, List<AnnotationInstance>> map, Class<?> clazz, int expected)
+            throws NoSuchMethodException, ClassNotFoundException, InstantiationException, IllegalAccessException,
+            java.lang.reflect.InvocationTargetException {
         Collection<AnnotationInstance> filter1 = createFilter(map, clazz);
         Assert.assertEquals(expected, filter1.size());
 
@@ -153,7 +157,9 @@ public class AnnotationInstanceFilterTestCase {
     }
 
     @SuppressWarnings("unchecked")
-    private Collection<AnnotationInstance> createFilter(Map<DotName, List<AnnotationInstance>> map, Class<?> clazz) throws NoSuchMethodException, ClassNotFoundException, InstantiationException, IllegalAccessException, java.lang.reflect.InvocationTargetException {
+    private Collection<AnnotationInstance> createFilter(Map<DotName, List<AnnotationInstance>> map, Class<?> clazz)
+            throws NoSuchMethodException, ClassNotFoundException, InstantiationException, IllegalAccessException,
+            java.lang.reflect.InvocationTargetException {
         Constructor<?> constructor = Class.forName("org.jboss.jandex.AnnotationTargetFilterCollection")
                 .getDeclaredConstructor(Map.class, Class.class);
         constructor.setAccessible(true);
@@ -169,6 +175,5 @@ public class AnnotationInstanceFilterTestCase {
 
         list.add(instance);
     }
-
 
 }

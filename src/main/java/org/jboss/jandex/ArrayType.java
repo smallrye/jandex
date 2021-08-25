@@ -69,7 +69,7 @@ public final class ArrayType extends Type {
             builder.append('[');
         }
         if (component instanceof PrimitiveType) {
-            builder.append(((PrimitiveType)component).toCode());
+            builder.append(((PrimitiveType) component).toCode());
         } else {
             // This relies on name() representing the erased type name
             // For historical 1.x reasons, we follow the Java reflection format
@@ -136,7 +136,7 @@ public final class ArrayType extends Type {
             return true;
         }
 
-        if (! (o instanceof ArrayType)) {
+        if (!(o instanceof ArrayType)) {
             return false;
         }
         ArrayType arrayType = (ArrayType) o;

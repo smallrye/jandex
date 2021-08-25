@@ -20,9 +20,11 @@ package org.jboss.jandex.test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -47,7 +49,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Arrays;
 import java.util.List;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -79,39 +80,59 @@ public class BasicTestCase {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface TestAnnotation {
         String name();
+
         int[] ints();
+
         String other() default "something";
+
         String override() default "override-me";
 
         long longValue();
+
         Class<?> klass();
+
         NestedAnnotation nested();
+
         ElementType[] enums();
+
         NestedAnnotation[] nestedArray();
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    public @interface MethodAnnotation1 {}
+    public @interface MethodAnnotation1 {
+    }
+
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    public @interface MethodAnnotation2 {}
+    public @interface MethodAnnotation2 {
+    }
+
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    public @interface MethodAnnotation3 {}
+    public @interface MethodAnnotation3 {
+    }
+
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    public @interface MethodAnnotation4 {}
+    public @interface MethodAnnotation4 {
+    }
 
     public @interface NestedAnnotation {
         float value();
     }
 
-    @TestAnnotation(name = "Test", override = "somethingelse", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f), nestedArray = {
-            @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) }, enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
+    // @formatter:off
+    @TestAnnotation(name = "Test", override = "somethingelse", ints = { 1, 2, 3, 4, 5 }, klass = Void.class,
+            nested = @NestedAnnotation(1.34f), nestedArray = { @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) },
+            enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
+    // @formatter:on
     public class DummyClass implements Serializable {
-        void doSomething(int x, long y, Long foo){}
-        void doSomething(int x, long y){}
+        void doSomething(int x, long y, Long foo) {
+        }
+
+        void doSomething(int x, long y) {
+        }
 
         @FieldAnnotation
         private int x;
@@ -119,28 +140,42 @@ public class BasicTestCase {
         @MethodAnnotation1
         @MethodAnnotation2
         @MethodAnnotation4
-        void doSomething(int x, long y, String foo){}
+        void doSomething(int x, long y, String foo) {
+        }
 
         public class Nested {
-            public Nested(int noAnnotation) {}
-            public Nested(@ParameterAnnotation byte annotated) {}
+            public Nested(int noAnnotation) {
+            }
+
+            public Nested(@ParameterAnnotation byte annotated) {
+            }
         }
     }
 
     public enum Enum {
-        A(1), B(2);
+        A(1),
+        B(2);
 
-        private Enum(int noAnnotation) {}
-        private Enum(@ParameterAnnotation byte annotated) {}
+        private Enum(int noAnnotation) {
+        }
+
+        private Enum(@ParameterAnnotation byte annotated) {
+        }
     }
 
-    @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f), nestedArray = {
-        @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) }, enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
+    // @formatter:off
+    @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f),
+            nestedArray = { @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) },
+            enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
+    // @formatter:on
     public static class NestedA implements Serializable {
     }
 
-    @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f), nestedArray = {
-        @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) }, enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
+    // @formatter:off
+    @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f),
+            nestedArray = { @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) },
+            enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
+    // @formatter:on
     public static class NestedB implements Serializable {
 
         NestedB(Integer foo) {
@@ -157,16 +192,19 @@ public class BasicTestCase {
         static Class<?> anonymousStaticClass;
         Class<?> anonymousInnerClass;
 
+        // @formatter:off
         static {
             anonymousStaticClass = new Object() {}.getClass();
         }
         {
             anonymousInnerClass = new Object() {}.getClass();
         }
+        // @formatter:on
     }
 
     public static class ApiClass {
-        public static void superApi() {}
+        public static void superApi() {
+        }
     }
 
     public static class ApiUser {
@@ -178,13 +216,17 @@ public class BasicTestCase {
     @Test
     public void testIndexer() throws IOException {
         Indexer indexer = new Indexer();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName().replace('.', '/') + ".class");
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName()
+                .replace('.', '/') + ".class");
         indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(TestAnnotation.class.getName().replace('.', '/') + ".class");
+        stream = getClass().getClassLoader().getResourceAsStream(TestAnnotation.class.getName()
+                .replace('.', '/') + ".class");
         indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(DummyClass.Nested.class.getName().replace('.', '/') + ".class");
+        stream = getClass().getClassLoader().getResourceAsStream(DummyClass.Nested.class.getName()
+                .replace('.', '/') + ".class");
         indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(Enum.class.getName().replace('.', '/') + ".class");
+        stream = getClass().getClassLoader().getResourceAsStream(Enum.class.getName()
+                .replace('.', '/') + ".class");
         indexer.index(stream);
         Index index = indexer.complete();
 
@@ -261,13 +303,17 @@ public class BasicTestCase {
     @Test
     public void testWriteRead() throws IOException {
         Indexer indexer = new Indexer();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName().replace('.', '/') + ".class");
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName()
+                .replace('.', '/') + ".class");
         indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(TestAnnotation.class.getName().replace('.', '/') + ".class");
+        stream = getClass().getClassLoader().getResourceAsStream(TestAnnotation.class.getName()
+                .replace('.', '/') + ".class");
         indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(DummyClass.Nested.class.getName().replace('.', '/') + ".class");
+        stream = getClass().getClassLoader().getResourceAsStream(DummyClass.Nested.class.getName()
+                .replace('.', '/') + ".class");
         indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(Enum.class.getName().replace('.', '/') + ".class");
+        stream = getClass().getClassLoader().getResourceAsStream(Enum.class.getName()
+                .replace('.', '/') + ".class");
         indexer.index(stream);
         Index index = indexer.complete();
 
@@ -282,12 +328,13 @@ public class BasicTestCase {
     @Test
     public void testWriteReadPreviousVersion() throws IOException {
         Indexer indexer = new Indexer();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName().replace('.', '/') + ".class");
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName()
+                .replace('.', '/') + ".class");
         indexer.index(stream);
         Index index = indexer.complete();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new IndexWriter(baos).write(index, (byte)2);
+        new IndexWriter(baos).write(index, (byte) 2);
 
         index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
         assertFalse(index.getClassByName(DotName.createSimple(DummyClass.class.getName())).hasNoArgsConstructor());
@@ -301,7 +348,11 @@ public class BasicTestCase {
 
     private void verifyWriteReadNesting(int version, ClassInfo.NestingType expectedNoEncloseAnon) throws IOException {
         Class<?> noEncloseInstance = new NoEnclosureAnonTest().anonymousInnerClass;
-        Class<?> plainAnon = new Object(){}.getClass();
+
+        // @formatter:off
+        Class<?> plainAnon = new Object() {}.getClass();
+        // @formatter:on
+
         class Named {
         }
 
@@ -318,12 +369,18 @@ public class BasicTestCase {
         int ignore = (version == -1) ? new IndexWriter(baos).write(index) : new IndexWriter(baos).write(index, version);
 
         index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
-        assertEquals(ClassInfo.NestingType.INNER, index.getClassByName(DotName.createSimple(NestedC.class.getName())).nestingType());
-        assertEquals(ClassInfo.NestingType.TOP_LEVEL, index.getClassByName(DotName.createSimple(BasicTestCase.class.getName())).nestingType());
-        assertEquals(ClassInfo.NestingType.ANONYMOUS, index.getClassByName(DotName.createSimple(plainAnon.getName())).nestingType());
-        assertEquals(ClassInfo.NestingType.LOCAL, index.getClassByName(DotName.createSimple(Named.class.getName())).nestingType());
-        assertEquals(expectedNoEncloseAnon, index.getClassByName(DotName.createSimple(noEncloseInstance.getName())).nestingType());
-        assertEquals(expectedNoEncloseAnon, index.getClassByName(DotName.createSimple(NoEnclosureAnonTest.anonymousStaticClass.getName())).nestingType());
+        assertEquals(ClassInfo.NestingType.INNER,
+                index.getClassByName(DotName.createSimple(NestedC.class.getName())).nestingType());
+        assertEquals(ClassInfo.NestingType.TOP_LEVEL,
+                index.getClassByName(DotName.createSimple(BasicTestCase.class.getName())).nestingType());
+        assertEquals(ClassInfo.NestingType.ANONYMOUS,
+                index.getClassByName(DotName.createSimple(plainAnon.getName())).nestingType());
+        assertEquals(ClassInfo.NestingType.LOCAL,
+                index.getClassByName(DotName.createSimple(Named.class.getName())).nestingType());
+        assertEquals(expectedNoEncloseAnon,
+                index.getClassByName(DotName.createSimple(noEncloseInstance.getName())).nestingType());
+        assertEquals(expectedNoEncloseAnon,
+                index.getClassByName(DotName.createSimple(NoEnclosureAnonTest.anonymousStaticClass.getName())).nestingType());
     }
 
     private void indexClass(Class<?> klass, Indexer indexer) throws IOException {
@@ -355,24 +412,21 @@ public class BasicTestCase {
     }
 
     @Test
-    public void testSimpleName() throws IOException  {
-        class MyLocal{}
+    public void testSimpleName() throws IOException {
+        class MyLocal {
+        }
         assertEquals("NestedC", getIndexForClasses(NestedC.class)
-                                .getClassByName(DotName.createSimple(NestedC.class.getName())
-                                ).simpleName());
+                .getClassByName(DotName.createSimple(NestedC.class.getName())).simpleName());
         assertEquals("BasicTestCase", getIndexForClasses(BasicTestCase.class)
-                                        .getClassByName(DotName.createSimple(BasicTestCase.class.getName())
-                                        ).simpleName());
+                .getClassByName(DotName.createSimple(BasicTestCase.class.getName())).simpleName());
         assertEquals("MyLocal", getIndexForClasses(MyLocal.class)
-                                        .getClassByName(DotName.createSimple(MyLocal.class.getName())
-                                        ).simpleName());
+                .getClassByName(DotName.createSimple(MyLocal.class.getName())).simpleName());
         assertEquals("String", getIndexForClasses(String.class)
-                                        .getClassByName(DotName.createSimple(String.class.getName())
-                                        ).simpleName());
-        Class<?> anon = new Object(){}.getClass();
-        assertEquals(null, getIndexForClasses(anon)
-                                        .getClassByName(DotName.createSimple(anon.getName())
-                                        ).simpleName());
+                .getClassByName(DotName.createSimple(String.class.getName())).simpleName());
+        // @formatter:off
+        Class<?> anon = new Object() {}.getClass();
+        // @formatter:on
+        assertNull(getIndexForClasses(anon).getClassByName(DotName.createSimple(anon.getName())).simpleName());
     }
 
     @Test
@@ -419,11 +473,11 @@ public class BasicTestCase {
 
         // Verify values
         assertEquals("Test", instance.value("name").asString());
-        assertTrue(Arrays.equals(new int[] {1,2,3,4,5}, instance.value("ints").asIntArray()));
+        assertArrayEquals(new int[] { 1, 2, 3, 4, 5 }, instance.value("ints").asIntArray());
         assertEquals(Void.class.getName(), instance.value("klass").asClass().name().toString());
-        assertTrue(1.34f == instance.value("nested").asNested().value().asFloat());
-        assertTrue(3.14f == instance.value("nestedArray").asNestedArray()[0].value().asFloat());
-        assertTrue(2.27f == instance.value("nestedArray").asNestedArray()[1].value().asFloat());
+        assertEquals(1.34f, instance.value("nested").asNested().value().asFloat(), 0.0);
+        assertEquals(3.14f, instance.value("nestedArray").asNestedArray()[0].value().asFloat(), 0.0);
+        assertEquals(2.27f, instance.value("nestedArray").asNestedArray()[1].value().asFloat(), 0.0);
         assertEquals(ElementType.TYPE.name(), instance.value("enums").asEnumArray()[0]);
         assertEquals(ElementType.PACKAGE.name(), instance.value("enums").asEnumArray()[1]);
         assertEquals(10, instance.value("longValue").asLong());
@@ -444,7 +498,8 @@ public class BasicTestCase {
             assertEquals(1, clazz.classAnnotations().size());
 
             // Verify method annotations
-            MethodInfo method = clazz.method("doSomething", PrimitiveType.INT, PrimitiveType.LONG, Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS));
+            MethodInfo method = clazz.method("doSomething", PrimitiveType.INT, PrimitiveType.LONG,
+                    Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS));
 
             // Verify default value
             assertEquals("something", instance.valueWithDefault(index, "other").asString());
@@ -468,9 +523,12 @@ public class BasicTestCase {
 
             assertNotNull(method);
             assertEquals(3, method.annotations().size());
-            assertEquals(MethodAnnotation1.class.getName(), method.annotation(DotName.createSimple(MethodAnnotation1.class.getName())).name().toString());
-            assertEquals(MethodAnnotation2.class.getName(), method.annotation(DotName.createSimple(MethodAnnotation2.class.getName())).name().toString());
-            assertEquals(MethodAnnotation4.class.getName(), method.annotation(DotName.createSimple(MethodAnnotation4.class.getName())).name().toString());
+            assertEquals(MethodAnnotation1.class.getName(),
+                    method.annotation(DotName.createSimple(MethodAnnotation1.class.getName())).name().toString());
+            assertEquals(MethodAnnotation2.class.getName(),
+                    method.annotation(DotName.createSimple(MethodAnnotation2.class.getName())).name().toString());
+            assertEquals(MethodAnnotation4.class.getName(),
+                    method.annotation(DotName.createSimple(MethodAnnotation4.class.getName())).name().toString());
             assertFalse(method.hasAnnotation(DotName.createSimple(MethodAnnotation3.class.getName())));
 
             assertEquals("x", method.parameterName(0));
@@ -481,7 +539,7 @@ public class BasicTestCase {
             assertNotNull(nested);
             // synthetic param counts here
             MethodInfo nestedConstructor1 = nested.method("<init>",
-                  Type.create(DotName.createSimple(DummyClass.class.getName()), Type.Kind.CLASS), PrimitiveType.INT);
+                    Type.create(DotName.createSimple(DummyClass.class.getName()), Type.Kind.CLASS), PrimitiveType.INT);
             assertNotNull(nestedConstructor1);
             // synthetic param counts here
             assertEquals(2, nestedConstructor1.parameters().size());
@@ -489,14 +547,15 @@ public class BasicTestCase {
             assertEquals("noAnnotation", nestedConstructor1.parameterName(0));
 
             MethodInfo nestedConstructor2 = nested.method("<init>",
-                  Type.create(DotName.createSimple(DummyClass.class.getName()), Type.Kind.CLASS), PrimitiveType.BYTE);
+                    Type.create(DotName.createSimple(DummyClass.class.getName()), Type.Kind.CLASS), PrimitiveType.BYTE);
             assertNotNull(nestedConstructor2);
             // synthetic param counts here
             assertEquals(2, nestedConstructor2.parameters().size());
             // synthetic param does not counts here
             assertEquals("annotated", nestedConstructor2.parameterName(0));
 
-            AnnotationInstance paramAnnotation = nestedConstructor2.annotation(DotName.createSimple(ParameterAnnotation.class.getName()));
+            AnnotationInstance paramAnnotation = nestedConstructor2
+                    .annotation(DotName.createSimple(ParameterAnnotation.class.getName()));
             assertNotNull(paramAnnotation);
             assertEquals(Kind.METHOD_PARAMETER, paramAnnotation.target().kind());
             assertEquals("annotated", paramAnnotation.target().asMethodParameter().name());
@@ -506,13 +565,14 @@ public class BasicTestCase {
             assertNotNull(enumClass);
             // synthetic param counts here (for ECJ)
             MethodInfo enumConstructor1 = enumClass.method("<init>",
-                  Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS), PrimitiveType.INT, PrimitiveType.INT);
-            if(enumConstructor1 == null) {
+                    Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS), PrimitiveType.INT,
+                    PrimitiveType.INT);
+            if (enumConstructor1 == null) {
                 enumConstructor1 = enumClass.method("<init>", PrimitiveType.INT);
                 assertNotNull(enumConstructor1);
                 // synthetic param does not found here
                 assertEquals(1, enumConstructor1.parameters().size());
-            }else {
+            } else {
                 // synthetic param counts here
                 assertEquals(3, enumConstructor1.parameters().size());
             }
@@ -520,13 +580,14 @@ public class BasicTestCase {
             assertEquals("noAnnotation", enumConstructor1.parameterName(0));
 
             MethodInfo enumConstructor2 = enumClass.method("<init>",
-                  Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS), PrimitiveType.INT, PrimitiveType.BYTE);
-            if(enumConstructor2 == null) {
+                    Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS), PrimitiveType.INT,
+                    PrimitiveType.BYTE);
+            if (enumConstructor2 == null) {
                 enumConstructor2 = enumClass.method("<init>", PrimitiveType.BYTE);
                 assertNotNull(enumConstructor2);
                 // synthetic param does not found here
                 assertEquals(1, enumConstructor2.parameters().size());
-            }else {
+            } else {
                 // synthetic param counts here
                 assertEquals(3, enumConstructor2.parameters().size());
             }
@@ -574,7 +635,7 @@ public class BasicTestCase {
     public void testClassConstantIndexing() throws IOException, URISyntaxException {
         Index index = getIndexForClasses(DummyClass.class, ApiClass.class, ApiUser.class);
         DotName apiClassDotName = DotName.createSimple(ApiClass.class.getName());
-        List<ClassInfo> users = index.getKnownUsers(apiClassDotName );
+        List<ClassInfo> users = index.getKnownUsers(apiClassDotName);
         assertEquals(2, users.size());
         ClassInfo apiUserClassInfo = index.getClassByName(DotName.createSimple(ApiUser.class.getName()));
         assertTrue(users.contains(apiUserClassInfo));
@@ -582,7 +643,7 @@ public class BasicTestCase {
         assertTrue(users.contains(apiClassInfo));
 
         Index readIndex = testClassConstantSerialisation(index, -1);
-        List<ClassInfo> readUsers = readIndex.getKnownUsers(apiClassDotName );
+        List<ClassInfo> readUsers = readIndex.getKnownUsers(apiClassDotName);
         assertEquals(2, readUsers.size());
         ClassInfo readApiUserClassInfo = readIndex.getClassByName(DotName.createSimple(ApiUser.class.getName()));
         assertTrue(readUsers.contains(readApiUserClassInfo));
@@ -593,19 +654,19 @@ public class BasicTestCase {
         assertEquals(0, readOldIndex.getKnownUsers(apiClassDotName).size());
 
         Index allClasses = index(getClass().getProtectionDomain().getCodeSource().getLocation(),
-              Index.class.getProtectionDomain().getCodeSource().getLocation());
-        System.err.println("Indexed "+allClasses.getKnownClasses().size()+" classes");
+                Index.class.getProtectionDomain().getCodeSource().getLocation());
+        System.err.println("Indexed " + allClasses.getKnownClasses().size() + " classes");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        System.err.println("V9 size: "+new IndexWriter(baos).write(index, 9));
+        System.err.println("V9 size: " + new IndexWriter(baos).write(index, 9));
         baos = new ByteArrayOutputStream();
-        System.err.println("V10 size: "+new IndexWriter(baos).write(index));
+        System.err.println("V10 size: " + new IndexWriter(baos).write(index));
     }
 
     private Index index(URL... locations) throws URISyntaxException, IOException {
         final Indexer indexer = new Indexer();
         final ClassLoader cl = BasicTestCase.class.getClassLoader();
 
-        for(URL url : locations) {
+        for (URL url : locations) {
             final Path path = Paths.get(url.toURI());
             Files.walkFileTree(path, new FileVisitor<Path>() {
 
@@ -617,7 +678,7 @@ public class BasicTestCase {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     String name = file.toString();
-                    if(name.endsWith(".class")) {
+                    if (name.endsWith(".class")) {
                         InputStream stream = cl.getResourceAsStream(path.relativize(file).toString());
                         indexer.index(stream);
                     }

@@ -25,20 +25,24 @@ import java.util.List;
  * Represents a generic parameterized type. The <code>name()</code> corresponds to the raw type,
  * and the arguments list corresponds to a list of type arguments passed to the parameterized type.
  *
- * <p>Additionally, a parameterized type is used to represent an inner class whose enclosing class
+ * <p>
+ * Additionally, a parameterized type is used to represent an inner class whose enclosing class
  * is either parameterized or has type annotations. In this case, the <code>owner()</code> method
  * will specify the type for the enclosing class. It is also possible for such a type to be parameterized
  * itself.
  *
- * <p>For example, the follow declaration would have a name of "java.util.Map", and two
+ * <p>
+ * For example, the follow declaration would have a name of "java.util.Map", and two
  * <code>ClassType</code> arguments, the first being "java.lang.String", the second "java.lang.Integer":
  *
  * <pre class="brush:java; gutter:false">
  *     java.util.Map&lt;String, Integer&gt;
  * </pre>
  *
- * <p>Another example shows the case where a parameterized type is used to represent a non-parameterized
+ * <p>
+ * Another example shows the case where a parameterized type is used to represent a non-parameterized
  * class (X), whose owner (Y) is itself parameterized:
+ *
  * <pre class="brush:java; gutter:false">
  *     Y&lt;String&gt;.X
  * </pre>
@@ -93,17 +97,23 @@ public class ParameterizedType extends Type {
      * or contains type annotations. The latter may be a <code>ClassType</code>. Otherwise null is
      * returned.
      *
-     * <p>Note that this means that inner classes whose enclosing types are not parameterized or
-     * annotated may return null when this method is called.</p>
+     * <p>
+     * Note that this means that inner classes whose enclosing types are not parameterized or
+     * annotated may return null when this method is called.
+     * </p>
      *
-     * <p>The example below shows the case where a parameterized type is used to represent a non-parameterized
+     * <p>
+     * The example below shows the case where a parameterized type is used to represent a non-parameterized
      * class (X).
+     *
      * <pre class="brush:java; gutter:false;">
      *     Y&lt;String&gt;.X
      * </pre>
      *
-     * <p>This example will return a parameterized type for "Y" when X's <code>owner()</code> method
-     * is called.</p>
+     * <p>
+     * This example will return a parameterized type for "Y" when X's <code>owner()</code> method
+     * is called.
+     * </p>
      *
      * @return the owner type if the owner is parameterized or annotated, otherwise null
      */

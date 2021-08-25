@@ -34,7 +34,7 @@ package org.jboss.jandex;
  * <code>MethodInfo</code>, and <code>isReceiver</code> would return false.
  *
  * @author Jason T. Greene
-*/
+ */
 public class EmptyTypeTarget extends TypeTarget {
     private boolean receiver;
 

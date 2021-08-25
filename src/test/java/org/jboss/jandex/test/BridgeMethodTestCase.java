@@ -18,6 +18,9 @@
 
 package org.jboss.jandex.test;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
@@ -26,20 +29,16 @@ import org.jboss.jandex.TypeTarget;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 public class BridgeMethodTestCase {
 
     @Test
     public void nestedConsumer() throws IOException {
-         verifyMethodSignature(
-                 "test/BridgeMethods$NestedConsumer.class",
-                 "accept",
-                 TypeTarget.Usage.METHOD_PARAMETER, "java.lang.Object",
-                 "@Nullable test.BridgeMethods$NestedConsumer");
-     }
-
+        verifyMethodSignature(
+                "test/BridgeMethods$NestedConsumer.class",
+                "accept",
+                TypeTarget.Usage.METHOD_PARAMETER, "java.lang.Object",
+                "@Nullable test.BridgeMethods$NestedConsumer");
+    }
 
     @Test
     public void arrayWithNullableElements() throws IOException {
@@ -49,7 +48,6 @@ public class BridgeMethodTestCase {
                 TypeTarget.Usage.METHOD_PARAMETER, "java.lang.Object",
                 "@Nullable java.lang.Object[]");
     }
-
 
     @Test
     public void nullableArray() throws IOException {
@@ -69,7 +67,6 @@ public class BridgeMethodTestCase {
                 "@Nullable java.lang.Object @Nullable []");
     }
 
-
     @Test
     public void arrayWithNullableElementsSupplier() throws IOException {
         verifyMethodSignature(
@@ -79,7 +76,6 @@ public class BridgeMethodTestCase {
                 "java.lang.Object",
                 "@Nullable java.lang.Object[]");
     }
-
 
     @Test
     public void nullableArraySupplier() throws IOException {
@@ -126,7 +122,7 @@ public class BridgeMethodTestCase {
                     throw new IllegalArgumentException("Expected METHOD_PARAMETER or EMPTY, got " + usage);
             }
             Assert.assertEquals(type + " signature for " +
-                            (isBridge(method) ? "" : "non-") + "bridge method " + method,
+                    (isBridge(method) ? "" : "non-") + "bridge method " + method,
                     expectedType, type.toString());
             methods++;
         }

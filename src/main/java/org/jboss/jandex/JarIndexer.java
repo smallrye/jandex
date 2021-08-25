@@ -50,10 +50,10 @@ public class JarIndexer {
         else
             return new File(jarFile.getAbsolutePath().replaceAll(pattern, "-" + ext.substring(1)) + ".idx");
     }
-    
+
     /**
      * Indexes a jar file and saves the result. If the modify flag is set, index is saved to META-INF/jandex.idx.
-     * Otherwise an external file is created with a similar name to the original file, 
+     * Otherwise an external file is created with a similar name to the original file,
      * concatenating <code>.idx</code> suffix.
      *
      * @param jarFile The file to index
@@ -64,7 +64,8 @@ public class JarIndexer {
      * @return indexing result
      * @throws IOException for any I/o error
      */
-    public static Result createJarIndex(File jarFile, Indexer indexer, boolean modify, boolean newJar, boolean verbose) throws IOException {
+    public static Result createJarIndex(File jarFile, Indexer indexer, boolean modify, boolean newJar, boolean verbose)
+            throws IOException {
         return createJarIndex(jarFile, indexer, modify, newJar, verbose, System.out, System.err);
     }
 
@@ -82,7 +83,8 @@ public class JarIndexer {
      * @return indexing result
      * @throws IOException for any I/o error
      */
-    public static Result createJarIndex(File jarFile, Indexer indexer, File outputFile, boolean modify, boolean newJar, boolean verbose) throws IOException {
+    public static Result createJarIndex(File jarFile, Indexer indexer, File outputFile, boolean modify, boolean newJar,
+            boolean verbose) throws IOException {
         return createJarIndex(jarFile, indexer, outputFile, modify, newJar, verbose, System.out, System.err);
     }
 
@@ -102,7 +104,8 @@ public class JarIndexer {
      * @return indexing result
      * @throws IOException for any I/o error
      */
-    public static Result createJarIndex(File jarFile, Indexer indexer, boolean modify, boolean newJar, boolean verbose, PrintStream infoStream, PrintStream errStream) throws IOException {
+    public static Result createJarIndex(File jarFile, Indexer indexer, boolean modify, boolean newJar, boolean verbose,
+            PrintStream infoStream, PrintStream errStream) throws IOException {
         return createJarIndex(jarFile, indexer, null, modify, newJar, verbose, infoStream, errStream);
     }
 
@@ -117,13 +120,14 @@ public class JarIndexer {
      * @param modify If the original jar should be modified
      * @param newJar If the new jar should be created
      * @param verbose If we should print what we are doing to the specified info stream
-     * @param infoStream A print stream which will record verbose info, may be null               1
+     * @param infoStream A print stream which will record verbose info, may be null
      * @param errStream A print stream to print errors, must not be null
      *
      * @return indexing result
      * @throws IOException for any I/o error
      */
-    public static Result createJarIndex(File jarFile, Indexer indexer, File outputFile, boolean modify, boolean newJar, boolean verbose, PrintStream infoStream, PrintStream errStream) throws IOException {
+    public static Result createJarIndex(File jarFile, Indexer indexer, File outputFile, boolean modify, boolean newJar,
+            boolean verbose, PrintStream infoStream, PrintStream errStream) throws IOException {
         File tmpCopy = null;
         ZipOutputStream zo = null;
         OutputStream out;
@@ -158,8 +162,7 @@ public class JarIndexer {
                         final InputStream stream = jar.getInputStream(entry);
                         try {
                             copy(stream, zo);
-                        }
-                        finally {
+                        } finally {
                             safeClose(stream);
                         }
                     }
@@ -178,8 +181,9 @@ public class JarIndexer {
                             printIndexEntryInfo(info, infoStream);
                     } catch (Exception e) {
                         String message = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
-                        errStream.println("ERROR: Could not index " + entry.getName() + ": " + message); if (verbose)
-                        e.printStackTrace(errStream);
+                        errStream.println("ERROR: Could not index " + entry.getName() + ": " + message);
+                        if (verbose)
+                            e.printStackTrace(errStream);
                     }
                 }
             }
@@ -216,7 +220,7 @@ public class JarIndexer {
         FileOutputStream fos = new FileOutputStream(new File(dest.getAbsolutePath()));
         try {
             byte[] b = new byte[8196];
-            for (int count=0; (count = fis.read(b, 0, 8196)) >= 0;  ) {
+            for (int count = 0; (count = fis.read(b, 0, 8196)) >= 0;) {
                 fos.write(b, 0, count);
             }
         } finally {
@@ -228,7 +232,7 @@ public class JarIndexer {
     private static void printIndexEntryInfo(ClassInfo info, PrintStream infoStream) {
         infoStream.println("Indexed " + info.name() + " (" + info.annotations().size() + " annotations)");
     }
-    
+
     private static void copy(InputStream in, OutputStream out) throws IOException {
         byte[] buf = new byte[8192];
         int len;

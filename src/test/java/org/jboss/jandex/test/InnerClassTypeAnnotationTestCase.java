@@ -54,7 +54,6 @@ public class InnerClassTypeAnnotationTestCase {
         verifyRW("StaticNoGenericsConstruct", 0, 2);
     }
 
-
     @Test
     public void testGenericsConstructIndex() throws IOException {
         verifyIndex("GenericsConstruct", 0, -1);
@@ -89,13 +88,15 @@ public class InnerClassTypeAnnotationTestCase {
 
     private Index buildIndex(String name) throws IOException {
         Indexer indexer = new Indexer();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream("test/InnerClassTypeAnnotationsExample$" + name + ".class");
+        InputStream stream = getClass().getClassLoader()
+                .getResourceAsStream("test/InnerClassTypeAnnotationsExample$" + name + ".class");
         indexer.index(stream);
         return indexer.complete();
     }
 
     private void verifyTypeAnnotations(Index index, String name, int pos) {
         ClassInfo clazz = index.getClassByName(DotName.createSimple("test.InnerClassTypeAnnotationsExample$" + name));
-        Assert.assertTrue(clazz.constructors().get(0).parameters().get(pos).hasAnnotation(DotName.createSimple("test.Nullable")));
+        Assert.assertTrue(
+                clazz.constructors().get(0).parameters().get(pos).hasAnnotation(DotName.createSimple("test.Nullable")));
     }
 }

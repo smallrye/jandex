@@ -28,19 +28,19 @@ package org.jboss.jandex;
  * @see org.jboss.jandex.ThrowsTypeTarget
  * @since 2.0
  * @author Jason T. Greene
-*/
+ */
 public abstract class PositionBasedTypeTarget extends TypeTarget {
     private short position; // throws is a u2, everything else is u1
     private boolean adjusted;
 
     PositionBasedTypeTarget(AnnotationTarget enclosingTarget, int position) {
         super(enclosingTarget);
-        this.position = (short)position;
+        this.position = (short) position;
     }
 
     PositionBasedTypeTarget(AnnotationTarget enclosingTarget, Type target, int position) {
         super(enclosingTarget, target);
-        this.position = (short)position;
+        this.position = (short) position;
     }
 
     void adjustUp() {

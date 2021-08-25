@@ -33,16 +33,20 @@ import java.util.Map;
  * Java class, it is not intended as a complete replacement for Java reflection.
  * Only the methods and fields which are references by an annotation are stored.
  *
- * <p>Global information including the parent class, implemented methodParameters, and
+ * <p>
+ * Global information including the parent class, implemented methodParameters, and
  * access flags are also provided since this information is often necessary.
  *
- * <p>Note that a parent class and interface may exist outside of the scope of the
+ * <p>
+ * Note that a parent class and interface may exist outside of the scope of the
  * index (e.g. classes in a different jar) so the references are stored as names
  * instead of direct references. It is expected that multiple indexes may need
  * to be queried to assemble a full hierarchy in a complex multi-jar environment
  * (e.g. an application server).
  *
- * <p><b>Thread-Safety</b></p>
+ * <p>
+ * <b>Thread-Safety</b>
+ * </p>
  * This class is immutable and can be shared between threads without safe publication.
  *
  * @author Jason T. Greene
@@ -198,7 +202,8 @@ public final class ClassInfo implements AnnotationTarget {
      * @return a new mock class representation
      */
     @Deprecated
-    public static ClassInfo create(DotName name, DotName superName, short flags, DotName[] interfaces, Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
+    public static ClassInfo create(DotName name, DotName superName, short flags, DotName[] interfaces,
+            Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
         Type[] interfaceTypes = new Type[interfaces.length];
         for (int i = 0; i < interfaces.length; i++) {
             interfaceTypes[i] = new ClassType(interfaces[i]);
@@ -310,8 +315,10 @@ public final class ClassInfo implements AnnotationTarget {
      * The annotation instances in this map correspond to both annotations on the class,
      * and every nested element of the class (fields, types, methods, etc).
      *
-     * <p>The target of the annotation instance can be used to determine the location of
-     * the annotation usage.</p>
+     * <p>
+     * The target of the annotation instance can be used to determine the location of
+     * the annotation usage.
+     * </p>
      *
      * @return the annotations specified on this class and its elements
      */
@@ -353,7 +360,8 @@ public final class ClassInfo implements AnnotationTarget {
     /**
      * Retrieves annotation instances declared on this class, by the name of the annotation.
      *
-     * If the specified annotation is repeatable (JLS 9.6), then attempt to  result contains the values from the containing annotation.
+     * If the specified annotation is repeatable (JLS 9.6), then attempt to result contains the values from the containing
+     * annotation.
      *
      * @param name the name of the annotation
      * @param index the index used to obtain the annotation class
@@ -395,7 +403,9 @@ public final class ClassInfo implements AnnotationTarget {
      * and "&lt;clinit&gt;", respectively. It does not, however, include inherited methods.
      * These must be discovered by traversing the class hierarchy.
      *
-     * <p>This list may be empty, but never null.</p>
+     * <p>
+     * This list may be empty, but never null.
+     * </p>
      *
      * @return the list of methods declared in this class
      */
@@ -412,7 +422,9 @@ public final class ClassInfo implements AnnotationTarget {
      * It does not include inherited methods.
      * These must be discovered by traversing the class hierarchy.
      *
-     * <p>This list may never be null.</p>
+     * <p>
+     * This list may never be null.
+     * </p>
      *
      * @return the list of constructors declared in this class
      */
@@ -440,16 +452,19 @@ public final class ClassInfo implements AnnotationTarget {
      * a generic type parameter "T" is equivalent to <code>java.lang.Object</code>, since the raw form
      * of a type parameter is its upper bound.
      *
-     * <p>Eligible methods include constructors and static initializer blocks which have the special JVM
+     * <p>
+     * Eligible methods include constructors and static initializer blocks which have the special JVM
      * assigned names of "&lt;init&gt;" and "&lt;clinit&gt;", respectively. This does not, however, include
-     * inherited methods. These must be discovered by traversing the class hierarchy.</p>
+     * inherited methods. These must be discovered by traversing the class hierarchy.
+     * </p>
      *
      * @param name the name of the method to find
      * @param parameters the type parameters of the method
      * @return the located method or null if not found
      */
     public final MethodInfo method(String name, Type... parameters) {
-        MethodInternal key = new MethodInternal(Utils.toUTF8(name), MethodInternal.EMPTY_PARAMETER_NAMES, parameters, null, (short) 0);
+        MethodInternal key = new MethodInternal(Utils.toUTF8(name), MethodInternal.EMPTY_PARAMETER_NAMES, parameters, null,
+                (short) 0);
         int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
         return i >= 0 ? new MethodInfo(this, methods[i]) : null;
     }
@@ -464,13 +479,14 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the first discovered method matching this name, or null if no match is found
      */
     public final MethodInfo firstMethod(String name) {
-        MethodInternal key = new MethodInternal(Utils.toUTF8(name), MethodInternal.EMPTY_PARAMETER_NAMES, Type.EMPTY_ARRAY, null, (short) 0);
+        MethodInternal key = new MethodInternal(Utils.toUTF8(name), MethodInternal.EMPTY_PARAMETER_NAMES, Type.EMPTY_ARRAY,
+                null, (short) 0);
         int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
         if (i < -methods.length) {
             return null;
         }
 
-        MethodInfo method = new MethodInfo(this,i >= 0 ? methods[i] : methods[++i * -1]);
+        MethodInfo method = new MethodInfo(this, i >= 0 ? methods[i] : methods[++i * -1]);
         return method.name().equals(name) ? method : null;
     }
 
@@ -482,7 +498,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the field
      */
     public final FieldInfo field(String name) {
-        FieldInternal key = new FieldInternal(Utils.toUTF8(name), VoidType.VOID, (short)0);
+        FieldInternal key = new FieldInternal(Utils.toUTF8(name), VoidType.VOID, (short) 0);
         int i = Arrays.binarySearch(fields, key, FieldInternal.NAME_COMPARATOR);
         if (i < 0) {
             return null;
@@ -551,12 +567,13 @@ public final class ClassInfo implements AnnotationTarget {
         return recordComponentPositions;
     }
 
-
     /**
      * Returns a list of names for all interfaces this class implements. This list may be empty, but never null.
      *
-     * <p>Note that this information is also available on the <code>Type</code> instances returned by
-     * {@link #interfaceTypes}</p>
+     * <p>
+     * Note that this information is also available on the <code>Type</code> instances returned by
+     * {@link #interfaceTypes}
+     * </p>
      *
      * @return the list of names implemented by this class
      */
@@ -633,9 +650,11 @@ public final class ClassInfo implements AnnotationTarget {
      * Returns the nesting type of this class, which could either be a standard top level class, an inner class,
      * an anonymous class, or a local class.
      *
-     * <p>For historical reasons, static nested classes are returned as <code>INNER</code>. You can differentiate
+     * <p>
+     * For historical reasons, static nested classes are returned as <code>INNER</code>. You can differentiate
      * between a non-static nested class (inner class) and a static nested class by calling
-     * {@link java.lang.reflect.Modifier#isStatic(int)} on the return of {@link #flags()} </p>
+     * {@link java.lang.reflect.Modifier#isStatic(int)} on the return of {@link #flags()}
+     * </p>
      *
      * @return the nesting type of this class
      */
@@ -681,7 +700,7 @@ public final class ClassInfo implements AnnotationTarget {
      * It will also return null if the local or anonymous class is on an initializer.
      *
      * @return the enclosing method/constructor, if this class is local or anonymous, and it is within a
-     * method/constructor
+     *         method/constructor
      */
     public EnclosingMethodInfo enclosingMethod() {
         return nestingInfo != null ? nestingInfo.enclosingMethod : null;
@@ -811,7 +830,8 @@ public final class ClassInfo implements AnnotationTarget {
             this.recordComponents[i] = internal;
         }
 
-        this.recordComponentPositions = sortAndGetPositions(this.recordComponents, RecordComponentInternal.NAME_COMPARATOR, names);
+        this.recordComponentPositions = sortAndGetPositions(this.recordComponents, RecordComponentInternal.NAME_COMPARATOR,
+                names);
     }
 
     /**
@@ -876,7 +896,7 @@ public final class ClassInfo implements AnnotationTarget {
             nestingInfo = new NestingInfo();
         }
 
-        if (! setValues){
+        if (!setValues) {
             return;
         }
 

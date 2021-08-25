@@ -70,7 +70,8 @@ public class RecordTestCase {
     @Test
     public void testRecordComponentHasAnnotation() {
         ClassInfo rec = index.getClassByName(DotName.createSimple("test.RecordExample"));
-        List<AnnotationInstance> componentAnnos = rec.annotations().get(DotName.createSimple("test.RecordExample$ComponentAnnotation"));
+        List<AnnotationInstance> componentAnnos = rec.annotations()
+                .get(DotName.createSimple("test.RecordExample$ComponentAnnotation"));
         assertNotNull(componentAnnos);
         assertEquals(1, componentAnnos.size());
         assertEquals(AnnotationTarget.Kind.RECORD_COMPONENT, componentAnnos.get(0).target().kind());

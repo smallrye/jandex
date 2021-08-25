@@ -52,7 +52,7 @@ import java.util.TreeMap;
  * @author Jason T. Greene
  *
  */
-final class IndexWriterV2 extends IndexWriterImpl{
+final class IndexWriterV2 extends IndexWriterImpl {
     static final int MIN_VERSION = 6;
     static final int MAX_VERSION = 10;
 
@@ -88,7 +88,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
     private static final int NO_NESTING = 0;
     private static final int HAS_NESTING = 1;
 
-
     private final OutputStream out;
 
     private NameTable names;
@@ -97,7 +96,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
     private ReferenceTable<AnnotationInstance> annotationTable;
     private ReferenceTable<Type> typeTable;
     private ReferenceTable<Type[]> typeListTable;
-
 
     static class ReferenceEntry {
         private int index;
@@ -131,13 +129,11 @@ final class IndexWriterV2 extends IndexWriterImpl{
             return entry;
         }
 
-
         int positionOf(T reference) {
             ReferenceEntry entry = getReferenceEntry(reference);
 
             return entry.index;
         }
-
 
         boolean markWritten(T reference) {
             ReferenceEntry entry = getReferenceEntry(reference);
@@ -159,8 +155,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
     }
 
-
-
     /**
      * Constructs an IndexWriter using the specified stream
      *
@@ -169,7 +163,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
     IndexWriterV2(OutputStream out) {
         this.out = out;
     }
-
 
     /**
      * Writes the specified index to the associated output stream. This may be called multiple times in order
@@ -234,7 +227,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
     }
 
-
     private void writeUsersSet(PackedDataOutputStream stream, DotName user, List<ClassInfo> uses) throws IOException {
         stream.writePackedU32(positionOf(user));
         stream.writePackedU32(uses.size());
@@ -242,7 +234,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
             stream.writePackedU32(positionOf(use.name()));
         }
     }
-
 
     private void writeStringTable(PackedDataOutputStream stream) throws IOException {
         StrongInternPool<String> stringPool = names.stringPool();
@@ -327,7 +318,8 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
     }
 
-    private void writeRecordComponentEntry(PackedDataOutputStream stream, RecordComponentInternal recordComponent) throws IOException {
+    private void writeRecordComponentEntry(PackedDataOutputStream stream, RecordComponentInternal recordComponent)
+            throws IOException {
         stream.writePackedU32(positionOf(recordComponent.nameBytes()));
         stream.writePackedU32(positionOf(recordComponent.type()));
 
@@ -387,7 +379,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         } else if (target instanceof ClassInfo) {
             stream.writeByte(CLASS_TAG);
         } else if (target instanceof TypeTarget) {
-            writeTypeTarget(stream, (TypeTarget)target);
+            writeTypeTarget(stream, (TypeTarget) target);
         } else if (target instanceof RecordComponentInfo) {
             stream.writeByte(RECORD_COMPONENT_TAG);
         } else if (target == null) {
@@ -509,7 +501,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
         return i.intValue();
     }
 
-
     private int positionOf(Type type) {
         return typeTable.positionOf(type);
     }
@@ -530,11 +521,10 @@ final class IndexWriterV2 extends IndexWriterImpl{
         return annotationTable.markWritten(annotation);
     }
 
-
     private void writeClasses(PackedDataOutputStream stream, Index index, int version) throws IOException {
         Collection<ClassInfo> classes = index.getKnownClasses();
         stream.writePackedU32(classes.size());
-        for (ClassInfo clazz: classes) {
+        for (ClassInfo clazz : classes) {
             writeClassEntry(stream, clazz, version);
         }
     }
@@ -625,7 +615,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
 
         Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotations().entrySet();
-        for (Entry<DotName, List<AnnotationInstance>> entry :  entrySet) {
+        for (Entry<DotName, List<AnnotationInstance>> entry : entrySet) {
             List<AnnotationInstance> value = entry.getValue();
             stream.writePackedU32(value.size());
             for (AnnotationInstance annotation : value) {
@@ -706,7 +696,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         if (value instanceof AnnotationValue.ByteValue) {
             stream.writeByte(AVALUE_BYTE);
             stream.writeByte(value.asByte() & 0xFF);
-        } else if  (value instanceof AnnotationValue.ShortValue) {
+        } else if (value instanceof AnnotationValue.ShortValue) {
             stream.writeByte(AVALUE_SHORT);
             stream.writePackedU32(value.asShort() & 0xFFFF);
         } else if (value instanceof AnnotationValue.IntegerValue) {
@@ -791,7 +781,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
             case ARRAY:
                 ArrayType arrayType = type.asArrayType();
                 stream.writePackedU32(arrayType.dimensions());
-                writeReference(stream, arrayType.component(), false);  // TODO - full should not be necessary
+                writeReference(stream, arrayType.component(), false); // TODO - full should not be necessary
                 break;
             case PRIMITIVE:
                 stream.writeByte(type.asPrimitiveType().primitive().ordinal());
@@ -887,10 +877,10 @@ final class IndexWriterV2 extends IndexWriterImpl{
         addRecordComponentList(clazz.recordComponentArray());
         names.intern(clazz.recordComponentPositionArray());
 
-        for (Entry<DotName, List<AnnotationInstance>> entry :  clazz.annotations().entrySet()) {
+        for (Entry<DotName, List<AnnotationInstance>> entry : clazz.annotations().entrySet()) {
             addClassName(entry.getKey());
 
-            for (AnnotationInstance instance: entry.getValue()) {
+            for (AnnotationInstance instance : entry.getValue()) {
                 addAnnotation(instance);
             }
         }
@@ -990,7 +980,6 @@ final class IndexWriterV2 extends IndexWriterImpl{
         names.intern(recordComponent);
     }
 
-
     private void addEnclosingMethod(ClassInfo.EnclosingMethodInfo enclosingMethod) {
         if (enclosingMethod == null) {
             return;
@@ -1089,7 +1078,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
     }
 
     private void addClassName(DotName name) {
-        if (! nameTable.containsKey(name)) {
+        if (!nameTable.containsKey(name)) {
             addString(name.local());
             nameTable.put(name, null);
             sortedNameTable.put(name.toString(), name);

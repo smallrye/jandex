@@ -30,8 +30,9 @@ import java.util.Map;
  * @author Jason T. Greene
  */
 class GenericSignatureParser {
+    // @formatter:off
     /*
-     * Complete Grammar  (VM Spec v8)
+     * Complete Grammar (VM Spec v8)
      *
      * JavaTypeSignature:
      *   ReferenceTypeSignature
@@ -113,6 +114,7 @@ class GenericSignatureParser {
      *   ReferenceTypeSignature
      *
      */
+    // @formatter:on
     private static WildcardType UNBOUNDED_WILDCARD = new WildcardType(null, true);
     private String signature;
     private int pos;
@@ -205,7 +207,6 @@ class GenericSignatureParser {
             return throwables;
         }
 
-
         public String toString() {
             StringBuilder builder = new StringBuilder();
             if (typeParameters.length > 0) {
@@ -258,10 +259,10 @@ class GenericSignatureParser {
     }
 
     private void expect(char c) {
-         if (signature.charAt(pos++) != c) {
-             throw new IllegalArgumentException("Expected character '" + c + "' at position " + (pos - 1));
-         }
-     }
+        if (signature.charAt(pos++) != c) {
+            throw new IllegalArgumentException("Expected character '" + c + "' at position " + (pos - 1));
+        }
+    }
 
     Type parseFieldSignature(String signature) {
         this.signature = signature;
@@ -271,7 +272,6 @@ class GenericSignatureParser {
 
         return parseReferenceType();
     }
-
 
     MethodSignature parseMethodSignature(String signature) {
         this.signature = signature;
@@ -484,7 +484,7 @@ class GenericSignatureParser {
             return typeVariable != type ? typeVariable : null;
         }
 
-        if (! (type instanceof UnresolvedTypeVariable)) {
+        if (!(type instanceof UnresolvedTypeVariable)) {
             return null;
         }
 
@@ -552,7 +552,7 @@ class GenericSignatureParser {
 
         for (; end < signature.length(); end++) {
             char c = signature.charAt(end);
-            if (c == '.' || c == '<' || c ==';') {
+            if (c == '.' || c == '<' || c == ';') {
                 return pos = end;
             }
         }
@@ -560,6 +560,7 @@ class GenericSignatureParser {
         throw new IllegalStateException("Corrupted name");
     }
 
+    // @formatter:off
     public static void main(String[] args) throws IOException {
         GenericSignatureParser parser = new GenericSignatureParser(new NameTable());
         MethodSignature sig1 = parser.parseMethodSignature("<U:Ljava/lang/Foo;>(Ljava/lang/Class<TU;>;TU;)Ljava/lang/Class<+TU;>;");
@@ -591,6 +592,6 @@ class GenericSignatureParser {
 //        }
 
     }
-
+    // @formatter:on
 
 }

@@ -20,8 +20,8 @@ package org.jboss.jandex.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -117,7 +117,6 @@ public class DotNameTestCase {
         assertNull(DotName.createSimple("Foo").packagePrefix());
     }
 
-
     @Test
     public void testForNaturalComparator() {
         DotsContainer c = new DotsContainer();
@@ -135,7 +134,7 @@ public class DotNameTestCase {
 
     @Test
     public void testCollectionsProperties() {
-        for (int i=0; i<500; i++) {
+        for (int i = 0; i < 500; i++) {
             DotName componentised = createRandomComponentised();
             DotName simple = DotName.createSimple(componentised.toString());
             Assert.assertEquals(simple.hashCode(), componentised.hashCode());
@@ -181,8 +180,8 @@ public class DotNameTestCase {
     private void definitelyEquals(DotName a, DotName b) {
         Assert.assertEquals(a, b);
         Assert.assertEquals(b, a);
-        Assert.assertEquals(a.compareTo(b),0);
-        Assert.assertEquals(b.compareTo(a),0);
+        Assert.assertEquals(a.compareTo(b), 0);
+        Assert.assertEquals(b.compareTo(a), 0);
         sameHashCode(a, b);
     }
 
@@ -212,7 +211,6 @@ public class DotNameTestCase {
         c.add(DotName.createComponentized(DotName.createComponentized(null, "c", false), "ae", false));
         c.verifyAll();
     }
-
 
     @Test
     public void testTrailingDelimiter() throws IOException {

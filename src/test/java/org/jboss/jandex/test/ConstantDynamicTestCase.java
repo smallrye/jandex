@@ -1,18 +1,19 @@
 package org.jboss.jandex.test;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.Callable;
+
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.Indexer;
+import org.junit.Test;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.utility.JavaConstant;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.Indexer;
-import org.junit.Test;
-
-import static org.junit.Assert.assertNotNull;
 
 public class ConstantDynamicTestCase {
 

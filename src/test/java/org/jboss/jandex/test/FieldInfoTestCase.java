@@ -18,7 +18,9 @@ import org.junit.Test;
 public class FieldInfoTestCase {
 
     static enum FieldInfoTestEnum {
-        VAL1, VAL2("value2"), VAL3;
+        VAL1,
+        VAL2("value2"),
+        VAL3;
 
         static FieldInfoTestEnum notVAL;
 

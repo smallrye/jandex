@@ -54,6 +54,7 @@ public interface IndexView {
      * <p>
      * Note that this will only pick up direct subclasses of the class. It will not
      * pick up subclasses of subclasses.
+     * 
      * @param className the super class of the desired subclasses
      * @return a non-null list of all known subclasses of className
      */
@@ -111,14 +112,15 @@ public interface IndexView {
     public Collection<AnnotationInstance> getAnnotations(DotName annotationName);
 
     /**
-     * Obtains a list of instances for the specified annotation. If the specified annotation is repeatable (JLS 9.6), the result also contains all values from
-     * all instances of the container annotation. In this case, the {@link AnnotationInstance#target()} returns the target of the container annotation instance.
+     * Obtains a list of instances for the specified annotation. If the specified annotation is repeatable (JLS 9.6), the result
+     * also contains all values from all instances of the container annotation. In this case, the
+     * {@link AnnotationInstance#target()} returns the target of the container annotation instance.
      *
-     * @throws IllegalArgumentException If the the defining annotation class is not found
      * @param annotationName the name of the repeatable annotation
      * @param index the index containing the annotation class
      * @return a non-null list of annotation instances
-     * @throws IllegalArgumentException If the index does not contain the annotation definition or if it does not represent an annotation type
+     * @throws IllegalArgumentException If the index does not contain the annotation definition or if it does not represent
+     *         an annotation type
      */
     public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, IndexView index);
 

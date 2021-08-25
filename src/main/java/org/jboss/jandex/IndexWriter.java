@@ -18,16 +18,8 @@
 
 package org.jboss.jandex;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Writes a Jandex index file to a stream. The write process is somewhat more

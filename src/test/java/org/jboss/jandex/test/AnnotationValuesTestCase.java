@@ -48,24 +48,27 @@ public class AnnotationValuesTestCase {
         assertValues(AnnotationValue.createCharacterValue(name1, '1'), AnnotationValue.createCharacterValue(name1, '2'),
                 AnnotationValue.createCharacterValue(name2, '1'));
         // Double
-        assertValues(AnnotationValue.createDoubleValue(name1, 1), AnnotationValue.createDoubleValue(name1, 2), AnnotationValue.createDoubleValue(name2, 1),
-                diff);
+        assertValues(AnnotationValue.createDoubleValue(name1, 1), AnnotationValue.createDoubleValue(name1, 2),
+                AnnotationValue.createDoubleValue(name2, 1), diff);
         // Short
         assertValues(AnnotationValue.createShortValue(name1, (short) 1), AnnotationValue.createShortValue(name1, (short) 2),
                 AnnotationValue.createShortValue(name2, (short) 1), diff);
         // Float
-        assertValues(AnnotationValue.createFloatValue(name1, 1), AnnotationValue.createFloatValue(name1, 2), AnnotationValue.createFloatValue(name2, 1), diff);
+        assertValues(AnnotationValue.createFloatValue(name1, 1), AnnotationValue.createFloatValue(name1, 2),
+                AnnotationValue.createFloatValue(name2, 1), diff);
         // Integer
-        assertValues(AnnotationValue.createIntegerValue(name1, 1), AnnotationValue.createIntegerValue(name1, 2), AnnotationValue.createIntegerValue(name2, 1),
-                diff);
+        assertValues(AnnotationValue.createIntegerValue(name1, 1), AnnotationValue.createIntegerValue(name1, 2),
+                AnnotationValue.createIntegerValue(name2, 1), diff);
         // Long
-        assertValues(AnnotationValue.createLongValue(name1, 1), AnnotationValue.createLongValue(name1, 2), AnnotationValue.createLongValue(name2, 1), diff);
+        assertValues(AnnotationValue.createLongValue(name1, 1), AnnotationValue.createLongValue(name1, 2),
+                AnnotationValue.createLongValue(name2, 1), diff);
         // Boolean
         assertValues(AnnotationValue.createBooleanValue(name1, true), AnnotationValue.createBooleanValue(name1, false),
                 AnnotationValue.createBooleanValue(name2, true), diff);
         // Enum
         DotName typeName = DotName.createSimple("org.acme.Foo");
-        assertValues(AnnotationValue.createEnumValue(name1, typeName, "BAR"), AnnotationValue.createEnumValue(name1, typeName, "BAZ"),
+        assertValues(AnnotationValue.createEnumValue(name1, typeName, "BAR"),
+                AnnotationValue.createEnumValue(name1, typeName, "BAZ"),
                 AnnotationValue.createEnumValue(name2, typeName, "BAR"), diff);
         // Class
         Type type = Type.create(typeName, Kind.CLASS);
@@ -73,8 +76,10 @@ public class AnnotationValuesTestCase {
                 AnnotationValue.createClassValue(name1, Type.create(DotName.createSimple("org.acme.Bar"), Kind.CLASS)),
                 AnnotationValue.createClassValue(name2, type), diff);
         // Array
-        assertValues(AnnotationValue.createArrayValue(name1, new AnnotationValue[] { AnnotationValue.createLongValue(name1, 1) }),
-                AnnotationValue.createArrayValue(name1, new AnnotationValue[] { AnnotationValue.createLongValue(name2, 1) }), diff);
+        assertValues(
+                AnnotationValue.createArrayValue(name1, new AnnotationValue[] { AnnotationValue.createLongValue(name1, 1) }),
+                AnnotationValue.createArrayValue(name1, new AnnotationValue[] { AnnotationValue.createLongValue(name2, 1) }),
+                diff);
     }
 
     void assertValues(AnnotationValue val, AnnotationValue... differentValues) {

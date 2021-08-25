@@ -26,7 +26,8 @@ import java.util.Map;
  * instance equality should not be used to compare to them. Instead {@link #equals(Object)}
  * should be used.
  *
- * <p>A primitive is considered equal to another primitive if it specifies the same primitive
+ * <p>
+ * A primitive is considered equal to another primitive if it specifies the same primitive
  * enumeration value, and contains an equal set of annotation instances.
  *
  * @since 2.0
@@ -59,14 +60,22 @@ public final class PrimitiveType extends Type {
      * Specifies the underlying Java primitive type for a <code>PrimitiveType</code>
      */
     public enum Primitive {
-        /** Indicates a primitive byte type      */ BYTE,
-        /** Indicates a primitive character type */ CHAR,
-        /** Indicates a primitive double type    */ DOUBLE,
-        /** Indicates a primitive float type     */ FLOAT,
-        /** Indicates a primitive integer type   */ INT,
-        /** Indicates a primitive long type      */ LONG,
-        /** Indicates a primitive short type     */ SHORT,
-        /** Indicates a primitive boolean type   */ BOOLEAN,
+        /** Indicates a primitive byte type */
+        BYTE,
+        /** Indicates a primitive character type */
+        CHAR,
+        /** Indicates a primitive double type */
+        DOUBLE,
+        /** Indicates a primitive float type */
+        FLOAT,
+        /** Indicates a primitive integer type */
+        INT,
+        /** Indicates a primitive long type */
+        LONG,
+        /** Indicates a primitive short type */
+        SHORT,
+        /** Indicates a primitive boolean type */
+        BOOLEAN,
     }
 
     private final Primitive primitive;
@@ -79,7 +88,6 @@ public final class PrimitiveType extends Type {
         super(new DotName(null, primitive.name().toLowerCase(Locale.ENGLISH), true, false), annotations);
         this.primitive = primitive;
     }
-
 
     @Override
     public Kind kind() {

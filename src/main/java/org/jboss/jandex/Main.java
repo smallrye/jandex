@@ -39,8 +39,7 @@ public class Main {
     private File source;
     private Index index;
 
-    private Main()  {
-
+    private Main() {
     }
 
     public static void main(String[] args) {
@@ -84,10 +83,13 @@ public class Main {
 
     private Index getIndex(long start) throws IOException {
         Indexer indexer = new Indexer();
-        Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : JarIndexer.createJarIndex(source, indexer, outputFile, modify, jarFile, verbose);
+        Result result = (source.isDirectory()) ? indexDirectory(source, indexer)
+                : JarIndexer.createJarIndex(source, indexer, outputFile, modify, jarFile, verbose);
 
         double time = (System.currentTimeMillis() - start) / 1000.00;
-        System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d class usages, %d bytes)\n", result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(), result.getUsages(), result.getBytes());
+        System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d class usages, %d bytes)\n",
+                result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(), result.getUsages(),
+                result.getBytes());
         return result.getIndex();
     }
 
@@ -98,7 +100,8 @@ public class Main {
         long start = System.currentTimeMillis();
         Index index = reader.read();
         long end = System.currentTimeMillis() - start;
-        System.out.println("Dump index v" + reader.getIndexVersion() + " (current: v" + IndexWriterV2.MAX_VERSION + ") file: " + source);
+        System.out.println("Dump index v" + reader.getIndexVersion() + " (current: v" + IndexWriterV2.MAX_VERSION
+                + ") file: " + source);
         index.printAnnotations();
         index.printSubclasses();
 
@@ -146,7 +149,7 @@ public class Main {
             return;
         }
 
-        if (! source.getName().endsWith(".class"))
+        if (!source.getName().endsWith(".class"))
             return;
 
         FileInputStream input = new FileInputStream(source);
@@ -203,7 +206,6 @@ public class Main {
 
                 continue;
             }
-
 
             switch (arg.charAt(1)) {
                 case 'm':

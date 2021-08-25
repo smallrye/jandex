@@ -66,7 +66,7 @@ public class ModuleInfoTestCase {
     public void testModulePackagesListed() throws IOException {
         ModuleInfo mod = indexModuleInfo();
         List<DotName> expected = Arrays.asList(DotName.createSimple("test"),
-                                               DotName.createSimple("test.exec"));
+                DotName.createSimple("test.exec"));
         assertEquals(expected.size(), mod.packages().size());
         for (DotName e : expected) {
             assertTrue(mod.packages().contains(e));
@@ -107,7 +107,7 @@ public class ModuleInfoTestCase {
         assertEquals(1, provides.size());
         assertEquals("test.ServiceProviderExample", provides.get(0).service().toString());
         assertEquals("test.ServiceProviderExample$ServiceProviderExampleImpl",
-                     provides.get(0).providers().get(0).toString());
+                provides.get(0).providers().get(0).toString());
     }
 
     @Test

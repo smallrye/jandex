@@ -18,6 +18,14 @@
 
 package org.jboss.jandex.test;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.DotName;
@@ -28,38 +36,26 @@ import org.jboss.jandex.Indexer;
 import org.jboss.jandex.TypeTarget;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-
 public class TypeUseTestCase {
-
 
     private static final String TEST_SUBJECT_CLAZZ = "test.TypeUseExample$TestSubject";
 
     @Test
     public void testTypeParameter() throws IOException {
-        doTestTypeUse("test.TypeUseExample$TypeParameterAnnotation", TypeTarget.Usage.TYPE_PARAMETER, AnnotationTarget.Kind.CLASS);
+        doTestTypeUse("test.TypeUseExample$TypeParameterAnnotation", TypeTarget.Usage.TYPE_PARAMETER,
+                AnnotationTarget.Kind.CLASS);
     }
 
     @Test
     public void testTypeParameterBoundType() throws IOException {
-        doTestTypeUse("test.TypeUseExample$TypeParameterBoundTypeAnnotation", TypeTarget.Usage.TYPE_PARAMETER_BOUND, AnnotationTarget.Kind.CLASS);
+        doTestTypeUse("test.TypeUseExample$TypeParameterBoundTypeAnnotation", TypeTarget.Usage.TYPE_PARAMETER_BOUND,
+                AnnotationTarget.Kind.CLASS);
     }
 
     @Test
     public void testClassExtends() throws IOException {
-        doTestTypeUse("test.TypeUseExample$ClassExtendsAnnotation", TypeTarget.Usage.CLASS_EXTENDS, AnnotationTarget.Kind.CLASS);
+        doTestTypeUse("test.TypeUseExample$ClassExtendsAnnotation", TypeTarget.Usage.CLASS_EXTENDS,
+                AnnotationTarget.Kind.CLASS);
     }
 
     @Test
@@ -75,7 +71,8 @@ public class TypeUseTestCase {
      */
     @Test
     public void testMethodParameterType() throws IOException {
-        doTestTypeUse("test.TypeUseExample$MethodParameterTypeAnnotation", TypeTarget.Usage.METHOD_PARAMETER, AnnotationTarget.Kind.METHOD);
+        doTestTypeUse("test.TypeUseExample$MethodParameterTypeAnnotation", TypeTarget.Usage.METHOD_PARAMETER,
+                AnnotationTarget.Kind.METHOD);
     }
 
     @Test
@@ -89,9 +86,9 @@ public class TypeUseTestCase {
     }
 
     private void doTestTypeUse(String annotationClass,
-                               TypeTarget.Usage expectedUsage, AnnotationTarget.Kind expectedEnclosingTargetKind) throws IOException {
+            TypeTarget.Usage expectedUsage, AnnotationTarget.Kind expectedEnclosingTargetKind) throws IOException {
         Indexer indexer = new Indexer();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(TEST_SUBJECT_CLAZZ.replace('.', '/')+ ".class");
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(TEST_SUBJECT_CLAZZ.replace('.', '/') + ".class");
         indexer.index(stream);
         Index originalIndex = indexer.complete();
 
@@ -109,7 +106,7 @@ public class TypeUseTestCase {
     }
 
     private void verifyTypeUseAnnotations(Index index, String annotationClass,
-                                          TypeTarget.Usage expectedUsage, AnnotationTarget.Kind expectedEnclosingTargetKind) {
+            TypeTarget.Usage expectedUsage, AnnotationTarget.Kind expectedEnclosingTargetKind) {
         List<AnnotationInstance> annotations = index.getAnnotations(DotName.createSimple(annotationClass));
 
         // There must be exactly two copies of the annotation: one for the parameter and one for the parameter type.

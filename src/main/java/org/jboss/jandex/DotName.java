@@ -27,12 +27,14 @@ package org.jboss.jandex;
  * to offer memory efficiency. This reuse is common in Java where packages and classes follow
  * a tree structure.
  *
- * <p>Both the simple and componentized variants are considered semantically equivalent if they
+ * <p>
+ * Both the simple and componentized variants are considered semantically equivalent if they
  * refer to the same logical name. More specifically the equals and hashCode methods return the
  * same values for the same semantic name regardless of the variant used. Which variant to use
  * when depends on the specific performance and overhead objectives of the specific use pattern.
  *
- * <p>Simple names are cheap to construct (just a an additional wrapper object), so are ideal for
+ * <p>
+ * Simple names are cheap to construct (just a an additional wrapper object), so are ideal for
  * temporary use, like looking for an entry in a Map. Componentized names however require that
  * they be split in advance, and so require some additional time to construct. However the memory
  * benefits of reusing component strings make them desirable when stored in a longer term area
@@ -70,7 +72,7 @@ public final class DotName implements Comparable<DotName> {
      * @return a simple DotName that wraps name
      */
     public static DotName createSimple(String name) {
-       return new DotName(null, name, false, false);
+        return new DotName(null, name, false, false);
     }
 
     /**
@@ -144,7 +146,8 @@ public final class DotName implements Comparable<DotName> {
      * fully qualified string is returned. In componentized variants, just the
      * right most portion not including a separator (either . or $) is returned.
      *
-     * <p>Use {@link #withoutPackagePrefix()} instead of this method if the
+     * <p>
+     * Use {@link #withoutPackagePrefix()} instead of this method if the
      * desired value is simply the right most portion (including dollar signs if
      * present) after a '.' delimiter.
      * </p>
@@ -182,7 +185,6 @@ public final class DotName implements Comparable<DotName> {
         builder.append(local);
     }
 
-
     /**
      * Returns the package portion of this DotName.
      *
@@ -200,6 +202,7 @@ public final class DotName implements Comparable<DotName> {
             return index == -1 ? null : local.substring(0, index);
         }
     }
+
     /**
      * Returns whether this DotName is a componentized variant.
      *
@@ -331,10 +334,10 @@ public final class DotName implements Comparable<DotName> {
         if (this == o)
             return true;
 
-        if (! (o instanceof DotName))
+        if (!(o instanceof DotName))
             return false;
 
-        DotName other = (DotName)o;
+        DotName other = (DotName) o;
         if (other.prefix == null && prefix == null)
             return local.equals(other.local) && innerClass == other.innerClass;
 
@@ -361,15 +364,15 @@ public final class DotName implements Comparable<DotName> {
         }
 
         DotName current = comp;
-        while (current!=null) {
+        while (current != null) {
             final String nextFragment = current.local;
             final int fragLength = nextFragment.length();
-            if (! exactToMatch.regionMatches(cursor-fragLength, nextFragment, 0, fragLength)) {
+            if (!exactToMatch.regionMatches(cursor - fragLength, nextFragment, 0, fragLength)) {
                 return false;
             }
             //Jump by fragment match, +1 for the separator symbol:
             cursor = cursor - fragLength - 1;
-            if (cursor==-1) {
+            if (cursor == -1) {
                 //Our exactToMatch reference is finished; just verify we consumed comp completely as well::
                 return current.prefix == null;
             }
@@ -378,7 +381,7 @@ public final class DotName implements Comparable<DotName> {
                 return false;
             }
 
-            current=current.prefix;
+            current = current.prefix;
         }
         //And finally, verify we consumed it all:
         return cursor == -1;

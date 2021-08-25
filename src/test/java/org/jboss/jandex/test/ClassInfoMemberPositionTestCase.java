@@ -144,18 +144,29 @@ public class ClassInfoMemberPositionTestCase {
     static class TestEntity {
         String z;
         static int omega;
-        void c() {};
+
+        void c() {
+        }
+
         String y;
         String x;
+
         public TestEntity() {
         }
-        void a() {};
+
+        void a() {
+        }
+
         public TestEntity(String optional) {
         }
-        void b() {};
+
+        void b() {
+        }
+
         static long alpha;
 
-        void _() {};
+        void _() {
+        }
     }
 
     static class MaxSizeTestEntity {

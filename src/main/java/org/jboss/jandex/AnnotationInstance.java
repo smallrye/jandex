@@ -143,7 +143,7 @@ public final class AnnotationInstance {
     public AnnotationValue value(final String name) {
         int result = Arrays.binarySearch(values, name, new Comparator<Object>() {
             public int compare(Object o1, Object o2) {
-                return ((AnnotationValue)o1).name().compareTo(name);
+                return ((AnnotationValue) o1).name().compareTo(name);
             }
         });
         return result >= 0 ? values[result] : null;
@@ -158,7 +158,6 @@ public final class AnnotationInstance {
     public AnnotationValue value() {
         return value("value");
     }
-
 
     /**
      * Returns a value that corresponds with the specified parameter name,
@@ -180,7 +179,7 @@ public final class AnnotationInstance {
      * @param name the name of the annotation parameter
      * @return the value of the specified parameter, the default, or null
      * @throws IllegalArgumentException if index does not contain the defining
-     *                                  annotation class
+     *         annotation class
      * @since 2.1
      */
     public AnnotationValue valueWithDefault(IndexView index, String name) {
@@ -217,13 +216,12 @@ public final class AnnotationInstance {
      * @param index the index containing the defining annotation class
      * @return the "value" value, or its default, or null
      * @throws IllegalArgumentException if index does not contain the defining
-     *                                  annotation class
+     *         annotation class
      * @since 2.1
      */
     public AnnotationValue valueWithDefault(IndexView index) {
         return valueWithDefault(index, "value");
     }
-
 
     /**
      * Returns a list of all parameter values on this annotation instance,
@@ -234,11 +232,13 @@ public final class AnnotationInstance {
      * then an <code>IllegalArgumentException</code> will be thrown to prevent
      * non-deterministic results.
      *
-     * <p>The order of this list is undefined.</p>
+     * <p>
+     * The order of this list is undefined.
+     * </p>
      *
      * @return the parameter values of this annotation
      * @throws IllegalArgumentException if index does not contain the defining
-     *                                  annotation class
+     *         annotation class
      * @since 2.1
      */
     public List<AnnotationValue> valuesWithDefaults(IndexView index) {
@@ -334,8 +334,10 @@ public final class AnnotationInstance {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         AnnotationInstance instance = (AnnotationInstance) o;
 

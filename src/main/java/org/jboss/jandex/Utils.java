@@ -42,19 +42,19 @@ class Utils {
     }
 
     static <T> List<T> emptyOrWrap(List<T> list) {
-        return list.size() == 0 ? Collections.<T>emptyList() : Collections.unmodifiableList(list);
+        return list.size() == 0 ? Collections.<T> emptyList() : Collections.unmodifiableList(list);
     }
 
     static <T> Collection<T> emptyOrWrap(Collection<T> list) {
-        return list.size() == 0 ? Collections.<T>emptyList() : Collections.unmodifiableCollection(list);
+        return list.size() == 0 ? Collections.<T> emptyList() : Collections.unmodifiableCollection(list);
     }
 
     static <K, V> Map<K, V> emptyOrWrap(Map<K, V> map) {
-        return map.size() == 0 ? Collections.<K, V>emptyMap() : Collections.unmodifiableMap(map);
+        return map.size() == 0 ? Collections.<K, V> emptyMap() : Collections.unmodifiableMap(map);
     }
 
     static <T> List<T> listOfCapacity(int capacity) {
-        return capacity > 0 ? new ArrayList<T>(capacity) : Collections.<T>emptyList();
+        return capacity > 0 ? new ArrayList<T>(capacity) : Collections.<T> emptyList();
     }
 
 }

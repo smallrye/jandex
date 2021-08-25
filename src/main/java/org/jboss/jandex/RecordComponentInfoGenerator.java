@@ -37,7 +37,8 @@ class RecordComponentInfoGenerator extends AbstractList<RecordComponentInfo> {
 
     @Override
     public RecordComponentInfo get(int i) {
-        RecordComponentInternal recordComponent = (positions.length > 0) ? recordComponents[positions[i] & 0xFF] : recordComponents[i];
+        RecordComponentInternal recordComponent = (positions.length > 0) ? recordComponents[positions[i] & 0xFF]
+                : recordComponents[i];
         return new RecordComponentInfo(clazz, recordComponent);
     }
 

@@ -137,9 +137,9 @@ final class RecordComponentInternal {
     }
 
     void setAnnotations(List<AnnotationInstance> annotations) {
-         if (annotations.size() > 0) {
-             this.annotations = annotations.toArray(new AnnotationInstance[annotations.size()]);
-             Arrays.sort(this.annotations, AnnotationInstance.NAME_COMPARATOR);
-         }
-     }
+        if (annotations.size() > 0) {
+            this.annotations = annotations.toArray(new AnnotationInstance[annotations.size()]);
+            Arrays.sort(this.annotations, AnnotationInstance.NAME_COMPARATOR);
+        }
+    }
 }

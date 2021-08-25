@@ -46,7 +46,6 @@ public class RepeatableAnnotationsTestCase {
     static final DotName ALPHA_CONTAINER_NAME = DotName.createSimple("test.RepeatableAnnotationsExample$AlphaContainer");
     static final DotName MY_ANNOTATED_NAME = DotName.createSimple("test.RepeatableAnnotationsExample$MyAnnotated");
 
-
     @Test
     public void testIndexView() throws IOException {
         Index index = getIndexForClass(MY_ANNOTATED_NAME, ALPHA_NAME);
@@ -74,13 +73,15 @@ public class RepeatableAnnotationsTestCase {
         Index index = getIndexForClass(MY_ANNOTATED_NAME, ALPHA_NAME);
         ClassInfo alpha = index.getClassByName(MY_ANNOTATED_NAME);
         // MyAnnotated.foo()
-        MethodInfo foo = alpha.method("foo", Type.create(DotName.createSimple(String.class.getName()), org.jboss.jandex.Type.Kind.CLASS));
+        MethodInfo foo = alpha.method("foo",
+                Type.create(DotName.createSimple(String.class.getName()), org.jboss.jandex.Type.Kind.CLASS));
         List<AnnotationInstance> fooInstances = foo.annotationsWithRepeatable(ALPHA_NAME, index);
         assertEquals(3, fooInstances.size());
         assertValues(find(fooInstances, Kind.METHOD, null), 1);
         assertValues(find(fooInstances, Kind.METHOD_PARAMETER, null), 11, 12);
         // MyAnnotated.bar()
-        MethodInfo bar = alpha.method("bar", Type.create(DotName.createSimple(String.class.getName()), org.jboss.jandex.Type.Kind.CLASS));
+        MethodInfo bar = alpha.method("bar",
+                Type.create(DotName.createSimple(String.class.getName()), org.jboss.jandex.Type.Kind.CLASS));
         List<AnnotationInstance> barInstances = bar.annotationsWithRepeatable(ALPHA_NAME, index);
         assertEquals(3, barInstances.size());
         List<AnnotationInstance> barMethodInstance = find(barInstances, Kind.METHOD, null);
@@ -119,13 +120,13 @@ public class RepeatableAnnotationsTestCase {
     }
 
     private Index getIndexForClass(DotName... classes) throws IOException {
-            Indexer indexer = new Indexer();
-            for (DotName clazz : classes) {
-                InputStream stream = getClass().getClassLoader().getResourceAsStream(clazz.toString().replace('.', '/') + ".class");
-                indexer.index(stream);
-            }
-            return indexer.complete();
+        Indexer indexer = new Indexer();
+        for (DotName clazz : classes) {
+            InputStream stream = getClass().getClassLoader().getResourceAsStream(clazz.toString().replace('.', '/') + ".class");
+            indexer.index(stream);
         }
+        return indexer.complete();
+    }
 
     private List<AnnotationInstance> find(Collection<AnnotationInstance> instances, AnnotationTarget.Kind kind, String name) {
         List<AnnotationInstance> ret = new ArrayList<AnnotationInstance>();

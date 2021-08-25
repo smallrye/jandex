@@ -38,9 +38,10 @@ import java.util.Set;
  * concurrent access. Also the index is optimized for memory efficiency by using componentized
  * DotName values.
  *
- * <p>It contains the following information:
+ * <p>
+ * It contains the following information:
  * <ol>
- * <li>All annotations and a collection of targets they refer to </li>
+ * <li>All annotations and a collection of targets they refer to</li>
  * <li>All classes (including methodParameters) scanned during the indexing process (typical all classes in a jar)</li>
  * <li>All subclasses indexed by super class known to this index</li>
  * </ol>
@@ -62,8 +63,8 @@ public final class Index implements IndexView {
     final Map<DotName, List<ClassInfo>> users;
 
     Index(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
-          Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes, Map<DotName, ModuleInfo> modules,
-          Map<DotName, List<ClassInfo>> users) {
+            Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes, Map<DotName, ModuleInfo> modules,
+            Map<DotName, List<ClassInfo>> users) {
         this.annotations = Collections.unmodifiableMap(annotations);
         this.classes = Collections.unmodifiableMap(classes);
         this.subclasses = Collections.unmodifiableMap(subclasses);
@@ -71,7 +72,6 @@ public final class Index implements IndexView {
         this.modules = Collections.unmodifiableMap(modules);
         this.users = Collections.unmodifiableMap(users);
     }
-
 
     /**
      * Constructs a "mock" Index using the passed values. All passed values MUST NOT BE MODIFIED AFTER THIS CALL.
@@ -86,8 +86,9 @@ public final class Index implements IndexView {
      * @return the index
      */
     public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
-                               Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
-        return new Index(annotations, subclasses, implementors, classes, Collections.<DotName, ModuleInfo>emptyMap(), Collections.<DotName, List<ClassInfo>>emptyMap());
+            Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
+        return new Index(annotations, subclasses, implementors, classes, Collections.<DotName, ModuleInfo> emptyMap(),
+                Collections.<DotName, List<ClassInfo>> emptyMap());
     }
 
     /**
@@ -104,9 +105,9 @@ public final class Index implements IndexView {
      * @return the index
      */
     public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
-                               Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes,
-                               Map<DotName, List<ClassInfo>> users) {
-        return new Index(annotations, subclasses, implementors, classes, Collections.<DotName, ModuleInfo>emptyMap(), users);
+            Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes,
+            Map<DotName, List<ClassInfo>> users) {
+        return new Index(annotations, subclasses, implementors, classes, Collections.<DotName, ModuleInfo> emptyMap(), users);
     }
 
     /**
@@ -171,7 +172,7 @@ public final class Index implements IndexView {
      */
     public List<AnnotationInstance> getAnnotations(DotName annotationName) {
         List<AnnotationInstance> list = annotations.get(annotationName);
-        return list == null ? EMPTY_ANNOTATION_LIST: Collections.unmodifiableList(list);
+        return list == null ? EMPTY_ANNOTATION_LIST : Collections.unmodifiableList(list);
     }
 
     /**
@@ -200,12 +201,12 @@ public final class Index implements IndexView {
         for (AnnotationInstance containingInstance : getAnnotations(containingAnnotationName)) {
             for (AnnotationInstance nestedInstance : containingInstance.value().asNestedArray()) {
                 // We need to set the target of the containing instance
-                instances.add(new AnnotationInstance(nestedInstance.name(), containingInstance.target(), nestedInstance.valueArray()));
+                instances.add(new AnnotationInstance(nestedInstance.name(), containingInstance.target(),
+                        nestedInstance.valueArray()));
             }
         }
         return instances;
     }
-
 
     /**
      * {@inheritDoc}
@@ -223,7 +224,7 @@ public final class Index implements IndexView {
         return allKnown;
     }
 
-     private void getAllKnownSubClasses(DotName className, Set<ClassInfo> allKnown, Set<DotName> processedClasses) {
+    private void getAllKnownSubClasses(DotName className, Set<ClassInfo> allKnown, Set<DotName> processedClasses) {
         final Set<DotName> subClassesToProcess = new HashSet<DotName>();
         subClassesToProcess.add(className);
         while (!subClassesToProcess.isEmpty()) {
@@ -236,7 +237,7 @@ public final class Index implements IndexView {
     }
 
     private void getAllKnownSubClasses(DotName name, Set<ClassInfo> allKnown, Set<DotName> subClassesToProcess,
-                                       Set<DotName> processedClasses) {
+            Set<DotName> processedClasses) {
         final List<ClassInfo> list = getKnownDirectSubclasses(name);
         if (list != null) {
             for (final ClassInfo clazz : list) {
@@ -274,7 +275,7 @@ public final class Index implements IndexView {
     }
 
     private void getKnownImplementors(DotName name, Set<ClassInfo> allKnown, Set<DotName> subInterfacesToProcess,
-                                      Set<DotName> processedClasses) {
+            Set<DotName> processedClasses) {
         final List<ClassInfo> list = getKnownDirectImplementors(name);
         if (list != null) {
             for (final ClassInfo clazz : list) {
@@ -293,6 +294,7 @@ public final class Index implements IndexView {
             }
         }
     }
+
     /**
      * {@inheritDoc}
      */
@@ -327,14 +329,12 @@ public final class Index implements IndexView {
     /**
      * Print all annotations known by this index to stdout.
      */
-    public void printAnnotations()
-    {
+    public void printAnnotations() {
         System.out.println("Annotations:");
         for (Map.Entry<DotName, List<AnnotationInstance>> e : annotations.entrySet()) {
             System.out.println(e.getKey() + ":");
             for (AnnotationInstance instance : e.getValue()) {
                 AnnotationTarget target = instance.target();
-
 
                 if (target instanceof ClassInfo) {
                     System.out.println("    Class: " + target);
@@ -352,7 +352,7 @@ public final class Index implements IndexView {
 
                 StringBuilder builder = new StringBuilder("        (");
 
-                for (int i =  0; i < values.size(); i ++) {
+                for (int i = 0; i < values.size(); i++) {
                     builder.append(values.get(i));
                     if (i < values.size() - 1)
                         builder.append(", ");
@@ -366,8 +366,7 @@ public final class Index implements IndexView {
     /**
      * Print all classes that have known subclasses, and all their subclasses
      */
-    public void printSubclasses()
-    {
+    public void printSubclasses() {
         System.out.println("Subclasses:");
         for (Map.Entry<DotName, List<ClassInfo>> entry : subclasses.entrySet()) {
             System.out.println(entry.getKey() + ":");

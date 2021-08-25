@@ -53,7 +53,7 @@ public class CompositeIndex implements IndexView {
     }
 
     public static CompositeIndex createMerged(final CompositeIndex... indexes) {
-        ArrayList<IndexView> list =  new ArrayList<IndexView>();
+        ArrayList<IndexView> list = new ArrayList<IndexView>();
         for (CompositeIndex index : indexes) {
             list.addAll(index.indexes);
         }
@@ -108,7 +108,6 @@ public class CompositeIndex implements IndexView {
         getAllKnownSubClasses(className, allKnown, processedClasses);
         return allKnown;
     }
-
 
     private void getAllKnownSubClasses(DotName className, Set<ClassInfo> allKnown, Set<DotName> processedClasses) {
         final Set<DotName> subClassesToProcess = new HashSet<DotName>();
@@ -267,4 +266,3 @@ public class CompositeIndex implements IndexView {
         return Collections.unmodifiableCollection(users);
     }
 }
-

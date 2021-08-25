@@ -77,20 +77,34 @@ public abstract class AnnotationValue {
      * Specifies the kind of annotation value, which can be used to determine the underlying Java type.
      */
     public enum Kind {
-        /** Indicates a primitive byte value      */ BYTE,
-        /** Indicates a primitive short value     */ SHORT,
-        /** Indicates a primitive integer value   */ INTEGER,
-        /** Indicates a primitive character value */ CHARACTER,
-        /** Indicates a primitive float value     */ FLOAT,
-        /** Indicates a primitive double value    */ DOUBLE,
-        /** Indicates a primitive long value      */ LONG,
-        /** Indicates a primitive boolean value   */ BOOLEAN,
-        /** Indicates a Java Class value          */ CLASS,
-        /** Indicates a Java String value         */ STRING,
-        /** Indicates a Java Enum value           */ ENUM,
-        /** Indicates an array value              */ ARRAY,
-        /** Indicates a nested annotation value   */ NESTED,
-        /** Indicates the value type is unknown   */ UNKNOWN
+        /** Indicates a primitive byte value */
+        BYTE,
+        /** Indicates a primitive short value */
+        SHORT,
+        /** Indicates a primitive integer value */
+        INTEGER,
+        /** Indicates a primitive character value */
+        CHARACTER,
+        /** Indicates a primitive float value */
+        FLOAT,
+        /** Indicates a primitive double value */
+        DOUBLE,
+        /** Indicates a primitive long value */
+        LONG,
+        /** Indicates a primitive boolean value */
+        BOOLEAN,
+        /** Indicates a Java Class value */
+        CLASS,
+        /** Indicates a Java String value */
+        STRING,
+        /** Indicates a Java Enum value */
+        ENUM,
+        /** Indicates an array value */
+        ARRAY,
+        /** Indicates a nested annotation value */
+        NESTED,
+        /** Indicates the value type is unknown */
+        UNKNOWN
     }
 
     private final String name;
@@ -163,8 +177,7 @@ public abstract class AnnotationValue {
         return new ArrayValue(name, values);
     }
 
-    public static AnnotationValue createNestedAnnotationValue(String name, AnnotationInstance instance)
-    {
+    public static AnnotationValue createNestedAnnotationValue(String name, AnnotationInstance instance) {
         return new NestedAnnotation(name, instance);
     }
 
@@ -186,7 +199,6 @@ public abstract class AnnotationValue {
      * @return the underlying value
      */
     public abstract Object value();
-
 
     /**
      * Returns the kind of this value. The kind includes all Java primitives, String and Enum types, nested values,
@@ -225,7 +237,6 @@ public abstract class AnnotationValue {
     public int asInt() {
         throw new IllegalArgumentException("Not a number");
     }
-
 
     /**
      * Converts the underlying numerical type to an long as if it was
@@ -323,7 +334,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not an enum
      */
     public String asEnum() {
-       throw new IllegalArgumentException("not an enum");
+        throw new IllegalArgumentException("not an enum");
     }
 
     /**
@@ -336,7 +347,7 @@ public abstract class AnnotationValue {
      */
     public DotName asEnumType() {
         throw new IllegalArgumentException("not an enum");
-     }
+    }
 
     /**
      * Returns the class name, in {@link Type} form, that represents a Java
@@ -358,7 +369,7 @@ public abstract class AnnotationValue {
      *
      * @return the underlying nested annotation instance
      * @throws IllegalArgumentException if the value is not a nested annotation
-      */
+     */
     public AnnotationInstance asNested() {
         throw new IllegalArgumentException("not a nested annotation");
     }
@@ -471,7 +482,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not an enum array
      */
     public String[] asEnumArray() {
-       throw new IllegalArgumentException("not an enum array");
+        throw new IllegalArgumentException("not an enum array");
     }
 
     /**
@@ -497,7 +508,7 @@ public abstract class AnnotationValue {
      */
     public Type[] asClassArray() {
         throw new IllegalArgumentException("not a class array");
-     }
+    }
 
     /**
      * Returns an array of nested annotations representing the underlying annotation array value.

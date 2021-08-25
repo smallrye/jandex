@@ -430,5 +430,4 @@ public class TypeAnnotationTestCase {
         return false;
     }
 
-
 }

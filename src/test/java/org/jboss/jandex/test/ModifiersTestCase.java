@@ -35,7 +35,8 @@ public class ModifiersTestCase {
     @Test
     public void testClassIsSynthetic() throws Exception {
         Indexer indexer = new Indexer();
-        final byte[] syntheticClass = new ByteBuddy().subclass(Object.class).visit(new ModifierAdjustment().withTypeModifiers(SyntheticState.SYNTHETIC)).make()
+        final byte[] syntheticClass = new ByteBuddy().subclass(Object.class)
+                .visit(new ModifierAdjustment().withTypeModifiers(SyntheticState.SYNTHETIC)).make()
                 .getBytes();
         ClassInfo classInfo = indexer.index(new ByteArrayInputStream(syntheticClass));
         assertTrue(classInfo.isSynthetic());
@@ -44,8 +45,10 @@ public class ModifiersTestCase {
     @Test
     public void testMethodIsSynthetic() throws Exception {
         Indexer indexer = new Indexer();
-        final byte[] syntheticClass = new ByteBuddy().subclass(Object.class).visit(new ModifierAdjustment().withTypeModifiers(SyntheticState.SYNTHETIC))
-                .defineMethod("ping", String.class, SyntheticState.SYNTHETIC).intercept(FixedValue.value("Hello World!")).make().getBytes();
+        final byte[] syntheticClass = new ByteBuddy().subclass(Object.class)
+                .visit(new ModifierAdjustment().withTypeModifiers(SyntheticState.SYNTHETIC))
+                .defineMethod("ping", String.class, SyntheticState.SYNTHETIC).intercept(FixedValue.value("Hello World!")).make()
+                .getBytes();
         ClassInfo classInfo = indexer.index(new ByteArrayInputStream(syntheticClass));
         assertTrue(classInfo.isSynthetic());
         MethodInfo ping = null;
@@ -61,7 +64,8 @@ public class ModifiersTestCase {
     @Test
     public void testFieldIsSynthetic() throws Exception {
         Indexer indexer = new Indexer();
-        final byte[] syntheticClass = new ByteBuddy().subclass(Object.class).visit(new ModifierAdjustment().withTypeModifiers(SyntheticState.SYNTHETIC))
+        final byte[] syntheticClass = new ByteBuddy().subclass(Object.class)
+                .visit(new ModifierAdjustment().withTypeModifiers(SyntheticState.SYNTHETIC))
                 .defineField("ping", String.class, SyntheticState.SYNTHETIC).make().getBytes();
         ClassInfo classInfo = indexer.index(new ByteArrayInputStream(syntheticClass));
         assertTrue(classInfo.isSynthetic());

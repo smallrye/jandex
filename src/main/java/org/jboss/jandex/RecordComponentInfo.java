@@ -120,7 +120,8 @@ public final class RecordComponentInfo implements AnnotationTarget {
     }
 
     /**
-     * Retrieves an annotation instance declared on this field. If an annotation by that name is not present, null will be returned.
+     * Retrieves an annotation instance declared on this field. If an annotation by that name is not present, null will be
+     * returned.
      *
      * @param name the name of the annotation to locate on this field
      * @return the annotation if found, otherwise, null
@@ -132,12 +133,14 @@ public final class RecordComponentInfo implements AnnotationTarget {
     /**
      * Retrieves annotation instances declared on this field, by the name of the annotation.
      *
-     * If the specified annotation is repeatable (JLS 9.6), the result also contains all values from the container annotation instance.
+     * If the specified annotation is repeatable (JLS 9.6), the result also contains all values from the container annotation
+     * instance.
      *
      * @param name the name of the annotation
      * @param index the index used to obtain the annotation class
      * @return the annotation instances declared on this field, or an empty list if none
-     * @throws IllegalArgumentException If the index does not contain the annotation definition or if it does not represent an annotation type
+     * @throws IllegalArgumentException If the index does not contain the annotation definition or if it does not represent an
+     *         annotation type
      */
     public final List<AnnotationInstance> annotationsWithRepeatable(DotName name, IndexView index) {
         AnnotationInstance ret = annotation(name);

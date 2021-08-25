@@ -25,9 +25,12 @@ import java.util.List;
  * Represents a resolved type parameter or type argument. The <code>name()</code> of this type variable
  * corresponds to the raw type name. For type variables, the raw type name is the first upper bound. The
  * <code>identifier()</code> specifies the name of the type variable as specified in the source code.
- * <p>For example, consider the type variable:
+ * <p>
+ * For example, consider the type variable:
  *
- * <pre class="brush:java">T extends Number</pre>
+ * <pre class="brush:java">
+ * T extends Number
+ * </pre>
  *
  * The <code>identifier()</code> is "T", while the <code>name()</code> is "java.lang.Number".
  *
@@ -69,9 +72,12 @@ public final class TypeVariable extends Type {
     /**
      * The identifier of this type variable as it appears in Java source code.
      *
-     * <p> The following class has a type parameter, with an identifier of "T":
+     * <p>
+     * The following class has a type parameter, with an identifier of "T":
+     *
      * <pre class="brush:java; gutter:false;">
-     *     class Foo&lt;T extends Number&gt; {}
+     * class Foo&lt;T extends Number&gt; {
+     * }
      * </pre>
      *
      * @return the identifier of this type variable
@@ -131,7 +137,8 @@ public final class TypeVariable extends Type {
 
         TypeVariable that = (TypeVariable) o;
 
-        return name.equals(that.name) && Arrays.equals(bounds, that.bounds) && hasImplicitObjectBound() == that.hasImplicitObjectBound();
+        return name.equals(that.name) && Arrays.equals(bounds, that.bounds)
+                && hasImplicitObjectBound() == that.hasImplicitObjectBound();
     }
 
     @Override

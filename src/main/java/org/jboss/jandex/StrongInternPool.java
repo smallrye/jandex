@@ -108,10 +108,10 @@ class StrongInternPool<E> implements Cloneable, Serializable {
         init(initialCapacity, loadFactor);
     }
 
-
     private void init(int initialCapacity, float loadFactor) {
         int c = 1;
-        for (; c < initialCapacity; c <<= 1);
+        for (; c < initialCapacity; c <<= 1)
+            ;
         threshold = (int) (c * loadFactor);
 
         // Include the load factor when sizing the table for the first time
@@ -129,11 +129,11 @@ class StrongInternPool<E> implements Cloneable, Serializable {
         }
 
         if (o1 instanceof Object[] && o2 instanceof Object[]) {
-            return Arrays.equals((Object[])o1, (Object[])o2);
+            return Arrays.equals((Object[]) o1, (Object[]) o2);
         }
 
         if (o1 instanceof byte[] && o2 instanceof byte[]) {
-            return Arrays.equals((byte[])o1, (byte[])o2);
+            return Arrays.equals((byte[]) o1, (byte[]) o2);
         }
 
         return o1 != null && o1.equals(o2);
@@ -149,8 +149,9 @@ class StrongInternPool<E> implements Cloneable, Serializable {
 
     // The normal bit spreader...
     private static int hash(Object o) {
-        int h = o instanceof Object[] ? Arrays.hashCode((Object[])o) : o instanceof byte[] ? Arrays.hashCode((byte[])o) : o.hashCode();
-        return ((h << 1 ) - (h << 8));
+        int h = o instanceof Object[] ? Arrays.hashCode((Object[]) o)
+                : o instanceof byte[] ? Arrays.hashCode((byte[]) o) : o.hashCode();
+        return ((h << 1) - (h << 8));
     }
 
     @SuppressWarnings("unchecked")
@@ -191,7 +192,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
             if (e == null)
                 return false;
 
-            if (eq(entry,e))
+            if (eq(entry, e))
                 return true;
 
             index = nextIndex(index, length);
@@ -212,7 +213,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
             if (e == null)
                 return -1;
 
-            if (eq(entry,e))
+            if (eq(entry, e))
                 return index;
 
             index = nextIndex(index, length);
@@ -244,7 +245,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
                 break;
 
             if (eq(entry, e))
-                return (E)unmaskNull(e);
+                return (E) unmaskNull(e);
 
             index = nextIndex(index, length);
             if (index == start)
@@ -456,7 +457,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
 
     public String toString() {
         Iterator<E> i = iterator();
-        if (! i.hasNext())
+        if (!i.hasNext())
             return "[]";
 
         StringBuilder sb = new StringBuilder();
@@ -464,7 +465,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
         for (;;) {
             E e = i.next();
             sb.append(e);
-            if (! i.hasNext())
+            if (!i.hasNext())
                 return sb.append(']').toString();
             sb.append(", ");
         }
@@ -483,8 +484,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
             modCount = StrongInternPool.this.modCount;
         }
 
-        public int positionOf(E e)
-        {
+        public int positionOf(E e) {
             int offset = offset(e);
             return offset < 0 ? -1 : offsets[offset];
         }

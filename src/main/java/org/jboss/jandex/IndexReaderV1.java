@@ -69,7 +69,6 @@ final class IndexReaderV1 extends IndexReaderImpl {
     private String[] stringTable;
     private HashMap<DotName, List<AnnotationInstance>> masterAnnotations;
 
-
     /**
      * Constructs a new IndedReader using the passed stream. The stream is not
      * read from until the read method is called.
@@ -102,7 +101,6 @@ final class IndexReaderV1 extends IndexReaderImpl {
             masterAnnotations = null;
         }
     }
-
 
     private Index readClasses(PackedDataInputStream stream, int version) throws IOException {
         int entries = stream.readPackedU32();
@@ -142,9 +140,8 @@ final class IndexReaderV1 extends IndexReaderImpl {
         return Index.create(masterAnnotations, subclasses, implementors, classes, users);
     }
 
-
-    private void readAnnotations(PackedDataInputStream stream, Map<DotName, List<AnnotationInstance>> annotations, ClassInfo clazz)
-            throws IOException {
+    private void readAnnotations(PackedDataInputStream stream, Map<DotName, List<AnnotationInstance>> annotations,
+            ClassInfo clazz) throws IOException {
         int numAnnotations = stream.readPackedU32();
         for (int j = 0; j < numAnnotations; j++) {
             DotName annotationName = classTable[stream.readPackedU32()];
@@ -168,7 +165,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
                     }
                     case METHOD_PARAMETER_TAG: {
                         MethodInfo method = readMethod(clazz, stream);
-                        target = new MethodParameterInfo(method, (short)stream.readPackedU32());
+                        target = new MethodParameterInfo(method, (short) stream.readPackedU32());
                         break;
                     }
                     case CLASS_TAG: {
@@ -188,7 +185,6 @@ final class IndexReaderV1 extends IndexReaderImpl {
             }
         }
     }
-
 
     private AnnotationValue[] readAnnotationValues(PackedDataInputStream stream) throws IOException {
         int numValues = stream.readPackedU32();
@@ -231,7 +227,8 @@ final class IndexReaderV1 extends IndexReaderImpl {
                     value = new AnnotationValue.ClassValue(name, readType(stream));
                     break;
                 case AVALUE_ENUM:
-                    value = new AnnotationValue.EnumValue(name, classTable[stream.readPackedU32()], stringTable[stream.readPackedU32()]);
+                    value = new AnnotationValue.EnumValue(name, classTable[stream.readPackedU32()],
+                            stringTable[stream.readPackedU32()]);
                     break;
                 case AVALUE_ARRAY:
                     value = new AnnotationValue.ArrayValue(name, readAnnotationValues(stream));
@@ -256,7 +253,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
         String name = stringTable[stream.readPackedU32()];
         int numArgs = stream.readPackedU32();
         List<Type> args = new ArrayList<Type>(numArgs);
-        for (int i = 0; i < numArgs; i ++) {
+        for (int i = 0; i < numArgs; i++) {
             args.add(readType(stream));
         }
 
@@ -268,7 +265,8 @@ final class IndexReaderV1 extends IndexReaderImpl {
         return new MethodInfo(clazz, bytes, MethodInternal.EMPTY_PARAMETER_NAMES, parameters, returnType, flags);
     }
 
-    private void recordAnnotation(Map<DotName, List<AnnotationInstance>> annotations, DotName annotation, AnnotationInstance instance) {
+    private void recordAnnotation(Map<DotName, List<AnnotationInstance>> annotations, DotName annotation,
+            AnnotationInstance instance) {
         List<AnnotationInstance> list = annotations.get(annotation);
         if (list == null) {
             list = new ArrayList<AnnotationInstance>();
@@ -294,7 +292,6 @@ final class IndexReaderV1 extends IndexReaderImpl {
         return Type.create(name, kind);
     }
 
-
     private void readStringTable(PackedDataInputStream stream) throws IOException {
         int entries = stream.readPackedU32();
         stringTable = new String[entries];
@@ -303,7 +300,6 @@ final class IndexReaderV1 extends IndexReaderImpl {
             stringTable[i] = stream.readUTF();
         }
     }
-
 
     private void readClassTable(PackedDataInputStream stream) throws IOException {
         int entries = stream.readPackedU32();

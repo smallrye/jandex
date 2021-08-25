@@ -57,9 +57,8 @@ class PackedDataInputStream extends DataInputStream {
         do {
             b = readByte();
             i = (i << 7) | (b & MAX_1BYTE);
-        }  while ((b & 0x80) == 0x80);
+        } while ((b & 0x80) == 0x80);
 
         return i;
     }
 }
-

@@ -120,7 +120,7 @@ public class BasicTestCase {
         @MethodAnnotation2
         @MethodAnnotation4
         void doSomething(int x, long y, String foo){}
-        
+
         public class Nested {
             public Nested(int noAnnotation) {}
             public Nested(@ParameterAnnotation byte annotated) {}
@@ -129,11 +129,11 @@ public class BasicTestCase {
 
     public enum Enum {
         A(1), B(2);
-        
+
         private Enum(int noAnnotation) {}
         private Enum(@ParameterAnnotation byte annotated) {}
     }
-    
+
     @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f), nestedArray = {
         @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) }, enums = { ElementType.TYPE, ElementType.PACKAGE }, longValue = 10)
     public static class NestedA implements Serializable {
@@ -366,6 +366,9 @@ public class BasicTestCase {
         assertEquals("MyLocal", getIndexForClasses(MyLocal.class)
                                         .getClassByName(DotName.createSimple(MyLocal.class.getName())
                                         ).simpleName());
+        assertEquals("String", getIndexForClasses(String.class)
+                                        .getClassByName(DotName.createSimple(String.class.getName())
+                                        ).simpleName());
         Class<?> anon = new Object(){}.getClass();
         assertEquals(null, getIndexForClasses(anon)
                                         .getClassByName(DotName.createSimple(anon.getName())
@@ -469,15 +472,15 @@ public class BasicTestCase {
             assertEquals(MethodAnnotation2.class.getName(), method.annotation(DotName.createSimple(MethodAnnotation2.class.getName())).name().toString());
             assertEquals(MethodAnnotation4.class.getName(), method.annotation(DotName.createSimple(MethodAnnotation4.class.getName())).name().toString());
             assertFalse(method.hasAnnotation(DotName.createSimple(MethodAnnotation3.class.getName())));
-            
+
             assertEquals("x", method.parameterName(0));
             assertEquals("y", method.parameterName(1));
             assertEquals("foo", method.parameterName(2));
-            
+
             ClassInfo nested = index.getClassByName(DotName.createSimple(DummyClass.Nested.class.getName()));
             assertNotNull(nested);
             // synthetic param counts here
-            MethodInfo nestedConstructor1 = nested.method("<init>", 
+            MethodInfo nestedConstructor1 = nested.method("<init>",
                   Type.create(DotName.createSimple(DummyClass.class.getName()), Type.Kind.CLASS), PrimitiveType.INT);
             assertNotNull(nestedConstructor1);
             // synthetic param counts here
@@ -485,24 +488,24 @@ public class BasicTestCase {
             // synthetic param does not counts here
             assertEquals("noAnnotation", nestedConstructor1.parameterName(0));
 
-            MethodInfo nestedConstructor2 = nested.method("<init>", 
+            MethodInfo nestedConstructor2 = nested.method("<init>",
                   Type.create(DotName.createSimple(DummyClass.class.getName()), Type.Kind.CLASS), PrimitiveType.BYTE);
             assertNotNull(nestedConstructor2);
             // synthetic param counts here
             assertEquals(2, nestedConstructor2.parameters().size());
             // synthetic param does not counts here
             assertEquals("annotated", nestedConstructor2.parameterName(0));
-            
+
             AnnotationInstance paramAnnotation = nestedConstructor2.annotation(DotName.createSimple(ParameterAnnotation.class.getName()));
             assertNotNull(paramAnnotation);
             assertEquals(Kind.METHOD_PARAMETER, paramAnnotation.target().kind());
             assertEquals("annotated", paramAnnotation.target().asMethodParameter().name());
             assertEquals(0, paramAnnotation.target().asMethodParameter().position());
-            
+
             ClassInfo enumClass = index.getClassByName(DotName.createSimple(Enum.class.getName()));
             assertNotNull(enumClass);
             // synthetic param counts here (for ECJ)
-            MethodInfo enumConstructor1 = enumClass.method("<init>", 
+            MethodInfo enumConstructor1 = enumClass.method("<init>",
                   Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS), PrimitiveType.INT, PrimitiveType.INT);
             if(enumConstructor1 == null) {
                 enumConstructor1 = enumClass.method("<init>", PrimitiveType.INT);
@@ -516,7 +519,7 @@ public class BasicTestCase {
             // synthetic param does not counts here
             assertEquals("noAnnotation", enumConstructor1.parameterName(0));
 
-            MethodInfo enumConstructor2 = enumClass.method("<init>", 
+            MethodInfo enumConstructor2 = enumClass.method("<init>",
                   Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS), PrimitiveType.INT, PrimitiveType.BYTE);
             if(enumConstructor2 == null) {
                 enumConstructor2 = enumClass.method("<init>", PrimitiveType.BYTE);
@@ -529,7 +532,7 @@ public class BasicTestCase {
             }
             // synthetic param does not counts here
             assertEquals("annotated", enumConstructor2.parameterName(0));
-            
+
             paramAnnotation = enumConstructor2.annotation(DotName.createSimple(ParameterAnnotation.class.getName()));
             assertNotNull(paramAnnotation);
             assertEquals(Kind.METHOD_PARAMETER, paramAnnotation.target().kind());

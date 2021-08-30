@@ -1927,8 +1927,8 @@ public final class Indexer {
         if (clazz == null) {
             throw new IllegalArgumentException("clazz cannot be null");
         }
-        String resourceName = clazz.getName().replace('.', '/') + ".class";
-        InputStream resource = clazz.getClassLoader().getResourceAsStream(resourceName);
+        String resourceName = '/' + clazz.getName().replace('.', '/') + ".class";
+        InputStream resource = clazz.getResourceAsStream(resourceName);
         return index(resource);
     }
 

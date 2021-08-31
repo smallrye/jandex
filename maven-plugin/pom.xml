@@ -14,23 +14,22 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses />.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.jboss</groupId>
-    <artifactId>jboss-parent</artifactId>
-    <version>14</version>
+    <groupId>io.smallrye</groupId>
+    <artifactId>smallrye-build-parent</artifactId>
+    <version>31</version>
   </parent>
 
-  <groupId>org.jboss.jandex</groupId>
+  <groupId>io.smallrye</groupId>
   <artifactId>jandex-maven-plugin</artifactId>
-  <version>1.2.1-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
-  <name>Jandex wrapper for Maven</name>
-
-  <description>This is a Maven plugin used to generate Jandex index files</description>
+  <name>Jandex: Maven Plugin</name>
 
   <licenses>
     <license>
@@ -39,53 +38,6 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-
-	<issueManagement>
-    <url>https://github.com/jdcasey/jandex-maven-plugin/issues</url>
-    <system>GitHub Issues</system>
-  </issueManagement>
-
-  <developers>
-    <developer>
-      <id>jdcasey</id>
-      <name>John Casey</name>
-      <url>http://github.com/jdcasey/</url>
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-  </developers>
-
-  <contributors>
-    <contributor>
-      <name>Philippe Marschall</name>
-      <url>http://github.com/marschall/</url>
-    </contributor>
-  </contributors>
-
-  <scm>
-    <connection>scm:git:http://github.com/wildfly/jandex-maven-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:wildfly/jandex-maven-plugin.git</developerConnection>
-    <url>http://github.com/wildfly/jandex-maven-plugin</url>
-    <tag>HEAD</tag>
-  </scm>
-
-  <url>http://jdcasey.github.com/${project.artifactId}/${project.version}</url>
-
-  <distributionManagement>
-    <repository>
-      <id>jboss.org</id>
-      <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
-    </repository>
-    <site>
-      <id>dummy</id>
-      <url>file://${project.build.directory}/site-deployment</url>
-    </site>
-  </distributionManagement>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
 
   <dependencyManagement>
     <dependencies>
@@ -121,168 +73,8 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.1</version>
-          <configuration>
-            <source>1.6</source>
-            <target>1.6</target>
-          </configuration>
-        </plugin>
-        <plugin>
           <artifactId>maven-plugin-plugin</artifactId>
           <version>3.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-release-plugin</artifactId>
-          <version>2.5.1</version>
-          <configuration>
-            <releaseProfiles>release</releaseProfiles>
-          </configuration>
-        </plugin>
-        <plugin>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.3</version>
-          <dependencies>
-            <dependency>
-              <groupId>org.apache.maven.doxia</groupId>
-              <artifactId>doxia-module-markdown</artifactId>
-              <version>1.6</version>
-            </dependency>
-          </dependencies>
-          <configuration>
-            <outputDirectory>${project.reporting.outputDirectory}/${project.version}</outputDirectory>
-            <reportPlugins>
-              <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>2.7</version>
-                <configuration>
-                  <dependencyDetailsEnabled>true</dependencyDetailsEnabled>
-                  <dependencyLocationsEnabled>true</dependencyLocationsEnabled>
-                </configuration>
-              </plugin>
-              <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.2</version>
-              </plugin>
-              <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-              </plugin>
-              <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>2.16</version>
-              </plugin>
-              <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.11</version>
-              </plugin>
-            </reportPlugins>
-          </configuration>
-        </plugin>
-        <plugin>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>2.6</version>
-          <executions>
-            <execution>
-              <id>copy-root-resources</id>
-              <phase>pre-site</phase>
-              <goals>
-                <goal>copy-resources</goal>
-              </goals>
-              <configuration>
-                <outputDirectory>${project.reporting.outputDirectory}</outputDirectory>
-                <resources>
-                  <resource>
-                    <directory>src/site-resources</directory>
-                    <filtering>true</filtering>
-                  </resource>
-                </resources>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <groupId>com.github.github</groupId>
-          <artifactId>site-maven-plugin</artifactId>
-          <version>0.9</version>
-          <configuration>
-            <message>Building site for ${project.version}</message>
-            <server>github</server>
-            <merge>true</merge>
-          </configuration>
-          <executions>
-            <execution>
-              <goals>
-                <goal>site</goal>
-              </goals>
-              <phase>site</phase>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.4</version>
-          <executions>
-            <execution>
-              <id>project-assembly</id>
-              <goals>
-                <goal>single</goal>
-              </goals>
-              <configuration>
-                <descriptorRefs>
-                  <descriptorRef>project</descriptorRef>
-                </descriptorRefs>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <artifactId>maven-source-plugin</artifactId>
-          <version>2.2.1</version>
-          <executions>
-            <execution>
-              <id>sources</id>
-              <goals>
-                <goal>jar</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.9.1</version>
-          <executions>
-            <execution>
-              <id>javadocs</id>
-              <goals>
-                <goal>jar</goal>
-              </goals>
-              <configuration>
-                <detectOfflineLinks>false</detectOfflineLinks>
-                <additionalparam>-Xdoclint:none</additionalparam>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <artifactId>maven-gpg-plugin</artifactId>
-          <version>1.5</version>
-          <executions>
-            <execution>
-              <id>gpg</id>
-              <goals>
-                <goal>sign</goal>
-              </goals>
-              <configuration>
-                <useAgent>false</useAgent>
-              </configuration>
-            </execution>
-          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -309,32 +101,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>release</id>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-source-plugin</artifactId>
-          </plugin>
-          <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-          </plugin>
-          <plugin>
-            <artifactId>maven-javadoc-plugin</artifactId>
-          </plugin>
-          <plugin>
-            <artifactId>maven-gpg-plugin</artifactId>
-          </plugin>
-          <!-- Not currently working; not sure why
-          <plugin>
-            <groupId>com.github.github</groupId>
-            <artifactId>site-maven-plugin</artifactId>
-          </plugin>
-          -->
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>

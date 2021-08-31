@@ -44,9 +44,7 @@ import org.jboss.jandex.Indexer;
  * @threadSafe
  * @author jdcasey
  */
-public class JandexGoal
-    implements Mojo
-{
+public class JandexGoal implements Mojo {
 
     /**
      * By default, process the classes compiled for the project. If you need to process other sets of classes, such as
@@ -114,172 +112,134 @@ public class JandexGoal
 
     private Log log;
 
-    public void execute()
-        throws MojoExecutionException, MojoFailureException
-    {
-        if ( skip )
-        {
-            getLog().info( "Jandex execution skipped." );
+    public void execute() throws MojoExecutionException {
+        if (skip) {
+            getLog().info("Jandex execution skipped.");
             return;
         }
 
-        if ( processDefaultFileSet )
-        {
+        if (processDefaultFileSet) {
             boolean found = false;
-            if ( fileSets != null )
-            {
-                for ( final FileSet fileset : fileSets )
-                {
-                    if ( fileset.getDirectory()
-                                .equals( classesDir ) )
-                    {
+            if (fileSets != null) {
+                for (final FileSet fileset : fileSets) {
+                    if (fileset.getDirectory().equals(classesDir)) {
                         found = true;
                     }
                 }
             }
 
-            if ( !found )
-            {
+            if (!found) {
                 final FileSet fs = new FileSet();
-                fs.setDirectory( classesDir );
-                fs.setIncludes( Collections.singletonList( "**/*.class" ) );
+                fs.setDirectory(classesDir);
+                fs.setIncludes(Collections.singletonList("**/*.class"));
 
-                if ( fileSets == null )
-                {
+                if (fileSets == null) {
                     fileSets = new ArrayList<FileSet>();
                 }
 
-                fileSets.add( fs );
+                fileSets.add(fs);
             }
         }
 
         final Indexer indexer = new Indexer();
-        for ( final FileSet fileset : fileSets )
-        {
+        for (final FileSet fileset : fileSets) {
             final File dir = fileset.getDirectory();
-            if ( !dir.exists() )
-            {
-                getLog().info( "[SKIP] Cannot process fileset in directory: " + fileset.getDirectory()
-                                    + ". Directory does not exist!" );
+            if (!dir.exists()) {
+                getLog().info("[SKIP] Cannot process fileset in directory: " + fileset.getDirectory()
+                        + ". Directory does not exist!");
                 continue;
             }
 
             final DirectoryScanner scanner = new DirectoryScanner();
-            scanner.setBasedir( dir );
+            scanner.setBasedir(dir);
             // order files to get reproducible result
-            scanner.setFilenameComparator( new Comparator<String>()
-            {
+            scanner.setFilenameComparator(new Comparator<String>() {
                 @Override
-                public int compare( String s1, String s2 )
-                {
-                    return s1.compareTo( s2 );
+                public int compare(String s1, String s2) {
+                    return s1.compareTo(s2);
                 }
-            } );
+            });
 
-            if ( fileset.isUseDefaultExcludes() )
-            {
+            if (fileset.isUseDefaultExcludes()) {
                 scanner.addDefaultExcludes();
             }
 
             final List<String> includes = fileset.getIncludes();
-            if ( includes != null )
-            {
-                scanner.setIncludes( includes.toArray( new String[] {} ) );
+            if (includes != null) {
+                scanner.setIncludes(includes.toArray(new String[] {}));
             }
 
             final List<String> excludes = fileset.getExcludes();
-            if ( excludes != null )
-            {
-                scanner.setExcludes( excludes.toArray( new String[] {} ) );
+            if (excludes != null) {
+                scanner.setExcludes(excludes.toArray(new String[] {}));
             }
 
             scanner.scan();
             final String[] files = scanner.getIncludedFiles();
 
-            for ( final String file : files )
-            {
-                if ( file.endsWith( ".class" ) )
-                {
+            for (final String file : files) {
+                if (file.endsWith(".class")) {
                     FileInputStream fis = null;
-                    try
-                    {
-                        fis = new FileInputStream( new File( dir, file ) );
+                    try {
+                        fis = new FileInputStream(new File(dir, file));
 
-                        final ClassInfo info = indexer.index( fis );
-                        if ( doVerbose() && info != null )
-                        {
-                            getLog().info( "Indexed " + info.name() + " (" + info.annotations()
-                                                                                 .size() + " annotations)" );
+                        final ClassInfo info = indexer.index(fis);
+                        if (doVerbose() && info != null) {
+                            getLog().info("Indexed " + info.name() + " (" + info.annotations()
+                                    .size() + " annotations)");
                         }
-                    }
-                    catch ( final Exception e )
-                    {
-                        throw new MojoExecutionException( e.getMessage(), e );
-                    }
-                    finally
-                    {
-                        IOUtil.close( fis );
+                    } catch (final Exception e) {
+                        throw new MojoExecutionException(e.getMessage(), e);
+                    } finally {
+                        IOUtil.close(fis);
                     }
                 }
             }
 
-            final File idx = new File( dir, "META-INF/"+indexName );
-            idx.getParentFile()
-               .mkdirs();
+            final File idx = new File(dir, "META-INF/" + indexName);
+            idx.getParentFile().mkdirs();
 
             FileOutputStream indexOut = null;
-            try
-            {
-                getLog().info( "Saving Jandex index: " + idx );
-                indexOut = new FileOutputStream( idx );
-                final IndexWriter writer = new IndexWriter( indexOut );
+            try {
+                getLog().info("Saving Jandex index: " + idx);
+                indexOut = new FileOutputStream(idx);
+                final IndexWriter writer = new IndexWriter(indexOut);
                 final Index index = indexer.complete();
-                writer.write( index );
-            }
-            catch ( final IOException e )
-            {
-                throw new MojoExecutionException( "Could not save index " + idx, e );
-            }
-            finally
-            {
-                IOUtil.close( indexOut );
+                writer.write(index);
+            } catch (final IOException e) {
+                throw new MojoExecutionException("Could not save index " + idx, e);
+            } finally {
+                IOUtil.close(indexOut);
             }
         }
 
     }
 
-    private boolean doVerbose()
-    {
+    private boolean doVerbose() {
         return verbose || getLog().isDebugEnabled();
     }
 
-    public boolean isVerbose()
-    {
+    public boolean isVerbose() {
         return verbose;
     }
 
-    public void setVerbose( final boolean verbose )
-    {
+    public void setVerbose(final boolean verbose) {
         this.verbose = verbose;
     }
 
-    public boolean isSkip()
-    {
+    public boolean isSkip() {
         return skip;
     }
 
-    public void setSkip( final boolean skip )
-    {
+    public void setSkip(final boolean skip) {
         this.skip = skip;
     }
 
-    public void setLog( final Log log )
-    {
+    public void setLog(final Log log) {
         this.log = log;
     }
 
-    public Log getLog()
-    {
+    public Log getLog() {
         return log;
     }
 

@@ -92,13 +92,16 @@ public class JandexGoal extends AbstractMojo {
             return;
         }
 
+        if (fileSets == null) {
+            fileSets = new ArrayList<>();
+        }
+
         if (processDefaultFileSet) {
             boolean found = false;
-            if (fileSets != null) {
-                for (final FileSet fileset : fileSets) {
-                    if (fileset.getDirectory().equals(classesDir)) {
-                        found = true;
-                    }
+            for (final FileSet fileset : fileSets) {
+                if (fileset.getDirectory().equals(classesDir)) {
+                    found = true;
+                    break;
                 }
             }
 
@@ -106,10 +109,6 @@ public class JandexGoal extends AbstractMojo {
                 final FileSet fs = new FileSet();
                 fs.setDirectory(classesDir);
                 fs.setIncludes(Collections.singletonList("**/*.class"));
-
-                if (fileSets == null) {
-                    fileSets = new ArrayList<FileSet>();
-                }
 
                 fileSets.add(fs);
             }

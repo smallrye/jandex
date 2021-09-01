@@ -66,9 +66,9 @@
                     <version>true</version>
                     <author>true</author>
                     <keywords>true</keywords>
-                    <additionalparam>
+                    <additionalOptions>
                         -sourceclasspath ${project.build.outputDirectory}
-                    </additionalparam>
+                    </additionalOptions>
                     <docfilessubdirs>true</docfilessubdirs>
                     <top><![CDATA[
                          <script src="doc-files/addSyntax.js" type="text/javascript"></script>

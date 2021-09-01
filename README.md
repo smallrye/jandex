@@ -15,11 +15,11 @@ It supports the following capabilities:
 * Persisting an index into a custom storage efficient format.</li>
 * Quick-loading of the storage efficient format</li>
 * Compatibility with previous API and storage format versions</li>
-* Execution via an API, a command line tool, and ant</li>
+* Execution via an API, a command line tool, Ant, and a Maven plugin</li>
 
 ## Downloading Jandex
 
-Jandex artifacts can be [downloaded off of maven central](https://search.maven.org/search?q=jandex).
+Jandex artifacts can be [downloaded off of Maven Central](https://search.maven.org/search?q=jandex).
 
 ## API Docs
 
@@ -27,11 +27,11 @@ The extensive API docs for Jandex [are available here](http://wildfly.github.com
 
 ## Reporting issues
 
-Issues can be reported in the [Jandex JIRA Project](https://issues.jboss.org/browse/JANDEX), 
+Issues can be reported in [GitHub Issues](https://github.com/smallrye/jandex/issues).
  
 ## Getting Help
 
-Post to the [WildFly user forums for help] (https://developer.jboss.org/en/wildfly?view=discussions).
+Post to the [SmallRye Google group](https://groups.google.com/g/smallrye).
 
 ## Creating a Persisted Index Using the CLI
 
@@ -51,29 +51,116 @@ The above summary output tells us that this version of hibernate has 2,722 class
 The resulting index is 606KB uncompressed, which is only 14% of the 4.1MB compressed jar size, or 4% of the uncompressed class file data.
 If the index is stored in the jar (using the -m option) it can be compressed an additional 47%, leading to a jar growth of only 8%.
 
+## Using the Ant task to index your project
+
+The following Ant task can be used with either the `maven-antrun-plugin` or an Ant build to build an index for your project:
+
+```xml
+<taskdef name="jandex" classname="org.jboss.jandex.JandexAntTask"/>
+<jandex run="@{jandex}">
+    <fileset dir="${location.to.index.dir}"/>
+</jandex>
+```
+
+## Using the Maven plugin to index your project
+
+### Basic Usage
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>io.smallrye</groupId>
+            <artifactId>jandex-maven-plugin</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+            <executions>
+                <execution>
+                    <id>make-index</id>
+                    <goals>
+                        <goal>jandex</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+The `jandex` goal is bound to the `process-classes` phase by default.
+
+This configuration will index all `.class` files in your `target/classes` directory, and write the index to `target/classes/META-INF/jandex.idx`.
+
+### Advanced Usage
+
+If you need to process more than one directory of classes, you can specify multiple `fileSets` like this:
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>io.smallrye</groupId>
+            <artifactId>jandex-maven-plugin</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+            <executions>
+                <execution>
+                    <id>make-index</id>
+                    <goals>
+                        <goal>jandex</goal>
+                    </goals>
+                    <configuration>
+                        <fileSets>
+                            <fileSet>
+                                <directory>${project.build.directory}/generated-classes/foo</directory>
+                            </fileSet>
+                            <fileSet>
+                                <directory>${project.build.directory}/generated-classes/bar</directory>
+                            </fileSet>
+                        </fileSets>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+To turn _off_ processing of `target/classes`, add the following configuration:
+
+```xml
+<processDefaultFileSet>false</processDefaultFileSet>
+```
+
+For any `fileSet`, you can also fine-tune the classes that are processed using the following options:
+
+```xml
+<fileSet>
+    <directory>${project.build.directory}/somedir</directory>
+    <!-- included globs -->
+    <includes>
+        <include>**/indexed/*.class</include>
+        <include>**/idxd/*.class</include>
+    </includes>
+    <!-- excluded globs -->
+    <excludes>
+        <exclude>**/*NotIndexed.class</exclude>
+    </excludes>
+    <!-- normally true, this excludes things like the CVS/ and .svn/ directories, log files, etc. -->
+    <useDefaultExcludes>false</useDefaultExcludes>
+</fileSet>
+```
+
 ## Adding the Jandex API to your Maven project
 
 Just add the following to your POM:
 
 ```xml
 <dependency>
-    <groupId>org.jboss</groupId>
+    <groupId>io.smallrye</groupId>
     <artifactId>jandex</artifactId>
-    <version>2.0.1.Final</version>
+    <version>3.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
-## Using the Ant task to index your project
-
-The following Ant task can be used with either the `maven-antrun-plugin` or an Ant build to build an index for your project:
-
-```xml
-<taskdef name="jandex" classname="org.jboss.jandex.JandexAntTask" />
-<jandex run="@{jandex}>
-   <fileset dir="${location.to.index.dir}" />
-</jandex>
-```
- 
 ## Browsing a Class
 
 The following example demonstrates indexing a class and browsing its methods:

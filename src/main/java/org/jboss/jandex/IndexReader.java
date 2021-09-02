@@ -84,7 +84,10 @@ public final class IndexReader {
             reader = new IndexReaderV2(input);
         } else {
             input.close();
-            throw new UnsupportedVersion("Version: " + version);
+            throw new UnsupportedVersion("Can't read index version " + version
+                    + "; this IndexReader only supports index versions "
+                    + IndexReaderV1.MIN_VERSION + "-" + IndexReaderV1.MAX_VERSION + ","
+                    + IndexReaderV2.MIN_VERSION + "-" + IndexReaderV2.MAX_VERSION);
         }
 
         this.reader = reader;

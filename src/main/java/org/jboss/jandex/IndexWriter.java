@@ -101,7 +101,10 @@ public final class IndexWriter {
 
         IndexWriterImpl writer = getWriter(version);
         if (writer == null) {
-            throw new UnsupportedVersion("Version: " + version);
+            throw new UnsupportedVersion("Can't write index version " + version
+                    + "; this IndexWriter only supports index versions "
+                    + IndexWriterV1.MIN_VERSION + "-" + IndexWriterV1.MAX_VERSION + ","
+                    + IndexWriterV2.MIN_VERSION + "-" + IndexWriterV2.MAX_VERSION);
         }
 
         return writer.write(index, version);

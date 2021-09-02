@@ -55,7 +55,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
     static final int MAX_VERSION = 3;
     private static final byte FIELD_TAG = 1;
     private static final byte METHOD_TAG = 2;
-    private static final byte METHOD_PARAMATER_TAG = 3;
+    private static final byte METHOD_PARAMETER_TAG = 3;
     private static final byte CLASS_TAG = 4;
 
     private static final int AVALUE_BYTE = 1;
@@ -208,7 +208,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
                     } else if (target instanceof MethodParameterInfo) {
                         MethodParameterInfo param = (MethodParameterInfo) target;
                         MethodInfo method = param.method();
-                        stream.writeByte(METHOD_PARAMATER_TAG);
+                        stream.writeByte(METHOD_PARAMETER_TAG);
                         stream.writePackedU32(positionOf(method.name()));
                         stream.writePackedU32(method.args().length);
                         for (int i = 0; i < method.args().length; i ++) {

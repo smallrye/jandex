@@ -98,7 +98,9 @@ final class IndexWriterV1 extends IndexWriterImpl {
     int write(Index index, int version) throws IOException {
 
         if (version < MIN_VERSION || version > MAX_VERSION) {
-            throw new UnsupportedVersion("Version: " + version);
+            throw new UnsupportedVersion("Can't write index version " + version
+                    + "; this IndexWriterV1 only supports index versions "
+                    + IndexWriterV1.MIN_VERSION + "-" + IndexWriterV1.MAX_VERSION);
         }
 
         PackedDataOutputStream stream = new PackedDataOutputStream(new BufferedOutputStream(out));

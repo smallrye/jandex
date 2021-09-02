@@ -273,3 +273,26 @@ The above code prints the following output:
    Target type:@Label(value = "Name") java.lang.String
    Equivalent? true
 ```
+
+## Compatibility Promise
+
+Jandex uses an `X.Y.Z` versioning scheme.
+In the following text, we call `X` a _major_ version, `Y` a _minor_ version, and `Z` a _micro_ version.
+
+### API
+
+Jandex may break backward compatibility for _callers_ of the Jandex API in major versions.
+If you only call Jandex API, updating to a newer minor or micro version is safe.
+
+Jandex may break backward compatibility for users that _extend_ Jandex classes or _implement_ Jandex interfaces in minor or major versions.
+If you extend Jandex classes or implement Jandex interfaces, updating to a newer micro version is safe.
+
+### Persistent Index Format
+
+The persistent index format is versioned.
+Jandex is backward compatible when it comes to reading the persistent index, but not forward compatible.
+In other words, newer Jandex can read older index, but older Jandex can't read newer index.
+
+Jandex may introduce a new persistent index format version in minor or major versions.
+If you distribute a Jandex index as part of your artifacts, updating to a newer micro version is safe.
+Updating to a newer minor or major version may require consumers of the Jandex index to also update.

@@ -53,7 +53,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
     private static final byte NULL_TARGET_TAG = 0;
     private static final byte FIELD_TAG = 1;
     private static final byte METHOD_TAG = 2;
-    private static final byte METHOD_PARAMATER_TAG = 3;
+    private static final byte METHOD_PARAMETER_TAG = 3;
     private static final byte CLASS_TAG = 4;
     private static final byte EMPTY_TYPE_TAG = 5;
     private static final byte CLASS_EXTENDS_TYPE_TAG = 6;
@@ -411,7 +411,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             case METHOD_TAG:
             case RECORD_COMPONENT_TAG:
                 return caller;
-            case METHOD_PARAMATER_TAG: {
+            case METHOD_PARAMETER_TAG: {
                 short parameter = (short)stream.readPackedU32();
                 return new MethodParameterInfo((MethodInfo)caller, parameter);
             }

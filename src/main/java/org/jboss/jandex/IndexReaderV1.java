@@ -47,7 +47,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
     static final int MAX_VERSION = 3;
     private static final byte FIELD_TAG = 1;
     private static final byte METHOD_TAG = 2;
-    private static final byte METHOD_PARAMATER_TAG = 3;
+    private static final byte METHOD_PARAMETER_TAG = 3;
     private static final byte CLASS_TAG = 4;
 
     private static final int AVALUE_BYTE = 1;
@@ -166,7 +166,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
                         target = readMethod(clazz, stream);
                         break;
                     }
-                    case METHOD_PARAMATER_TAG: {
+                    case METHOD_PARAMETER_TAG: {
                         MethodInfo method = readMethod(clazz, stream);
                         target = new MethodParameterInfo(method, (short)stream.readPackedU32());
                         break;

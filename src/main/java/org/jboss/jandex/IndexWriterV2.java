@@ -61,7 +61,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
     private static final byte NULL_TARGET_TAG = 0;
     private static final byte FIELD_TAG = 1;
     private static final byte METHOD_TAG = 2;
-    private static final byte METHOD_PARAMATER_TAG = 3;
+    private static final byte METHOD_PARAMETER_TAG = 3;
     private static final byte CLASS_TAG = 4;
     private static final byte EMPTY_TYPE_TAG = 5;
     private static final byte CLASS_EXTENDS_TYPE_TAG = 6;
@@ -382,7 +382,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
             stream.writeByte(METHOD_TAG);
         } else if (target instanceof MethodParameterInfo) {
             MethodParameterInfo param = (MethodParameterInfo) target;
-            stream.writeByte(METHOD_PARAMATER_TAG);
+            stream.writeByte(METHOD_PARAMETER_TAG);
             stream.writePackedU32(param.position());
         } else if (target instanceof ClassInfo) {
             stream.writeByte(CLASS_TAG);

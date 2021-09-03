@@ -14,13 +14,55 @@
     <name>Jandex: Test Data</name>
 
     <properties>
-        <maven.compiler.source>16</maven.compiler.source>
-        <maven.compiler.target>16</maven.compiler.target>
-        <maven.compiler.release>16</maven.compiler.release>
+        <java.version>16</java.version>
+
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+
+        <version.exec-maven-plugin>3.0.0</version.exec-maven-plugin>
+        <version.mvn-jlink-wrapper>1.1.0</version.mvn-jlink-wrapper>
     </properties>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>com.igormaznitsa</groupId>
+                <artifactId>mvn-jlink-wrapper</artifactId>
+                <version>${version.mvn-jlink-wrapper}</version>
+                <executions>
+                    <execution>
+                        <id>download-jdk</id>
+                        <goals>
+                            <goal>cache-jdk</goal>
+                        </goals>
+                        <configuration>
+                            <jdkCachePath>${project.basedir}/jdk-cache</jdkCachePath>
+                            <jdkPathProperty>custom-jdk-path</jdkPathProperty>
+                            <provider>ADOPT</provider>
+                            <providerConfig>
+                                <release>${java.version}</release>
+                                <arch>x64</arch> <!-- TODO select automatically, but how? -->
+                            </providerConfig>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <configuration>
+                            <executable>${custom-jdk-path}/bin/javac</executable>
+                            <fork>true</fork>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- doesn't work correctly on records and modules -->
             <plugin>
                 <groupId>net.revelc.code</groupId>
@@ -33,17 +75,47 @@
                 </executions>
             </plugin>
 
+            <!-- exclude `module-info.class`, otherwise Maven JAR plugin invokes current JDK's `jar`, which may fail -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
-                    <archive>
-                        <manifest>
-                            <!-- Adds ModuleMainClass attribute to module-info. -->
-                            <mainClass>test.exec.Main</mainClass>
-                        </manifest>
-                    </archive>
+                    <excludes>
+                        <exclude>module-info.class</exclude>
+                    </excludes>
                 </configuration>
+            </plugin>
+
+            <!-- add `module-info.class` and the module attributes using custom JDK's `jar` -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>${version.exec-maven-plugin}</version>
+                <executions>
+                    <execution>
+                        <id>jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${custom-jdk-path}/bin/jar</executable>
+                            <workingDirectory>${project.build.directory}</workingDirectory>
+                            <arguments>
+                                <argument>--update</argument>
+                                <argument>--file</argument>
+                                <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
+                                <argument>--main-class</argument>
+                                <argument>test.exec.Main</argument>
+                                <argument>--module-version</argument>
+                                <argument>1.0</argument>
+                                <argument>-C</argument>
+                                <argument>${project.build.outputDirectory}</argument>
+                                <argument>module-info.class</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

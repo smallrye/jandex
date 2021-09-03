@@ -1,5 +1,7 @@
 target/
 
+jdk-cache/
+
 .classpath
 .project
 .settings/

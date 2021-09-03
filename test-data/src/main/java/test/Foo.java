@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
  * @author Jason T. Greene
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(value = {ElementType.TYPE_USE})
-public @interface Foo  {
+@Target(value = { ElementType.TYPE_USE })
+public @interface Foo {
 }

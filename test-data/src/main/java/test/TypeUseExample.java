@@ -10,37 +10,37 @@ import java.util.List;
 
 public class TypeUseExample {
     @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.TYPE_USE})
+    @Target({ ElementType.TYPE_USE })
     public @interface TypeParameterAnnotation {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.TYPE_USE})
+    @Target({ ElementType.TYPE_USE })
     public @interface TypeParameterBoundTypeAnnotation {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.TYPE_USE})
+    @Target({ ElementType.TYPE_USE })
     public @interface ClassExtendsAnnotation {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.TYPE_USE})
+    @Target({ ElementType.TYPE_USE })
     public @interface FieldTypeAnnotation {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.TYPE_USE})
+    @Target({ ElementType.TYPE_USE })
     public @interface MethodParameterTypeAnnotation {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.TYPE_USE})
+    @Target({ ElementType.TYPE_USE })
     public @interface MethodReturnTypeAnnotation {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.TYPE_USE})
+    @Target({ ElementType.TYPE_USE })
     public @interface MethodThrowsTypeAnnotation {
     }
 

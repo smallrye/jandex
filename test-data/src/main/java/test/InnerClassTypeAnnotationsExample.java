@@ -2,7 +2,8 @@ package test;
 
 public class InnerClassTypeAnnotationsExample {
 
-    public class Other {}
+    public class Other {
+    }
 
     public class NoGenericsConstruct {
         private final Other o;

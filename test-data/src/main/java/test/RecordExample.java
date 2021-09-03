@@ -7,12 +7,7 @@ import java.lang.annotation.Target;
 
 @RecordExample.RecordAnnotation("Example")
 public record RecordExample(@Nullable Integer id,
-                            @Nullable
-                                @ComponentAnnotation("nameComponent")
-                                @FieldAnnotation("nameField")
-                                @AccessorAnnotation("nameAccessor")
-                                    String name) {
-
+        @Nullable @ComponentAnnotation("nameComponent") @FieldAnnotation("nameField") @AccessorAnnotation("nameAccessor") String name) {
 
     static String staticField;
 
@@ -22,7 +17,6 @@ public record RecordExample(@Nullable Integer id,
 
     @RecordExample.RecordAnnotation("Empty")
     public static record NestedEmptyRecord() {
-
     }
 
     @Retention(RetentionPolicy.RUNTIME)

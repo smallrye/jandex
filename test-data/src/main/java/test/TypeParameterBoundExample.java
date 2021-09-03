@@ -1,6 +1,5 @@
 package test;
 
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,13 +40,11 @@ public class TypeParameterBoundExample {
         }
     }
 
-
-
     class Nest1<T> {
         class Nest2<X> {
             class Nest3<Y> {
                 public void foo() {
-                    new Consumer<@Nullable Object[]>(){
+                    new Consumer<@Nullable Object[]>() {
                         public void accept(@Nullable Object[] objects) {
                             new Nest1<String>.Nest2<Object[]>.Nest3<@Nullable Integer>() {
 

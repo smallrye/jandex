@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
@@ -64,12 +65,12 @@ public class ClassInfoMemberPositionTestCase {
 
         List<FieldInfo> unsortedFields = clazz.unsortedFields();
         for (int i = 0; i < 256; i++) {
-            assertEquals(String.format("f%03d", 255 - i), unsortedFields.get(i).name());
+            assertEquals(String.format(Locale.ROOT, "f%03d", 255 - i), unsortedFields.get(i).name());
         }
 
         List<FieldInfo> sortedFields = clazz.fields();
         for (int i = 0; i < 256; i++) {
-            assertEquals(String.format("f%03d", i), sortedFields.get(i).name());
+            assertEquals(String.format(Locale.ROOT, "f%03d", i), sortedFields.get(i).name());
         }
     }
 
@@ -80,12 +81,12 @@ public class ClassInfoMemberPositionTestCase {
 
         List<FieldInfo> unsortedFields = clazz.unsortedFields();
         for (int i = 0; i < 257; i++) {
-            assertEquals(String.format("f%03d", i), unsortedFields.get(i).name());
+            assertEquals(String.format(Locale.ROOT, "f%03d", i), unsortedFields.get(i).name());
         }
 
         List<FieldInfo> sortedFields = clazz.fields();
         for (int i = 0; i < 257; i++) {
-            assertEquals(String.format("f%03d", i), sortedFields.get(i).name());
+            assertEquals(String.format(Locale.ROOT, "f%03d", i), sortedFields.get(i).name());
         }
     }
 

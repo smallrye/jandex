@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -1914,7 +1915,8 @@ public final class Indexer {
         int pos = offsets[index - 1];
 
         if (pool[pos] != constantType) {
-            throw new IllegalStateException(String.format("Constant pool entry is not a %s type: %d:%d", typeName, index, pos));
+            throw new IllegalStateException(
+                    String.format(Locale.ROOT, "Constant pool entry is not a %s type: %d:%d", typeName, index, pos));
         }
 
         int nameIndex = (pool[++pos] & 0xFF) << 8 | (pool[++pos] & 0xFF);
@@ -2200,7 +2202,7 @@ public final class Indexer {
                     break;
                 default:
                     throw new IllegalStateException(
-                            String.format("Unknown tag %s! pos = %s poolCount = %s", tag, pos, poolCount));
+                            String.format(Locale.ROOT, "Unknown tag %s! pos = %s poolCount = %s", tag, pos, poolCount));
             }
         }
 

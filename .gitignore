@@ -1,6 +1,8 @@
 target
 *~
 
+jdk-cache
+
 # Eclipse
 .classpath
 .project

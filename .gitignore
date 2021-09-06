@@ -1,9 +1,11 @@
+target
+*~
+
+# Eclipse
 .classpath
 .project
 .settings
 
+# IntelliJ IDEA
 .idea
 *.iml
-
-target
-*~

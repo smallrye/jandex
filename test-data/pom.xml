@@ -4,13 +4,12 @@
 
     <parent>
         <groupId>io.smallrye</groupId>
-        <artifactId>smallrye-build-parent</artifactId>
-        <version>31</version>
+        <artifactId>jandex-parent</artifactId>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>io.smallrye</groupId>
     <artifactId>jandex-test-data</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+
     <name>Jandex: Test Data</name>
 
     <properties>
@@ -19,9 +18,6 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.release>${java.version}</maven.compiler.release>
-
-        <version.exec-maven-plugin>3.0.0</version.exec-maven-plugin>
-        <version.mvn-jlink-wrapper>1.1.0</version.mvn-jlink-wrapper>
     </properties>
 
     <build>

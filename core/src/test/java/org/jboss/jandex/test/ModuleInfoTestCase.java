@@ -123,6 +123,12 @@ public class ModuleInfoTestCase {
         assertEquals("test.exec.Main", mod.mainClass().toString());
     }
 
+    @Test
+    public void testModuleVersion() {
+        assertNotNull(mod.version());
+        assertEquals("1.0", mod.version());
+    }
+
     private ModuleInfo indexModuleInfo() throws IOException {
         Index index = buildIndex();
         return index.getModuleByName(DotName.createSimple("org.jboss.jandex.typeannotationtest"));

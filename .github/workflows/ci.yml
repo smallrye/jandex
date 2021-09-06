@@ -4,6 +4,8 @@ on:
   push:
     branches:
     - master
+    # temporary, should be removed once `smallrye` becomes `main`
+    - smallrye
     paths-ignore:
     - '.gitattributes'
     - '.gitignore'

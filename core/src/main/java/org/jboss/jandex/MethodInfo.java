@@ -321,7 +321,7 @@ public final class MethodInfo implements AnnotationTarget {
             Type containingType = repeatable.value().asClass();
             for (AnnotationInstance container : annotations(containingType.name())) {
                 for (AnnotationInstance nestedInstance : container.value().asNestedArray()) {
-                    instances.add(new AnnotationInstance(nestedInstance, container.target()));
+                    instances.add(AnnotationInstance.create(nestedInstance, container.target()));
                 }
             }
         }

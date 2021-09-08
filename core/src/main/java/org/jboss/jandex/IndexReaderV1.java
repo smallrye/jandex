@@ -64,7 +64,8 @@ final class IndexReaderV1 extends IndexReaderImpl {
     private static final int AVALUE_ARRAY = 12;
     private static final int AVALUE_NESTED = 13;
 
-    private PackedDataInputStream input;
+    private final PackedDataInputStream input;
+    private final int version;
     private DotName[] classTable;
     private String[] stringTable;
     private HashMap<DotName, List<AnnotationInstance>> masterAnnotations;
@@ -75,8 +76,9 @@ final class IndexReaderV1 extends IndexReaderImpl {
      *
      * @param input a stream which points to a jandex index file
      */
-    IndexReaderV1(PackedDataInputStream input) {
+    IndexReaderV1(PackedDataInputStream input, int version) {
         this.input = input;
+        this.version = version;
     }
 
     /**
@@ -88,13 +90,13 @@ final class IndexReaderV1 extends IndexReaderImpl {
      * @throws IllegalArgumentException if the stream does not point to Jandex index data
      * @throws org.jboss.jandex.UnsupportedVersion if the index data is tagged with a version not known to this reader
      */
-    Index read(int version) throws IOException {
+    Index read() throws IOException {
         try {
             PackedDataInputStream stream = this.input;
             masterAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
             readClassTable(stream);
             readStringTable(stream);
-            return readClasses(stream, version);
+            return readClasses(stream);
         } finally {
             classTable = null;
             stringTable = null;
@@ -102,7 +104,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
         }
     }
 
-    private Index readClasses(PackedDataInputStream stream, int version) throws IOException {
+    private Index readClasses(PackedDataInputStream stream) throws IOException {
         int entries = stream.readPackedU32();
         HashMap<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>();
         HashMap<DotName, List<ClassInfo>> implementors = new HashMap<DotName, List<ClassInfo>>();
@@ -177,7 +179,7 @@ final class IndexReaderV1 extends IndexReaderImpl {
                 }
 
                 AnnotationValue[] values = readAnnotationValues(stream);
-                AnnotationInstance instance = new AnnotationInstance(annotationName, target, values);
+                AnnotationInstance instance = AnnotationInstance.create(annotationName, target, values);
 
                 recordAnnotation(masterAnnotations, annotationName, instance);
                 recordAnnotation(annotations, annotationName, instance);
@@ -235,7 +237,8 @@ final class IndexReaderV1 extends IndexReaderImpl {
                     break;
                 case AVALUE_NESTED: {
                     DotName nestedName = classTable[stream.readPackedU32()];
-                    AnnotationInstance nestedInstance = new AnnotationInstance(nestedName, null, readAnnotationValues(stream));
+                    AnnotationInstance nestedInstance = AnnotationInstance.create(nestedName, null,
+                            readAnnotationValues(stream));
                     value = new AnnotationValue.NestedAnnotation(name, nestedInstance);
                     break;
                 }

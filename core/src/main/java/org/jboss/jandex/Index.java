@@ -201,8 +201,7 @@ public final class Index implements IndexView {
         for (AnnotationInstance containingInstance : getAnnotations(containingAnnotationName)) {
             for (AnnotationInstance nestedInstance : containingInstance.value().asNestedArray()) {
                 // We need to set the target of the containing instance
-                instances.add(new AnnotationInstance(nestedInstance.name(), containingInstance.target(),
-                        nestedInstance.valueArray()));
+                instances.add(AnnotationInstance.create(nestedInstance, containingInstance.target()));
             }
         }
         return instances;

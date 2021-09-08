@@ -73,15 +73,15 @@ public final class IndexReader {
             readVersion();
         }
 
-        return reader.read(version);
+        return reader.read();
     }
 
     private void initReader(int version) throws IOException {
         IndexReaderImpl reader;
         if (version >= IndexReaderV1.MIN_VERSION && version <= IndexReaderV1.MAX_VERSION) {
-            reader = new IndexReaderV1(input);
+            reader = new IndexReaderV1(input, version);
         } else if (version >= IndexReaderV2.MIN_VERSION && version <= IndexReaderV2.MAX_VERSION) {
-            reader = new IndexReaderV2(input);
+            reader = new IndexReaderV2(input, version);
         } else {
             input.close();
             throw new UnsupportedVersion("Can't read index version " + version

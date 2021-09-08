@@ -122,6 +122,12 @@ public class BasicTestCase {
         float value();
     }
 
+    @Retention(RetentionPolicy.CLASS)
+    @Target({ ElementType.TYPE, ElementType.PARAMETER })
+    @interface RuntimeInvisible {
+        String placement();
+    }
+
     // @formatter:off
     @TestAnnotation(name = "Test", override = "somethingelse", ints = { 1, 2, 3, 4, 5 }, klass = Void.class,
             nested = @NestedAnnotation(1.34f), nestedArray = { @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) },
@@ -466,6 +472,23 @@ public class BasicTestCase {
     public void testNullClass() throws IOException {
         Indexer indexer = new Indexer();
         indexer.indexClass(null);
+    }
+
+    @Test
+    public void testRuntimeInvisibleAnnotations() throws IOException {
+        @RuntimeInvisible(placement = "class")
+        class Target {
+            @SuppressWarnings("unused")
+            void execute(@RuntimeInvisible(placement = "arg") String arg) {
+            }
+        }
+
+        Index index = Index.of(Target.class);
+        DotName annoName = DotName.createSimple(RuntimeInvisible.class.getName());
+        List<AnnotationInstance> rtInvisible = index.getAnnotations(annoName);
+        assertEquals(2, rtInvisible.size());
+        assertEquals(0, Target.class.getDeclaredAnnotations().length);
+        assertEquals(0, Target.class.getDeclaredMethods()[0].getDeclaredAnnotations().length);
     }
 
     private void verifyDummy(Index index, boolean v2features) {

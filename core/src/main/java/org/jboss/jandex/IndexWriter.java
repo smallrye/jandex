@@ -99,16 +99,16 @@ public final class IndexWriter {
                     + IndexWriterV2.MIN_VERSION + "-" + IndexWriterV2.MAX_VERSION);
         }
 
-        return writer.write(index, version);
+        return writer.write(index);
     }
 
     private IndexWriterImpl getWriter(int version) {
         if (version >= IndexWriterV1.MIN_VERSION && version <= IndexWriterV1.MAX_VERSION) {
-            return new IndexWriterV1(out);
+            return new IndexWriterV1(out, version);
         }
 
         if (version >= IndexWriterV2.MIN_VERSION && version <= IndexWriterV2.MAX_VERSION) {
-            return new IndexWriterV2(out);
+            return new IndexWriterV2(out, version);
         }
 
         return null;

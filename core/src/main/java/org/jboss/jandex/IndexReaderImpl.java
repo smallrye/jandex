@@ -25,7 +25,7 @@ import java.io.IOException;
  * @author Jason T. Greene
  */
 abstract class IndexReaderImpl {
-    abstract Index read(int version) throws IOException;
+    abstract Index read() throws IOException;
 
     abstract int toDataVersion(int version);
 }

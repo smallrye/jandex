@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Responsible for launching the indexing tool on a java command line.
@@ -87,7 +88,7 @@ public class Main {
         Result result = (source.isDirectory()) ? indexDirectory(source, indexer) : JarIndexer.createJarIndex(source, indexer, outputFile, modify, jarFile, verbose);
 
         double time = (System.currentTimeMillis() - start) / 1000.00;
-        System.out.printf("Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d class usages, %d bytes)\n", result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(), result.getUsages(), result.getBytes());
+        System.out.printf(Locale.ROOT, "Wrote %s in %.4f seconds (%d classes, %d annotations, %d instances, %d class usages, %d bytes)%n", result.getName(), time, result.getClasses(), result.getAnnotations(), result.getInstances(), result.getUsages(), result.getBytes());
         return result.getIndex();
     }
 
@@ -102,7 +103,7 @@ public class Main {
         index.printAnnotations();
         index.printSubclasses();
 
-        System.out.printf("\nRead %s in %.04f seconds\n", source.getName(), end / 1000.0);
+        System.out.printf(Locale.ROOT, "%nRead %s in %.04f seconds%n", source.getName(), end / 1000.0);
     }
 
     private Result indexDirectory(File source, Indexer indexer) throws FileNotFoundException, IOException {

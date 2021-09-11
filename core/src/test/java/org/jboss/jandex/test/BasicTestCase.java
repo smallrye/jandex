@@ -475,7 +475,7 @@ public class BasicTestCase {
     }
 
     @Test
-    public void testRuntimeInvisibleAnnotations() throws IOException {
+    public void testRuntimeInvisiblePresentInV11() throws IOException {
         @RuntimeInvisible(placement = "class")
         class Target {
             @SuppressWarnings("unused")
@@ -483,12 +483,43 @@ public class BasicTestCase {
             }
         }
 
-        Index index = Index.of(Target.class);
-        DotName annoName = DotName.createSimple(RuntimeInvisible.class.getName());
-        List<AnnotationInstance> rtInvisible = index.getAnnotations(annoName);
-        assertEquals(2, rtInvisible.size());
         assertEquals(0, Target.class.getDeclaredAnnotations().length);
         assertEquals(0, Target.class.getDeclaredMethods()[0].getDeclaredAnnotations().length);
+
+        Index index = testClassConstantSerialisation(Index.of(Target.class), 11);
+        DotName annoName = DotName.createSimple(RuntimeInvisible.class.getName());
+        List<AnnotationInstance> rtInvisible = index.getAnnotations(annoName);
+
+        assertEquals(2, rtInvisible.size());
+
+        for (AnnotationInstance a : rtInvisible) {
+            assertFalse(a.runtimeVisible());
+        }
+    }
+
+    @Test
+    public void testRuntimeInvisibleAbsentFromV10() throws IOException {
+        @RuntimeInvisible(placement = "class")
+        class Target {
+            @SuppressWarnings("unused")
+            @MethodAnnotation1
+            void execute(@RuntimeInvisible(placement = "arg") String arg) {
+            }
+        }
+
+        Index index = testClassConstantSerialisation(Index.of(Target.class), 10);
+        DotName annoName = DotName.createSimple(RuntimeInvisible.class.getName());
+        List<AnnotationInstance> rtInvisible = index.getAnnotations(annoName);
+
+        assertEquals(0, rtInvisible.size());
+
+        annoName = DotName.createSimple(MethodAnnotation1.class.getName());
+        List<AnnotationInstance> rtVisible = index.getAnnotations(annoName);
+        assertEquals(1, rtVisible.size());
+
+        for (AnnotationInstance a : rtVisible) {
+            assertTrue(a.runtimeVisible());
+        }
     }
 
     private void verifyDummy(Index index, boolean v2features) {

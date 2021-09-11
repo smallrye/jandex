@@ -312,24 +312,14 @@ final class IndexWriterV2 extends IndexWriterImpl {
         stream.writePackedU32(positionOf(field.nameBytes()));
         stream.writePackedU32(field.flags());
         stream.writePackedU32(positionOf(field.type()));
-
-        AnnotationInstance[] annotations = field.annotationArray();
-        stream.writePackedU32(annotations.length);
-        for (AnnotationInstance annotation : annotations) {
-            writeReferenceOrFull(stream, annotation);
-        }
+        writeAnnotations(stream, field.annotationArray());
     }
 
     private void writeRecordComponentEntry(PackedDataOutputStream stream, RecordComponentInternal recordComponent)
             throws IOException {
         stream.writePackedU32(positionOf(recordComponent.nameBytes()));
         stream.writePackedU32(positionOf(recordComponent.type()));
-
-        AnnotationInstance[] annotations = recordComponent.annotationArray();
-        stream.writePackedU32(annotations.length);
-        for (AnnotationInstance annotation : annotations) {
-            writeReferenceOrFull(stream, annotation);
-        }
+        writeAnnotations(stream, recordComponent.annotationArray());
     }
 
     private void writeMethodEntry(PackedDataOutputStream stream, MethodInternal method) throws IOException {
@@ -355,11 +345,8 @@ final class IndexWriterV2 extends IndexWriterImpl {
                 stream.writePackedU32(positionOf(parameterName));
             }
         }
-        AnnotationInstance[] annotations = method.annotationArray();
-        stream.writePackedU32(annotations.length);
-        for (AnnotationInstance annotation : annotations) {
-            writeReferenceOrFull(stream, annotation);
-        }
+
+        writeAnnotations(stream, method.annotationArray());
     }
 
     private void writeAnnotation(PackedDataOutputStream stream, AnnotationInstance instance) throws IOException {
@@ -621,11 +608,7 @@ final class IndexWriterV2 extends IndexWriterImpl {
 
         Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotations().entrySet();
         for (Entry<DotName, List<AnnotationInstance>> entry : entrySet) {
-            List<AnnotationInstance> value = entry.getValue();
-            stream.writePackedU32(value.size());
-            for (AnnotationInstance annotation : value) {
-                writeReferenceOrFull(stream, annotation);
-            }
+            writeAnnotations(stream, entry.getValue());
         }
     }
 
@@ -758,15 +741,48 @@ final class IndexWriterV2 extends IndexWriterImpl {
         stream.writePackedU32(positionOf(type));
     }
 
+    private void writeAnnotations(PackedDataOutputStream stream, AnnotationInstance[] annotations) throws IOException {
+        if (version >= 11) {
+            stream.writePackedU32(annotations.length);
+
+            for (AnnotationInstance annotation : annotations) {
+                writeReferenceOrFull(stream, annotation);
+            }
+        } else {
+            // Index versions less than 11 may only include runtime visible annotations
+            int count = 0;
+
+            for (AnnotationInstance annotation : annotations) {
+                if (annotation.runtimeVisible()) {
+                    count++;
+                }
+            }
+
+            stream.writePackedU32(count);
+
+            if (count > 0) {
+                for (AnnotationInstance annotation : annotations) {
+                    if (annotation.runtimeVisible()) {
+                        writeReferenceOrFull(stream, annotation);
+                    }
+                }
+            }
+        }
+    }
+
+    private void writeAnnotations(PackedDataOutputStream stream, Collection<AnnotationInstance> annotations) throws IOException {
+        if (annotations.isEmpty()) {
+            writeAnnotations(stream, AnnotationInstance.EMPTY_ARRAY);
+        } else {
+            writeAnnotations(stream, annotations.toArray(new AnnotationInstance[annotations.size()]));
+        }
+    }
+
     private void writeReferenceOrFull(PackedDataOutputStream stream, AnnotationInstance annotation) throws IOException {
         stream.writePackedU32(positionOf(annotation));
         if (markWritten(annotation)) {
             writeAnnotation(stream, annotation);
         }
-    }
-
-    private void writeReference(PackedDataOutputStream stream, AnnotationInstance annotation) throws IOException {
-        stream.writePackedU32(positionOf(annotation));
     }
 
     private void writeReferenceOrFull(PackedDataOutputStream stream, Type[] types) throws IOException {
@@ -815,11 +831,7 @@ final class IndexWriterV2 extends IndexWriterImpl {
                 break;
         }
 
-        AnnotationInstance[] annotations = type.annotationArray();
-        stream.writePackedU32(annotations.length);
-        for (AnnotationInstance annotation : annotations) {
-            writeReferenceOrFull(stream, annotation);
-        }
+        writeAnnotations(stream, type.annotationArray());
     }
 
     private void buildTables(Index index) {

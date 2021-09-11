@@ -318,7 +318,10 @@ final class IndexReaderV2 extends IndexReaderImpl {
         DotName name = nameTable[stream.readPackedU32()];
         AnnotationTarget target = readAnnotationTarget(stream, caller);
         AnnotationValue[] values = readAnnotationValues(stream);
-        boolean visible = (version >= 11) && stream.readBoolean();
+        boolean visible = true;
+        if (version >= 11) {
+            visible = stream.readBoolean();
+        }
         return AnnotationInstance.create(name, visible, target, values);
     }
 

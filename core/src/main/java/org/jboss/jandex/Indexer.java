@@ -240,9 +240,9 @@ public final class Indexer {
     private final static int HAS_MODULE_PACKAGES = 13;
     private final static int HAS_MODULE_MAIN_CLASS = 14;
     private final static int HAS_RECORD = 15;
-    private final static int HAS_RUNTIME_INVISIBLE_ANNOTATIONS = 16;
-    private final static int HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATIONS = 17;
-    private final static int HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATIONS = 18;
+    private final static int HAS_RUNTIME_INVISIBLE_ANNOTATION = 16;
+    private final static int HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATION = 17;
+    private final static int HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION = 18;
 
     private final static byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
 
@@ -437,128 +437,52 @@ public final class Indexer {
 
     private void processAttributes(DataInputStream data, AnnotationTarget target) throws IOException {
         int numAttrs = data.readUnsignedShort();
-
         for (int a = 0; a < numAttrs; a++) {
             int index = data.readUnsignedShort();
             long attributeLen = data.readInt() & 0xFFFFFFFFL;
             byte annotationAttribute = constantPoolAnnoAttrributes[index - 1];
-
-            if (!processAttribute(data, target, annotationAttribute)) {
+            if (annotationAttribute == HAS_RUNTIME_ANNOTATION || annotationAttribute == HAS_RUNTIME_INVISIBLE_ANNOTATION) {
+                processAnnotations(data, target, annotationAttribute == HAS_RUNTIME_ANNOTATION);
+            } else if (annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION || annotationAttribute == HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATION) {
+                if (!(target instanceof MethodInfo)) {
+                    if (annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION) {
+                        throw new IllegalStateException("RuntimeVisibleParameterAnnotations appeared on a non-method");
+                    } else {
+                        throw new IllegalStateException("RuntimeInvisibleParameterAnnotations appeared on a non-method");
+                    }
+                }
+                int numParameters = data.readUnsignedByte();
+                for (short p = 0; p < numParameters; p++) {
+                    processAnnotations(data, new MethodParameterInfo((MethodInfo) target, p), annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION);
+                }
+            } else if (annotationAttribute == HAS_RUNTIME_TYPE_ANNOTATION || annotationAttribute == HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION) {
+                processTypeAnnotations(data, target, annotationAttribute == HAS_RUNTIME_TYPE_ANNOTATION);
+            } else if (annotationAttribute == HAS_SIGNATURE) {
+                processSignature(data, target);
+            } else if (annotationAttribute == HAS_EXCEPTIONS && target instanceof MethodInfo) {
+                processExceptions(data, (MethodInfo) target);
+            } else if (annotationAttribute == HAS_INNER_CLASSES && target instanceof ClassInfo) {
+                processInnerClasses(data, (ClassInfo) target);
+            } else if (annotationAttribute == HAS_ENCLOSING_METHOD && target instanceof ClassInfo) {
+                processEnclosingMethod(data, (ClassInfo) target);
+            } else if (annotationAttribute == HAS_ANNOTATION_DEFAULT && target instanceof MethodInfo) {
+                processAnnotationDefault(data, (MethodInfo) target);
+            } else if (annotationAttribute == HAS_METHOD_PARAMETERS && target instanceof MethodInfo) {
+                processMethodParameters(data, (MethodInfo) target);
+            } else if (annotationAttribute == HAS_CODE && target instanceof MethodInfo) {
+                processCode(data, (MethodInfo) target);
+            } else if (annotationAttribute == HAS_MODULE && target instanceof ClassInfo) {
+                processModule(data, (ClassInfo) target);
+            } else if (annotationAttribute == HAS_MODULE_PACKAGES && target instanceof ClassInfo) {
+                processModulePackages(data, (ClassInfo) target);
+            } else if (annotationAttribute == HAS_MODULE_MAIN_CLASS && target instanceof ClassInfo) {
+                processModuleMainClass(data, (ClassInfo) target);
+            } else if (annotationAttribute == HAS_RECORD && target instanceof ClassInfo) {
+                processRecordComponents(data);
+            } else {
                 skipFully(data, attributeLen);
             }
         }
-    }
-
-    private boolean processAttribute(DataInputStream data, AnnotationTarget target, byte annotationAttribute)
-            throws IOException {
-        boolean processed = false;
-
-        switch (annotationAttribute) {
-            case HAS_RUNTIME_INVISIBLE_ANNOTATIONS:
-            case HAS_RUNTIME_ANNOTATION:
-                processAnnotations(data, target, annotationAttribute == HAS_RUNTIME_ANNOTATION);
-                processed = true;
-                break;
-
-            case HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATIONS:
-            case HAS_RUNTIME_PARAM_ANNOTATION:
-                if (!(target instanceof MethodInfo))
-                    throw new IllegalStateException("RuntimeVisibleParameterAnnotations appeared on a non-method");
-
-                int numParameters = data.readUnsignedByte();
-                for (short p = 0; p < numParameters; p++) {
-                    processAnnotations(data, new MethodParameterInfo((MethodInfo) target, p),
-                            annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION);
-                }
-                processed = true;
-                break;
-
-            case HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATIONS:
-            case HAS_RUNTIME_TYPE_ANNOTATION:
-                processTypeAnnotations(data, target, annotationAttribute == HAS_RUNTIME_TYPE_ANNOTATION);
-                processed = true;
-                break;
-
-            case HAS_SIGNATURE:
-                processSignature(data, target);
-                processed = true;
-                break;
-
-            case HAS_EXCEPTIONS:
-                if (target instanceof MethodInfo) {
-                    processExceptions(data, (MethodInfo) target);
-                    processed = true;
-                }
-                break;
-
-            case HAS_INNER_CLASSES:
-                if (target instanceof ClassInfo) {
-                    processInnerClasses(data, (ClassInfo) target);
-                    processed = true;
-                }
-                break;
-
-            case HAS_ENCLOSING_METHOD:
-                if (target instanceof ClassInfo) {
-                    processEnclosingMethod(data, (ClassInfo) target);
-                    processed = true;
-                }
-                break;
-
-            case HAS_ANNOTATION_DEFAULT:
-                if (target instanceof MethodInfo) {
-                    processAnnotationDefault(data, (MethodInfo) target);
-                    processed = true;
-                }
-                break;
-
-            case HAS_METHOD_PARAMETERS:
-                if (target instanceof MethodInfo) {
-                    processMethodParameters(data, (MethodInfo) target);
-                    processed = true;
-                }
-                break;
-
-            case HAS_CODE:
-                if (target instanceof MethodInfo) {
-                    processCode(data, (MethodInfo) target);
-                    processed = true;
-                }
-                break;
-
-            case HAS_MODULE:
-                if (target instanceof ClassInfo) {
-                    processModule(data, (ClassInfo) target);
-                    processed = true;
-                }
-                break;
-
-            case HAS_MODULE_PACKAGES:
-                if (target instanceof ClassInfo) {
-                    processModulePackages(data, (ClassInfo) target);
-                    processed = true;
-                }
-                break;
-
-            case HAS_MODULE_MAIN_CLASS:
-                if (target instanceof ClassInfo) {
-                    processModuleMainClass(data, (ClassInfo) target);
-                    processed = true;
-                }
-                break;
-
-            case HAS_RECORD:
-                if (target instanceof ClassInfo) {
-                    processRecordComponents(data);
-                    processed = true;
-                }
-                break;
-
-            default:
-                break;
-        }
-
-        return processed;
     }
 
     private void processModule(DataInputStream data, ClassInfo target) throws IOException {
@@ -2028,10 +1952,10 @@ public final class Indexer {
                     } else if (len == RECORD_LEN && match(buf, offset, RECORD)) {
                         annoAttributes[pos] = HAS_RECORD;
                     } else if (len == RUNTIME_INVISIBLE_ANNOTATIONS_LEN && match(buf, offset, RUNTIME_INVISIBLE_ANNOTATIONS)) {
-                        annoAttributes[pos] = HAS_RUNTIME_INVISIBLE_ANNOTATIONS;
+                        annoAttributes[pos] = HAS_RUNTIME_INVISIBLE_ANNOTATION;
                     } else if (len == RUNTIME_INVISIBLE_PARAM_ANNOTATIONS_LEN
                             && match(buf, offset, RUNTIME_INVISIBLE_PARAM_ANNOTATIONS)) {
-                        annoAttributes[pos] = HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATIONS;
+                        annoAttributes[pos] = HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATION;
                     } else if (len == RUNTIME_INVISIBLE_TYPE_ANNOTATIONS_LEN
                             && match(buf, offset, RUNTIME_INVISIBLE_TYPE_ANNOTATIONS)) {
                         annoAttributes[pos] = HAS_RECORD;

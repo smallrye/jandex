@@ -40,7 +40,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.AnnotatedParameterizedType;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.FileVisitResult;
@@ -49,7 +52,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget.Kind;
@@ -74,6 +80,12 @@ public class BasicTestCase {
 
     @Retention(RetentionPolicy.RUNTIME)
     public @interface ParameterAnnotation {
+
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ ElementType.TYPE_PARAMETER, ElementType.TYPE_USE })
+    public @interface TypeUseAnnotation {
 
     }
 
@@ -123,9 +135,18 @@ public class BasicTestCase {
     }
 
     @Retention(RetentionPolicy.CLASS)
-    @Target({ ElementType.TYPE, ElementType.PARAMETER })
+    @Target({ ElementType.TYPE, ElementType.PARAMETER, ElementType.TYPE_USE })
     @interface RuntimeInvisible {
         String placement();
+    }
+
+    @RuntimeInvisible(placement = "class")
+    class RuntimeInvisibleTarget {
+        @SuppressWarnings("unused")
+        @MethodAnnotation1
+        void execute(
+                @ParameterAnnotation @RuntimeInvisible(placement = "arg") List<@TypeUseAnnotation @RuntimeInvisible(placement = "type use") String> arg) {
+        }
     }
 
     // @formatter:off
@@ -475,39 +496,47 @@ public class BasicTestCase {
     }
 
     @Test
-    public void testRuntimeInvisiblePresentInV11() throws IOException {
-        @RuntimeInvisible(placement = "class")
-        class Target {
-            @SuppressWarnings("unused")
-            void execute(@RuntimeInvisible(placement = "arg") String arg) {
-            }
-        }
+    public void testRuntimeInvisiblePresentInV11() throws Exception {
+        // Check @RuntimeInvisible not available to reflection APIs
+        Class<RuntimeInvisibleTarget> testTarget = RuntimeInvisibleTarget.class;
+        assertEquals(0, testTarget.getDeclaredAnnotations().length);
 
-        assertEquals(0, Target.class.getDeclaredAnnotations().length);
-        assertEquals(0, Target.class.getDeclaredMethods()[0].getDeclaredAnnotations().length);
+        Parameter[] executeParams = testTarget.getDeclaredMethod("execute", List.class).getParameters();
+        assertEquals(1, executeParams[0].getDeclaredAnnotations().length);
 
-        Index index = testClassConstantSerialisation(Index.of(Target.class), 11);
+        AnnotatedParameterizedType apt = (AnnotatedParameterizedType) executeParams[0].getAnnotatedType();
+        AnnotatedType argGenericType = apt.getAnnotatedActualTypeArguments()[0];
+        assertEquals(1, argGenericType.getDeclaredAnnotations().length);
+
+        Index index = testClassConstantSerialisation(Index.of(testTarget), 11);
         DotName annoName = DotName.createSimple(RuntimeInvisible.class.getName());
         List<AnnotationInstance> rtInvisible = index.getAnnotations(annoName);
 
-        assertEquals(2, rtInvisible.size());
+        assertEquals(4, rtInvisible.size());
+        Map<String, List<AnnotationInstance>> placements = new HashMap<>(3);
 
         for (AnnotationInstance a : rtInvisible) {
             assertFalse(a.runtimeVisible());
+            String placement = a.value("placement").asString();
+            placements.compute(placement, (k, v) -> {
+                if (v == null) {
+                    v = new ArrayList<>();
+                }
+                v.add(a);
+                return v;
+            });
         }
+
+        assertEquals(1, placements.get("class").size());
+        // @RuntimeInvisible recorded on both method parameter and method parameter type
+        assertEquals(2, placements.get("arg").size());
+        assertEquals(1, placements.get("type use").size());
     }
 
     @Test
     public void testRuntimeInvisibleAbsentFromV10() throws IOException {
-        @RuntimeInvisible(placement = "class")
-        class Target {
-            @SuppressWarnings("unused")
-            @MethodAnnotation1
-            void execute(@RuntimeInvisible(placement = "arg") String arg) {
-            }
-        }
-
-        Index index = testClassConstantSerialisation(Index.of(Target.class), 10);
+        Class<RuntimeInvisibleTarget> testTarget = RuntimeInvisibleTarget.class;
+        Index index = testClassConstantSerialisation(Index.of(testTarget), 10);
         DotName annoName = DotName.createSimple(RuntimeInvisible.class.getName());
         List<AnnotationInstance> rtInvisible = index.getAnnotations(annoName);
 

@@ -770,7 +770,8 @@ final class IndexWriterV2 extends IndexWriterImpl {
         }
     }
 
-    private void writeAnnotations(PackedDataOutputStream stream, Collection<AnnotationInstance> annotations) throws IOException {
+    private void writeAnnotations(PackedDataOutputStream stream, Collection<AnnotationInstance> annotations)
+            throws IOException {
         if (annotations.isEmpty()) {
             writeAnnotations(stream, AnnotationInstance.EMPTY_ARRAY);
         } else {

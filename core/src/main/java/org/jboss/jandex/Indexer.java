@@ -443,7 +443,8 @@ public final class Indexer {
             byte annotationAttribute = constantPoolAnnoAttrributes[index - 1];
             if (annotationAttribute == HAS_RUNTIME_ANNOTATION || annotationAttribute == HAS_RUNTIME_INVISIBLE_ANNOTATION) {
                 processAnnotations(data, target, annotationAttribute == HAS_RUNTIME_ANNOTATION);
-            } else if (annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION || annotationAttribute == HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATION) {
+            } else if (annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION
+                    || annotationAttribute == HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATION) {
                 if (!(target instanceof MethodInfo)) {
                     if (annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION) {
                         throw new IllegalStateException("RuntimeVisibleParameterAnnotations appeared on a non-method");
@@ -453,9 +454,11 @@ public final class Indexer {
                 }
                 int numParameters = data.readUnsignedByte();
                 for (short p = 0; p < numParameters; p++) {
-                    processAnnotations(data, new MethodParameterInfo((MethodInfo) target, p), annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION);
+                    processAnnotations(data, new MethodParameterInfo((MethodInfo) target, p),
+                            annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION);
                 }
-            } else if (annotationAttribute == HAS_RUNTIME_TYPE_ANNOTATION || annotationAttribute == HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION) {
+            } else if (annotationAttribute == HAS_RUNTIME_TYPE_ANNOTATION
+                    || annotationAttribute == HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION) {
                 processTypeAnnotations(data, target, annotationAttribute == HAS_RUNTIME_TYPE_ANNOTATION);
             } else if (annotationAttribute == HAS_SIGNATURE) {
                 processSignature(data, target);
@@ -1958,7 +1961,7 @@ public final class Indexer {
                         annoAttributes[pos] = HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATION;
                     } else if (len == RUNTIME_INVISIBLE_TYPE_ANNOTATIONS_LEN
                             && match(buf, offset, RUNTIME_INVISIBLE_TYPE_ANNOTATIONS)) {
-                        annoAttributes[pos] = HAS_RECORD;
+                        annoAttributes[pos] = HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION;
                     }
                     offset += len;
                     break;

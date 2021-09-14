@@ -54,11 +54,7 @@ public final class AnnotationInstance {
         }
     }
 
-    AnnotationInstance(AnnotationInstance instance, AnnotationTarget target) {
-        this(instance.name, target, instance.values, instance.runtimeVisible);
-    }
-
-    AnnotationInstance(DotName name, AnnotationTarget target, AnnotationValue[] values, boolean runtimeVisible) {
+    private AnnotationInstance(DotName name, AnnotationTarget target, AnnotationValue[] values, boolean runtimeVisible) {
         this.name = name;
         this.target = target;
         this.values = values != null && values.length > 0 ? values : AnnotationValue.EMPTY_VALUE_ARRAY;
@@ -66,22 +62,19 @@ public final class AnnotationInstance {
     }
 
     static AnnotationInstance create(AnnotationInstance instance, AnnotationTarget target) {
-        return new AnnotationInstance(instance, target);
-    }
-
-    private static final AnnotationInstance create(DotName name) {
-        return new AnnotationInstance(name, null, AnnotationValue.EMPTY_VALUE_ARRAY, false);
+        return new AnnotationInstance(instance.name, target, instance.values, instance.runtimeVisible);
     }
 
     /**
      * Construct a new mock annotation instance. The passed values array will be defensively copied.
+     * It is assumed that the annotation is {@link #runtimeVisible()}.
      *
      * @param name the name of the annotation instance
      * @param target the thing the annotation is declared on
      * @param values the values of this annotation instance
      * @return the new mock Annotation Instance
      */
-    public static final AnnotationInstance create(DotName name, AnnotationTarget target, AnnotationValue[] values) {
+    public static AnnotationInstance create(DotName name, AnnotationTarget target, AnnotationValue[] values) {
         return create(name, true, target, values);
     }
 
@@ -94,7 +87,7 @@ public final class AnnotationInstance {
      * @param values the values of this annotation instance
      * @return the new mock Annotation Instance
      */
-    public static final AnnotationInstance create(DotName name, boolean visible, AnnotationTarget target,
+    public static AnnotationInstance create(DotName name, boolean visible, AnnotationTarget target,
             AnnotationValue[] values) {
         if (name == null)
             throw new IllegalArgumentException("Name can't be null");
@@ -116,13 +109,14 @@ public final class AnnotationInstance {
 
     /**
      * Construct a new mock annotation instance. The passed values list will be defensively copied.
+     * It is assumed that the annotation is {@link #runtimeVisible()}.
      *
      * @param name the name of the annotation instance
      * @param target the thing the annotation is declared on
      * @param values the values of this annotation instance
      * @return the new mock Annotation Instance
      */
-    public static final AnnotationInstance create(DotName name, AnnotationTarget target, List<AnnotationValue> values) {
+    public static AnnotationInstance create(DotName name, AnnotationTarget target, List<AnnotationValue> values) {
         return create(name, true, target, values);
     }
 
@@ -135,7 +129,7 @@ public final class AnnotationInstance {
      * @param values the values of this annotation instance
      * @return the new mock Annotation Instance
      */
-    public static final AnnotationInstance create(DotName name, boolean visible, AnnotationTarget target,
+    public static AnnotationInstance create(DotName name, boolean visible, AnnotationTarget target,
             List<AnnotationValue> values) {
         if (name == null)
             throw new IllegalArgumentException("Name can't be null");
@@ -146,8 +140,9 @@ public final class AnnotationInstance {
         return create(name, visible, target, values.toArray(ANNOTATION_VALUES_TYPE));
     }
 
-    static final AnnotationInstance binarySearch(AnnotationInstance[] annotations, DotName name) {
-        AnnotationInstance key = create(name);
+    static AnnotationInstance binarySearch(AnnotationInstance[] annotations, DotName name) {
+        // only `name` is significant in `key`, the rest can be arbitrary
+        AnnotationInstance key = new AnnotationInstance(name, null, null, false);
         int i = Arrays.binarySearch(annotations, key, AnnotationInstance.NAME_COMPARATOR);
         return i >= 0 ? annotations[i] : null;
     }
@@ -372,6 +367,9 @@ public final class AnnotationInstance {
 
         this.target = target;
     }
+
+    // runtime visibility is ignored for the purpose of equality and hash code, because
+    // the annotation type identity (the name) already includes that information
 
     /**
      * Returns whether or not this annotation instance is equivalent to another instance.

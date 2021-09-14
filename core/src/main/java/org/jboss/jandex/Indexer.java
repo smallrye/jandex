@@ -1065,7 +1065,7 @@ public final class Indexer {
         PathElementStack elements = typeAnnotationState.pathElements;
         PathElement element = elements.pop();
         if (element == null) {
-            type = intern(type.addAnnotation(new AnnotationInstance(typeAnnotationState.annotation, null)));
+            type = intern(type.addAnnotation(AnnotationInstance.create(typeAnnotationState.annotation, null)));
             typeAnnotationState.target.setTarget(type); // FIXME
             // Clone the instance with a null target so that it can be interned
             return type;

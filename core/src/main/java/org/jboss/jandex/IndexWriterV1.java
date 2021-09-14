@@ -73,6 +73,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
     private static final int AVALUE_NESTED = 13;
 
     private final OutputStream out;
+    private final int version;
     private StrongInternPool<String> pool;
     StrongInternPool<String>.Index poolIndex;
     private TreeMap<DotName, Integer> classTable;
@@ -82,8 +83,9 @@ final class IndexWriterV1 extends IndexWriterImpl {
      *
      * @param out a stream to write an index to
      */
-    IndexWriterV1(OutputStream out) {
+    IndexWriterV1(OutputStream out, int version) {
         this.out = out;
+        this.version = version;
     }
 
     /**
@@ -95,7 +97,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
      * @return the number of bytes written to the stream
      * @throws java.io.IOException if any i/o error occurs
      */
-    int write(Index index, int version) throws IOException {
+    int write(Index index) throws IOException {
 
         if (version < MIN_VERSION || version > MAX_VERSION) {
             throw new UnsupportedVersion("Can't write index version " + version
@@ -110,7 +112,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
         buildTables(index);
         writeClassTable(stream);
         writeStringTable(stream);
-        writeClasses(stream, index, version);
+        writeClasses(stream, index);
         stream.flush();
         return stream.size();
     }
@@ -161,7 +163,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
         return i.intValue();
     }
 
-    private void writeClasses(PackedDataOutputStream stream, Index index, int version) throws IOException {
+    private void writeClasses(PackedDataOutputStream stream, Index index) throws IOException {
         Collection<ClassInfo> classes = index.getKnownClasses();
         stream.writePackedU32(classes.size());
         for (ClassInfo clazz : classes) {

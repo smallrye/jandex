@@ -172,6 +172,40 @@ public final class Indexer {
             0x52, 0x65, 0x63, 0x6f, 0x72, 0x64
     };
 
+    // "RuntimeInvisibleAnnotations"
+    private final static byte[] RUNTIME_INVISIBLE_ANNOTATIONS = new byte[] {
+            // R     u     n     t     i     m     e
+            0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65,
+            // I     n     v     i     s     i     b     l     e
+            0x49, 0x6e, 0x76, 0x69, 0x73, 0x69, 0x62, 0x6c, 0x65,
+            // A     n     n     o     t     a     t     i     o     n     s
+            0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73
+    };
+
+    // "RuntimeInvisibleParameterAnnotations"
+    private final static byte[] RUNTIME_INVISIBLE_PARAM_ANNOTATIONS = new byte[] {
+            // R     u     n     t     i     m     e
+            0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65,
+            // I     n     v     i     s     i     b     l     e
+            0x49, 0x6e, 0x76, 0x69, 0x73, 0x69, 0x62, 0x6c, 0x65,
+            // P     a     r     a     m     e     t     e     r
+            0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72,
+            // A     n     n     o     t     a     t     i     o     n     s
+            0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73
+    };
+
+    // "RuntimeInvisibleTypeAnnotations"
+    private final static byte[] RUNTIME_INVISIBLE_TYPE_ANNOTATIONS = new byte[] {
+            // R     u     n     t     i     m     e
+            0x52, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65,
+            // I     n     v     i     s     i     b     l     e
+            0x49, 0x6e, 0x76, 0x69, 0x73, 0x69, 0x62, 0x6c, 0x65,
+            // T     y     p     e
+            0x54, 0x79, 0x70, 0x65,
+            // A     n     n     o     t     a     t     i     o     n     s
+            0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73
+    };
+
     private final static int RUNTIME_ANNOTATIONS_LEN = RUNTIME_ANNOTATIONS.length;
     private final static int RUNTIME_PARAM_ANNOTATIONS_LEN = RUNTIME_PARAM_ANNOTATIONS.length;
     private final static int RUNTIME_TYPE_ANNOTATIONS_LEN = RUNTIME_TYPE_ANNOTATIONS.length;
@@ -187,6 +221,9 @@ public final class Indexer {
     private final static int MODULE_PACKAGES_LEN = MODULE_PACKAGES.length;
     private final static int MODULE_MAIN_CLASS_LEN = MODULE_MAIN_CLASS.length;
     private final static int RECORD_LEN = RECORD.length;
+    private final static int RUNTIME_INVISIBLE_ANNOTATIONS_LEN = RUNTIME_INVISIBLE_ANNOTATIONS.length;
+    private final static int RUNTIME_INVISIBLE_PARAM_ANNOTATIONS_LEN = RUNTIME_INVISIBLE_PARAM_ANNOTATIONS.length;
+    private final static int RUNTIME_INVISIBLE_TYPE_ANNOTATIONS_LEN = RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.length;
 
     private final static int HAS_RUNTIME_ANNOTATION = 1;
     private final static int HAS_RUNTIME_PARAM_ANNOTATION = 2;
@@ -203,6 +240,9 @@ public final class Indexer {
     private final static int HAS_MODULE_PACKAGES = 13;
     private final static int HAS_MODULE_MAIN_CLASS = 14;
     private final static int HAS_RECORD = 15;
+    private final static int HAS_RUNTIME_INVISIBLE_ANNOTATION = 16;
+    private final static int HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATION = 17;
+    private final static int HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION = 18;
 
     private final static byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
 
@@ -401,17 +441,25 @@ public final class Indexer {
             int index = data.readUnsignedShort();
             long attributeLen = data.readInt() & 0xFFFFFFFFL;
             byte annotationAttribute = constantPoolAnnoAttrributes[index - 1];
-            if (annotationAttribute == HAS_RUNTIME_ANNOTATION) {
-                processAnnotations(data, target);
-            } else if (annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION) {
-                if (!(target instanceof MethodInfo))
-                    throw new IllegalStateException("RuntimeVisibleParameterAnnotations appeared on a non-method");
+            if (annotationAttribute == HAS_RUNTIME_ANNOTATION || annotationAttribute == HAS_RUNTIME_INVISIBLE_ANNOTATION) {
+                processAnnotations(data, target, annotationAttribute == HAS_RUNTIME_ANNOTATION);
+            } else if (annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION
+                    || annotationAttribute == HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATION) {
+                if (!(target instanceof MethodInfo)) {
+                    if (annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION) {
+                        throw new IllegalStateException("RuntimeVisibleParameterAnnotations appeared on a non-method");
+                    } else {
+                        throw new IllegalStateException("RuntimeInvisibleParameterAnnotations appeared on a non-method");
+                    }
+                }
                 int numParameters = data.readUnsignedByte();
                 for (short p = 0; p < numParameters; p++) {
-                    processAnnotations(data, new MethodParameterInfo((MethodInfo) target, p));
+                    processAnnotations(data, new MethodParameterInfo((MethodInfo) target, p),
+                            annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION);
                 }
-            } else if (annotationAttribute == HAS_RUNTIME_TYPE_ANNOTATION) {
-                processTypeAnnotations(data, target);
+            } else if (annotationAttribute == HAS_RUNTIME_TYPE_ANNOTATION
+                    || annotationAttribute == HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION) {
+                processTypeAnnotations(data, target, annotationAttribute == HAS_RUNTIME_TYPE_ANNOTATION);
             } else if (annotationAttribute == HAS_SIGNATURE) {
                 processSignature(data, target);
             } else if (annotationAttribute == HAS_EXCEPTIONS && target instanceof MethodInfo) {
@@ -593,10 +641,10 @@ public final class Indexer {
         target.setDefaultValue(processAnnotationElementValue(target.name(), data));
     }
 
-    private void processAnnotations(DataInputStream data, AnnotationTarget target) throws IOException {
+    private void processAnnotations(DataInputStream data, AnnotationTarget target, boolean visible) throws IOException {
         int numAnnotations = data.readUnsignedShort();
         while (numAnnotations-- > 0)
-            processAnnotation(data, target);
+            processAnnotation(data, target, visible);
     }
 
     private void processInnerClasses(DataInputStream data, ClassInfo target) throws IOException {
@@ -701,12 +749,12 @@ public final class Indexer {
         target.setEnclosingMethod(method);
     }
 
-    private void processTypeAnnotations(DataInputStream data, AnnotationTarget target) throws IOException {
+    private void processTypeAnnotations(DataInputStream data, AnnotationTarget target, boolean visible) throws IOException {
         int numAnnotations = data.readUnsignedShort();
         List<TypeAnnotationState> annotations = new ArrayList<TypeAnnotationState>(numAnnotations);
 
         for (int i = 0; i < numAnnotations; i++) {
-            TypeAnnotationState annotation = processTypeAnnotation(data, target);
+            TypeAnnotationState annotation = processTypeAnnotation(data, target, visible);
             if (annotation != null) {
                 annotations.add(annotation);
             }
@@ -715,7 +763,8 @@ public final class Indexer {
         typeAnnotations.put(target, annotations);
     }
 
-    private TypeAnnotationState processTypeAnnotation(DataInputStream data, AnnotationTarget target) throws IOException {
+    private TypeAnnotationState processTypeAnnotation(DataInputStream data, AnnotationTarget target, boolean visible)
+            throws IOException {
         int targetType = data.readUnsignedByte();
         TypeTarget typeTarget = null;
         switch (targetType) {
@@ -793,14 +842,14 @@ public final class Indexer {
             skipTargetPath(data);
             // eat
             // TODO - introduce an allocation free annotation skip
-            processAnnotation(data, null);
+            processAnnotation(data, null, visible);
             return null;
         }
 
         BooleanHolder genericsRequired = new BooleanHolder();
         BooleanHolder bridgeIncompatible = new BooleanHolder();
         ArrayList<PathElement> pathElements = processTargetPath(data, genericsRequired, bridgeIncompatible);
-        AnnotationInstance annotation = processAnnotation(data, typeTarget);
+        AnnotationInstance annotation = processAnnotation(data, typeTarget, visible);
         return new TypeAnnotationState(typeTarget, annotation, pathElements, genericsRequired.bool, bridgeIncompatible.bool);
     }
 
@@ -1016,7 +1065,7 @@ public final class Indexer {
         PathElementStack elements = typeAnnotationState.pathElements;
         PathElement element = elements.pop();
         if (element == null) {
-            type = intern(type.addAnnotation(new AnnotationInstance(typeAnnotationState.annotation, null)));
+            type = intern(type.addAnnotation(AnnotationInstance.create(typeAnnotationState.annotation, null)));
             typeAnnotationState.target.setTarget(type); // FIXME
             // Clone the instance with a null target so that it can be interned
             return type;
@@ -1439,7 +1488,8 @@ public final class Indexer {
         recordComponent.setType(type);
     }
 
-    private AnnotationInstance processAnnotation(DataInputStream data, AnnotationTarget target) throws IOException {
+    private AnnotationInstance processAnnotation(DataInputStream data, AnnotationTarget target, boolean visible)
+            throws IOException {
         String annotation = convertClassFieldDescriptor(decodeUtf8Entry(data.readUnsignedShort()));
         int valuePairs = data.readUnsignedShort();
 
@@ -1457,7 +1507,7 @@ public final class Indexer {
         });
 
         DotName annotationName = names.convertToName(annotation);
-        AnnotationInstance instance = new AnnotationInstance(annotationName, target, values);
+        AnnotationInstance instance = AnnotationInstance.create(annotationName, visible, target, values);
 
         // Don't record nested annotations in index
         if (target != null) {
@@ -1536,7 +1586,7 @@ public final class Indexer {
                 return new AnnotationValue.EnumValue(name, type, value);
             }
             case '@':
-                return new AnnotationValue.NestedAnnotation(name, processAnnotation(data, null));
+                return new AnnotationValue.NestedAnnotation(name, processAnnotation(data, null, true));
             case '[': {
                 int numValues = data.readUnsignedShort();
                 AnnotationValue values[] = new AnnotationValue[numValues];
@@ -1904,6 +1954,14 @@ public final class Indexer {
                         annoAttributes[pos] = HAS_MODULE_MAIN_CLASS;
                     } else if (len == RECORD_LEN && match(buf, offset, RECORD)) {
                         annoAttributes[pos] = HAS_RECORD;
+                    } else if (len == RUNTIME_INVISIBLE_ANNOTATIONS_LEN && match(buf, offset, RUNTIME_INVISIBLE_ANNOTATIONS)) {
+                        annoAttributes[pos] = HAS_RUNTIME_INVISIBLE_ANNOTATION;
+                    } else if (len == RUNTIME_INVISIBLE_PARAM_ANNOTATIONS_LEN
+                            && match(buf, offset, RUNTIME_INVISIBLE_PARAM_ANNOTATIONS)) {
+                        annoAttributes[pos] = HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATION;
+                    } else if (len == RUNTIME_INVISIBLE_TYPE_ANNOTATIONS_LEN
+                            && match(buf, offset, RUNTIME_INVISIBLE_TYPE_ANNOTATIONS)) {
+                        annoAttributes[pos] = HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION;
                     }
                     offset += len;
                     break;

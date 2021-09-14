@@ -48,7 +48,7 @@ import java.util.Set;
  */
 final class IndexReaderV2 extends IndexReaderImpl {
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 10;
+    static final int MAX_VERSION = 11;
     static final int MAX_DATA_VERSION = 4;
     private static final byte NULL_TARGET_TAG = 0;
     private static final byte FIELD_TAG = 1;
@@ -78,7 +78,8 @@ final class IndexReaderV2 extends IndexReaderImpl {
     private static final int HAS_ENCLOSING_METHOD = 1;
     private final static byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
 
-    private PackedDataInputStream input;
+    private final PackedDataInputStream input;
+    private final int version;
     private byte[][] byteTable;
     private String[] stringTable;
     private DotName[] nameTable;
@@ -90,11 +91,12 @@ final class IndexReaderV2 extends IndexReaderImpl {
     private RecordComponentInternal[] recordComponentTable;
     private HashMap<DotName, Set<DotName>> users;
 
-    IndexReaderV2(PackedDataInputStream input) {
+    IndexReaderV2(PackedDataInputStream input, int version) {
         this.input = input;
+        this.version = version;
     }
 
-    Index read(int version) throws IOException {
+    Index read() throws IOException {
         try {
             PackedDataInputStream stream = this.input;
             int annotationsSize = stream.readPackedU32();
@@ -119,12 +121,12 @@ final class IndexReaderV2 extends IndexReaderImpl {
             if (version >= 10) {
                 readUsers(stream, usersSize);
             }
-            readMethodTable(stream, version);
+            readMethodTable(stream);
             readFieldTable(stream);
             if (version >= 10) {
                 readRecordComponentTable(stream);
             }
-            return readClasses(stream, annotationsSize, implementorsSize, subclassesSize, version);
+            return readClasses(stream, annotationsSize, implementorsSize, subclassesSize);
         } finally {
             byteTable = null;
             stringTable = null;
@@ -316,7 +318,11 @@ final class IndexReaderV2 extends IndexReaderImpl {
         DotName name = nameTable[stream.readPackedU32()];
         AnnotationTarget target = readAnnotationTarget(stream, caller);
         AnnotationValue[] values = readAnnotationValues(stream);
-        return new AnnotationInstance(name, target, values);
+        boolean visible = true;
+        if (version >= 11) {
+            visible = stream.readBoolean();
+        }
+        return AnnotationInstance.create(name, visible, target, values);
     }
 
     private Type[] readTypeListReference(PackedDataInputStream stream) throws IOException {
@@ -450,12 +456,12 @@ final class IndexReaderV2 extends IndexReaderImpl {
         throw new IllegalStateException("Invalid tag: " + tag);
     }
 
-    private void readMethodTable(PackedDataInputStream stream, int version) throws IOException {
+    private void readMethodTable(PackedDataInputStream stream) throws IOException {
         // Null holds the first slot
         int size = stream.readPackedU32() + 1;
         methodTable = new MethodInternal[size];
         for (int i = 1; i < size; i++) {
-            methodTable[i] = readMethodEntry(stream, version);
+            methodTable[i] = readMethodEntry(stream);
         }
 
     }
@@ -478,7 +484,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         }
     }
 
-    private MethodInternal readMethodEntry(PackedDataInputStream stream, int version) throws IOException {
+    private MethodInternal readMethodEntry(PackedDataInputStream stream) throws IOException {
         byte[] name = byteTable[stream.readPackedU32()];
         short flags = (short) stream.readPackedU32();
         Type[] typeParameters = typeListTable[stream.readPackedU32()];
@@ -538,7 +544,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
     }
 
     private ClassInfo readClassEntry(PackedDataInputStream stream,
-            Map<DotName, List<AnnotationInstance>> masterAnnotations, int version) throws IOException {
+            Map<DotName, List<AnnotationInstance>> masterAnnotations) throws IOException {
         DotName name = nameTable[stream.readPackedU32()];
         short flags = (short) stream.readPackedU32();
         Type superType = typeTable[stream.readPackedU32()];
@@ -564,7 +570,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         if (hasNesting) {
             enclosingClass = nameTable[stream.readPackedU32()];
             simpleName = stringTable[stream.readPackedU32()];
-            enclosingMethod = hasEnclosingMethod ? readEnclosingMethod(stream, version) : null;
+            enclosingMethod = hasEnclosingMethod ? readEnclosingMethod(stream) : null;
         }
 
         int size = stream.readPackedU32();
@@ -784,7 +790,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         }
     }
 
-    private ClassInfo.EnclosingMethodInfo readEnclosingMethod(PackedDataInputStream stream, int version) throws IOException {
+    private ClassInfo.EnclosingMethodInfo readEnclosingMethod(PackedDataInputStream stream) throws IOException {
         if (version < 9 && stream.readUnsignedByte() != HAS_ENCLOSING_METHOD) {
             return null;
         }
@@ -797,7 +803,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
     }
 
     private Index readClasses(PackedDataInputStream stream,
-            int annotationsSize, int implementorsSize, int subclassesSize, int version) throws IOException {
+            int annotationsSize, int implementorsSize, int subclassesSize) throws IOException {
         int classesSize = stream.readPackedU32();
         HashMap<DotName, ClassInfo> classes = new HashMap<DotName, ClassInfo>(classesSize);
         HashMap<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>(subclassesSize);
@@ -806,7 +812,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
                 annotationsSize);
 
         for (int i = 0; i < classesSize; i++) {
-            ClassInfo clazz = readClassEntry(stream, masterAnnotations, version);
+            ClassInfo clazz = readClassEntry(stream, masterAnnotations);
             addClassToMap(subclasses, clazz.superName(), clazz);
             for (Type interfaceType : clazz.interfaceTypeArray()) {
                 addClassToMap(implementors, interfaceType.name(), clazz);
@@ -827,22 +833,21 @@ final class IndexReaderV2 extends IndexReaderImpl {
             users = Collections.emptyMap();
         }
 
-        Map<DotName, ModuleInfo> modules = (version >= 10) ? readModules(stream, masterAnnotations, version)
+        Map<DotName, ModuleInfo> modules = (version >= 10) ? readModules(stream, masterAnnotations)
                 : Collections.<DotName, ModuleInfo> emptyMap();
 
         return new Index(masterAnnotations, subclasses, implementors, classes, modules, users);
     }
 
     private Map<DotName, ModuleInfo> readModules(PackedDataInputStream stream,
-            Map<DotName, List<AnnotationInstance>> masterAnnotations,
-            int version) throws IOException {
+            Map<DotName, List<AnnotationInstance>> masterAnnotations) throws IOException {
 
         int modulesSize = stream.readPackedU32();
         Map<DotName, ModuleInfo> modules = modulesSize > 0 ? new HashMap<DotName, ModuleInfo>(modulesSize)
                 : Collections.<DotName, ModuleInfo> emptyMap();
 
         for (int i = 0; i < modulesSize; i++) {
-            ClassInfo clazz = readClassEntry(stream, masterAnnotations, version);
+            ClassInfo clazz = readClassEntry(stream, masterAnnotations);
             ModuleInfo module = readModuleEntry(stream, clazz);
             modules.put(module.name(), module);
         }

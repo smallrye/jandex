@@ -27,8 +27,9 @@ jobs:
         # we want: all LTS versions (that we care about), latest GA, upcoming
         - 8
         - 11
-        - 16
-        - 17-ea
+        - 17
+        # Temurin doesn't have an 18-ea build yet
+        #- 18-ea
         os:
         - ubuntu-latest
         - windows-latest
@@ -58,6 +59,8 @@ jobs:
         java:
         - 8
         - 11
+        # fails because Groovy (used by Gradle) can't read classes compiled with Java 17
+        #- 17
     steps:
     - name: Checkout
       uses: actions/checkout@v2

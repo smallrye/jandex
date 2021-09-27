@@ -21,6 +21,7 @@ package org.jboss.jandex;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -243,7 +244,13 @@ final class IndexWriterV2 extends IndexWriterImpl {
         Iterator<String> iterator = stringPool.iterator();
         while (iterator.hasNext()) {
             String string = iterator.next();
-            stream.writeUTF(string);
+            if (version >= 11) {
+                byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
+                stream.writePackedU32(bytes.length);
+                stream.write(bytes);
+            } else {
+                stream.writeUTF(string);
+            }
         }
     }
 

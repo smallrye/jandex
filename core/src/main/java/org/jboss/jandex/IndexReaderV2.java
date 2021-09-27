@@ -19,6 +19,7 @@
 package org.jboss.jandex;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -169,7 +170,14 @@ final class IndexReaderV2 extends IndexReaderImpl {
         int size = stream.readPackedU32() + 1;
         String[] stringTable = this.stringTable = new String[size];
         for (int i = 1; i < size; i++) {
-            stringTable[i] = stream.readUTF();
+            if (version >= 11) {
+                int len = stream.readPackedU32();
+                byte[] bytes = new byte[len];
+                stream.readFully(bytes, 0, len);
+                stringTable[i] = new String(bytes, StandardCharsets.UTF_8);
+            } else {
+                stringTable[i] = stream.readUTF();
+            }
         }
     }
 

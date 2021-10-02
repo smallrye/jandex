@@ -60,7 +60,16 @@ class NameTable {
         int pos = name.length() - 1;
         while (--pos >= 0) {
             char c = name.charAt(pos);
-            if (c == delim1 || c == delim2) {
+
+            if (c == delim1) {
+                break;
+            }
+
+            /*
+             * Only split on the inner class delimiter when it will not
+             * result in an empty string for the containing top-level class.
+             */
+            if (c == delim2 && pos > 0 && name.charAt(pos - 1) != delim1) {
                 break;
             }
         }

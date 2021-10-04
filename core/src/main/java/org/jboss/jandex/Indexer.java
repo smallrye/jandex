@@ -21,12 +21,12 @@ package org.jboss.jandex;
 import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Modifier;
-import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -864,7 +864,7 @@ public final class Indexer {
         }
     }
 
-    private void resolveUsers() {
+    private void resolveUsers() throws IOException {
         byte[] pool = constantPool;
         int[] offsets = constantPoolOffsets;
 
@@ -1665,19 +1665,19 @@ public final class Indexer {
 
     }
 
-    private DotName decodeClassEntry(int index) {
+    private DotName decodeClassEntry(int index) throws IOException {
         return index == 0 ? null : decodeDotNameEntry(index, CONSTANT_CLASS, "Class_info", '/');
     }
 
-    private DotName decodeModuleEntry(int index) {
+    private DotName decodeModuleEntry(int index) throws IOException {
         return index == 0 ? null : decodeDotNameEntry(index, CONSTANT_MODULE, "Module_info", '.');
     }
 
-    private DotName decodePackageEntry(int index) {
+    private DotName decodePackageEntry(int index) throws IOException {
         return index == 0 ? null : decodeDotNameEntry(index, CONSTANT_PACKAGE, "Package_info", '/');
     }
 
-    private DotName decodeDotNameEntry(int index, int constantType, String typeName, char delim) {
+    private DotName decodeDotNameEntry(int index, int constantType, String typeName, char delim) throws IOException {
         byte[] pool = constantPool;
         int[] offsets = constantPoolOffsets;
 
@@ -1691,11 +1691,11 @@ public final class Indexer {
         return names.convertToName(decodeUtf8Entry(nameIndex), delim);
     }
 
-    private String decodeOptionalUtf8Entry(int index) {
+    private String decodeOptionalUtf8Entry(int index) throws IOException {
         return index == 0 ? null : decodeUtf8Entry(index);
     }
 
-    private String decodeUtf8Entry(int index) {
+    private String decodeUtf8Entry(int index) throws IOException {
         byte[] pool = constantPool;
         int[] offsets = constantPoolOffsets;
 
@@ -1703,8 +1703,11 @@ public final class Indexer {
         if (pool[pos] != CONSTANT_UTF8)
             throw new IllegalStateException("Constant pool entry is not a utf8 info type: " + index + ":" + pos);
 
-        int len = (pool[++pos] & 0xFF) << 8 | (pool[++pos] & 0xFF);
-        return new String(pool, ++pos, len, Charset.forName("UTF-8"));
+        pos++;
+
+        // DataInputStream needs to read the length again
+        int len = (pool[pos] & 0xFF) << 8 | (pool[pos + 1] & 0xFF);
+        return new DataInputStream(new ByteArrayInputStream(pool, pos, len + 2)).readUTF();
     }
 
     private byte[] decodeUtf8EntryAsBytes(int index) {
@@ -1730,7 +1733,7 @@ public final class Indexer {
         }
     }
 
-    private NameAndType decodeNameAndTypeEntry(int index) {
+    private NameAndType decodeNameAndTypeEntry(int index) throws IOException {
         byte[] pool = constantPool;
         int[] offsets = constantPoolOffsets;
 

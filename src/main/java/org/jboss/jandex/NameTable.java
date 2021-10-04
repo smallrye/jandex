@@ -45,7 +45,7 @@ class NameTable {
         if (result != null)
             return result;
 
-        int loc = lastIndexOf(name, delim, '$');
+        int loc = lastIndexOf(name, delim);
         String local = intern(name.substring(loc + 1));
         DotName prefix = loc < 1 ? null : convertToName(intern(name.substring(0, loc)), delim);
         result = new DotName(prefix, local, true, loc > 0 && name.charAt(loc) == '$');
@@ -55,23 +55,21 @@ class NameTable {
         return result;
     }
 
-    private int lastIndexOf(String name, char delim1, char delim2) {
+    private int lastIndexOf(String name, char delim) {
         // Begin at second last position to avoid empty local name
         int pos = name.length() - 1;
         while (--pos >= 0) {
             char c = name.charAt(pos);
-
-            if (c == delim1) {
+            if (c == delim || c == '$') {
                 break;
             }
+        }
 
-            /*
-             * Only split on the inner class delimiter when it will not
-             * result in an empty string for the containing top-level class.
-             */
-            if (c == delim2 && pos > 0 && name.charAt(pos - 1) != delim1) {
-                break;
-            }
+        // avoid splitting on '$' if previous char is a delimiter or the '$'
+        // is in position 0, because subsequent split would produce an empty
+        // local name
+        if (pos >=0 && name.charAt(pos) == '$' && (pos == 0 || name.charAt(pos - 1) == delim)) {
+            pos--;
         }
 
         return pos;

@@ -20,8 +20,8 @@ package org.jboss.jandex.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -32,6 +32,8 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.junit.Assert;
 import org.junit.Test;
+
+import $pkg.test.$LeadingDelimiter;
 
 /**
  * Since DotName is often used as a key in collections and implements Comparable,
@@ -231,6 +233,33 @@ public class DotNameTestCase {
 
     public static class Test$ {
 
+    }
+
+    @Test
+    public void testLeadingInnerClassDelimiterOnClass() throws IOException {
+        DotName pkg = DotName.createComponentized(null, "$pkg");
+        DotName test = DotName.createComponentized(pkg, "test");
+        DotName testName = DotName.createComponentized(test, $LeadingDelimiter.class.getSimpleName());
+
+        Index index = Index.of($LeadingDelimiter.class);
+        assertEquals(testName, index.getKnownClasses().iterator().next().name());
+        assertNotNull(index.getClassByName(DotName.createSimple($LeadingDelimiter.class.getName())));
+        assertNotNull(index.getClassByName(testName));
+    }
+
+    @Test
+    public void testClassNameWithDelimitersFirstAndLast() throws IOException {
+        DotName pkg = DotName.createComponentized(null, "$delimiters$");
+        DotName test = DotName.createComponentized(pkg, "test");
+        DotName testName = DotName.createComponentized(test, $delimiters$.test.$SurroundedByDelimiters$.class.getSimpleName());
+        DotName testNameSimple = DotName.createSimple($delimiters$.test.$SurroundedByDelimiters$.class.getName());
+
+        Index index = Index.of($delimiters$.test.$SurroundedByDelimiters$.class);
+        DotName indexedName = index.getKnownClasses().iterator().next().name();
+        assertEquals(testName, indexedName);
+        assertNotNull(index.getClassByName(testNameSimple));
+        assertNotNull(index.getClassByName(testName));
+        assertEquals("$delimiters$.test.$SurroundedByDelimiters$", indexedName.toString());
     }
 
     private static DotName createRandomDotName() {

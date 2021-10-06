@@ -848,6 +848,12 @@ public final class Indexer {
 
         BooleanHolder genericsRequired = new BooleanHolder();
         BooleanHolder bridgeIncompatible = new BooleanHolder();
+
+        if (typeTarget.usage() == TypeTarget.Usage.TYPE_PARAMETER
+                || typeTarget.usage() == TypeTarget.Usage.TYPE_PARAMETER_BOUND) {
+            genericsRequired.bool = true;
+        }
+
         ArrayList<PathElement> pathElements = processTargetPath(data, genericsRequired, bridgeIncompatible);
         AnnotationInstance annotation = processAnnotation(data, typeTarget, visible);
         return new TypeAnnotationState(typeTarget, annotation, pathElements, genericsRequired.bool, bridgeIncompatible.bool);

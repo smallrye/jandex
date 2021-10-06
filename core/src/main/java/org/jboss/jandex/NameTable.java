@@ -68,7 +68,7 @@ class NameTable {
         // avoid splitting on '$' if previous char is a delimiter or the '$'
         // is in position 0, because subsequent split would produce an empty
         // local name
-        if (pos >=0 && name.charAt(pos) == '$' && (pos == 0 || name.charAt(pos - 1) == delim)) {
+        if (pos >= 0 && name.charAt(pos) == '$' && (pos == 0 || name.charAt(pos - 1) == delim)) {
             pos--;
         }
 

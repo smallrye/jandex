@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
@@ -21,6 +23,7 @@ import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.type.TypeDescription;
 
 public class Utf8ConstantEncodingTest {
+    @Retention(RetentionPolicy.RUNTIME)
     @interface MyAnnotation {
         String value();
     }
@@ -34,7 +37,7 @@ public class Utf8ConstantEncodingTest {
         // it is encoded as 0xC0 0x80 (this is not the only difference between the two encodings,
         // but is the easiest to test with)
         StringBuilder longString = new StringBuilder();
-        for (int i = 0; i < 25_000; i++) {
+        for (int i = 0; i < 25000; i++) {
             longString.append('\0');
         }
         LONG_STRING = longString.toString();

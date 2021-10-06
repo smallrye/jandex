@@ -19,6 +19,7 @@
 package org.jboss.jandex.test;
 
 import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
@@ -28,6 +29,10 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 public class BridgeMethodTestCase {
 
@@ -133,5 +138,83 @@ public class BridgeMethodTestCase {
         if (methods == 0) {
             Assert.fail("At least one '" + methodName + "' method is expected in " + klass);
         }
+    }
+
+    @Test
+    public void returnType() throws IOException {
+        DotName nullable = DotName.createSimple("test.Nullable");
+        DotName untainted = DotName.createSimple("test.Untainted");
+
+        Indexer indexer = new Indexer();
+        ClassInfo clazz = indexer.index(getClassBytes("test/BridgeMethods$Subclass.class"));
+        for (MethodInfo method : filterMethods(clazz, "typeVariable")) {
+            if (method.returnType().name().equals(DotName.createSimple(Collection.class.getName()))) {
+                // bridge method
+                Assert.assertTrue(isBridge(method));
+                Assert.assertEquals(Type.Kind.CLASS, method.returnType().kind());
+                Assert.assertTrue(method.typeParameters().isEmpty());
+
+                Assert.assertNotNull(method.annotation(nullable));
+                Assert.assertEquals(Type.Kind.VOID, method.annotation(nullable).target().asType().target().kind());
+
+                Assert.assertNotNull(method.annotation(untainted));
+                Assert.assertEquals(Type.Kind.VOID, method.annotation(untainted).target().asType().target().kind());
+            } else if (method.returnType().name().equals(DotName.createSimple(Set.class.getName()))) {
+                // actual overridden method
+                Assert.assertFalse(isBridge(method));
+                Assert.assertEquals(Type.Kind.PARAMETERIZED_TYPE, method.returnType().kind());
+                Assert.assertFalse(method.typeParameters().isEmpty());
+
+                Assert.assertNotNull(method.annotation(nullable));
+                Assert.assertEquals(Type.Kind.CLASS, method.annotation(nullable).target().asType().target().kind());
+                Assert.assertNotNull(method.typeParameters().get(0).asTypeVariable()
+                        .bounds().get(0).annotation(nullable));
+
+                Assert.assertNotNull(method.annotation(untainted));
+                Assert.assertEquals(Type.Kind.TYPE_VARIABLE, method.annotation(untainted).target().asType().target().kind());
+                Assert.assertNotNull(method.typeParameters().get(0).asTypeVariable().annotation(untainted));
+            } else {
+                Assert.fail();
+            }
+        }
+
+        for (MethodInfo method : filterMethods(clazz, "wildcard")) {
+            if (method.returnType().name().equals(DotName.createSimple(Collection.class.getName()))) {
+                // bridge method
+                Assert.assertTrue(isBridge(method));
+                Assert.assertEquals(Type.Kind.CLASS, method.returnType().kind());
+
+                Assert.assertNotNull(method.annotation(nullable));
+                Assert.assertEquals(Type.Kind.VOID, method.annotation(nullable).target().asType().target().kind());
+
+                Assert.assertNotNull(method.annotation(untainted));
+                Assert.assertEquals(Type.Kind.VOID, method.annotation(untainted).target().asType().target().kind());
+            } else if (method.returnType().name().equals(DotName.createSimple(Set.class.getName()))) {
+                // actual overridden method
+                Assert.assertFalse(isBridge(method));
+                Assert.assertEquals(Type.Kind.PARAMETERIZED_TYPE, method.returnType().kind());
+
+                Assert.assertNotNull(method.annotation(nullable));
+                Assert.assertEquals(Type.Kind.CLASS, method.annotation(nullable).target().asType().target().kind());
+                Assert.assertNotNull(method.returnType().asParameterizedType().arguments().get(0)
+                        .asWildcardType().extendsBound().annotation(nullable));
+
+                Assert.assertNotNull(method.annotation(untainted));
+                Assert.assertEquals(Type.Kind.WILDCARD_TYPE, method.annotation(untainted).target().asType().target().kind());
+                Assert.assertNotNull(method.returnType().asParameterizedType().arguments().get(0).annotation(untainted));
+            } else {
+                Assert.fail();
+            }
+        }
+    }
+
+    private List<MethodInfo> filterMethods(ClassInfo clazz, String methodName) {
+        List<MethodInfo> result = new ArrayList<MethodInfo>();
+        for (MethodInfo method : clazz.methods()) {
+            if (methodName.equals(method.name())) {
+                result.add(method);
+            }
+        }
+        return result;
     }
 }

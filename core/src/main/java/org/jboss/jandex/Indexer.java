@@ -453,6 +453,13 @@ public final class Indexer {
                     }
                 }
                 int numParameters = data.readUnsignedByte();
+                if (target.asMethod().parameters().size() > 255) {
+                    // the Kotlin compiler happily generates methods with more than 255 parameters,
+                    // even if the JVM specification prohibits them, so if the method descriptor
+                    // indicates that so many parameters are present, let's use that count instead of
+                    // the one we just read (for extra safety, do NOT do this for compliant methods)
+                    numParameters = target.asMethod().parameters().size();
+                }
                 for (short p = 0; p < numParameters; p++) {
                     processAnnotations(data, new MethodParameterInfo((MethodInfo) target, p),
                             annotationAttribute == HAS_RUNTIME_PARAM_ANNOTATION);
@@ -670,6 +677,13 @@ public final class Indexer {
 
     private void processMethodParameters(DataInputStream data, MethodInfo target) throws IOException {
         int numParameters = data.readUnsignedByte();
+        if (target.parameters().size() > 255) {
+            // the Kotlin compiler happily generates methods with more than 255 parameters,
+            // even if the JVM specification prohibits them, so if the method descriptor
+            // indicates that so many parameters are present, let's use that count instead of
+            // the one we just read (for extra safety, do NOT do this for compliant methods)
+            numParameters = target.parameters().size();
+        }
         byte[][] parameterNames = numParameters > 0 ? new byte[numParameters][] : MethodInternal.EMPTY_PARAMETER_NAMES;
         int filledParameters = 0;
         for (int i = 0; i < numParameters; i++) {

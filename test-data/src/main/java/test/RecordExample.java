@@ -6,8 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @RecordExample.RecordAnnotation("Example")
-public record RecordExample(@Nullable Integer id,
-        @Nullable @ComponentAnnotation("nameComponent") @FieldAnnotation("nameField") @AccessorAnnotation("nameAccessor") String name) {
+public record RecordExample<T> (@Nullable Integer id,
+        @Nullable @ComponentAnnotation("nameComponent") @FieldAnnotation("nameField") @AccessorAnnotation("nameAccessor") String name,
+        T generic) {
 
     static String staticField;
 

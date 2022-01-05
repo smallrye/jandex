@@ -308,6 +308,7 @@ public final class Indexer {
     private ArrayList<AnnotationInstance> elementAnnotations;
     private IdentityHashMap<AnnotationTarget, Object> signaturePresent;
     private List<Object> signatures;
+    private int classSignatureIndex;
     private Map<DotName, InnerClassInfo> innerClasses;
     private IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>> typeAnnotations;
     private List<MethodInfo> methods;
@@ -357,6 +358,7 @@ public final class Indexer {
         elementAnnotations = new ArrayList<AnnotationInstance>();
         signaturePresent = new IdentityHashMap<AnnotationTarget, Object>();
         signatures = new ArrayList<Object>();
+        classSignatureIndex = -1;
         typeAnnotations = new IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>>();
 
         // in bytecode, record components are stored as class attributes,
@@ -1451,6 +1453,9 @@ public final class Indexer {
 
     private void processSignature(DataInputStream data, AnnotationTarget target) throws IOException {
         String signature = decodeUtf8Entry(data.readUnsignedShort());
+        if (target instanceof ClassInfo) {
+            classSignatureIndex = signatures.size();
+        }
         signatures.add(signature);
         signatures.add(target);
         signaturePresent.put(target, null);
@@ -1466,14 +1471,18 @@ public final class Indexer {
     private void applySignatures() {
         int end = signatures.size();
 
-        // Class signature is always the last element and should be processed first
-        Object last = end > 1 ? signatures.get(end - 1) : null;
-        if (last instanceof ClassInfo) {
-            parseClassSignature((String) signatures.get(end - 2), (ClassInfo) last);
-            end -= 2;
+        // Class signature should be processed first to establish class type parameters
+        if (classSignatureIndex >= 0) {
+            String elementSignature = (String) signatures.get(classSignatureIndex);
+            Object element = signatures.get(classSignatureIndex + 1);
+            parseClassSignature(elementSignature, (ClassInfo) element);
         }
 
         for (int i = 0; i < end; i += 2) {
+            if (i == classSignatureIndex) {
+                continue;
+            }
+
             String elementSignature = (String) signatures.get(i);
             Object element = signatures.get(i + 1);
 
@@ -2072,6 +2081,7 @@ public final class Indexer {
             elementAnnotations = null;
             innerClasses = null;
             signatures = null;
+            classSignatureIndex = -1;
             signaturePresent = null;
         }
     }

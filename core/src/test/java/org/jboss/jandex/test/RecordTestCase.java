@@ -78,7 +78,7 @@ public class RecordTestCase {
         assertEquals("name", componentAnnos.get(0).target().asRecordComponent().name());
         assertEquals("nameComponent", componentAnnos.get(0).value().asString());
 
-        assertEquals(2, rec.recordComponents().size());
+        assertEquals(3, rec.recordComponents().size());
 
         RecordComponentInfo idComponent = rec.recordComponent("id");
         assertNotNull(idComponent);
@@ -143,6 +143,16 @@ public class RecordTestCase {
         assertEquals("name", nameAnnotations.get(1).target().asMethod().name());
         assertEquals("test.RecordExample$AccessorAnnotation", nameAnnotations.get(1).name().toString());
         assertEquals("nameAccessor", nameAnnotations.get(1).value().asString());
+    }
+
+    @Test
+    public void testRecordSignatureProcessed() {
+        ClassInfo rec = index.getClassByName(DotName.createSimple("test.RecordExample"));
+        assertNotNull(rec);
+        assertTrue(rec.isRecord());
+
+        assertEquals(1, rec.typeParameters().size());
+        assertEquals("T", rec.typeParameters().get(0).identifier());
     }
 
     private Index buildIndex() throws IOException {

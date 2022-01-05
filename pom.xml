@@ -129,7 +129,7 @@
         <dependency>
             <groupId>org.jboss.jandex</groupId>
             <artifactId>typeannotation-test</artifactId>
-            <version>1.10-SNAPSHOT</version>
+            <version>1.10</version>
             <type>jar</type>
             <scope>test</scope>
         </dependency>

@@ -2030,8 +2030,9 @@ public final class Indexer {
             throw new IllegalArgumentException("clazz cannot be null");
         }
         String resourceName = '/' + clazz.getName().replace('.', '/') + ".class";
-        InputStream resource = clazz.getResourceAsStream(resourceName);
-        return index(resource);
+        try (InputStream resource = clazz.getResourceAsStream(resourceName)) {
+            return index(resource);
+        }
     }
 
     /**
@@ -2054,7 +2055,7 @@ public final class Indexer {
 
             // Retroweaved classes may contain annotations
             // Also, hierarchy info is needed regardless
-            if (!isJDK11OrNewer(data))
+            if (!isJDK11OrNewer(data)) // refers to JDK 1.1, not JDK 11
                 return null;
 
             initIndexMaps();

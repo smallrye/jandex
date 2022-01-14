@@ -278,6 +278,8 @@ public final class Indexer {
     private List<RecordComponentInfo> recordComponents;
     private byte[][] debugParameterNames;
     private byte[][] methodParameterNames;
+    private List<DotName> modulePackages;
+    private DotName moduleMainClass;
 
     // Index lifespan fields
     private Map<DotName, List<AnnotationInstance>> masterAnnotations;
@@ -327,6 +329,9 @@ public final class Indexer {
         // in bytecode, record components are stored as class attributes,
         // and if the attribute is missing, processRecordComponents isn't called at all
         recordComponents = new ArrayList<RecordComponentInfo>();
+
+        modulePackages = null;
+        moduleMainClass = null;
     }
 
     private void processMethodInfo(DataInputStream data) throws IOException {
@@ -558,7 +563,7 @@ public final class Indexer {
             packages.add(decodePackageEntry(data.readUnsignedShort()));
         }
 
-        target.module().setPackages(packages);
+        this.modulePackages = packages;
     }
 
     private void processModuleMainClass(DataInputStream data, ClassInfo target) throws IOException {
@@ -566,7 +571,7 @@ public final class Indexer {
             throw new IllegalStateException("ModuleMainClass attribute appeared in a non-module class file");
         }
 
-        target.module().setMainClass(decodeClassEntry(data.readUnsignedShort()));
+        this.moduleMainClass = decodeClassEntry(data.readUnsignedShort());
     }
 
     private void processCode(DataInputStream data, MethodInfo target) throws IOException {
@@ -1993,6 +1998,12 @@ public final class Indexer {
             currentClass.setFields(fields, names);
             currentClass.setRecordComponents(recordComponents, names);
             currentClass.setAnnotations(classAnnotations);
+            if (currentClass.isModule() && currentClass.module() != null) {
+                if (modulePackages != null) {
+                    currentClass.module().setPackages(modulePackages);
+                }
+                currentClass.module().setMainClass(moduleMainClass);
+            }
 
             return currentClass;
         } finally {

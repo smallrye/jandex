@@ -22,16 +22,20 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * An index useful for quickly processing annotations. The index is read-only and supports
@@ -137,30 +141,50 @@ public final class Index implements IndexView {
     }
 
     /**
-     * Constructs an Index of class files found in the passed directories.
-     * The directories are <i>not</i> scanned recursively.
+     * Constructs an Index of the passed files and directories. Files may be class files or JAR files.
+     * Directories are scanned for class files, but <i>not</i> recursively.
      *
-     * @param directories Directories containing class files to index
+     * @param files class files, JAR files or directories containing class files to index
      * @return the index
-     * @throws IllegalArgumentException if any passed {@code File} is null or not a directory
+     * @throws IllegalArgumentException if any passed {@code File} is null or not a class file, JAR file or directory
      */
-    public static Index of(File... directories) throws IOException {
+    public static Index of(File... files) throws IOException {
         Indexer indexer = new Indexer();
 
-        for (File directory : directories) {
-            if (directory == null || !directory.isDirectory()) {
-                throw new IllegalArgumentException("not a directory: " + directory);
-            }
+        for (File file : files) {
+            if (file == null) {
+                throw new IllegalArgumentException("File must not be null");
+            } else if (file.isDirectory()) {
+                File[] classFiles = file.listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File pathname) {
+                        return pathname.isFile() && pathname.getName().endsWith(".class");
+                    }
+                });
 
-            File[] sources = directory.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File pathname) {
-                    return pathname.isFile() && pathname.getName().endsWith(".class");
+                for (File classFile : classFiles) {
+                    try (InputStream in = new FileInputStream(classFile)) {
+                        indexer.index(in);
+                    }
                 }
-            });
-
-            for (File source : sources) {
-                indexer.index(new FileInputStream(source));
+            } else if (file.isFile() && file.getName().endsWith(".class")) {
+                try (InputStream in = new FileInputStream(file)) {
+                    indexer.index(in);
+                }
+            } else if (file.isFile() && file.getName().endsWith(".jar")) {
+                try (JarFile jarFile = new JarFile(file)) {
+                    Enumeration<JarEntry> entries = jarFile.entries();
+                    while (entries.hasMoreElements()) {
+                        JarEntry entry = entries.nextElement();
+                        if (entry.getName().endsWith(".class")) {
+                            try (InputStream in = jarFile.getInputStream(entry)) {
+                                indexer.index(in);
+                            }
+                        }
+                    }
+                }
+            } else {
+                throw new IllegalArgumentException("Not a class file, JAR file or directory: " + file);
             }
         }
 

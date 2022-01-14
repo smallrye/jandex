@@ -277,10 +277,19 @@ public class BasicTestCase {
 
     @Test
     public void testIndexOfEmptyDirectory() throws IOException, URISyntaxException {
-        URL testLocation = getClass().getResource(getClass().getSimpleName() + ".class");
-        File testDirectory = new File(testLocation.toURI().resolve("../../../../"));
-        Index index = Index.of(testDirectory);
-        assertEquals(0, index.getKnownClasses().size());
+        File tempDir = null;
+
+        try {
+            tempDir = File.createTempFile("temp", ".dir");
+            tempDir.delete();
+            tempDir.mkdir();
+            Index index = Index.of(tempDir);
+            assertEquals(0, index.getKnownClasses().size());
+        } finally {
+            if (tempDir != null) {
+                tempDir.delete();
+            }
+        }
     }
 
     @Test
@@ -306,19 +315,43 @@ public class BasicTestCase {
     }
 
     @Test
-    public void testIndexOfNonDirectory() throws IOException, URISyntaxException {
+    public void testIndexOfClassFile() throws IOException, URISyntaxException {
         final URL testLocation = getClass().getResource(getClass().getSimpleName() + ".class");
         final File thisClassFile = new File(testLocation.toURI());
-        assertThrows(IllegalArgumentException.class, new ThrowingRunnable() {
-            @Override
-            public void run() throws Throwable {
-                Index.of(thisClassFile);
-            }
-        });
+        Index index = Index.of(thisClassFile);
+        assertEquals(1, index.getKnownClasses().size());
     }
 
     @Test
-    public void testIndexOfNullDirectory() throws IOException, URISyntaxException {
+    public void testIndexOfNonClassFile() throws IOException {
+        File tempDir = null;
+        File tempFile = null;
+
+        try {
+            tempDir = File.createTempFile("temp", ".dir");
+            tempDir.delete();
+            tempDir.mkdir();
+            tempFile = File.createTempFile("dummy", ".tmp", tempDir);
+
+            File temp = tempFile;
+            assertThrows(IllegalArgumentException.class, new ThrowingRunnable() {
+                @Override
+                public void run() throws Throwable {
+                    Index.of(temp);
+                }
+            });
+        } finally {
+            if (tempFile != null) {
+                tempFile.delete();
+            }
+            if (tempDir != null) {
+                tempDir.delete();
+            }
+        }
+    }
+
+    @Test
+    public void testIndexOfNullDirectory() {
         assertThrows(IllegalArgumentException.class, new ThrowingRunnable() {
             @Override
             public void run() throws Throwable {

@@ -1,6 +1,6 @@
 package org.jboss.jandex.test;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,7 +10,7 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.Type;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class BoundedWildcardTestCase {
 

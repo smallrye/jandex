@@ -1,13 +1,13 @@
 package org.jboss.jandex.test;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.Callable;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Indexer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;

@@ -18,6 +18,8 @@
 
 package org.jboss.jandex.test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,8 +38,7 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.RecordComponentInfo;
 import org.jboss.jandex.TypeTarget;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class AnnotationInstanceFilterTestCase {
     private static class Hit implements AnnotationTarget {
@@ -144,7 +145,7 @@ public class AnnotationInstanceFilterTestCase {
             throws NoSuchMethodException, ClassNotFoundException, InstantiationException, IllegalAccessException,
             java.lang.reflect.InvocationTargetException {
         Collection<AnnotationInstance> filter1 = createFilter(map, clazz);
-        Assert.assertEquals(expected, filter1.size());
+        assertEquals(expected, filter1.size());
 
         int count = 0;
         for (AnnotationInstance instance : filter1) {
@@ -153,7 +154,7 @@ public class AnnotationInstanceFilterTestCase {
             }
         }
 
-        Assert.assertEquals(expected, count);
+        assertEquals(expected, count);
     }
 
     @SuppressWarnings("unchecked")

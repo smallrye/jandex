@@ -20,7 +20,7 @@
         <version.apiviz>1.3.2.GA</version.apiviz>
         <version.bytebuddy>1.11.13</version.bytebuddy>
         <version.exec-maven-plugin>3.0.0</version.exec-maven-plugin>
-        <version.junit>4.13.2</version.junit>
+        <version.junit>5.8.2</version.junit>
         <version.maven>3.8.1</version.maven>
         <version.maven-bundle-plugin>5.1.2</version.maven-bundle-plugin>
         <version.maven-enforcer-plugin>3.0.0</version.maven-enforcer-plugin>
@@ -62,11 +62,6 @@
             </dependency>
 
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${version.junit}</version>
-            </dependency>
-            <dependency>
                 <groupId>net.bytebuddy</groupId>
                 <artifactId>byte-buddy</artifactId>
                 <version>${version.bytebuddy}</version>
@@ -90,6 +85,11 @@
                 <groupId>org.codehaus.plexus</groupId>
                 <artifactId>plexus-utils</artifactId>
                 <version>${version.plexus-utils}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${version.junit}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

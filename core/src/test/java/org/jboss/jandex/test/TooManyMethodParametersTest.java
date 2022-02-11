@@ -1,7 +1,7 @@
 package org.jboss.jandex.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.NamingStrategy;

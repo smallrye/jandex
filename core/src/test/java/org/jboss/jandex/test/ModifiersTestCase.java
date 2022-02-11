@@ -1,7 +1,7 @@
 package org.jboss.jandex.test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -10,16 +10,13 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.asm.ModifierAdjustment;
 import net.bytebuddy.description.modifier.SyntheticState;
 import net.bytebuddy.implementation.FixedValue;
 
-/**
- * 
- */
 public class ModifiersTestCase {
 
     @Test

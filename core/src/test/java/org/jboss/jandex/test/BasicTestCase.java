@@ -18,16 +18,14 @@
 
 package org.jboss.jandex.test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -69,8 +67,7 @@ import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.PrimitiveType;
 import org.jboss.jandex.Type;
-import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
+import org.junit.jupiter.api.Test;
 
 public class BasicTestCase {
     @Retention(RetentionPolicy.RUNTIME)
@@ -334,11 +331,8 @@ public class BasicTestCase {
             tempFile = File.createTempFile("dummy", ".tmp", tempDir);
 
             File temp = tempFile;
-            assertThrows(IllegalArgumentException.class, new ThrowingRunnable() {
-                @Override
-                public void run() throws Throwable {
-                    Index.of(temp);
-                }
+            assertThrows(IllegalArgumentException.class, () -> {
+                Index.of(temp);
             });
         } finally {
             if (tempFile != null) {
@@ -352,11 +346,8 @@ public class BasicTestCase {
 
     @Test
     public void testIndexOfNullDirectory() {
-        assertThrows(IllegalArgumentException.class, new ThrowingRunnable() {
-            @Override
-            public void run() throws Throwable {
-                Index.of((File) null);
-            }
+        assertThrows(IllegalArgumentException.class, () -> {
+            Index.of((File) null);
         });
     }
 
@@ -516,16 +507,20 @@ public class BasicTestCase {
         assertNesting(Something.class, ClassInfo.NestingType.LOCAL, true);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testNullStream() throws IOException {
-        Indexer indexer = new Indexer();
-        indexer.index(null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            Indexer indexer = new Indexer();
+            indexer.index(null);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testNullClass() throws IOException {
-        Indexer indexer = new Indexer();
-        indexer.indexClass(null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            Indexer indexer = new Indexer();
+            indexer.indexClass(null);
+        });
     }
 
     @Test
@@ -724,7 +719,7 @@ public class BasicTestCase {
     private void assertHasNoArgsConstructor(Class<?> clazz, boolean result) throws IOException {
         ClassInfo classInfo = getIndexForClasses(clazz).getClassByName(DotName.createSimple(clazz.getName()));
         assertNotNull(classInfo);
-        assertThat(classInfo.hasNoArgsConstructor(), is(result));
+        assertEquals(result, classInfo.hasNoArgsConstructor());
     }
 
     private void assertFlagSet(Class<?> clazz, int flag, boolean result) throws IOException {
@@ -736,7 +731,11 @@ public class BasicTestCase {
     private void assertNesting(Class<?> clazz, ClassInfo.NestingType nesting, boolean result) throws IOException {
         ClassInfo classInfo = getIndexForClasses(clazz).getClassByName(DotName.createSimple(clazz.getName()));
         assertNotNull(classInfo);
-        assertThat(classInfo.nestingType(), result ? is(nesting) : not(nesting));
+        if (result) {
+            assertEquals(nesting, classInfo.nestingType());
+        } else {
+            assertNotEquals(nesting, classInfo.nestingType());
+        }
     }
 
     static Index getIndexForClasses(Class<?>... classes) throws IOException {

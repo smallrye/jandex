@@ -18,7 +18,7 @@
 
 package org.jboss.jandex.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,7 +34,7 @@ import org.jboss.jandex.IndexReader;
 import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.TypeTarget;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TypeUseTestCase {
 

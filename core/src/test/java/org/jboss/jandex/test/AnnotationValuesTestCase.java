@@ -18,8 +18,8 @@
 
 package org.jboss.jandex.test;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -28,7 +28,7 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Type;
 import org.jboss.jandex.Type.Kind;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class AnnotationValuesTestCase {
 
@@ -85,7 +85,7 @@ public class AnnotationValuesTestCase {
     void assertValues(AnnotationValue val, AnnotationValue... differentValues) {
         assertEquals(val, val);
         for (AnnotationValue diff : differentValues) {
-            assertFalse("Values should not be equal: " + val + " and " + diff, val.equals(diff));
+            assertNotEquals(val, diff, "Values should not be equal: " + val + " and " + diff);
         }
     }
 

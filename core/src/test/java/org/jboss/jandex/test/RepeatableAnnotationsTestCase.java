@@ -18,8 +18,9 @@
 
 package org.jboss.jandex.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +39,7 @@ import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class RepeatableAnnotationsTestCase {
 
@@ -105,17 +106,19 @@ public class RepeatableAnnotationsTestCase {
         assertEquals(ALPHA_CONTAINER_NAME, direct.get(0).name());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAnnotationDefinitionNotAvailable() throws IOException {
-        Index index = getIndexForClass(MY_ANNOTATED_NAME);
-        index.getAnnotationsWithRepeatable(ALPHA_NAME, index);
+        assertThrows(IllegalArgumentException.class, () -> {
+            Index index = getIndexForClass(MY_ANNOTATED_NAME);
+            index.getAnnotationsWithRepeatable(ALPHA_NAME, index);
+        });
     }
 
     private void assertValues(Collection<AnnotationInstance> instances, Integer... values) {
         assertEquals(values.length, instances.size());
         List<Integer> list = Arrays.asList(values);
         for (AnnotationInstance i : instances) {
-            assertTrue(i + " is not found in " + values, list.contains(i.value().asInt()));
+            assertTrue(list.contains(i.value().asInt()), i + " is not found in " + Arrays.toString(values));
         }
     }
 

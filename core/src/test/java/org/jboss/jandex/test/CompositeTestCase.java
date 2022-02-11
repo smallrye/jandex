@@ -18,7 +18,7 @@
 
 package org.jboss.jandex.test;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -32,7 +32,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.CompositeIndex;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class CompositeTestCase {
 

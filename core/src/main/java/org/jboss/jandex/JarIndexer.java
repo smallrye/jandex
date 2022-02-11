@@ -171,9 +171,9 @@ public class JarIndexer {
                 if (entry.getName().endsWith(".class")) {
                     try {
                         final InputStream stream = jar.getInputStream(entry);
-                        ClassInfo info;
+                        ClassSummary info;
                         try {
-                            info = indexer.index(stream);
+                            info = indexer.indexWithSummary(stream);
                         } finally {
                             safeClose(stream);
                         }
@@ -229,8 +229,8 @@ public class JarIndexer {
         }
     }
 
-    private static void printIndexEntryInfo(ClassInfo info, PrintStream infoStream) {
-        infoStream.println("Indexed " + info.name() + " (" + info.annotations().size() + " annotations)");
+    private static void printIndexEntryInfo(ClassSummary info, PrintStream infoStream) {
+        infoStream.println("Indexed " + info.name() + " (" + info.annotationsCount() + " annotations)");
     }
 
     private static void copy(InputStream in, OutputStream out) throws IOException {

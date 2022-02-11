@@ -22,8 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -33,18 +31,16 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexReader;
-import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.TypeParameterBoundTypeTarget;
+import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
 public class TypeParameterBoundTestCase {
 
     @Test
     public void listConsumer() throws IOException {
-        Indexer indexer = new Indexer();
-        ClassInfo info = indexer.index(getClassBytes("test/TypeParameterBoundExample$ListConsumer.class"));
+        ClassInfo info = IndexingUtil.indexSingle(getClassBytes("test/TypeParameterBoundExample$ListConsumer.class"));
         assertEquals(
                 "T extends @Nullable java.util.List",
                 info.typeParameters().get(0).toString());
@@ -52,8 +48,7 @@ public class TypeParameterBoundTestCase {
 
     @Test
     public void arrayListConsumer() throws IOException {
-        Indexer indexer = new Indexer();
-        ClassInfo info = indexer.index(getClassBytes("test/TypeParameterBoundExample$ArrayListConsumer.class"));
+        ClassInfo info = IndexingUtil.indexSingle(getClassBytes("test/TypeParameterBoundExample$ArrayListConsumer.class"));
         assertEquals(
                 "T extends @Nullable java.util.ArrayList",
                 info.typeParameters().get(0).toString());
@@ -61,8 +56,8 @@ public class TypeParameterBoundTestCase {
 
     @Test
     public void serializableListConsumer() throws IOException {
-        Indexer indexer = new Indexer();
-        ClassInfo info = indexer.index(getClassBytes("test/TypeParameterBoundExample$SerializableListConsumer.class"));
+        ClassInfo info = IndexingUtil
+                .indexSingle(getClassBytes("test/TypeParameterBoundExample$SerializableListConsumer.class"));
         assertEquals(
                 "T extends @Nullable java.util.List & @Untainted java.io.Serializable",
                 info.typeParameters().get(0).toString());
@@ -70,28 +65,25 @@ public class TypeParameterBoundTestCase {
 
     @Test
     public void classExtendsOnInner() throws IOException {
-        Indexer indexer = new Indexer();
-        ClassInfo info = indexer.index(getClassBytes("test/TypeParameterBoundExample$IteratorSupplier.class"));
+        ClassInfo info = IndexingUtil.indexSingle(getClassBytes("test/TypeParameterBoundExample$IteratorSupplier.class"));
         assertEquals("java.util.function.Supplier<java.util.function.Consumer<@Nullable java.lang.Object[]>>",
                 info.interfaceTypes().get(0).toString());
     }
 
     @Test
     public void classExtendsOnAnonInInner() throws IOException {
-        Indexer indexer = new Indexer();
-        ClassInfo info = indexer.index(getClassBytes("test/TypeParameterBoundExample$IteratorSupplier$1.class"));
+        ClassInfo info = IndexingUtil.indexSingle(getClassBytes("test/TypeParameterBoundExample$IteratorSupplier$1.class"));
         assertEquals("java.util.function.Consumer<@Nullable java.lang.Object[]>",
                 info.interfaceTypes().get(0).toString());
     }
 
     @Test
     public void classExtendsNestAnonExtendsInner() throws IOException {
-        Indexer indexer = new Indexer();
-        ClassInfo info = indexer.index(getClassBytes("test/TypeParameterBoundExample$Nest1$Nest2$Nest3$1$1.class"));
+        ClassInfo info = IndexingUtil.indexSingle(getClassBytes("test/TypeParameterBoundExample$Nest1$Nest2$Nest3$1$1.class"));
         assertEquals(
                 "test.TypeParameterBoundExample$Nest1<java.lang.String>.Nest2<java.lang.Object[]>.Nest3<@Nullable java.lang.Integer>",
                 info.superClassType().toString());
-        info = indexer.index(getClassBytes("test/TypeParameterBoundExample$Nest1$Nest2$Nest3$1$2.class"));
+        info = IndexingUtil.indexSingle(getClassBytes("test/TypeParameterBoundExample$Nest1$Nest2$Nest3$1$2.class"));
         assertEquals(
                 "test.TypeParameterBoundExample$Nest1<java.lang.String>.Nest2<@Nullable java.lang.Object[]>.Nest3<java.lang.Integer>",
                 info.superClassType().toString());
@@ -101,15 +93,15 @@ public class TypeParameterBoundTestCase {
     public void serializableListConsumerDA() throws IOException {
         Indexer indexer = new Indexer();
         String klass = "TypeParameterBoundExample$SerializableListConsumerDoubleA";
-        ClassInfo info = indexer.index(getClassBytes("test/" + klass + ".class"));
+        indexer.index(getClassBytes("test/" + klass + ".class"));
         Index index = indexer.complete();
+
+        ClassInfo info = index.getKnownClasses().iterator().next();
 
         assertNotNull(info);
         verifySerializableListConsumerDA(info);
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new IndexWriter(baos).write(index);
-        index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
+        index = IndexingUtil.roundtrip(index);
         info = index.getClassByName(DotName.createSimple("test." + klass));
 
         assertNotNull(info);

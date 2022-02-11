@@ -20,17 +20,14 @@ package org.jboss.jandex.test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexReader;
-import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
+import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
 public class InnerClassTypeAnnotationTestCase {
@@ -76,10 +73,7 @@ public class InnerClassTypeAnnotationTestCase {
 
     private void verifyRW(String name, int pos1, int pos2) throws IOException {
         Index index = buildIndex(name);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new IndexWriter(baos).write(index);
-
-        index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
+        index = IndexingUtil.roundtrip(index);
 
         verifyTypeAnnotations(index, name, pos1);
         if (pos2 != -1) {

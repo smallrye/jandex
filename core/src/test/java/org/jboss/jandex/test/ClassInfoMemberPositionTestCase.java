@@ -20,22 +20,16 @@ package org.jboss.jandex.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexReader;
-import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,32 +53,8 @@ public class ClassInfoMemberPositionTestCase {
     }
 
     @Test
-    public void testMembersUnsortedWithFile() throws IOException {
-        File tmpIndex = File.createTempFile("cls", ".idx");
-        OutputStream output = null;
-        try {
-            output = new FileOutputStream(tmpIndex);
-            IndexWriter writer = new IndexWriter(output);
-            writer.write(this.index);
-        } finally {
-            if (output != null) {
-                output.close();
-            }
-        }
-
-        InputStream input = null;
-        Index fileIndex;
-        try {
-            input = new FileInputStream(tmpIndex);
-            IndexReader reader = new IndexReader(input);
-            fileIndex = reader.read();
-        } finally {
-            if (input != null) {
-                input.close();
-            }
-        }
-
-        assertOriginalPositions(fileIndex);
+    public void testMembersUnsortedAfterRoundtrip() throws IOException {
+        assertOriginalPositions(IndexingUtil.roundtrip(index));
     }
 
     @Test

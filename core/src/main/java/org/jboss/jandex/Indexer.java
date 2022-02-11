@@ -2017,35 +2017,46 @@ public final class Indexer {
 
     /**
      * Analyze and index the class file data present in the passed class.
-     * Each call adds information to the final complete index; however, to aid in
-     * processing a per-class index (ClassInfo) is returned on each call.
+     * Each call adds information to the final complete index.
      *
      * @param clazz a previously-loaded class
-     * @return a class index containing all annotations on the passed class stream
      * @throws IOException if the class file data is corrupt or the underlying stream fails
      * @throws IllegalArgumentException if clazz is null
      */
-    public ClassInfo indexClass(Class<?> clazz) throws IOException {
+    public void indexClass(Class<?> clazz) throws IOException {
         if (clazz == null) {
             throw new IllegalArgumentException("clazz cannot be null");
         }
         String resourceName = '/' + clazz.getName().replace('.', '/') + ".class";
         try (InputStream resource = clazz.getResourceAsStream(resourceName)) {
-            return index(resource);
+            index(resource);
         }
     }
 
     /**
      * Analyze and index the class file data present in the passed input stream.
-     * Each call adds information to the final complete index; however, to aid in
-     * processing a per-class index (ClassInfo) is returned on each call.
+     * Each call adds information to the final complete index.
      *
      * @param stream a stream pointing to class file data
-     * @return a class index containing all annotations on the passed class stream
      * @throws IOException if the class file data is corrupt or the underlying stream fails
      * @throws IllegalArgumentException if stream is null
      */
-    public ClassInfo index(InputStream stream) throws IOException {
+    public void index(InputStream stream) throws IOException {
+        indexWithSummary(stream);
+    }
+
+    /**
+     * Analyze and index the class file data present in the passed input stream.
+     * Each call adds information to the final complete index. For reporting progress
+     * in batch indexers, this variant of {@code index} returns a summary of
+     * the just-indexed class.
+     *
+     * @param stream a stream pointing to class file data
+     * @return a summary of the just-indexed class
+     * @throws IOException if the class file data is corrupt or the underlying stream fails
+     * @throws IllegalArgumentException if stream is null
+     */
+    public ClassSummary indexWithSummary(InputStream stream) throws IOException {
         if (stream == null) {
             throw new IllegalArgumentException("stream cannot be null");
         }
@@ -2083,7 +2094,7 @@ public final class Indexer {
                 currentClass.module().setMainClass(moduleMainClass);
             }
 
-            return currentClass;
+            return new ClassSummary(currentClass.name().toString(), currentClass.annotations().size());
         } finally {
             constantPool = null;
             constantPoolOffsets = null;

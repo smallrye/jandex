@@ -67,6 +67,7 @@ import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.PrimitiveType;
 import org.jboss.jandex.Type;
+import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
 public class BasicTestCase {
@@ -368,10 +369,7 @@ public class BasicTestCase {
         indexer.index(stream);
         Index index = indexer.complete();
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new IndexWriter(baos).write(index);
-
-        index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
+        index = IndexingUtil.roundtrip(index);
 
         verifyDummy(index, true);
     }
@@ -384,10 +382,8 @@ public class BasicTestCase {
         indexer.index(stream);
         Index index = indexer.complete();
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new IndexWriter(baos).write(index, (byte) 2);
+        index = IndexingUtil.roundtrip(index);
 
-        index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
         assertFalse(index.getClassByName(DotName.createSimple(DummyClass.class.getName())).hasNoArgsConstructor());
     }
 

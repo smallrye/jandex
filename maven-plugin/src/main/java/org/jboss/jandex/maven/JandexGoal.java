@@ -17,7 +17,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.IOUtil;
-import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.ClassSummary;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
@@ -156,10 +156,10 @@ public class JandexGoal extends AbstractMojo {
                     try {
                         fis = new FileInputStream(new File(dir, file));
 
-                        final ClassInfo info = indexer.index(fis);
+                        final ClassSummary info = indexer.indexWithSummary(fis);
                         if (doVerbose() && info != null) {
-                            getLog().info("Indexed " + info.name() + " (" + info.annotations()
-                                    .size() + " annotations)");
+                            getLog().info("Indexed " + info.name() + " (" + info.annotationsCount()
+                                    + " annotations)");
                         }
                     } catch (final Exception e) {
                         throw new MojoExecutionException(e.getMessage(), e);

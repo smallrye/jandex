@@ -133,8 +133,8 @@ public class Main {
         }
     }
 
-    private void printIndexEntryInfo(ClassInfo info) {
-        System.out.println("Indexed " + info.name() + " (" + info.annotations().size() + " annotations)");
+    private void printIndexEntryInfo(ClassSummary info) {
+        System.out.println("Indexed " + info.name() + " (" + info.annotationsCount() + " annotations)");
     }
 
     private void scanFile(File source, Indexer indexer) throws FileNotFoundException, IOException {
@@ -155,7 +155,7 @@ public class Main {
         FileInputStream input = new FileInputStream(source);
 
         try {
-            ClassInfo info = indexer.index(input);
+            ClassSummary info = indexer.indexWithSummary(input);
             if (verbose && info != null)
                 printIndexEntryInfo(info);
         } catch (Exception e) {

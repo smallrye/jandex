@@ -2,11 +2,10 @@ package org.jboss.jandex.test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.io.ByteArrayInputStream;
 import java.util.concurrent.Callable;
 
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.Indexer;
+import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
 import net.bytebuddy.ByteBuddy;
@@ -19,7 +18,6 @@ public class ConstantDynamicTestCase {
 
     @Test
     public void testConstantDynamicSupport() throws Exception {
-        Indexer indexer = new Indexer();
         // Creating dynamic constants using Byte Buddy
         // Inspired from https://www.javacodegeeks.com/2018/08/hands-on-java-constantdynamic.html
         final byte[] dynamicConstantsClass = new ByteBuddy()
@@ -29,7 +27,7 @@ public class ConstantDynamicTestCase {
                 .intercept(FixedValue.value(JavaConstant.Dynamic.ofInvocation(Object.class.getConstructor())))
                 .make()
                 .getBytes();
-        ClassInfo classInfo = indexer.index(new ByteArrayInputStream(dynamicConstantsClass));
+        ClassInfo classInfo = IndexingUtil.indexSingle(dynamicConstantsClass);
         assertNotNull(classInfo);
     }
 }

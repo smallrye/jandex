@@ -22,8 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -33,13 +31,12 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexReader;
-import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 import org.jboss.jandex.TypeVariable;
+import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
 public class TypeAnnotationTestCase {
@@ -53,10 +50,7 @@ public class TypeAnnotationTestCase {
     @Test
     public void testReadWrite() throws IOException {
         Index index = buildIndex();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new IndexWriter(baos).write(index);
-
-        index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
+        index = IndexingUtil.roundtrip(index);
 
         verifyTypeAnnotations(index);
     }

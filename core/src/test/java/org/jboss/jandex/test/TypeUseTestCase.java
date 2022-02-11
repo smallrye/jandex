@@ -20,8 +20,6 @@ package org.jboss.jandex.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -30,10 +28,9 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexReader;
-import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.TypeTarget;
+import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
 public class TypeUseTestCase {
@@ -95,9 +92,7 @@ public class TypeUseTestCase {
         // This has always worked fine
         verifyTypeUseAnnotations(originalIndex, annotationClass, expectedUsage, expectedEnclosingTargetKind);
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new IndexWriter(baos).write(originalIndex);
-        Index indexAfterWriteRead = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
+        Index indexAfterWriteRead = IndexingUtil.roundtrip(originalIndex);
 
         // This used to fail with a ClassCastException because after the index was written, then read again,
         // the enclosing target in MethodParameterTypeTarget became a type,

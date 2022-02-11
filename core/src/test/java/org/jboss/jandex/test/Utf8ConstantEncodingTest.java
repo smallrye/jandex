@@ -3,7 +3,6 @@ package org.jboss.jandex.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -11,9 +10,8 @@ import java.lang.annotation.RetentionPolicy;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexReader;
-import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
+import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
 import net.bytebuddy.ByteBuddy;
@@ -67,7 +65,7 @@ public class Utf8ConstantEncodingTest {
 
         verifyAnnotationValue(index);
 
-        Index index2 = roundtrip(index);
+        Index index2 = IndexingUtil.roundtrip(index);
 
         verifyAnnotationValue(index2);
     }
@@ -76,11 +74,5 @@ public class Utf8ConstantEncodingTest {
         ClassInfo clazz = index.getClassByName(DotName.createSimple(CLASS_NAME));
         String annotationValue = clazz.classAnnotation(DotName.createSimple(MyAnnotation.class.getName())).value().asString();
         assertEquals(LONG_STRING, annotationValue);
-    }
-
-    private Index roundtrip(Index index) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new IndexWriter(baos).write(index);
-        return new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
     }
 }

@@ -21,8 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
@@ -33,14 +31,13 @@ import java.util.Map;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexReader;
-import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.ModuleInfo;
 import org.jboss.jandex.ModuleInfo.ExportedPackageInfo;
 import org.jboss.jandex.ModuleInfo.OpenedPackageInfo;
 import org.jboss.jandex.ModuleInfo.ProvidedServiceInfo;
 import org.jboss.jandex.ModuleInfo.RequiredModuleInfo;
+import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -137,14 +134,8 @@ public class ModuleInfoTestCase {
     private Index buildIndex() throws IOException {
         Indexer indexer = new Indexer();
         indexAvailableModuleInfo(indexer);
-
         Index index = indexer.complete();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new IndexWriter(baos).write(index);
-
-        index = new IndexReader(new ByteArrayInputStream(baos.toByteArray())).read();
-
-        return index;
+        return IndexingUtil.roundtrip(index);
     }
 
     /**

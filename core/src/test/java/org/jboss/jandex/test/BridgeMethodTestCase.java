@@ -33,10 +33,10 @@ import java.util.Set;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
-import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
 import org.jboss.jandex.TypeTarget;
+import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
 public class BridgeMethodTestCase {
@@ -112,8 +112,7 @@ public class BridgeMethodTestCase {
             TypeTarget.Usage usage,
             String expectedBridgeType,
             String expectedNonBridgeType) throws IOException {
-        Indexer indexer = new Indexer();
-        ClassInfo info = indexer.index(getClassBytes(klass));
+        ClassInfo info = IndexingUtil.indexSingle(getClassBytes(klass));
         int methods = 0;
         for (MethodInfo method : info.methods()) {
             if (!methodName.equals(method.name())) {
@@ -145,8 +144,7 @@ public class BridgeMethodTestCase {
         DotName nullable = DotName.createSimple("test.Nullable");
         DotName untainted = DotName.createSimple("test.Untainted");
 
-        Indexer indexer = new Indexer();
-        ClassInfo clazz = indexer.index(getClassBytes("test/BridgeMethods$Subclass.class"));
+        ClassInfo clazz = IndexingUtil.indexSingle(getClassBytes("test/BridgeMethods$Subclass.class"));
         for (MethodInfo method : filterMethods(clazz, "typeVariable")) {
             if (method.returnType().name().equals(DotName.createSimple(Collection.class.getName()))) {
                 // bridge method

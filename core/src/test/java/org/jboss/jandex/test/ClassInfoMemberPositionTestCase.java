@@ -17,8 +17,8 @@
  */
 package org.jboss.jandex.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,14 +36,14 @@ import org.jboss.jandex.IndexReader;
 import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ClassInfoMemberPositionTestCase {
 
     private Index index;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         Indexer indexer = new Indexer();
         String prefix = "org/jboss/jandex/test/ClassInfoMemberPositionTestCase$";

@@ -18,6 +18,12 @@
 
 package org.jboss.jandex.test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -31,8 +37,7 @@ import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
 import org.jboss.jandex.TypeTarget;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class BridgeMethodTestCase {
 
@@ -126,13 +131,12 @@ public class BridgeMethodTestCase {
                 default:
                     throw new IllegalArgumentException("Expected METHOD_PARAMETER or EMPTY, got " + usage);
             }
-            Assert.assertEquals(type + " signature for " +
-                    (isBridge(method) ? "" : "non-") + "bridge method " + method,
-                    expectedType, type.toString());
+            assertEquals(expectedType, type.toString(), type + " signature for " +
+                    (isBridge(method) ? "" : "non-") + "bridge method " + method);
             methods++;
         }
         if (methods == 0) {
-            Assert.fail("At least one '" + methodName + "' method is expected in " + klass);
+            fail("At least one '" + methodName + "' method is expected in " + klass);
         }
     }
 
@@ -146,60 +150,62 @@ public class BridgeMethodTestCase {
         for (MethodInfo method : filterMethods(clazz, "typeVariable")) {
             if (method.returnType().name().equals(DotName.createSimple(Collection.class.getName()))) {
                 // bridge method
-                Assert.assertTrue(isBridge(method));
-                Assert.assertEquals(Type.Kind.CLASS, method.returnType().kind());
-                Assert.assertTrue(method.typeParameters().isEmpty());
+                assertTrue(isBridge(method));
+                assertEquals(Type.Kind.CLASS, method.returnType().kind());
+                assertTrue(method.typeParameters().isEmpty());
 
-                Assert.assertNotNull(method.annotation(nullable));
-                Assert.assertEquals(Type.Kind.VOID, method.annotation(nullable).target().asType().target().kind());
+                assertNotNull(method.annotation(nullable));
+                assertEquals(Type.Kind.VOID, method.annotation(nullable).target().asType().target().kind());
 
-                Assert.assertNotNull(method.annotation(untainted));
-                Assert.assertEquals(Type.Kind.VOID, method.annotation(untainted).target().asType().target().kind());
+                assertNotNull(method.annotation(untainted));
+                assertEquals(Type.Kind.VOID, method.annotation(untainted).target().asType().target().kind());
             } else if (method.returnType().name().equals(DotName.createSimple(Set.class.getName()))) {
                 // actual overridden method
-                Assert.assertFalse(isBridge(method));
-                Assert.assertEquals(Type.Kind.PARAMETERIZED_TYPE, method.returnType().kind());
-                Assert.assertFalse(method.typeParameters().isEmpty());
+                assertFalse(isBridge(method));
+                assertEquals(Type.Kind.PARAMETERIZED_TYPE, method.returnType().kind());
+                assertFalse(method.typeParameters().isEmpty());
 
-                Assert.assertNotNull(method.annotation(nullable));
-                Assert.assertEquals(Type.Kind.CLASS, method.annotation(nullable).target().asType().target().kind());
-                Assert.assertNotNull(method.typeParameters().get(0).asTypeVariable()
+                assertNotNull(method.annotation(nullable));
+                assertEquals(Type.Kind.CLASS, method.annotation(nullable).target().asType().target().kind());
+                assertNotNull(method.typeParameters().get(0).asTypeVariable()
                         .bounds().get(0).annotation(nullable));
 
-                Assert.assertNotNull(method.annotation(untainted));
-                Assert.assertEquals(Type.Kind.TYPE_VARIABLE, method.annotation(untainted).target().asType().target().kind());
-                Assert.assertNotNull(method.typeParameters().get(0).asTypeVariable().annotation(untainted));
+                assertNotNull(method.annotation(untainted));
+                assertEquals(Type.Kind.TYPE_VARIABLE,
+                        method.annotation(untainted).target().asType().target().kind());
+                assertNotNull(method.typeParameters().get(0).asTypeVariable().annotation(untainted));
             } else {
-                Assert.fail();
+                fail();
             }
         }
 
         for (MethodInfo method : filterMethods(clazz, "wildcard")) {
             if (method.returnType().name().equals(DotName.createSimple(Collection.class.getName()))) {
                 // bridge method
-                Assert.assertTrue(isBridge(method));
-                Assert.assertEquals(Type.Kind.CLASS, method.returnType().kind());
+                assertTrue(isBridge(method));
+                assertEquals(Type.Kind.CLASS, method.returnType().kind());
 
-                Assert.assertNotNull(method.annotation(nullable));
-                Assert.assertEquals(Type.Kind.VOID, method.annotation(nullable).target().asType().target().kind());
+                assertNotNull(method.annotation(nullable));
+                assertEquals(Type.Kind.VOID, method.annotation(nullable).target().asType().target().kind());
 
-                Assert.assertNotNull(method.annotation(untainted));
-                Assert.assertEquals(Type.Kind.VOID, method.annotation(untainted).target().asType().target().kind());
+                assertNotNull(method.annotation(untainted));
+                assertEquals(Type.Kind.VOID, method.annotation(untainted).target().asType().target().kind());
             } else if (method.returnType().name().equals(DotName.createSimple(Set.class.getName()))) {
                 // actual overridden method
-                Assert.assertFalse(isBridge(method));
-                Assert.assertEquals(Type.Kind.PARAMETERIZED_TYPE, method.returnType().kind());
+                assertFalse(isBridge(method));
+                assertEquals(Type.Kind.PARAMETERIZED_TYPE, method.returnType().kind());
 
-                Assert.assertNotNull(method.annotation(nullable));
-                Assert.assertEquals(Type.Kind.CLASS, method.annotation(nullable).target().asType().target().kind());
-                Assert.assertNotNull(method.returnType().asParameterizedType().arguments().get(0)
+                assertNotNull(method.annotation(nullable));
+                assertEquals(Type.Kind.CLASS, method.annotation(nullable).target().asType().target().kind());
+                assertNotNull(method.returnType().asParameterizedType().arguments().get(0)
                         .asWildcardType().extendsBound().annotation(nullable));
 
-                Assert.assertNotNull(method.annotation(untainted));
-                Assert.assertEquals(Type.Kind.WILDCARD_TYPE, method.annotation(untainted).target().asType().target().kind());
-                Assert.assertNotNull(method.returnType().asParameterizedType().arguments().get(0).annotation(untainted));
+                assertNotNull(method.annotation(untainted));
+                assertEquals(Type.Kind.WILDCARD_TYPE,
+                        method.annotation(untainted).target().asType().target().kind());
+                assertNotNull(method.returnType().asParameterizedType().arguments().get(0).annotation(untainted));
             } else {
-                Assert.fail();
+                fail();
             }
         }
     }

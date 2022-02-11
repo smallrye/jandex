@@ -17,11 +17,11 @@
  */
 package org.jboss.jandex.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -30,8 +30,7 @@ import java.util.TreeSet;
 
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import $pkg.test.$LeadingDelimiter;
 
@@ -67,21 +66,21 @@ public class DotNameTestCase {
         }
 
         void verifyAll() {
-            Assert.assertEquals(strings.size(), dotnames.size());
+            assertEquals(strings.size(), dotnames.size());
             Iterator<DotName> dots = dotnames.iterator();
             Iterator<String> names = strings.iterator();
             while (dots.hasNext()) {
-                Assert.assertTrue(names.hasNext());
+                assertTrue(names.hasNext());
                 final String fullname = names.next();
                 DotName instance = dots.next();
-                Assert.assertEquals(fullname, instance.toString());
+                assertEquals(fullname, instance.toString());
                 DotName asSimple = DotName.createSimple(fullname);
-                Assert.assertTrue(dotnames.contains(asSimple));
+                assertTrue(dotnames.contains(asSimple));
                 sameHashCode(instance, asSimple);
-                Assert.assertEquals(0, instance.compareTo(asSimple));
-                Assert.assertEquals(0, asSimple.compareTo(instance));
+                assertEquals(0, instance.compareTo(asSimple));
+                assertEquals(0, asSimple.compareTo(instance));
             }
-            Assert.assertEquals(dotnames.toString(), strings.toString());
+            assertEquals(dotnames.toString(), strings.toString());
         }
     }
 
@@ -128,8 +127,8 @@ public class DotNameTestCase {
         // Throw in a special case:
         c.add(DotName.createSimple("a"));
         // "a" being the simplest case it must come first:
-        Assert.assertEquals("a", c.strings.iterator().next());
-        Assert.assertEquals("a", c.dotnames.iterator().next().toString());
+        assertEquals("a", c.strings.iterator().next());
+        assertEquals("a", c.dotnames.iterator().next().toString());
         // Simple way to verify the comparator of DotName implements
         c.verifyAll();
     }
@@ -139,17 +138,17 @@ public class DotNameTestCase {
         for (int i = 0; i < 500; i++) {
             DotName componentised = createRandomComponentised();
             DotName simple = DotName.createSimple(componentised.toString());
-            Assert.assertEquals(simple.hashCode(), componentised.hashCode());
-            Assert.assertEquals(0, simple.compareTo(componentised));
-            Assert.assertEquals(0, componentised.compareTo(simple));
-            Assert.assertTrue(simple.equals(componentised));
-            Assert.assertTrue(componentised.equals(simple));
-            Assert.assertFalse(componentised == simple);
-            Assert.assertFalse(simple.equals(null));
-            Assert.assertFalse(componentised.equals(null));
-            Assert.assertTrue(componentised.toString().equals(simple.toString()));
-            Assert.assertEquals(0, componentised.compareTo(simple));
-            Assert.assertEquals(0, simple.compareTo(componentised));
+            assertEquals(simple.hashCode(), componentised.hashCode());
+            assertEquals(0, simple.compareTo(componentised));
+            assertEquals(0, componentised.compareTo(simple));
+            assertTrue(simple.equals(componentised));
+            assertTrue(componentised.equals(simple));
+            assertFalse(componentised == simple);
+            assertFalse(simple.equals(null));
+            assertFalse(componentised.equals(null));
+            assertTrue(componentised.toString().equals(simple.toString()));
+            assertEquals(0, componentised.compareTo(simple));
+            assertEquals(0, simple.compareTo(componentised));
         }
     }
 
@@ -180,23 +179,23 @@ public class DotNameTestCase {
     }
 
     private void definitelyEquals(DotName a, DotName b) {
-        Assert.assertEquals(a, b);
-        Assert.assertEquals(b, a);
-        Assert.assertEquals(a.compareTo(b), 0);
-        Assert.assertEquals(b.compareTo(a), 0);
+        assertEquals(a, b);
+        assertEquals(b, a);
+        assertEquals(a.compareTo(b), 0);
+        assertEquals(b.compareTo(a), 0);
         sameHashCode(a, b);
     }
 
     private static void sameHashCode(DotName a, DotName b) {
-        Assert.assertEquals(a.hashCode(), b.hashCode());
+        assertEquals(a.hashCode(), b.hashCode());
     }
 
     private void definitelyNotEquals(DotName a, DotName b) {
-        Assert.assertFalse("should not be equals", a.equals(b));
-        Assert.assertFalse("should not be equals", b.equals(a));
-        Assert.assertFalse(a.compareTo(b) == 0);
-        Assert.assertFalse(b.compareTo(a) == 0);
-        Assert.assertEquals(b.compareTo(a), -1 * a.compareTo(b));
+        assertFalse(a.equals(b), "should not be equals");
+        assertFalse(b.equals(a), "should not be equals");
+        assertFalse(a.compareTo(b) == 0);
+        assertFalse(b.compareTo(a) == 0);
+        assertEquals(b.compareTo(a), -1 * a.compareTo(b));
     }
 
     @Test

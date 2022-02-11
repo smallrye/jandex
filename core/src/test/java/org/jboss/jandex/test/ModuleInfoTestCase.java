@@ -17,9 +17,9 @@
 
 package org.jboss.jandex.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -41,14 +41,14 @@ import org.jboss.jandex.ModuleInfo.ExportedPackageInfo;
 import org.jboss.jandex.ModuleInfo.OpenedPackageInfo;
 import org.jboss.jandex.ModuleInfo.ProvidedServiceInfo;
 import org.jboss.jandex.ModuleInfo.RequiredModuleInfo;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ModuleInfoTestCase {
 
     ModuleInfo mod;
 
-    @Before
+    @BeforeEach
     public void setup() throws IOException {
         mod = indexModuleInfo();
     }

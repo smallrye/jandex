@@ -18,6 +18,8 @@
 
 package org.jboss.jandex.test;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,8 +31,7 @@ import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexReader;
 import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class InnerClassTypeAnnotationTestCase {
 
@@ -96,7 +97,6 @@ public class InnerClassTypeAnnotationTestCase {
 
     private void verifyTypeAnnotations(Index index, String name, int pos) {
         ClassInfo clazz = index.getClassByName(DotName.createSimple("test.InnerClassTypeAnnotationsExample$" + name));
-        Assert.assertTrue(
-                clazz.constructors().get(0).parameters().get(pos).hasAnnotation(DotName.createSimple("test.Nullable")));
+        assertTrue(clazz.constructors().get(0).parameters().get(pos).hasAnnotation(DotName.createSimple("test.Nullable")));
     }
 }

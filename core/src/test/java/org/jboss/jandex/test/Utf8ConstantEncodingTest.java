@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
@@ -21,11 +19,6 @@ import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.type.TypeDescription;
 
 public class Utf8ConstantEncodingTest {
-    @Retention(RetentionPolicy.RUNTIME)
-    @interface MyAnnotation {
-        String value();
-    }
-
     private static final String CLASS_NAME = "org.jboss.jandex.test.MyTestClass";
 
     private static final String LONG_STRING;

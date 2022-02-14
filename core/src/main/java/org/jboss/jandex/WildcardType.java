@@ -26,7 +26,7 @@ package org.jboss.jandex;
  * @author Jason T. Greene
  */
 public class WildcardType extends Type {
-    private static Type OBJECT = new ClassType(DotName.OBJECT_NAME);
+    private static final Type OBJECT = new ClassType(DotName.OBJECT_NAME);
 
     private final boolean isExtends;
     private final Type bound;
@@ -82,6 +82,10 @@ public class WildcardType extends Type {
 
     boolean isExtends() {
         return isExtends;
+    }
+
+    boolean hasImplicitObjectBound() {
+        return isExtends && bound == OBJECT;
     }
 
     @Override

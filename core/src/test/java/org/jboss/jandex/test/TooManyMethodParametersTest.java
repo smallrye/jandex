@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,10 +23,6 @@ import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.implementation.StubMethod;
-
-@Retention(RetentionPolicy.RUNTIME)
-@interface MyAnn {
-}
 
 public class TooManyMethodParametersTest {
     private static final String TEST_CLASS = "org.jboss.jandex.test.TestClass";
@@ -51,10 +45,11 @@ public class TooManyMethodParametersTest {
                 .subclass(Object.class)
                 .defineMethod("hugeMethod", void.class)
                 .withParameter(String.class, "p0")
-                .annotateParameter(AnnotationDescription.Builder.ofType(MyAnn.class).build());
+                .annotateParameter(AnnotationDescription.Builder.ofType(MyAnnotation.class).define("value", "0").build());
         for (int i = 1; i < 300; i++) {
             builder = builder.withParameter(String.class, "p" + i)
-                    .annotateParameter(AnnotationDescription.Builder.ofType(MyAnn.class).build());
+                    .annotateParameter(
+                            AnnotationDescription.Builder.ofType(MyAnnotation.class).define("value", "" + i).build());
         }
         byte[] syntheticClass = builder
                 .intercept(StubMethod.INSTANCE)
@@ -79,7 +74,8 @@ public class TooManyMethodParametersTest {
                 }
             }
             assertEquals(1, paramAnnotations.size());
-            assertEquals("MyAnn", paramAnnotations.get(0).name().withoutPackagePrefix());
+            assertEquals("MyAnnotation", paramAnnotations.get(0).name().withoutPackagePrefix());
+            assertEquals("" + i, paramAnnotations.get(0).value().asString());
         }
     }
 }

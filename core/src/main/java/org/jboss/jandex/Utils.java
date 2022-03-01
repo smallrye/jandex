@@ -18,7 +18,7 @@
 
 package org.jboss.jandex;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,14 +31,12 @@ import java.util.Map;
  * @author Jason T. Greene
  */
 class Utils {
-    private static Charset UTF8 = Charset.forName("UTF-8");
-
     static byte[] toUTF8(String string) {
-        return string.getBytes(UTF8);
+        return string.getBytes(StandardCharsets.UTF_8);
     }
 
     static String fromUTF8(byte[] bytes) {
-        return new String(bytes, UTF8);
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     static <T> List<T> emptyOrWrap(List<T> list) {
@@ -56,5 +54,4 @@ class Utils {
     static <T> List<T> listOfCapacity(int capacity) {
         return capacity > 0 ? new ArrayList<T>(capacity) : Collections.<T> emptyList();
     }
-
 }

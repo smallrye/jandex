@@ -347,7 +347,7 @@ public final class DotName implements Comparable<DotName> {
         if (other.componentized && !componentized)
             return crossEquals(this, other);
 
-        return prefix != null && innerClass == other.innerClass && local.equals(other.local) && prefix.equals(other.prefix);
+        return componentizedEquals(this, other);
     }
 
     private static boolean crossEquals(final DotName simple, final DotName comp) {
@@ -385,6 +385,66 @@ public final class DotName implements Comparable<DotName> {
         }
         //And finally, verify we consumed it all:
         return cursor == -1;
+    }
+
+    private static boolean componentizedEquals(DotName a, DotName b) {
+        // fast path for identical componentizations
+        if (a == null && b == null) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
+        if (a.innerClass == b.innerClass && a.local.equals(b.local)) {
+            return componentizedEquals(a.prefix, b.prefix);
+        }
+
+        // this algorithm simply goes from the end towards the beginning, both `DotName`s in parallel,
+        // and checks that they match on each position; whenever there is a mismatch, the result is `false`
+        //
+        // positions range from -1 to <local name length - 1>, where values >= 0 are indices into
+        // the string and the -1 value is used for a separator (either '$' or '.', depending on
+        // whether given name has the `innerClass` flag set)
+        //
+        // an interesting situation occurs at the position -1 of the farthest `DotName` (one that has
+        // no prefix): we still need to compare whether the `innerClass` flags match, but there's no need
+        // to write a special case for it, we just treat a prefix-less `DotName` that is _not_ flagged `innerClass`
+        // as having an extra '.' character at the beginning
+        //
+        // the same algorithm could also be used for `crossEquals`, but that method is supposedly more efficient
+        // for its special case
+
+        String aLocal = a.local;
+        String bLocal = b.local;
+        int aPos = aLocal.length() - 1;
+        int bPos = bLocal.length() - 1;
+        while (a != null && b != null) {
+            char aChar = aPos >= 0 ? aLocal.charAt(aPos) : (a.innerClass ? '$' : '.');
+            char bChar = bPos >= 0 ? bLocal.charAt(bPos) : (b.innerClass ? '$' : '.');
+
+            if (aChar != bChar) {
+                return false;
+            }
+
+            aPos--;
+            if (aPos < -1) {
+                a = a.prefix;
+                if (a != null) {
+                    aLocal = a.local;
+                    aPos = aLocal.length() - 1;
+                }
+            }
+
+            bPos--;
+            if (bPos < -1) {
+                b = b.prefix;
+                if (b != null) {
+                    bLocal = b.local;
+                    bPos = bLocal.length() - 1;
+                }
+            }
+        }
+        return a == null && b == null;
     }
 
     private static class IndexState {

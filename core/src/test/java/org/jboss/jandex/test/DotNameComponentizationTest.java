@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
+import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
 public class DotNameComponentizationTest {
@@ -23,6 +24,8 @@ public class DotNameComponentizationTest {
         Index index = Index.of(Foo.class);
 
         doTest(index);
+
+        doTest(IndexingUtil.roundtrip(index));
     }
 
     private void doTest(Index index) {

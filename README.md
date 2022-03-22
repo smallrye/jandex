@@ -31,7 +31,7 @@ Issues can be reported in the [Jandex JIRA Project](https://issues.jboss.org/bro
  
 ## Getting Help
 
-Post to the [WildFly user forums for help] (https://developer.jboss.org/en/wildfly?view=discussions).
+Post to the [WildFly user forums for help](https://developer.jboss.org/en/wildfly?view=discussions).
 
 ## Creating a Persisted Index Using the CLI
 

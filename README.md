@@ -6,20 +6,20 @@ Jandex is a space efficient Java annotation indexer and offline reflection libra
  
  It supports the following capabilities:
  
- * Indexing all runtime visible Java annotations for a set of classes into a memory efficient representation.</li>
- * Indexing the class hierarchy and interface implementation of a set classes.</li>
- * Browsing and searching of declared methods on an indexed class.</li>
- * Browsing and searching of declared fields on an indexed class.</li>
- * Browsing of all generic type information on methods, fields, and classes.</li>
- * Browsing and searching annotations, including Java 8 type annotations</li>
- * Persisting an index into a custom storage efficient format.</li>
- * Quick-loading of the storage efficient format</li>
- * Compatibility with previous API and storage format versions</li>
- * Execution via an API, a command line tool, and ant</li>
+ * Indexing all runtime visible Java annotations for a set of classes into a memory efficient representation
+ * Indexing the class hierarchy and interface implementation of a set classes
+ * Browsing and searching of declared methods on an indexed class
+ * Browsing and searching of declared fields on an indexed class
+ * Browsing of all generic type information on methods, fields, and classes
+ * Browsing and searching annotations, including Java 8 type annotations
+ * Persisting an index into a custom storage efficient format
+ * Quick-loading of the storage efficient format
+ * Compatibility with previous API and storage format versions
+ * Execution via an API, a command line tool, and Ant
 
 ## Downloading Jandex
 
-Jandex artifacts can be [downloaded off of maven central](http://search.maven.org/#browse%7C1278342764).
+Jandex artifacts can be [downloaded off of Maven Central](https://search.maven.org/search?q=g:org.jboss%20a:jandex).
 
 ## API Docs
 
@@ -27,11 +27,11 @@ The extensive API docs for Jandex [are available here](http://wildfly.github.io/
 
 ## Reporting issues
 
-Issues can be reported in the [Jandex JIRA Project](https://issues.jboss.org/browse/JANDEX), 
- 
+Issues can be reported in [GitHub Issues](https://github.com/wildfly/jandex/issues).
+
 ## Getting Help
 
-Post to the [WildFly user forums for help] (https://developer.jboss.org/en/wildfly?view=discussions).
+Post to the [SmallRye Google group](https://groups.google.com/g/smallrye) or the [Quarkus Zulip chat](https://quarkusio.zulipchat.com/).
 
 ## Creating a Persisted Index Using the CLI
 

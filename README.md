@@ -6,24 +6,24 @@ Jandex is a space efficient Java annotation indexer and offline reflection libra
  
 It supports the following capabilities:
  
-* Indexing all runtime visible Java annotations for a set of classes into a memory efficient representation.</li>
-* Indexing the class hierarchy and interface implementation of a set classes.</li>
-* Browsing and searching of declared methods on an indexed class.</li>
-* Browsing and searching of declared fields on an indexed class.</li>
-* Browsing of all generic type information on methods, fields, and classes.</li>
-* Browsing and searching annotations, including Java 8 type annotations</li>
-* Persisting an index into a custom storage efficient format.</li>
-* Quick-loading of the storage efficient format</li>
-* Compatibility with previous API and storage format versions</li>
-* Execution via an API, a command line tool, Ant, and a Maven plugin</li>
+* Indexing all runtime visible Java annotations for a set of classes into a memory efficient representation
+* Indexing the class hierarchy and interface implementation of a set classes
+* Browsing and searching of declared methods on an indexed class
+* Browsing and searching of declared fields on an indexed class
+* Browsing of all generic type information on methods, fields, and classes
+* Browsing and searching annotations, including Java 8 type annotations
+* Persisting an index into a custom storage efficient format
+* Quick-loading of the storage efficient format
+* Compatibility with previous API and storage format versions
+* Execution via an API, a command line tool, Ant, and a Maven plugin
 
 ## Downloading Jandex
 
-Jandex artifacts can be [downloaded off of Maven Central](https://search.maven.org/search?q=jandex).
+Jandex artifacts can be [downloaded off of Maven Central](https://search.maven.org/search?q=g:io.smallrye%20a:jandex).
 
 ## API Docs
 
-The extensive API docs for Jandex [are available here](http://wildfly.github.com/jandex).
+The extensive API docs for Jandex [are available here](http://wildfly.github.io/jandex).
 
 ## Reporting issues
 
@@ -31,7 +31,7 @@ Issues can be reported in [GitHub Issues](https://github.com/smallrye/jandex/iss
  
 ## Getting Help
 
-Post to the [SmallRye Google group](https://groups.google.com/g/smallrye).
+Post to the [SmallRye Google group](https://groups.google.com/g/smallrye) or the [Quarkus Zulip chat](https://quarkusio.zulipchat.com/).
 
 ## Creating a Persisted Index Using the CLI
 

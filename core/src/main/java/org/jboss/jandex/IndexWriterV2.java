@@ -429,18 +429,35 @@ final class IndexWriterV2 extends IndexWriterImpl {
         // Zero is reserved for null
         int pos = 1;
         for (Entry<String, DotName> entry : sortedNameTable.entrySet()) {
-            nameTable.put(entry.getValue(), pos++);
+            nameTable.put(entry.getValue(), pos);
             DotName name = entry.getValue();
             assert name.isComponentized();
 
-            int nameDepth = 0;
-            for (DotName prefix = name.prefix(); prefix != null; prefix = prefix.prefix())
-                nameDepth++;
+            if (version >= 11) {
+                // to save space, instead of storing [absolute] prefix position, we store [relative] prefix offset,
+                // and since the offset is always negative (the prefix must have been written before),
+                // we store its absolute value; the value of 0 is used to mean `null` prefix
+                int prefixPosition = name.prefix() == null ? 0 : positionOf(name.prefix());
+                int prefixOffset = prefixPosition == 0 ? 0 : pos - prefixPosition;
 
-            nameDepth = nameDepth << 1 | (name.isInner() ? 1 : 0);
+                int prefixOffsetToWrite = prefixOffset << 1 | (name.isInner() ? 1 : 0);
+                stream.writePackedU32(prefixOffsetToWrite);
+                stream.writePackedU32(positionOf(name.local()));
+            } else {
+                // in older versions, we store the depth of the name, in hope that we can find the prefix
+                // when reading by "unrolling" the previously read name; that mostly works, but may fail
+                // in case of weird names starting with '$'
+                int nameDepth = 0;
+                for (DotName prefix = name.prefix(); prefix != null; prefix = prefix.prefix())
+                    nameDepth++;
 
-            stream.writePackedU32(nameDepth);
-            stream.writePackedU32(positionOf(name.local()));
+                nameDepth = nameDepth << 1 | (name.isInner() ? 1 : 0);
+
+                stream.writePackedU32(nameDepth);
+                stream.writePackedU32(positionOf(name.local()));
+            }
+
+            pos++;
         }
     }
 
@@ -488,7 +505,7 @@ final class IndexWriterV2 extends IndexWriterImpl {
     private int positionOf(DotName className) {
         Integer i = nameTable.get(className);
         if (i == null)
-            throw new IllegalStateException("Class not found in class table:" + className);
+            throw new IllegalStateException("Class not found in class table: " + className);
 
         return i.intValue();
     }

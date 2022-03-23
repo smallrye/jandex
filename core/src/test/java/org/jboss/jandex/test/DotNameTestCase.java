@@ -84,6 +84,84 @@ public class DotNameTestCase {
         }
     }
 
+    private static void definitelyEquals(DotName a, DotName b) {
+        assertEquals(a, b);
+        assertEquals(b, a);
+        assertEquals(a.compareTo(b), 0);
+        assertEquals(b.compareTo(a), 0);
+        sameHashCode(a, b);
+    }
+
+    private static void sameHashCode(DotName a, DotName b) {
+        assertEquals(a.hashCode(), b.hashCode());
+    }
+
+    private static void definitelyNotEquals(DotName a, DotName b) {
+        assertFalse(a.equals(b), "should not be equals");
+        assertFalse(b.equals(a), "should not be equals");
+        assertFalse(a.compareTo(b) == 0);
+        assertFalse(b.compareTo(a) == 0);
+        assertEquals(b.compareTo(a), -1 * a.compareTo(b));
+    }
+
+    private static DotName createRandomDotName() {
+        return r.nextBoolean() ? createRandomComponentised() : createRandomSimple();
+    }
+
+    private static DotName createRandomSimple() {
+        int partsToAppend = r.nextInt(5);
+        final StringBuilder sb = new StringBuilder();
+        sb.append(someRandomChars());
+        while (partsToAppend > 0) {
+            sb.append('.');
+            sb.append(someRandomChars());
+            partsToAppend--;
+        }
+        // Occasionally make it a nested class:
+        if (r.nextBoolean()) {
+            sb.append('$');
+            sb.append(someRandomChars());
+        }
+        return DotName.createSimple(sb.toString());
+    }
+
+    private static DotName createRandomComponentised() {
+        int partsToAppend = r.nextInt(5) + 1;
+        DotName current = null;
+        while (partsToAppend > 0) {
+            current = DotName.createComponentized(current, someRandomChars());
+            partsToAppend--;
+        }
+        // Occasionally make it a nested class:
+        if (r.nextBoolean()) {
+            current = DotName.createComponentized(current, someRandomChars(), true);
+        }
+        return current;
+    }
+
+    private static String someRandomChars() {
+        final int chars = r.nextInt(10) + 1;
+        final char[] buf = new char[chars];
+        // Good enough for our purposes
+        final char[] validOptions = new char[] { 'a', 'b', 'c', 'd', 'e', '$' };
+        for (int i = 0; i < chars; i++) {
+            buf[i] = validOptions[r.nextInt(validOptions.length)];
+        }
+        return new String(buf);
+    }
+
+    private static DotName structuralCopy(DotName name) {
+        if (!name.isComponentized()) {
+            return DotName.createSimple(name.local());
+        }
+
+        DotName prefix = name.prefix();
+        if (prefix == null) {
+            return DotName.createComponentized(null, name.local(), name.isInner());
+        }
+        return DotName.createComponentized(structuralCopy(prefix), name.local(), name.isInner());
+    }
+
     @Test
     public void testIsComponentized() {
         assertTrue(DotName.createComponentized(DotName.createComponentized(null, "jboss"), "Foo").isComponentized());
@@ -125,10 +203,10 @@ public class DotNameTestCase {
             c.add(createRandomDotName());
         }
         // Throw in a special case:
-        c.add(DotName.createSimple("a"));
-        // "a" being the simplest case it must come first:
-        assertEquals("a", c.strings.iterator().next());
-        assertEquals("a", c.dotnames.iterator().next().toString());
+        c.add(DotName.createSimple("$"));
+        // "$" being the simplest case it must come first:
+        assertEquals("$", c.strings.iterator().next());
+        assertEquals("$", c.dotnames.iterator().next().toString());
         // Simple way to verify the comparator of DotName implements
         c.verifyAll();
     }
@@ -178,26 +256,6 @@ public class DotNameTestCase {
         definitelyNotEquals(simple_shorter, simple_perfectmatch);
     }
 
-    private void definitelyEquals(DotName a, DotName b) {
-        assertEquals(a, b);
-        assertEquals(b, a);
-        assertEquals(a.compareTo(b), 0);
-        assertEquals(b.compareTo(a), 0);
-        sameHashCode(a, b);
-    }
-
-    private static void sameHashCode(DotName a, DotName b) {
-        assertEquals(a.hashCode(), b.hashCode());
-    }
-
-    private void definitelyNotEquals(DotName a, DotName b) {
-        assertFalse(a.equals(b), "should not be equals");
-        assertFalse(b.equals(a), "should not be equals");
-        assertFalse(a.compareTo(b) == 0);
-        assertFalse(b.compareTo(a) == 0);
-        assertEquals(b.compareTo(a), -1 * a.compareTo(b));
-    }
-
     @Test
     public void testSpecialCase() {
         // This specific sequence was highlighting a bug
@@ -223,7 +281,7 @@ public class DotNameTestCase {
         DotName testName = DotName.createComponentized(indexerTestCase, Test$.class.getSimpleName(), true);
 
         Index index = Index.of(Test$.class);
-        assertEquals(testName, index.getKnownClasses().iterator().next().name());
+        definitelyEquals(testName, index.getKnownClasses().iterator().next().name());
         assertNotNull(index.getClassByName(DotName.createSimple(Test$.class.getName())));
         assertNotNull(index.getClassByName(testName));
     }
@@ -239,7 +297,7 @@ public class DotNameTestCase {
         DotName testName = DotName.createComponentized(test, $LeadingDelimiter.class.getSimpleName());
 
         Index index = Index.of($LeadingDelimiter.class);
-        assertEquals(testName, index.getKnownClasses().iterator().next().name());
+        definitelyEquals(testName, index.getKnownClasses().iterator().next().name());
         assertNotNull(index.getClassByName(DotName.createSimple($LeadingDelimiter.class.getName())));
         assertNotNull(index.getClassByName(testName));
     }
@@ -253,56 +311,78 @@ public class DotNameTestCase {
 
         Index index = Index.of($delimiters$.test.$SurroundedByDelimiters$.class);
         DotName indexedName = index.getKnownClasses().iterator().next().name();
-        assertEquals(testName, indexedName);
+        definitelyEquals(testName, indexedName);
         assertNotNull(index.getClassByName(testNameSimple));
         assertNotNull(index.getClassByName(testName));
         assertEquals("$delimiters$.test.$SurroundedByDelimiters$", indexedName.toString());
     }
 
-    private static DotName createRandomDotName() {
-        return r.nextBoolean() ? createRandomComponentised() : createRandomSimple();
+    @Test
+    public void componentizedEquals() {
+        for (int i = 0; i < 100; i++) {
+            DotName a = createRandomComponentised();
+            DotName b = structuralCopy(a);
+
+            definitelyEquals(a, b);
+        }
+
+        for (int i = 0; i < 100; i++) {
+            DotName a = createRandomComponentised();
+            DotName b = createRandomComponentised();
+
+            if (!a.toString().equals(b.toString())) {
+                definitelyNotEquals(a, b);
+            }
+        }
     }
 
-    private static DotName createRandomSimple() {
-        int partsToAppend = r.nextInt(5);
-        final StringBuilder sb = new StringBuilder();
-        sb.append(someRandomChars());
-        while (partsToAppend > 0) {
-            sb.append('.');
-            sb.append(someRandomChars());
-            partsToAppend--;
+    @Test
+    public void scalaAnonfunCurriedCase1() {
+        DotName a;
+        DotName b;
+
+        {
+            DotName scala = DotName.createComponentized(null, "scala", false);
+            DotName function2 = DotName.createComponentized(scala, "Function2$", false);
+            DotName anonfun = DotName.createComponentized(function2, "anonfun", true);
+            DotName curried = DotName.createComponentized(anonfun, "curried", true);
+            DotName one = DotName.createComponentized(curried, "1", true);
+            a = one;
         }
-        // Occasionally make it a nested class:
-        if (r.nextBoolean()) {
-            sb.append('$');
-            sb.append(someRandomChars());
+
+        {
+            DotName scala = DotName.createComponentized(null, "scala", false);
+            DotName function2 = DotName.createComponentized(scala, "Function2", false);
+            DotName anonfunCurriedOne = DotName.createComponentized(function2, "$anonfun$curried$1", true);
+            b = anonfunCurriedOne;
         }
-        return DotName.createSimple(sb.toString());
+
+        definitelyEquals(a, b);
     }
 
-    private static String someRandomChars() {
-        final int chars = r.nextInt(10) + 1;
-        final char[] buf = new char[chars];
-        // Good enough for our purposes, and want to avoid symbols:
-        final char[] validOptions = new char[] { 'a', 'b', 'c', 'd', 'e' };
-        for (int i = 0; i < chars; i++) {
-            buf[i] = validOptions[r.nextInt(validOptions.length)];
-        }
-        return new String(buf);
-    }
+    @Test
+    public void scalaAnonfunCurriedCase2() {
+        DotName a;
+        DotName b;
 
-    private static DotName createRandomComponentised() {
-        int partsToAppend = r.nextInt(5) + 1;
-        DotName current = null;
-        while (partsToAppend > 0) {
-            current = DotName.createComponentized(current, someRandomChars());
-            partsToAppend--;
+        {
+            DotName scala = DotName.createComponentized(null, "scala", false);
+            DotName function2 = DotName.createComponentized(scala, "Function2$", false);
+            DotName anonfun = DotName.createComponentized(function2, "anonfun", true);
+            DotName curried = DotName.createComponentized(anonfun, "curried", true);
+            DotName one = DotName.createComponentized(curried, "1", true);
+            a = one;
         }
-        // Occasionally make it a nested class:
-        if (r.nextBoolean()) {
-            current = DotName.createComponentized(current, someRandomChars(), true);
-        }
-        return current;
-    }
 
+        {
+            DotName scala = DotName.createComponentized(null, "scala", false);
+            DotName function2 = DotName.createComponentized(scala, "Function2", false);
+            DotName anonfun = DotName.createComponentized(function2, "$anonfun", true);
+            DotName curried = DotName.createComponentized(anonfun, "curried", true);
+            DotName one = DotName.createComponentized(curried, "1", true);
+            b = one;
+        }
+
+        definitelyEquals(a, b);
+    }
 }

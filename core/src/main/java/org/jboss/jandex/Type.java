@@ -116,13 +116,13 @@ public abstract class Type {
     }
 
     /**
-     * Creates a type instance of the specified kind. Types of kind <code>CLASS</code>,
-     * directly use the specified name. Types of kind <code>ARRAY</code> parse the name
-     * in the Java reflection format (Java descriptor format changing / to '.',
-     * e.g. "[[[[Ljava.lang.String;"). Types of kind PRIMITIVE parsed using the
-     * primitive descriptor format (e.g. "I" for int).
-     * Types of kind VOID ignore the specified name, and return a void type. All
-     * other types will throw an exception.
+     * Creates a type instance of the specified kind. If {@code kind} is {@code CLASS},
+     * the {@code name} is used as is. If {@code kind} is {@code ARRAY}, the {@code name}
+     * must be in the Java reflection format (Java descriptor format changing {@code /}
+     * to {@code .}, e.g. {@code [[[[Ljava.lang.String;"} or {@code [[[I}). If {@code kind}
+     * is {@code PRIMITIVE}, the name must be in the Java reflection format (which is equal
+     * to the Java keyword denoting the primitive type, e.g. {@code int}). If kind is
+     * {@code VOID}, the {@code name} is ignored. All other kinds cause an exception.
      *
      * @param name the name to use or parse
      * @param kind the kind of type to create

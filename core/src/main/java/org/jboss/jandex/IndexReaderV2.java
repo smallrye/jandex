@@ -181,21 +181,33 @@ final class IndexReaderV2 extends IndexReaderImpl {
 
         nameTable = new DotName[entries];
         for (int i = 1; i < entries; i++) {
-            int depth = stream.readPackedU32();
-            boolean inner = (depth & 1) == 1;
-            depth >>= 1;
+            // see IndexWriterV2.writeNameTable
+            if (version >= 11) {
+                int prefixOffset = stream.readPackedU32();
+                boolean inner = (prefixOffset & 1) == 1;
+                prefixOffset >>= 1;
 
-            String local = stringTable[stream.readPackedU32()];
+                int prefixPosition = prefixOffset == 0 ? 0 : i - prefixOffset;
+                DotName prefix = nameTable[prefixPosition];
+                String local = stringTable[stream.readPackedU32()];
+                nameTable[i] = new DotName(prefix, local, true, inner);
+            } else {
+                int depth = stream.readPackedU32();
+                boolean inner = (depth & 1) == 1;
+                depth >>= 1;
 
-            if (depth <= lastDepth) {
-                while (lastDepth-- >= depth) {
-                    assert curr != null;
-                    curr = curr.prefix();
+                String local = stringTable[stream.readPackedU32()];
+
+                if (depth <= lastDepth) {
+                    while (lastDepth-- >= depth) {
+                        assert curr != null;
+                        curr = curr.prefix();
+                    }
                 }
-            }
 
-            nameTable[i] = curr = new DotName(curr, local, true, inner);
-            lastDepth = depth;
+                nameTable[i] = curr = new DotName(curr, local, true, inner);
+                lastDepth = depth;
+            }
         }
     }
 

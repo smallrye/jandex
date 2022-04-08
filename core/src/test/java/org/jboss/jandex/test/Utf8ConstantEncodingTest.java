@@ -65,7 +65,7 @@ public class Utf8ConstantEncodingTest {
 
     private void verifyAnnotationValue(Index index) {
         ClassInfo clazz = index.getClassByName(DotName.createSimple(CLASS_NAME));
-        String annotationValue = clazz.classAnnotation(DotName.createSimple(MyAnnotation.class.getName())).value().asString();
+        String annotationValue = clazz.declaredAnnotation(MyAnnotation.DOT_NAME).value().asString();
         assertEquals(LONG_STRING, annotationValue);
     }
 }

@@ -775,7 +775,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             updateAnnotationTargetInfo(method.annotationArray(), clazz);
             methods[i] = method;
 
-            if (method.parameterArray().length == 0 && Arrays.equals(INIT_METHOD_NAME, method.nameBytes())) {
+            if (method.parameterTypesArray().length == 0 && Arrays.equals(INIT_METHOD_NAME, method.nameBytes())) {
                 clazz.setHasNoArgsConstructor(true);
             }
         }

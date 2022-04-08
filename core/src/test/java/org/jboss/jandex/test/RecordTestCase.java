@@ -52,7 +52,7 @@ public class RecordTestCase {
         ClassInfo rec = index.getClassByName(DotName.createSimple("test.RecordExample"));
         assertNotNull(rec);
         assertTrue(rec.isRecord());
-        AnnotationInstance anno = rec.classAnnotation(recordAnnotation);
+        AnnotationInstance anno = rec.declaredAnnotation(recordAnnotation);
         assertNotNull(anno);
         assertEquals("Example", anno.value().asString());
 
@@ -60,14 +60,14 @@ public class RecordTestCase {
         assertNotNull(rec);
         assertTrue(rec.isRecord());
         assertEquals(ClassInfo.NestingType.INNER, nestedRec.nestingType());
-        assertEquals("Empty", nestedRec.classAnnotation(recordAnnotation).value().asString());
+        assertEquals("Empty", nestedRec.declaredAnnotation(recordAnnotation).value().asString());
 
     }
 
     @Test
     public void testRecordComponentHasAnnotation() {
         ClassInfo rec = index.getClassByName(DotName.createSimple("test.RecordExample"));
-        List<AnnotationInstance> componentAnnos = rec.annotations()
+        List<AnnotationInstance> componentAnnos = rec.annotationsMap()
                 .get(DotName.createSimple("test.RecordExample$ComponentAnnotation"));
         assertNotNull(componentAnnos);
         assertEquals(1, componentAnnos.size());

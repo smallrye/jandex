@@ -181,7 +181,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
             for (DotName intf : interfaces)
                 stream.writePackedU32(positionOf(intf));
 
-            Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotations().entrySet();
+            Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotationsMap().entrySet();
             stream.writePackedU32(entrySet.size());
             for (Entry<DotName, List<AnnotationInstance>> entry : entrySet) {
                 stream.writePackedU32(positionOf(entry.getKey()));
@@ -200,9 +200,9 @@ final class IndexWriterV1 extends IndexWriterImpl {
                         MethodInfo method = (MethodInfo) target;
                         stream.writeByte(METHOD_TAG);
                         stream.writePackedU32(positionOf(method.name()));
-                        stream.writePackedU32(method.args().length);
-                        for (int i = 0; i < method.args().length; i++) {
-                            writeType(stream, method.args()[i]);
+                        stream.writePackedU32(method.copyParameters().length);
+                        for (int i = 0; i < method.copyParameters().length; i++) {
+                            writeType(stream, method.copyParameters()[i]);
                         }
                         writeType(stream, method.returnType());
                         stream.writeShort(method.flags());
@@ -211,9 +211,9 @@ final class IndexWriterV1 extends IndexWriterImpl {
                         MethodInfo method = param.method();
                         stream.writeByte(METHOD_PARAMETER_TAG);
                         stream.writePackedU32(positionOf(method.name()));
-                        stream.writePackedU32(method.args().length);
-                        for (int i = 0; i < method.args().length; i++) {
-                            writeType(stream, method.args()[i]);
+                        stream.writePackedU32(method.copyParameters().length);
+                        for (int i = 0; i < method.copyParameters().length; i++) {
+                            writeType(stream, method.copyParameters()[i]);
                         }
                         writeType(stream, method.returnType());
                         stream.writeShort(method.flags());
@@ -310,7 +310,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
             for (DotName intf : clazz.interfaces())
                 addClassName(intf);
 
-            for (Entry<DotName, List<AnnotationInstance>> entry : clazz.annotations().entrySet()) {
+            for (Entry<DotName, List<AnnotationInstance>> entry : clazz.annotationsMap().entrySet()) {
                 addClassName(entry.getKey());
 
                 for (AnnotationInstance instance : entry.getValue()) {
@@ -323,14 +323,14 @@ final class IndexWriterV1 extends IndexWriterImpl {
                     } else if (target instanceof MethodInfo) {
                         MethodInfo method = (MethodInfo) target;
                         intern(method.name());
-                        for (Type type : method.args())
+                        for (Type type : method.copyParameters())
                             addClassName(type.name());
 
                         addClassName(method.returnType().name());
                     } else if (target instanceof MethodParameterInfo) {
                         MethodParameterInfo param = (MethodParameterInfo) target;
                         intern(param.method().name());
-                        for (Type type : param.method().args())
+                        for (Type type : param.method().copyParameters())
                             addClassName(type.name());
 
                         addClassName(param.method().returnType().name());

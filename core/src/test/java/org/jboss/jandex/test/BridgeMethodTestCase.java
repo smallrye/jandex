@@ -122,7 +122,7 @@ public class BridgeMethodTestCase {
             Type type;
             switch (usage) {
                 case METHOD_PARAMETER:
-                    type = method.parameters().get(0);
+                    type = method.parameterTypes().get(0);
                     break;
                 case EMPTY:
                     type = method.returnType();

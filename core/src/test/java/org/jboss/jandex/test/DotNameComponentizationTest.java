@@ -30,7 +30,7 @@ public class DotNameComponentizationTest {
 
     private void doTest(Index index) {
         assertEquals(1, index.getKnownClasses().size());
-        DotName name = index.getKnownClasses().iterator().next().firstMethod("baz").parameters().get(0).name();
+        DotName name = index.getKnownClasses().iterator().next().firstMethod("baz").parameterTypes().get(0).name();
 
         {
             DotName org = DotName.createComponentized(null, "org");

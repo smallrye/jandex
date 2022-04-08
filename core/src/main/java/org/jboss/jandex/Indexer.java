@@ -460,12 +460,12 @@ public final class Indexer {
                     }
                 }
                 int numParameters = data.readUnsignedByte();
-                if (target.asMethod().parameters().size() > 255) {
+                if (target.asMethod().parametersCount() > 255) {
                     // the Kotlin compiler happily generates methods with more than 255 parameters,
                     // even if the JVM specification prohibits them, so if the method descriptor
                     // indicates that so many parameters are present, let's use that count instead of
                     // the one we just read (for extra safety, do NOT do this for compliant methods)
-                    numParameters = target.asMethod().parameters().size();
+                    numParameters = target.asMethod().parametersCount();
                 }
                 for (short p = 0; p < numParameters; p++) {
                     processAnnotations(data, new MethodParameterInfo((MethodInfo) target, p),
@@ -684,12 +684,12 @@ public final class Indexer {
 
     private void processMethodParameters(DataInputStream data, MethodInfo target) throws IOException {
         int numParameters = data.readUnsignedByte();
-        if (target.parameters().size() > 255) {
+        if (target.parametersCount() > 255) {
             // the Kotlin compiler happily generates methods with more than 255 parameters,
             // even if the JVM specification prohibits them, so if the method descriptor
             // indicates that so many parameters are present, let's use that count instead of
             // the one we just read (for extra safety, do NOT do this for compliant methods)
-            numParameters = target.parameters().size();
+            numParameters = target.parametersCount();
         }
         byte[][] parameterNames = numParameters > 0 ? new byte[numParameters][] : MethodInternal.EMPTY_PARAMETER_NAMES;
         int filledParameters = 0;
@@ -1182,7 +1182,7 @@ public final class Indexer {
                 if (skipBridge(typeAnnotationState, method)) {
                     return;
                 }
-                type = method.methodInternal().parameterArray()[target.asMethodParameterType().position()];
+                type = method.methodInternal().parameterTypesArray()[target.asMethodParameterType().position()];
 
                 break;
             }
@@ -2094,7 +2094,7 @@ public final class Indexer {
                 currentClass.module().setMainClass(moduleMainClass);
             }
 
-            return new ClassSummary(currentClass.name().toString(), currentClass.annotations().size());
+            return new ClassSummary(currentClass.name().toString(), currentClass.annotationsMap().size());
         } finally {
             constantPool = null;
             constantPoolOffsets = null;

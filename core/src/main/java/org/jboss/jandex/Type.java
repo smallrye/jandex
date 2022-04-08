@@ -18,20 +18,19 @@
 
 package org.jboss.jandex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Represents a Java type declaration usage that is specified on methods, fields, classes,
+ * Represents a Java type usage that is specified on methods, fields, classes,
  * annotations, or other types. A type can be any class based type (interface, class, annotation),
  * any primitive, any array, any generic type declaration, or void.
- *
  * <p>
  * A type usage may have annotations associated with its declaration. A type is equal to
  * another type if, and only if, it represents the same exact definition including the annotations
  * specific to its usage.
- *
  * <p>
  * To reduce memory overhead, type instances are often shared between their enclosing classes.
  *
@@ -360,29 +359,92 @@ public abstract class Type {
         return name.equals(type.name) && Arrays.equals(annotations, type.annotations);
     }
 
-    /**
-     * Returns the list of annotations declared on this type's usage. In order to allow for
-     * type reuse, the annotation instances returned by this method will have a null annotation target
-     * value. However, this information is not useful, because if it is accessed from this method,
-     * the target is this type.
-     *
-     * @return a list of annotation instances declared on the usage this type represents
-     * @since 2.0
-     */
-    public List<AnnotationInstance> annotations() {
-        return Collections.unmodifiableList(Arrays.asList(annotations));
-    }
-
     AnnotationInstance[] annotationArray() {
         return annotations;
     }
 
+    /**
+     * Returns whether an annotation instance with given name is declared on this type usage.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return {@code true} if the annotation is present, {@code false} otherwise
+     * @see #annotation(DotName)
+     */
+    public final boolean hasAnnotation(DotName name) {
+        return annotation(name) != null;
+    }
+
+    /**
+     * Returns the annotation instance with given name declared on this type usage.
+     * <p>
+     * To allow for {@code Type} object reuse, the annotation instances returned by this method
+     * have a {@code null} annotation target.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return the annotation instance, or {@code null} if not found
+     */
     public final AnnotationInstance annotation(DotName name) {
         return AnnotationInstance.binarySearch(annotations, name);
     }
 
-    public final boolean hasAnnotation(DotName name) {
-        return annotation(name) != null;
+    /**
+     * Returns the annotation instances with given name declared on this type usage.
+     * <p>
+     * If the specified annotation is repeatable, the result also contains all values from the container annotation
+     * instance. In this case, the {@link AnnotationInstance#target()} returns the target of the container annotation
+     * instance.
+     * <p>
+     * To allow for {@code Type} object reuse, the annotation instances returned by this method
+     * have a {@code null} annotation target.
+     *
+     * @param name name of the annotation type, must not be {@code null}
+     * @param index index used to obtain the annotation type, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @throws IllegalArgumentException if the index is {@code null}, if the index does not contain the annotation type
+     *         or if {@code name} does not identify an annotation type
+     * @since 3.0
+     * @see #annotations()
+     */
+    public final List<AnnotationInstance> annotationsWithRepeatable(DotName name, IndexView index) {
+        if (index == null) {
+            throw new IllegalArgumentException("Index must not be null");
+        }
+        List<AnnotationInstance> instances = new ArrayList<>();
+        AnnotationInstance declaredInstance = annotation(name);
+        if (declaredInstance != null) {
+            instances.add(declaredInstance);
+        }
+        ClassInfo annotationClass = index.getClassByName(name);
+        if (annotationClass == null) {
+            throw new IllegalArgumentException("Index does not contain the annotation definition: " + name);
+        }
+        if (!annotationClass.isAnnotation()) {
+            throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
+        }
+        AnnotationInstance repeatable = annotationClass.declaredAnnotation(Index.REPEATABLE);
+        if (repeatable != null) {
+            Type containingType = repeatable.value().asClass();
+            AnnotationInstance container = annotation(containingType.name());
+            if (container != null) {
+                for (AnnotationInstance nestedInstance : container.value().asNestedArray()) {
+                    instances.add(AnnotationInstance.create(nestedInstance, container.target()));
+                }
+            }
+        }
+        return Collections.unmodifiableList(instances);
+    }
+
+    /**
+     * Returns the annotation instances declared on this type usage.
+     * <p>
+     * To allow for {@code Type} object reuse, the annotation instances returned by this method
+     * have a {@code null} annotation target.
+     *
+     * @return immutable list of annotation instances, never {@code null}
+     * @since 2.0
+     */
+    public List<AnnotationInstance> annotations() {
+        return Collections.unmodifiableList(Arrays.asList(annotations));
     }
 
     Type addAnnotation(AnnotationInstance annotation) {

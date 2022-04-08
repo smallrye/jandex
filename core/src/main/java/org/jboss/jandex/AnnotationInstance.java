@@ -40,17 +40,17 @@ import java.util.List;
  */
 public final class AnnotationInstance {
     private static final AnnotationValue[] ANNOTATION_VALUES_TYPE = new AnnotationValue[0];
-    static final InstanceNameComparator NAME_COMPARATOR = new InstanceNameComparator();
+    static final NameComparator NAME_COMPARATOR = new NameComparator();
     static final AnnotationInstance[] EMPTY_ARRAY = new AnnotationInstance[0];
 
     private final DotName name;
-    private AnnotationTarget target;
+    private final AnnotationTarget target;
     private final AnnotationValue[] values;
     private final boolean runtimeVisible;
 
-    static class InstanceNameComparator implements Comparator<AnnotationInstance> {
-        public int compare(AnnotationInstance instance, AnnotationInstance instance2) {
-            return instance.name().compareTo(instance2.name());
+    static class NameComparator implements Comparator<AnnotationInstance> {
+        public int compare(AnnotationInstance instance1, AnnotationInstance instance2) {
+            return instance1.name().compareTo(instance2.name());
         }
     }
 
@@ -358,14 +358,6 @@ public final class AnnotationInstance {
      */
     public String toString() {
         return toString(true);
-    }
-
-    void setTarget(AnnotationTarget target) {
-        if (this.target != null) {
-            throw new IllegalStateException("Attempt to modify target post-initialization");
-        }
-
-        this.target = target;
     }
 
     // runtime visibility is ignored for the purpose of equality and hash code, because

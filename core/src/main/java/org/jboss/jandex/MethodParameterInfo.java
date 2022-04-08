@@ -18,6 +18,10 @@
 
 package org.jboss.jandex;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Represents an individual Java method parameter that was annotated.
  *
@@ -30,11 +34,11 @@ package org.jboss.jandex;
  */
 public final class MethodParameterInfo implements AnnotationTarget {
     private final MethodInfo method;
-    private final short parameter;
+    private final short position;
 
-    MethodParameterInfo(MethodInfo method, short parameter) {
+    MethodParameterInfo(MethodInfo method, short position) {
         this.method = method;
-        this.parameter = parameter;
+        this.position = position;
     }
 
     /**
@@ -63,16 +67,266 @@ public final class MethodParameterInfo implements AnnotationTarget {
      * @return the position of this parameter
      */
     public final short position() {
-        return parameter;
+        return position;
     }
 
     /**
      * Returns the name of this parameter.
      * 
-     * @return the name of this parameter.
+     * @return the name of this parameter
      */
     public final String name() {
-        return method.parameterName(parameter);
+        return method.parameterName(position);
+    }
+
+    /**
+     * Returns the type of this parameter.
+     *
+     * @return the type of this parameter
+     */
+    public final Type type() {
+        return method.parameterType(position);
+    }
+
+    // assumes `annotation` is on `this.method`
+    private boolean targetsThis(AnnotationInstance annotation) {
+        return annotation.target().kind() == Kind.METHOD_PARAMETER
+                && annotation.target().asMethodParameter().position == position;
+    }
+
+    // assumes `annotation` is on `this.method`
+    private boolean targetsThisOrNested(AnnotationInstance annotation) {
+        return targetsThis(annotation)
+                || annotation.target().kind() == Kind.TYPE
+                        && annotation.target().asType().usage() == TypeTarget.Usage.METHOD_PARAMETER
+                        && annotation.target().asType().asMethodParameterType().position() == position;
+    }
+
+    /**
+     * Returns whether an annotation instance with given name is declared on this method parameter or any type
+     * within its signature.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return {@code true} if the annotation is present, {@code false} otherwise
+     * @since 3.0
+     * @see #annotation(DotName)
+     */
+    @Override
+    public boolean hasAnnotation(DotName name) {
+        return annotation(name) != null;
+    }
+
+    /**
+     * Returns the annotation instance with given name declared on this method parameter or any type within
+     * its signature. The {@code target()} method of the returned annotation instance may be used to determine
+     * the exact location of the annotation instance.
+     * <p>
+     * In case an annotation with given name occurs more than once, the result of this method is not deterministic.
+     * For such situations, {@link #annotations(DotName)} is preferable.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return the annotation instance, or {@code null} if not found
+     * @since 3.0
+     * @see #annotations(DotName)
+     */
+    @Override
+    public AnnotationInstance annotation(DotName name) {
+        for (AnnotationInstance instance : method.methodInternal().annotationArray()) {
+            if (targetsThisOrNested(instance) && instance.name().equals(name)) {
+                return instance;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the annotation instances with given name declared on this method parameter or any type within
+     * its signature. The {@code target()} method of the returned annotation instances may be used to determine
+     * the exact location of the respective annotation instance.
+     *
+     * @param name name of the annotation type, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @since 3.0
+     * @see #annotationsWithRepeatable(DotName, IndexView)
+     * @see #annotations()
+     */
+    @Override
+    public List<AnnotationInstance> annotations(DotName name) {
+        List<AnnotationInstance> instances = new ArrayList<>();
+        for (AnnotationInstance instance : method.methodInternal().annotationArray()) {
+            if (targetsThisOrNested(instance) && instance.name().equals(name)) {
+                instances.add(instance);
+            }
+        }
+        return Collections.unmodifiableList(instances);
+    }
+
+    /**
+     * Returns the annotation instances with given name declared on this method parameter or any type within
+     * its signature. The {@code target()} method of the returned annotation instances may be used to determine
+     * the exact location of the respective annotation instance.
+     * <p>
+     * If the specified annotation is repeatable, the result also contains all values from the container annotation
+     * instance. In this case, the {@link AnnotationInstance#target()} returns the target of the container annotation
+     * instance.
+     *
+     * @param name name of the annotation type, must not be {@code null}
+     * @param index index used to obtain the annotation type, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @throws IllegalArgumentException if the index is {@code null}, if the index does not contain the annotation type
+     *         or if {@code name} does not identify an annotation type
+     * @since 3.0
+     * @see #annotations(DotName)
+     * @see #annotations()
+     */
+    @Override
+    public List<AnnotationInstance> annotationsWithRepeatable(DotName name, IndexView index) {
+        if (index == null) {
+            throw new IllegalArgumentException("Index must not be null");
+        }
+        List<AnnotationInstance> instances = new ArrayList<>(annotations(name));
+        ClassInfo annotationClass = index.getClassByName(name);
+        if (annotationClass == null) {
+            throw new IllegalArgumentException("Index does not contain the annotation definition: " + name);
+        }
+        if (!annotationClass.isAnnotation()) {
+            throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
+        }
+        AnnotationInstance repeatable = annotationClass.declaredAnnotation(Index.REPEATABLE);
+        if (repeatable != null) {
+            Type containingType = repeatable.value().asClass();
+            for (AnnotationInstance container : annotations(containingType.name())) {
+                for (AnnotationInstance nestedInstance : container.value().asNestedArray()) {
+                    instances.add(AnnotationInstance.create(nestedInstance, container.target()));
+                }
+            }
+        }
+        return Collections.unmodifiableList(instances);
+    }
+
+    /**
+     * Returns the annotation instances declared on this method parameter or any type within its signature.
+     * The {@code target()} method of the returned annotation instances may be used to determine the exact location
+     * of the respective annotation instance.
+     *
+     * @return immutable list of annotation instances, never {@code null}
+     * @since 3.0
+     */
+    @Override
+    public List<AnnotationInstance> annotations() {
+        List<AnnotationInstance> instances = new ArrayList<>();
+        for (AnnotationInstance instance : method.methodInternal().annotationArray()) {
+            if (targetsThisOrNested(instance)) {
+                instances.add(instance);
+            }
+        }
+        return Collections.unmodifiableList(instances);
+    }
+
+    /**
+     * Returns whether an annotation instance with given name is declared on this method parameter.
+     * <p>
+     * Unlike {@link #hasAnnotation(DotName)}, this method ignores annotations declared on types within
+     * the methor parameter signature.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return {@code true} if the annotation is present, {@code false} otherwise
+     * @since 3.0
+     * @see #hasAnnotation(DotName)
+     */
+    @Override
+    public boolean hasDeclaredAnnotation(DotName name) {
+        return declaredAnnotation(name) != null;
+    }
+
+    /**
+     * Returns the annotation instance with given name declared on this method parameter.
+     * <p>
+     * Unlike {@link #annotation(DotName)}, this method doesn't return annotations declared on types within
+     * the methor parameter signature.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return the annotation instance, or {@code null} if not found
+     * @since 3.0
+     * @see #annotation(DotName)
+     */
+    @Override
+    public AnnotationInstance declaredAnnotation(DotName name) {
+        for (AnnotationInstance instance : method.methodInternal().annotationArray()) {
+            if (targetsThis(instance) && instance.name().equals(name)) {
+                return instance;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the annotation instances with given name declared on this method parameter.
+     * <p>
+     * If the specified annotation is repeatable, the result also contains all values from the container annotation
+     * instance. In this case, the {@link AnnotationInstance#target()} returns the target of the container annotation
+     * instance.
+     * <p>
+     * Unlike {@link #annotationsWithRepeatable(DotName, IndexView)}, this method doesn't return annotations
+     * declared on types within the methor parameter signature.
+     *
+     * @param name name of the annotation type, must not be {@code null}
+     * @param index index used to obtain the annotation type, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @throws IllegalArgumentException if the index is {@code null}, if the index does not contain the annotation type
+     *         or if {@code name} does not identify an annotation type
+     * @since 3.0
+     * @see #annotationsWithRepeatable(DotName, IndexView)
+     */
+    @Override
+    public List<AnnotationInstance> declaredAnnotationsWithRepeatable(DotName name, IndexView index) {
+        if (index == null) {
+            throw new IllegalArgumentException("Index must not be null");
+        }
+        List<AnnotationInstance> instances = new ArrayList<>();
+        AnnotationInstance declaredInstance = declaredAnnotation(name);
+        if (declaredInstance != null) {
+            instances.add(declaredInstance);
+        }
+        ClassInfo annotationClass = index.getClassByName(name);
+        if (annotationClass == null) {
+            throw new IllegalArgumentException("Index does not contain the annotation definition: " + name);
+        }
+        if (!annotationClass.isAnnotation()) {
+            throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
+        }
+        AnnotationInstance repeatable = annotationClass.declaredAnnotation(Index.REPEATABLE);
+        if (repeatable != null) {
+            Type containingType = repeatable.value().asClass();
+            AnnotationInstance container = declaredAnnotation(containingType.name());
+            if (container != null) {
+                for (AnnotationInstance nestedInstance : container.value().asNestedArray()) {
+                    instances.add(AnnotationInstance.create(nestedInstance, container.target()));
+                }
+            }
+        }
+        return Collections.unmodifiableList(instances);
+    }
+
+    /**
+     * Returns the annotation instances declared on this method parameter.
+     * <p>
+     * Unlike {@link #annotations()}, this method doesn't return annotations declared on types within
+     * the methor parameter signature.
+     *
+     * @return immutable list of annotation instances, never {@code null}
+     * @since 3.0
+     * @see #annotations()
+     */
+    @Override
+    public List<AnnotationInstance> declaredAnnotations() {
+        List<AnnotationInstance> instances = new ArrayList<>();
+        for (AnnotationInstance instance : method.methodInternal().annotationArray()) {
+            if (targetsThis(instance)) {
+                instances.add(instance);
+            }
+        }
+        return Collections.unmodifiableList(instances);
     }
 
     /**
@@ -81,7 +335,7 @@ public final class MethodParameterInfo implements AnnotationTarget {
      * @return a string representation of this parameter
      */
     public String toString() {
-        return method + " #" + parameter;
+        return method + " #" + position;
     }
 
     @Override
@@ -110,7 +364,7 @@ public final class MethodParameterInfo implements AnnotationTarget {
     }
 
     @Override
-    public RecordComponentInfo asRecordComponent() {
+    public final RecordComponentInfo asRecordComponent() {
         throw new IllegalArgumentException("Not a record component");
     }
 
@@ -123,7 +377,7 @@ public final class MethodParameterInfo implements AnnotationTarget {
     public int hashCode() {
         int result = 1;
         result = 31 * result + method.hashCode();
-        result = 31 * result + (int) parameter;
+        result = 31 * result + (int) position;
         return result;
     }
 
@@ -136,7 +390,7 @@ public final class MethodParameterInfo implements AnnotationTarget {
             return false;
         }
         MethodParameterInfo other = (MethodParameterInfo) o;
-        return method.equals(other.method) && parameter == other.parameter;
+        return method.equals(other.method) && position == other.position;
     }
 
 }

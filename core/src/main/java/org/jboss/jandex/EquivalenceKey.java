@@ -108,7 +108,7 @@ public abstract class EquivalenceKey {
             return null;
         }
         return new MethodEquivalenceKey(method.declaringClass().name(), method.methodInternal().nameBytes(),
-                of(method.methodInternal().parameterArray()), of(method.returnType()));
+                of(method.methodInternal().parameterTypesArray()), of(method.returnType()));
     }
 
     /**

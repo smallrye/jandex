@@ -210,7 +210,7 @@ public final class Index implements IndexView {
         if (!annotationClass.isAnnotation()) {
             throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
         }
-        AnnotationInstance repeatable = annotationClass.classAnnotation(REPEATABLE);
+        AnnotationInstance repeatable = annotationClass.declaredAnnotation(REPEATABLE);
         if (repeatable == null) {
             // Not a repeatable annotation
             return getAnnotations(annotationName);

@@ -92,9 +92,8 @@ public class EquivalenceTest {
         assertEquals("class org.jboss.jandex.test.EquivalenceTest$B", keyB.toString());
 
         Map<DotName, List<AnnotationInstance>> annotations = new HashMap<>();
-        DotName annotationName = DotName.createSimple(MyAnnotation.class.getName());
-        annotations.put(annotationName,
-                Collections.singletonList(AnnotationInstance.create(annotationName, null, new AnnotationValue[0])));
+        annotations.put(MyAnnotation.DOT_NAME,
+                Collections.singletonList(AnnotationInstance.create(MyAnnotation.DOT_NAME, null, new AnnotationValue[0])));
         ClassInfo bWithAnnotations = ClassInfo.create(b.name(), b.superName(), b.flags(), b.interfaces(), annotations,
                 b.hasNoArgsConstructor());
         EquivalenceKey keyBWithAnnotations = EquivalenceKey.of(bWithAnnotations);
@@ -159,10 +158,11 @@ public class EquivalenceTest {
                 keyC2.toString());
 
         MethodInfo z = index.getClassByName(DotName.createSimple(B.class.getName())).firstMethod("z");
-        MethodInfo zWithAnnotations = MethodInfo.create(z.declaringClass(), z.name(), z.parameters().toArray(Type.EMPTY_ARRAY),
+        MethodInfo zWithAnnotations = MethodInfo.create(z.declaringClass(), z.name(),
+                z.parameterTypes().toArray(Type.EMPTY_ARRAY),
                 z.returnType(), z.flags());
         List<AnnotationInstance> annotations = Collections.singletonList(
-                AnnotationInstance.create(DotName.createSimple(MyAnnotation.class.getName()), null, new AnnotationValue[0]));
+                AnnotationInstance.create(MyAnnotation.DOT_NAME, null, new AnnotationValue[0]));
         Method setAnnotations = zWithAnnotations.getClass().getDeclaredMethod("setAnnotations", List.class);
         setAnnotations.setAccessible(true);
         setAnnotations.invoke(zWithAnnotations, annotations);
@@ -220,10 +220,11 @@ public class EquivalenceTest {
         }
 
         MethodInfo z = index.getClassByName(DotName.createSimple(B.class.getName())).firstMethod("z");
-        MethodInfo zWithAnnotations = MethodInfo.create(z.declaringClass(), z.name(), z.parameters().toArray(Type.EMPTY_ARRAY),
+        MethodInfo zWithAnnotations = MethodInfo.create(z.declaringClass(), z.name(),
+                z.parameterTypes().toArray(Type.EMPTY_ARRAY),
                 z.returnType(), z.flags());
         List<AnnotationInstance> annotations = Collections.singletonList(
-                AnnotationInstance.create(DotName.createSimple(MyAnnotation.class.getName()),
+                AnnotationInstance.create(MyAnnotation.DOT_NAME,
                         MethodParameterInfo.create(z, (short) 0), new AnnotationValue[0]));
         Method setAnnotations = zWithAnnotations.getClass().getDeclaredMethod("setAnnotations", List.class);
         setAnnotations.setAccessible(true);
@@ -263,7 +264,7 @@ public class EquivalenceTest {
         FieldInfo z = index.getClassByName(DotName.createSimple(B.class.getName())).field("z");
         FieldInfo zWithAnnotations = FieldInfo.create(z.declaringClass(), z.name(), z.type(), z.flags());
         List<AnnotationInstance> annotations = Collections.singletonList(
-                AnnotationInstance.create(DotName.createSimple(MyAnnotation.class.getName()), null, new AnnotationValue[0]));
+                AnnotationInstance.create(MyAnnotation.DOT_NAME, null, new AnnotationValue[0]));
         Method setAnnotations = zWithAnnotations.getClass().getDeclaredMethod("setAnnotations", List.class);
         setAnnotations.setAccessible(true);
         setAnnotations.invoke(zWithAnnotations, annotations);

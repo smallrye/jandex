@@ -17,17 +17,18 @@
  */
 package org.jboss.jandex;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Represents a type that is the target of a type annotation. Type annotations can
  * occur at any nesting level on any type declaration. For this reason, an enclosing
  * target is provided, as well as other usage specific information to determine the
  * starting point for locating the type.
- *
  * <p>
  * It is expected that callers will traverse the full tree from the specified
  * starting point, since this context is important in interpreting the meaning
  * of the type annotation
- * </p>
  *
  * @see org.jboss.jandex.EmptyTypeTarget
  * @see org.jboss.jandex.ClassExtendsTypeTarget
@@ -196,8 +197,173 @@ public abstract class TypeTarget implements AnnotationTarget {
     }
 
     @Override
-    public RecordComponentInfo asRecordComponent() {
+    public final RecordComponentInfo asRecordComponent() {
         throw new IllegalArgumentException("Not a record component");
     }
 
+    /**
+     * Returns whether an annotation instance with given name is declared on this type usage.
+     * <p>
+     * Note that unlike other {@code AnnotationTarget}s, this method doesn't inspect nested annotation targets,
+     * even though array types, parameterized types and wildcard types may contain other types inside them.
+     * In other words, this method is equivalent to {@link #hasDeclaredAnnotation(DotName)}.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return {@code true} if the annotation is present, {@code false} otherwise
+     * @since 3.0
+     * @see #annotation(DotName)
+     */
+    @Override
+    public boolean hasAnnotation(DotName name) {
+        if (target == null) {
+            return false;
+        }
+        return target.hasAnnotation(name);
+    }
+
+    /**
+     * Returns the annotation instance with given name declared on this type usage.
+     * <p>
+     * Note that unlike other {@code AnnotationTarget}s, this method doesn't inspect nested annotation targets,
+     * even though array types, parameterized types and wildcard types may contain other types inside them.
+     * In other words, this method is equivalent to {@link #declaredAnnotation(DotName)}.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return the annotation instance, or {@code null} if not found
+     * @since 3.0
+     * @see #annotations(DotName)
+     */
+    @Override
+    public AnnotationInstance annotation(DotName name) {
+        if (target == null) {
+            return null;
+        }
+        return target.annotation(name);
+    }
+
+    /**
+     * Returns the annotation instances with given name declared on this type usage.
+     * <p>
+     * Note that unlike other {@code AnnotationTarget}s, this method doesn't inspect nested annotation targets,
+     * even though array types, parameterized types and wildcard types may contain other types inside them.
+     * In other words, this method is equivalent to {@link #annotation(DotName)} and {@link #declaredAnnotation(DotName)},
+     * except it returns a list.
+     *
+     * @param name name of the annotation type, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @since 3.0
+     * @see #annotationsWithRepeatable(DotName, IndexView)
+     * @see #annotations()
+     */
+    @Override
+    public List<AnnotationInstance> annotations(DotName name) {
+        if (target == null) {
+            return Collections.emptyList();
+        }
+        return Collections.singletonList(target.annotation(name));
+    }
+
+    /**
+     * Returns the annotation instances with given name declared on this type usage.
+     * <p>
+     * If the specified annotation is repeatable, the result also contains all values from the container annotation
+     * instance. In this case, the {@link AnnotationInstance#target()} returns the target of the container annotation
+     * instance.
+     * <p>
+     * Note that unlike other {@code AnnotationTarget}s, this method doesn't inspect nested annotation targets,
+     * even though array types, parameterized types and wildcard types may contain other types inside them.
+     * In other words, this method is equivalent to {@link #declaredAnnotationsWithRepeatable(DotName, IndexView)}.
+     *
+     * @param name name of the annotation type, must not be {@code null}
+     * @param index index used to obtain the annotation type, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @throws IllegalArgumentException if the index is {@code null}, if the index does not contain the annotation type
+     *         or if {@code name} does not identify an annotation type
+     * @since 3.0
+     * @see #annotations(DotName)
+     * @see #annotations()
+     */
+    @Override
+    public List<AnnotationInstance> annotationsWithRepeatable(DotName name, IndexView index) {
+        if (target == null) {
+            return Collections.emptyList();
+        }
+        return target.annotationsWithRepeatable(name, index);
+    }
+
+    /**
+     * Returns the annotation instances declared on this type usage.
+     * <p>
+     * Note that unlike other {@code AnnotationTarget}s, this method doesn't inspect nested annotation targets,
+     * even though array types, parameterized types and wildcard types may contain other types inside them.
+     * In other words, this method is equivalent to {@link #declaredAnnotations()}.
+     *
+     * @return immutable list of annotation instances, never {@code null}
+     * @since 3.0
+     */
+    @Override
+    public List<AnnotationInstance> annotations() {
+        if (target == null) {
+            return Collections.emptyList();
+        }
+        return target.annotations();
+    }
+
+    /**
+     * Returns whether an annotation instance with given name is declared on this type usage.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return {@code true} if the annotation is present, {@code false} otherwise
+     * @since 3.0
+     * @see #hasAnnotation(DotName)
+     */
+    @Override
+    public boolean hasDeclaredAnnotation(DotName name) {
+        return hasAnnotation(name);
+    }
+
+    /**
+     * Returns the annotation instance with given name declared on this type usage.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return the annotation instance, or {@code null} if not found
+     * @since 3.0
+     * @see #annotation(DotName)
+     */
+    @Override
+    public AnnotationInstance declaredAnnotation(DotName name) {
+        return annotation(name);
+    }
+
+    /**
+     * Returns the annotation instances with given name declared on this type usage.
+     * <p>
+     * If the specified annotation is repeatable, the result also contains all values from the container annotation
+     * instance. In this case, the {@link AnnotationInstance#target()} returns the target of the container annotation
+     * instance.
+     *
+     * @param name name of the annotation type, must not be {@code null}
+     * @param index index used to obtain the annotation type, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @throws IllegalArgumentException if the index is {@code null}, if the index does not contain the annotation type
+     *         or if {@code name} does not identify an annotation type
+     * @since 3.0
+     * @see #annotationsWithRepeatable(DotName, IndexView)
+     */
+    @Override
+    public List<AnnotationInstance> declaredAnnotationsWithRepeatable(DotName name, IndexView index) {
+        return annotationsWithRepeatable(name, index);
+    }
+
+    /**
+     * Returns the annotation instances declared on this type usage.
+     *
+     * @return immutable list of annotation instances, never {@code null}
+     * @since 3.0
+     * @see #annotations()
+     */
+    @Override
+    public List<AnnotationInstance> declaredAnnotations() {
+        return annotations();
+    }
 }

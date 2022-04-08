@@ -66,7 +66,7 @@ public class RepeatableAnnotationsTestCase {
     public void testClassInfo() throws IOException {
         Index index = getIndexForClass(MY_ANNOTATED_NAME, ALPHA_NAME);
         ClassInfo alpha = index.getClassByName(MY_ANNOTATED_NAME);
-        assertValues(alpha.classAnnotationsWithRepeatable(ALPHA_NAME, index), 0);
+        assertValues(alpha.declaredAnnotationsWithRepeatable(ALPHA_NAME, index), 0);
     }
 
     @Test

@@ -144,16 +144,20 @@ public final class ModuleInfo {
         return Collections.unmodifiableList(packages);
     }
 
-    public final AnnotationInstance annotation(DotName name) {
-        return moduleInfoClass.classAnnotation(name);
+    public final boolean hasAnnotation(DotName name) {
+        return moduleInfoClass.hasDeclaredAnnotation(name);
     }
 
-    public final Collection<AnnotationInstance> annotations() {
-        return moduleInfoClass.classAnnotations();
+    public final AnnotationInstance annotation(DotName name) {
+        return moduleInfoClass.declaredAnnotation(name);
     }
 
     public final List<AnnotationInstance> annotationsWithRepeatable(DotName name, IndexView index) {
-        return moduleInfoClass.classAnnotationsWithRepeatable(name, index);
+        return moduleInfoClass.declaredAnnotationsWithRepeatable(name, index);
+    }
+
+    public final Collection<AnnotationInstance> annotations() {
+        return moduleInfoClass.declaredAnnotations();
     }
 
     void setMainClass(DotName mainClass) {

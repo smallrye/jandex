@@ -53,10 +53,10 @@ final class MethodInternal {
                 return x;
             }
 
-            int min = Math.min(instance.parameters.length, instance2.parameters.length);
+            int min = Math.min(instance.parameterTypes.length, instance2.parameterTypes.length);
             for (int i = 0; i < min; i++) {
-                Type t1 = instance.parameters[i];
-                Type t2 = instance2.parameters[i];
+                Type t1 = instance.parameterTypes[i];
+                Type t2 = instance2.parameterTypes[i];
 
                 x = t1.name().compareTo(t2.name());
                 if (x != 0) {
@@ -64,7 +64,7 @@ final class MethodInternal {
                 }
             }
 
-            x = instance.parameters.length - instance2.parameters.length;
+            x = instance.parameterTypes.length - instance2.parameterTypes.length;
             if (x != 0) {
                 return x;
             }
@@ -76,7 +76,7 @@ final class MethodInternal {
 
     private byte[] name;
     private byte[][] parameterNames;
-    private Type[] parameters;
+    private Type[] parameterTypes;
     private Type returnType;
     private Type[] exceptions;
     private Type receiverType;
@@ -85,22 +85,22 @@ final class MethodInternal {
     private AnnotationValue defaultValue;
     private short flags;
 
-    MethodInternal(byte[] name, byte[][] parameterNames, Type[] parameters, Type returnType, short flags) {
-        this(name, parameterNames, parameters, returnType, flags, Type.EMPTY_ARRAY, Type.EMPTY_ARRAY);
+    MethodInternal(byte[] name, byte[][] parameterNames, Type[] parameterTypes, Type returnType, short flags) {
+        this(name, parameterNames, parameterTypes, returnType, flags, Type.EMPTY_ARRAY, Type.EMPTY_ARRAY);
     }
 
-    MethodInternal(byte[] name, byte[][] parameterNames, Type[] parameters, Type returnType, short flags, Type[] typeParameters,
-            Type[] exceptions) {
-        this(name, parameterNames, parameters, returnType, flags, null, typeParameters, exceptions,
+    MethodInternal(byte[] name, byte[][] parameterNames, Type[] parameterTypes, Type returnType, short flags,
+            Type[] typeParameters, Type[] exceptions) {
+        this(name, parameterNames, parameterTypes, returnType, flags, null, typeParameters, exceptions,
                 AnnotationInstance.EMPTY_ARRAY, null);
     }
 
-    MethodInternal(byte[] name, byte[][] parameterNames, Type[] parameters, Type returnType, short flags,
+    MethodInternal(byte[] name, byte[][] parameterNames, Type[] parameterTypes, Type returnType, short flags,
             Type receiverType, Type[] typeParameters, Type[] exceptions,
             AnnotationInstance[] annotations, AnnotationValue defaultValue) {
         this.name = name;
         this.parameterNames = parameterNames;
-        this.parameters = parameters.length == 0 ? Type.EMPTY_ARRAY : parameters;
+        this.parameterTypes = parameterTypes.length == 0 ? Type.EMPTY_ARRAY : parameterTypes;
         this.returnType = returnType;
         this.flags = flags;
         this.annotations = annotations;
@@ -136,7 +136,7 @@ final class MethodInternal {
         if (!Arrays.deepEquals(parameterNames, methodInternal.parameterNames)) {
             return false;
         }
-        if (!Arrays.equals(parameters, methodInternal.parameters)) {
+        if (!Arrays.equals(parameterTypes, methodInternal.parameterTypes)) {
             return false;
         }
         if (receiverType != null ? !receiverType.equals(methodInternal.receiverType) : methodInternal.receiverType != null) {
@@ -155,7 +155,7 @@ final class MethodInternal {
     public int hashCode() {
         int result = Arrays.hashCode(name);
         result = 31 * result + Arrays.deepHashCode(parameterNames);
-        result = 31 * result + Arrays.hashCode(parameters);
+        result = 31 * result + Arrays.hashCode(parameterTypes);
         result = 31 * result + returnType.hashCode();
         result = 31 * result + Arrays.hashCode(exceptions);
         result = 31 * result + (receiverType != null ? receiverType.hashCode() : 0);
@@ -168,6 +168,10 @@ final class MethodInternal {
 
     final String name() {
         return Utils.fromUTF8(name);
+    }
+
+    final int parametersCount() {
+        return parameterTypes.length;
     }
 
     final String parameterName(int i) {
@@ -184,20 +188,20 @@ final class MethodInternal {
         return parameterNames;
     }
 
-    final Type[] copyParameters() {
-        return parameters.clone();
+    final Type[] copyParameterTypes() {
+        return parameterTypes.clone();
     }
 
-    final Type[] parameterArray() {
-        return parameters;
+    final Type[] parameterTypesArray() {
+        return parameterTypes;
     }
 
     final Type[] copyExceptions() {
         return exceptions.clone();
     }
 
-    final List<Type> parameters() {
-        return Collections.unmodifiableList(Arrays.asList(parameters));
+    final List<Type> parameterTypes() {
+        return Collections.unmodifiableList(Arrays.asList(parameterTypes));
     }
 
     final Type returnType() {
@@ -259,14 +263,14 @@ final class MethodInternal {
         StringBuilder builder = new StringBuilder();
         String name = name();
         builder.append(returnType).append(' ').append(name).append('(');
-        for (int i = 0; i < parameters.length; i++) {
-            builder.append(parameters[i]);
+        for (int i = 0; i < parameterTypes.length; i++) {
+            builder.append(parameterTypes[i]);
             String parameterName = parameterName(i);
             if (parameterName != null) {
                 builder.append(' ');
                 builder.append(parameterName);
             }
-            if (i + 1 < parameters.length)
+            if (i + 1 < parameterTypes.length)
                 builder.append(", ");
         }
         builder.append(')');
@@ -294,8 +298,8 @@ final class MethodInternal {
         this.parameterNames = parameterNames;
     }
 
-    void setParameters(Type[] parameters) {
-        this.parameters = parameters.length == 0 ? Type.EMPTY_ARRAY : parameters;
+    void setParameterTypes(Type[] parameterTypes) {
+        this.parameterTypes = parameterTypes.length == 0 ? Type.EMPTY_ARRAY : parameterTypes;
     }
 
     void setReturnType(Type returnType) {

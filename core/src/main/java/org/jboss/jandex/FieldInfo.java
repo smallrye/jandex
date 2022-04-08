@@ -102,42 +102,197 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns the list of annotation instances declared on this field. It may be empty, but never null.
+     * Returns whether an annotation instance with given name is declared on this field or any type
+     * within its signature.
      *
-     * @return the list of annotations on this field
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return {@code true} if the annotation is present, {@code false} otherwise
+     * @see #annotation(DotName)
      */
-    public List<AnnotationInstance> annotations() {
-        return internal.annotations();
+    public final boolean hasAnnotation(DotName name) {
+        return internal.hasAnnotation(name);
     }
 
     /**
-     * Retrieves an annotation instance declared on this field. If an annotation by that name is not present, null will be
-     * returned.
+     * Returns the annotation instance with given name declared on this field or any type within its signature.
+     * The {@code target()} method of the returned annotation instance may be used to determine the exact location
+     * of the annotation instance.
+     * <p>
+     * The following is a non-exhaustive list of examples of annotations returned by this method:
+     * 
+     * <pre class="brush:java; gutter: false;">
+     *     {@literal @}MyFieldAnnotation
+     *     public String foo;
      *
-     * @param name the name of the annotation to locate on this field
-     * @return the annotation if found, otherwise, null
+     *     public List&lt;{@literal @}MyTypeAnnotation String&gt; bar;
+     * </pre>
+     * <p>
+     * In case an annotation with given name occurs more than once, the result of this method is not deterministic.
+     * For such situations, {@link #annotations(DotName)} is preferable.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return the annotation instance, or {@code null} if not found
+     * @see #annotations(DotName)
      */
     public final AnnotationInstance annotation(DotName name) {
         return internal.annotation(name);
     }
 
     /**
-     * Retrieves annotation instances declared on this field, by the name of the annotation.
+     * Returns the annotation instances with given name declared on this field or any type within its signature.
+     * The {@code target()} method of the returned annotation instances may be used to determine the exact location
+     * of the respective annotation instance.
+     * <p>
+     * The following is a non-exhaustive list of examples of annotations returned by this method:
      * 
-     * If the specified annotation is repeatable (JLS 9.6), the result also contains all values from the container annotation
+     * <pre class="brush:java; gutter: false;">
+     *     {@literal @}MyFieldAnnotation
+     *     public String foo;
+     *
+     *     public List&lt;{@literal @}MyTypeAnnotation String&gt; bar;
+     * </pre>
+     *
+     * @param name name of the annotation type, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @see #annotationsWithRepeatable(DotName, IndexView)
+     * @see #annotations()
+     */
+    @Override
+    public final List<AnnotationInstance> annotations(DotName name) {
+        List<AnnotationInstance> instances = new ArrayList<>();
+        for (AnnotationInstance instance : internal.annotationArray()) {
+            if (instance.name().equals(name)) {
+                instances.add(instance);
+            }
+        }
+        return Collections.unmodifiableList(instances);
+    }
+
+    /**
+     * Returns the annotation instances with given name declared on this field or any type within its signature.
+     * The {@code target()} method of the returned annotation instances may be used to determine the exact location
+     * of the respective annotation instance.
+     * <p>
+     * If the specified annotation is repeatable, the result also contains all values from the container annotation
+     * instance. In this case, the {@link AnnotationInstance#target()} returns the target of the container annotation
      * instance.
-     * 
-     * @param name the name of the annotation
-     * @param index the index used to obtain the annotation class
-     * @return the annotation instances declared on this field, or an empty list if none
-     * @throws IllegalArgumentException If the index does not contain the annotation definition or if it does not represent an
-     *         annotation type
+     *
+     * @param name name of the annotation type, must not be {@code null}
+     * @param index index used to obtain the annotation type, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @throws IllegalArgumentException if the index is {@code null}, if the index does not contain the annotation type
+     *         or if {@code name} does not identify an annotation type
+     * @see #annotations(DotName)
+     * @see #annotations()
      */
     public final List<AnnotationInstance> annotationsWithRepeatable(DotName name, IndexView index) {
-        AnnotationInstance ret = annotation(name);
-        if (ret != null) {
-            // Annotation present - no need to try to find repeatable annotations
-            return Collections.singletonList(ret);
+        if (index == null) {
+            throw new IllegalArgumentException("Index must not be null");
+        }
+        List<AnnotationInstance> instances = new ArrayList<>(annotations(name));
+        ClassInfo annotationClass = index.getClassByName(name);
+        if (annotationClass == null) {
+            throw new IllegalArgumentException("Index does not contain the annotation definition: " + name);
+        }
+        if (!annotationClass.isAnnotation()) {
+            throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
+        }
+        AnnotationInstance repeatable = annotationClass.declaredAnnotation(Index.REPEATABLE);
+        if (repeatable != null) {
+            Type containingType = repeatable.value().asClass();
+            for (AnnotationInstance container : annotations(containingType.name())) {
+                for (AnnotationInstance nestedInstance : container.value().asNestedArray()) {
+                    instances.add(AnnotationInstance.create(nestedInstance, container.target()));
+                }
+            }
+        }
+        return Collections.unmodifiableList(instances);
+    }
+
+    /**
+     * Returns the annotation instances declared on this field or any type within its signature.
+     * The {@code target()} method of the returned annotation instances may be used to determine the exact location
+     * of the respective annotation instance.
+     * <p>
+     * The following is a non-exhaustive list of examples of annotations returned by this method:
+     * 
+     * <pre class="brush:java; gutter: false;">
+     *     {@literal @}MyFieldAnnotation
+     *     public String foo;
+     *
+     *     public List&lt;{@literal @}MyTypeAnnotation String&gt; bar;
+     * </pre>
+     *
+     * @return collection of annotation instances, never {@code null}
+     */
+    public final List<AnnotationInstance> annotations() {
+        return internal.annotations();
+    }
+
+    /**
+     * Returns whether an annotation instance with given name is declared on this field.
+     * <p>
+     * Unlike {@link #hasAnnotation(DotName)}, this method ignores annotations declared on
+     * types within the field signature.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return {@code true} if the annotation is present, {@code false} otherwise
+     * @since 3.0
+     * @see #hasAnnotation(DotName)
+     */
+    @Override
+    public final boolean hasDeclaredAnnotation(DotName name) {
+        return declaredAnnotation(name) != null;
+    }
+
+    /**
+     * Returns the annotation instance with given name declared on this field.
+     * <p>
+     * Unlike {@link #annotation(DotName)}, this method doesn't return annotations declared on types
+     * within the field signature.
+     *
+     * @param name name of the annotation type to look for, must not be {@code null}
+     * @return the annotation instance, or {@code null} if not found
+     * @since 3.0
+     * @see #annotation(DotName)
+     */
+    @Override
+    public final AnnotationInstance declaredAnnotation(DotName name) {
+        for (AnnotationInstance instance : internal.annotationArray()) {
+            if (instance.target().kind() == Kind.FIELD && instance.name().equals(name)) {
+                return instance;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the annotation instances with given name declared on this field.
+     * <p>
+     * If the specified annotation is repeatable, the result also contains all values from the container annotation
+     * instance. In this case, the {@link AnnotationInstance#target()} returns the target of the container annotation
+     * instance.
+     * <p>
+     * Unlike {@link #annotationsWithRepeatable(DotName, IndexView)}, this method doesn't return annotations
+     * declared on types within the field signature.
+     *
+     * @param name name of the annotation type, must not be {@code null}
+     * @param index index used to obtain the annotation type, must not be {@code null}
+     * @return list of annotation instances, never {@code null}
+     * @throws IllegalArgumentException if the index is {@code null}, if the index does not contain the annotation type
+     *         or if {@code name} does not identify an annotation type
+     * @since 3.0
+     * @see #annotationsWithRepeatable(DotName, IndexView)
+     */
+    @Override
+    public final List<AnnotationInstance> declaredAnnotationsWithRepeatable(DotName name, IndexView index) {
+        if (index == null) {
+            throw new IllegalArgumentException("Index must not be null");
+        }
+        List<AnnotationInstance> instances = new ArrayList<>();
+        AnnotationInstance declaredInstance = declaredAnnotation(name);
+        if (declaredInstance != null) {
+            instances.add(declaredInstance);
         }
         ClassInfo annotationClass = index.getClassByName(name);
         if (annotationClass == null) {
@@ -146,44 +301,48 @@ public final class FieldInfo implements AnnotationTarget {
         if (!annotationClass.isAnnotation()) {
             throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
         }
-        AnnotationInstance repeatable = annotationClass.classAnnotation(Index.REPEATABLE);
-        if (repeatable == null) {
-            return Collections.emptyList();
+        AnnotationInstance repeatable = annotationClass.declaredAnnotation(Index.REPEATABLE);
+        if (repeatable != null) {
+            Type containingType = repeatable.value().asClass();
+            AnnotationInstance container = declaredAnnotation(containingType.name());
+            if (container != null) {
+                for (AnnotationInstance nestedInstance : container.value().asNestedArray()) {
+                    instances.add(AnnotationInstance.create(nestedInstance, container.target()));
+                }
+            }
         }
-        Type containingType = repeatable.value().asClass();
-        AnnotationInstance containing = annotation(containingType.name());
-        if (containing == null) {
-            return Collections.emptyList();
-        }
-        AnnotationInstance[] values = containing.value().asNestedArray();
-        List<AnnotationInstance> instances = new ArrayList<AnnotationInstance>(values.length);
-        for (AnnotationInstance nestedInstance : values) {
-            instances.add(nestedInstance);
-        }
-        return instances;
+        return Collections.unmodifiableList(instances);
     }
 
     /**
-     * Returns whether or not the annotation instance with the given name occurs on this field
+     * Returns the annotation instances declared on this field.
+     * <p>
+     * Unlike {@link #annotations()}, this method doesn't return annotations declared on types
+     * within the field signature.
      *
+     * @return list of annotation instances, never {@code null}
+     * @since 3.0
      * @see #annotations()
-     * @see #annotation(DotName)
-     * @param name the name of the annotation to look for
-     * @return true if the annotation is present, false otherwise
      */
-    public final boolean hasAnnotation(DotName name) {
-        return internal.hasAnnotation(name);
+    @Override
+    public final List<AnnotationInstance> declaredAnnotations() {
+        List<AnnotationInstance> instances = new ArrayList<>();
+        for (AnnotationInstance instance : internal.annotationArray()) {
+            if (instance.target().kind() == Kind.FIELD) {
+                instances.add(instance);
+            }
+        }
+        return Collections.unmodifiableList(instances);
     }
 
     /**
-     * Returns whether or not this field is declared as an element of an enum.
+     * Returns whether this field is declared as an element of an enum.
      *
-     * @return true if the field is declared as an element of an enum, false
-     *         otherwise.
+     * @return true if the field is declared as an element of an enum, false otherwise
      *
      * @see java.lang.reflect.Field#isEnumConstant()
      */
-    public boolean isEnumConstant() {
+    public final boolean isEnumConstant() {
         return (flags() & Modifiers.ENUM) != 0;
     }
 
@@ -205,9 +364,8 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns a string representation describing this field. It is similar although not necessarily equivalent to a Java source
-     * code expression representing
-     * this field.
+     * Returns a string representation describing this field. It is similar although not necessarily equivalent
+     * to a Java source code expression representing this field.
      *
      * @return a string representation for this field
      */
@@ -241,7 +399,7 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     @Override
-    public RecordComponentInfo asRecordComponent() {
+    public final RecordComponentInfo asRecordComponent() {
         throw new IllegalArgumentException("Not a record component");
     }
 

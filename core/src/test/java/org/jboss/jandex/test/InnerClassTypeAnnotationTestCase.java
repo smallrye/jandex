@@ -91,6 +91,6 @@ public class InnerClassTypeAnnotationTestCase {
 
     private void verifyTypeAnnotations(Index index, String name, int pos) {
         ClassInfo clazz = index.getClassByName(DotName.createSimple("test.InnerClassTypeAnnotationsExample$" + name));
-        assertTrue(clazz.constructors().get(0).parameters().get(pos).hasAnnotation(DotName.createSimple("test.Nullable")));
+        assertTrue(clazz.constructors().get(0).parameterTypes().get(pos).hasAnnotation(DotName.createSimple("test.Nullable")));
     }
 }

@@ -34,7 +34,7 @@ import java.util.Map;
  * Only the methods and fields which are references by an annotation are stored.
  *
  * <p>
- * Global information including the parent class, implemented methodParameters, and
+ * Global information including the parent class, implemented interfaces, and
  * access flags are also provided since this information is often necessary.
  *
  * <p>
@@ -196,7 +196,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @param name the name of this class
      * @param superName the name of the parent class
      * @param flags the class attributes
-     * @param interfaces the methodParameters this class implements
+     * @param interfaces the interfaces this class implements
      * @param annotations the annotations on this class
      * @param hasNoArgsConstructor whether this class has a no arg constructor
      * @return a new mock class representation

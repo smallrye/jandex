@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Modifier;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,21 +34,26 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
  * An index useful for quickly processing annotations. The index is read-only and supports
- * concurrent access. Also the index is optimized for memory efficiency by using componentized
- * DotName values.
+ * concurrent access. Also, the index is optimized for memory efficiency by using componentized
+ * {@code DotName} values.
  *
  * <p>
  * It contains the following information:
  * <ol>
  * <li>All annotations and a collection of targets they refer to</li>
- * <li>All classes (including methodParameters) scanned during the indexing process (typical all classes in a jar)</li>
- * <li>All subclasses indexed by super class known to this index</li>
+ * <li>All classes (including interfaces) scanned during the indexing process (typically all classes in a jar)</li>
+ * <li>All modules scanned during the indexing process (typically one module in a jar)</li>
+ * <li>All subclasses for each class known to this index</li>
+ * <li>All subinterfaces for each interface known to this index</li>
+ * <li>All implementors for each interface known to this index</li>
+ * <li>All users of each class known to this index</li>
  * </ol>
  *
  * @author Jason T. Greene
@@ -61,17 +67,19 @@ public final class Index implements IndexView {
 
     final Map<DotName, List<AnnotationInstance>> annotations;
     final Map<DotName, List<ClassInfo>> subclasses;
+    final Map<DotName, List<ClassInfo>> subinterfaces;
     final Map<DotName, List<ClassInfo>> implementors;
     final Map<DotName, ClassInfo> classes;
     final Map<DotName, ModuleInfo> modules;
     final Map<DotName, List<ClassInfo>> users;
 
     Index(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
-            Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes, Map<DotName, ModuleInfo> modules,
-            Map<DotName, List<ClassInfo>> users) {
+            Map<DotName, List<ClassInfo>> subinterfaces, Map<DotName, List<ClassInfo>> implementors,
+            Map<DotName, ClassInfo> classes, Map<DotName, ModuleInfo> modules, Map<DotName, List<ClassInfo>> users) {
         this.annotations = Collections.unmodifiableMap(annotations);
         this.classes = Collections.unmodifiableMap(classes);
         this.subclasses = Collections.unmodifiableMap(subclasses);
+        this.subinterfaces = Collections.unmodifiableMap(subinterfaces);
         this.implementors = Collections.unmodifiableMap(implementors);
         this.modules = Collections.unmodifiableMap(modules);
         this.users = Collections.unmodifiableMap(users);
@@ -91,8 +99,8 @@ public final class Index implements IndexView {
      */
     public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
             Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes) {
-        return new Index(annotations, subclasses, implementors, classes, Collections.<DotName, ModuleInfo> emptyMap(),
-                Collections.<DotName, List<ClassInfo>> emptyMap());
+        return new Index(annotations, subclasses, Collections.emptyMap(), implementors, classes, Collections.emptyMap(),
+                Collections.emptyMap());
     }
 
     /**
@@ -109,9 +117,28 @@ public final class Index implements IndexView {
      * @return the index
      */
     public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
-            Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes,
-            Map<DotName, List<ClassInfo>> users) {
-        return new Index(annotations, subclasses, implementors, classes, Collections.<DotName, ModuleInfo> emptyMap(), users);
+            Map<DotName, List<ClassInfo>> implementors, Map<DotName, ClassInfo> classes, Map<DotName, List<ClassInfo>> users) {
+        return new Index(annotations, subclasses, Collections.emptyMap(), implementors, classes, Collections.emptyMap(), users);
+    }
+
+    /**
+     * Constructs a "mock" Index using the passed values. All passed values MUST NOT BE MODIFIED AFTER THIS CALL.
+     * Otherwise the resulting object would not conform to the contract outlined above. Also, to conform to the
+     * memory efficiency contract this method should be passed componentized DotNames, which all share common root
+     * instances. Of course for testing code this doesn't really matter.
+     *
+     * @param annotations A map to lookup annotation instances by class name
+     * @param subclasses A map to lookup subclasses by super class name
+     * @param subinterfaces A map to lookup subinterfaces by super interface name
+     * @param implementors A map to lookup implementing classes by interface name
+     * @param classes A map to lookup classes by class name
+     * @param users A map to lookup class users
+     * @return the index
+     */
+    public static Index create(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
+            Map<DotName, List<ClassInfo>> subinterfaces, Map<DotName, List<ClassInfo>> implementors,
+            Map<DotName, ClassInfo> classes, Map<DotName, List<ClassInfo>> users) {
+        return new Index(annotations, subclasses, subinterfaces, implementors, classes, Collections.emptyMap(), users);
     }
 
     /**
@@ -194,6 +221,7 @@ public final class Index implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<AnnotationInstance> getAnnotations(DotName annotationName) {
         List<AnnotationInstance> list = annotations.get(annotationName);
         return list == null ? EMPTY_ANNOTATION_LIST : Collections.unmodifiableList(list);
@@ -202,6 +230,7 @@ public final class Index implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, IndexView index) {
         ClassInfo annotationClass = index.getClassByName(annotationName);
         if (annotationClass == null) {
@@ -234,6 +263,7 @@ public final class Index implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<ClassInfo> getKnownDirectSubclasses(DotName className) {
         List<ClassInfo> list = subclasses.get(className);
         return list == null ? EMPTY_CLASSINFO_LIST : Collections.unmodifiableList(list);
@@ -276,11 +306,50 @@ public final class Index implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
+    public List<ClassInfo> getKnownDirectSubinterfaces(DotName interfaceName) {
+        List<ClassInfo> list = subinterfaces.get(interfaceName);
+        return list == null ? EMPTY_CLASSINFO_LIST : Collections.unmodifiableList(list);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<ClassInfo> getAllKnownSubinterfaces(DotName interfaceName) {
+        Set<ClassInfo> result = new HashSet<>();
+
+        Queue<DotName> workQueue = new ArrayDeque<>();
+        Set<DotName> alreadyProcessed = new HashSet<>();
+
+        workQueue.add(interfaceName);
+        while (!workQueue.isEmpty()) {
+            DotName iface = workQueue.remove();
+            if (!alreadyProcessed.add(iface)) {
+                continue;
+            }
+
+            for (ClassInfo directSubinterface : getKnownDirectSubinterfaces(iface)) {
+                result.add(directSubinterface);
+                workQueue.add(directSubinterface.name());
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public List<ClassInfo> getKnownDirectImplementors(DotName className) {
         List<ClassInfo> list = implementors.get(className);
         return list == null ? EMPTY_CLASSINFO_LIST : Collections.unmodifiableList(list);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<ClassInfo> getAllKnownImplementors(final DotName interfaceName) {
         final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
@@ -329,6 +398,7 @@ public final class Index implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Collection<ClassInfo> getKnownClasses() {
         return classes.values();
     }
@@ -348,6 +418,20 @@ public final class Index implements IndexView {
     public ModuleInfo getModuleByName(DotName moduleName) {
         return modules.get(moduleName);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<ClassInfo> getKnownUsers(DotName className) {
+        List<ClassInfo> ret = users.get(className);
+        if (ret == null) {
+            return EMPTY_CLASSINFO_LIST;
+        }
+        return Collections.unmodifiableList(ret);
+    }
+
+    // ---
 
     /**
      * Print all annotations known by this index to stdout.
@@ -396,17 +480,5 @@ public final class Index implements IndexView {
             for (ClassInfo clazz : entry.getValue())
                 System.out.println("    " + clazz.name());
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<ClassInfo> getKnownUsers(DotName className) {
-        List<ClassInfo> ret = users.get(className);
-        if (ret == null) {
-            return EMPTY_CLASSINFO_LIST;
-        }
-        return Collections.unmodifiableList(ret);
     }
 }

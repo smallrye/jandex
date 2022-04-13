@@ -188,6 +188,9 @@ final class IndexWriterV2 extends IndexWriterImpl {
         stream.writeByte(version);
         stream.writePackedU32(index.annotations.size());
         stream.writePackedU32(index.implementors.size());
+        if (version >= 11) {
+            stream.writePackedU32(index.subinterfaces.size());
+        }
         stream.writePackedU32(index.subclasses.size());
         if (version >= 10) {
             stream.writePackedU32(index.users.size());

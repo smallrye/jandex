@@ -19,6 +19,7 @@
 package org.jboss.jandex;
 
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -101,6 +102,10 @@ final class IndexReaderV2 extends IndexReaderImpl {
             PackedDataInputStream stream = this.input;
             int annotationsSize = stream.readPackedU32();
             int implementorsSize = stream.readPackedU32();
+            int subinterfacesSize = 0;
+            if (version >= 11) {
+                subinterfacesSize = stream.readPackedU32();
+            }
             int subclassesSize = stream.readPackedU32();
             int usersSize = 0;
             if (version >= 10) {
@@ -126,7 +131,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             if (version >= 10) {
                 readRecordComponentTable(stream);
             }
-            return readClasses(stream, annotationsSize, implementorsSize, subclassesSize);
+            return readClasses(stream, annotationsSize, implementorsSize, subinterfacesSize, subclassesSize);
         } finally {
             byteTable = null;
             stringTable = null;
@@ -815,10 +820,11 @@ final class IndexReaderV2 extends IndexReaderImpl {
     }
 
     private Index readClasses(PackedDataInputStream stream,
-            int annotationsSize, int implementorsSize, int subclassesSize) throws IOException {
+            int annotationsSize, int implementorsSize, int subinterfacesSize, int subclassesSize) throws IOException {
         int classesSize = stream.readPackedU32();
         HashMap<DotName, ClassInfo> classes = new HashMap<DotName, ClassInfo>(classesSize);
         HashMap<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>(subclassesSize);
+        HashMap<DotName, List<ClassInfo>> subinterfaces = new HashMap<DotName, List<ClassInfo>>(subinterfacesSize);
         HashMap<DotName, List<ClassInfo>> implementors = new HashMap<DotName, List<ClassInfo>>(implementorsSize);
         HashMap<DotName, List<AnnotationInstance>> masterAnnotations = new HashMap<DotName, List<AnnotationInstance>>(
                 annotationsSize);
@@ -827,6 +833,11 @@ final class IndexReaderV2 extends IndexReaderImpl {
             ClassInfo clazz = readClassEntry(stream, masterAnnotations);
             addClassToMap(subclasses, clazz.superName(), clazz);
             for (Type interfaceType : clazz.interfaceTypeArray()) {
+                if (Modifier.isInterface(clazz.flags())) {
+                    addClassToMap(subinterfaces, interfaceType.name(), clazz);
+                }
+                // interfaces are intentionally added to implementors
+                // it is counter-intuitive, but we keep it to maintain behavioral compatibility
                 addClassToMap(implementors, interfaceType.name(), clazz);
             }
             classes.put(clazz.name(), clazz);
@@ -848,7 +859,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         Map<DotName, ModuleInfo> modules = (version >= 10) ? readModules(stream, masterAnnotations)
                 : Collections.<DotName, ModuleInfo> emptyMap();
 
-        return new Index(masterAnnotations, subclasses, implementors, classes, modules, users);
+        return new Index(masterAnnotations, subclasses, subinterfaces, implementors, classes, modules, users);
     }
 
     private Map<DotName, ModuleInfo> readModules(PackedDataInputStream stream,

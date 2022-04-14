@@ -37,8 +37,7 @@ import org.junit.jupiter.api.Test;
 public class CompositeTestCase {
 
     private static final DotName BASE_NAME = DotName.createSimple("foo.Base");
-    private static final DotName OBJECT_NAME = DotName.createSimple("java.lang.Object");
-    private static ClassInfo BASE_INFO = ClassInfo.create(BASE_NAME, OBJECT_NAME, (short) 0, new DotName[0],
+    private static final ClassInfo BASE_INFO = ClassInfo.create(BASE_NAME, DotName.OBJECT_NAME, (short) 0, new DotName[0],
             Collections.<DotName, List<AnnotationInstance>> emptyMap(), false);
     private static final DotName BAR_NAME = DotName.createSimple("foo.Bar");
     private static final DotName FOO_NAME = DotName.createSimple("foo.Foo");
@@ -60,9 +59,9 @@ public class CompositeTestCase {
         }
         assertEquals(3, hit);
 
-        assertEquals(5, verifyClasses(barIndex.getAllKnownSubclasses(OBJECT_NAME)));
-        assertEquals(6, verifyClasses(fooIndex.getAllKnownSubclasses(OBJECT_NAME)));
-        assertEquals(7, verifyClasses(index.getAllKnownSubclasses(OBJECT_NAME)));
+        assertEquals(5, verifyClasses(barIndex.getAllKnownSubclasses(DotName.OBJECT_NAME)));
+        assertEquals(6, verifyClasses(fooIndex.getAllKnownSubclasses(DotName.OBJECT_NAME)));
+        assertEquals(7, verifyClasses(index.getAllKnownSubclasses(DotName.OBJECT_NAME)));
     }
 
     private int verifyClasses(Collection<ClassInfo> allKnownSubclasses) {
@@ -82,9 +81,7 @@ public class CompositeTestCase {
 
     private Index createIndex(DotName name) {
         Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
-        DotName baseName = BASE_NAME;
-        ClassInfo classInfo = ClassInfo.create(name, baseName, (short) 0, new DotName[0], annotations, false);
-        ClassInfo baseInfo = BASE_INFO;
+        ClassInfo classInfo = ClassInfo.create(name, BASE_NAME, (short) 0, new DotName[0], annotations, false);
 
         AnnotationValue[] values = new AnnotationValue[] { AnnotationValue.createStringValue("blah", "blah") };
         DotName annotationName = DotName.createSimple("foo.BarAnno");
@@ -94,8 +91,8 @@ public class CompositeTestCase {
         Map<DotName, List<ClassInfo>> implementors = Collections.emptyMap();
         Map<DotName, ClassInfo> classes = Collections.singletonMap(name, classInfo);
         Map<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>();
-        subclasses.put(OBJECT_NAME, Collections.singletonList(baseInfo));
-        subclasses.put(baseName, Collections.singletonList(classInfo));
+        subclasses.put(DotName.OBJECT_NAME, Collections.singletonList(BASE_INFO));
+        subclasses.put(BASE_NAME, Collections.singletonList(classInfo));
 
         return Index.create(annotations, subclasses, implementors, classes);
     }

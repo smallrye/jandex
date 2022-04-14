@@ -322,6 +322,7 @@ public final class Indexer {
     // Index lifespan fields
     private Map<DotName, List<AnnotationInstance>> masterAnnotations;
     private Map<DotName, List<ClassInfo>> subclasses;
+    private Map<DotName, List<ClassInfo>> subinterfaces;
     private Map<DotName, List<ClassInfo>> implementors;
     private Map<DotName, ClassInfo> classes;
     private Map<DotName, ModuleInfo> modules;
@@ -335,6 +336,9 @@ public final class Indexer {
 
         if (subclasses == null)
             subclasses = new HashMap<DotName, List<ClassInfo>>();
+
+        if (subinterfaces == null)
+            subinterfaces = new HashMap<DotName, List<ClassInfo>>();
 
         if (implementors == null)
             implementors = new HashMap<DotName, List<ClassInfo>>();
@@ -1656,7 +1660,13 @@ public final class Indexer {
             addSubclass(superName, currentClass);
 
         for (int i = 0; i < numInterfaces; i++) {
-            addImplementor(interfaces.get(i).name(), currentClass);
+            DotName superInterface = interfaces.get(i).name();
+            // interfaces are intentionally added to implementors
+            // it is counter-intuitive, but we keep it to maintain behavioral compatibility
+            addImplementor(superInterface, currentClass);
+            if (Modifier.isInterface(currentClass.flags())) {
+                addSubinterface(superInterface, currentClass);
+            }
         }
 
         if (!currentClass.isModule()) {
@@ -1669,6 +1679,16 @@ public final class Indexer {
         if (list == null) {
             list = new ArrayList<ClassInfo>();
             subclasses.put(superName, list);
+        }
+
+        list.add(currentClass);
+    }
+
+    private void addSubinterface(DotName superName, ClassInfo currentClass) {
+        List<ClassInfo> list = subinterfaces.get(superName);
+        if (list == null) {
+            list = new ArrayList<ClassInfo>();
+            subinterfaces.put(superName, list);
         }
 
         list.add(currentClass);
@@ -2118,10 +2138,12 @@ public final class Indexer {
     public Index complete() {
         initIndexMaps();
         try {
-            return new Index(masterAnnotations, subclasses, implementors, classes, modules, users);
+            return new Index(masterAnnotations, subclasses, subinterfaces, implementors, classes, modules, users);
         } finally {
             masterAnnotations = null;
             subclasses = null;
+            subinterfaces = null;
+            implementors = null;
             classes = null;
             signatureParser = null;
             names = null;

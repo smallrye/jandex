@@ -19,6 +19,7 @@
 package org.jboss.jandex;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,6 +27,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -63,6 +65,7 @@ public class CompositeIndex implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<AnnotationInstance> getAnnotations(final DotName annotationName) {
         final List<AnnotationInstance> allInstances = new ArrayList<AnnotationInstance>();
         for (IndexView index : indexes) {
@@ -77,6 +80,7 @@ public class CompositeIndex implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, IndexView index) {
         List<AnnotationInstance> allInstances = new ArrayList<AnnotationInstance>();
         for (IndexView i : indexes) {
@@ -88,6 +92,7 @@ public class CompositeIndex implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<ClassInfo> getKnownDirectSubclasses(final DotName className) {
         final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
         for (IndexView index : indexes) {
@@ -102,6 +107,7 @@ public class CompositeIndex implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<ClassInfo> getAllKnownSubclasses(final DotName className) {
         final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
         final Set<DotName> processedClasses = new HashSet<DotName>();
@@ -140,6 +146,50 @@ public class CompositeIndex implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
+    public Collection<ClassInfo> getKnownDirectSubinterfaces(DotName interfaceName) {
+        Set<ClassInfo> allKnown = new HashSet<>();
+        for (IndexView index : indexes) {
+            Collection<ClassInfo> list = index.getKnownDirectSubinterfaces(interfaceName);
+            if (list != null) {
+                allKnown.addAll(list);
+            }
+        }
+        return Collections.unmodifiableSet(allKnown);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<ClassInfo> getAllKnownSubinterfaces(DotName interfaceName) {
+        Set<ClassInfo> result = new HashSet<>();
+
+        Queue<DotName> workQueue = new ArrayDeque<>();
+        Set<DotName> alreadyProcessed = new HashSet<>();
+
+        workQueue.add(interfaceName);
+        while (!workQueue.isEmpty()) {
+            DotName iface = workQueue.remove();
+            if (!alreadyProcessed.add(iface)) {
+                continue;
+            }
+
+            for (IndexView index : indexes) {
+                for (ClassInfo directSubinterface : index.getKnownDirectSubinterfaces(iface)) {
+                    result.add(directSubinterface);
+                    workQueue.add(directSubinterface.name());
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Collection<ClassInfo> getKnownDirectImplementors(final DotName className) {
         final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
         for (IndexView index : indexes) {
@@ -154,6 +204,7 @@ public class CompositeIndex implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<ClassInfo> getAllKnownImplementors(final DotName interfaceName) {
         final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
         final Set<DotName> subInterfacesToProcess = new HashSet<DotName>();
@@ -195,6 +246,7 @@ public class CompositeIndex implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ClassInfo getClassByName(final DotName className) {
         for (IndexView index : indexes) {
             final ClassInfo info = index.getClassByName(className);
@@ -208,6 +260,7 @@ public class CompositeIndex implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Collection<ClassInfo> getKnownClasses() {
         final List<ClassInfo> allKnown = new ArrayList<ClassInfo>();
         for (IndexView index : indexes) {
@@ -222,6 +275,7 @@ public class CompositeIndex implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ModuleInfo getModuleByName(final DotName moduleName) {
         for (IndexView index : indexes) {
             final ModuleInfo info = index.getModuleByName(moduleName);
@@ -235,6 +289,7 @@ public class CompositeIndex implements IndexView {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Collection<ModuleInfo> getKnownModules() {
         final List<ModuleInfo> allKnown = new ArrayList<ModuleInfo>();
         for (IndexView index : indexes) {

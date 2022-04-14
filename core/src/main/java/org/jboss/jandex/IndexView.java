@@ -67,7 +67,7 @@ public interface IndexView {
     }
 
     /**
-     * Gets all known direct subclasses of the specified class name. A known direct
+     * Gets all known direct subclasses of the specified class. A known direct
      * subclass is one which was found during the scanning process; however, this is
      * often not the complete universe of subclasses, since typically indexes are
      * constructed per jar. It is expected that several indexes will need to be searched
@@ -83,7 +83,7 @@ public interface IndexView {
     Collection<ClassInfo> getKnownDirectSubclasses(DotName className);
 
     /**
-     * Gets all known direct subclasses of the specified class name. A known direct
+     * Gets all known direct subclasses of the specified class. A known direct
      * subclass is one which was found during the scanning process; however, this is
      * often not the complete universe of subclasses, since typically indexes are
      * constructed per jar. It is expected that several indexes will need to be searched
@@ -101,7 +101,7 @@ public interface IndexView {
     }
 
     /**
-     * Gets all known direct subclasses of the specified class name. A known direct
+     * Gets all known direct subclasses of the specified class. A known direct
      * subclass is one which was found during the scanning process; however, this is
      * often not the complete universe of subclasses, since typically indexes are
      * constructed per jar. It is expected that several indexes will need to be searched
@@ -119,7 +119,7 @@ public interface IndexView {
     }
 
     /**
-     * Returns all known (including non-direct) sub classes of the given class.
+     * Returns all known (including non-direct) subclasses of the given class.
      * I.e., returns all known classes that are assignable to the given class.
      *
      * @param className The class
@@ -129,7 +129,7 @@ public interface IndexView {
     Collection<ClassInfo> getAllKnownSubclasses(final DotName className);
 
     /**
-     * Returns all known (including non-direct) sub classes of the given class.
+     * Returns all known (including non-direct) subclasses of the given class.
      * I.e., returns all known classes that are assignable to the given class.
      *
      * @param className The class
@@ -141,7 +141,7 @@ public interface IndexView {
     }
 
     /**
-     * Returns all known (including non-direct) sub classes of the given class.
+     * Returns all known (including non-direct) subclasses of the given class.
      * I.e., returns all known classes that are assignable to the given class.
      *
      * @param clazz The class
@@ -153,17 +153,107 @@ public interface IndexView {
     }
 
     /**
-     * Gets all known direct implementors of the specified interface name. A known
+     * Gets all known direct subinterfaces of the specified interface. A known direct
+     * subinterface is one which was found during the scanning process; however, this is
+     * often not the complete universe of subinterfaces, since typically indexes are
+     * constructed per jar. It is expected that several indexes will need to be searched
+     * when analyzing a jar that is a part of a complex multi-module/classloader
+     * environment (like an EE application server).
+     * <p>
+     * Note that this will only pick up direct subinterfaces of the interface. It will not
+     * pick up subinterfaces of subinterfaces.
+     *
+     * @param interfaceName the super interface of the desired subinterfaces
+     * @return a non-null list of all known subinterfaces of interfaceName
+     * @since 3.0
+     */
+    Collection<ClassInfo> getKnownDirectSubinterfaces(DotName interfaceName);
+
+    /**
+     * Gets all known direct subinterfaces of the specified interface. A known direct
+     * subinterface is one which was found during the scanning process; however, this is
+     * often not the complete universe of subinterfaces, since typically indexes are
+     * constructed per jar. It is expected that several indexes will need to be searched
+     * when analyzing a jar that is a part of a complex multi-module/classloader
+     * environment (like an EE application server).
+     * <p>
+     * Note that this will only pick up direct subinterfaces of the interface. It will not
+     * pick up subinterfaces of subinterfaces.
+     *
+     * @param interfaceName the super interface of the desired subinterfaces
+     * @return a non-null list of all known subinterfaces of interfaceName
+     * @since 3.0
+     */
+    default Collection<ClassInfo> getKnownDirectSubinterfaces(String interfaceName) {
+        return getKnownDirectSubinterfaces(DotName.createSimple(interfaceName));
+    }
+
+    /**
+     * Gets all known direct subinterfaces of the specified interface. A known direct
+     * subinterface is one which was found during the scanning process; however, this is
+     * often not the complete universe of subinterfaces, since typically indexes are
+     * constructed per jar. It is expected that several indexes will need to be searched
+     * when analyzing a jar that is a part of a complex multi-module/classloader
+     * environment (like an EE application server).
+     * <p>
+     * Note that this will only pick up direct subinterfaces of the interface. It will not
+     * pick up subinterfaces of subinterfaces.
+     *
+     * @param iface the super interface of the desired subinterfaces
+     * @return a non-null list of all known subinterfaces of iface
+     * @since 3.0
+     */
+    default Collection<ClassInfo> getKnownDirectSubinterfaces(Class<?> iface) {
+        return getKnownDirectSubinterfaces(DotName.createSimple(iface.getName()));
+    }
+
+    /**
+     * Returns all known interfaces that extend the given interface, directly and indirectly.
+     * I.e., returns every interface in the index that is assignable to the given interface.
+     *
+     * @param interfaceName The interace
+     * @return all known subinterfaces
+     * @since 3.0
+     */
+    Collection<ClassInfo> getAllKnownSubinterfaces(DotName interfaceName);
+
+    /**
+     * Returns all known interfaces that extend the given interface, directly and indirectly.
+     * I.e., returns every interface in the index that is assignable to the given interface.
+     *
+     * @param interfaceName The interace
+     * @return all known subinterfaces
+     * @since 3.0
+     */
+    default Collection<ClassInfo> getAllKnownSubinterfaces(String interfaceName) {
+        return getAllKnownSubinterfaces(DotName.createSimple(interfaceName));
+    }
+
+    /**
+     * Returns all known interfaces that extend the given interface, directly and indirectly.
+     * I.e., returns every interface in the index that is assignable to the given interface.
+     *
+     * @param iface The interace
+     * @return all known subinterfaces
+     * @since 3.0
+     */
+    default Collection<ClassInfo> getAllKnownSubinterfaces(Class<?> iface) {
+        return getAllKnownSubinterfaces(DotName.createSimple(iface.getName()));
+    }
+
+    /**
+     * Gets all known direct implementors of the specified interface. A known
      * direct implementor is one which was found during the scanning process; however,
      * this is often not the complete universe of implementors, since typically indexes
      * are constructed per jar. It is expected that several indexes will need to
      * be searched when analyzing a jar that is a part of a complex
      * multi-module/classloader environment (like an EE application server).
      * <p>
-     * The list of implementors may also include other methodParameters, in order to get a complete
-     * list of all classes that are assignable to a given interface it is necessary to
-     * recursively call {@link #getKnownDirectImplementors(DotName)} for every implementing
-     * interface found.
+     * The list of implementors also includes direct subinterfaces. This is inconsistent
+     * with {@link #getAllKnownImplementors(DotName)}, which doesn't return subinterfaces.
+     * <p>
+     * Note that this will only pick up classes that directly implement given interface.
+     * It will not pick up classes implementing subinterfaces.
      *
      * @param className the super class of the desired subclasses
      * @return a non-null list of all known subclasses of className
@@ -178,10 +268,11 @@ public interface IndexView {
      * be searched when analyzing a jar that is a part of a complex
      * multi-module/classloader environment (like an EE application server).
      * <p>
-     * The list of implementors may also include other methodParameters, in order to get a complete
-     * list of all classes that are assignable to a given interface it is necessary to
-     * recursively call {@link #getKnownDirectImplementors(DotName)} for every implementing
-     * interface found.
+     * The list of implementors also includes direct subinterfaces. This is inconsistent
+     * with {@link #getAllKnownImplementors(String)}, which doesn't return subinterfaces.
+     * <p>
+     * Note that this will only pick up classes that directly implement given interface.
+     * It will not pick up classes implementing subinterfaces.
      *
      * @param className the super class of the desired subclasses
      * @return a non-null list of all known subclasses of className
@@ -198,10 +289,11 @@ public interface IndexView {
      * be searched when analyzing a jar that is a part of a complex
      * multi-module/classloader environment (like an EE application server).
      * <p>
-     * The list of implementors may also include other methodParameters, in order to get a complete
-     * list of all classes that are assignable to a given interface it is necessary to
-     * recursively call {@link #getKnownDirectImplementors(DotName)} for every implementing
-     * interface found.
+     * The list of implementors also includes direct subinterfaces. This is inconsistent
+     * with {@link #getAllKnownImplementors(Class)}, which doesn't return subinterfaces.
+     * <p>
+     * Note that this will only pick up classes that directly implement given interface.
+     * It will not pick up classes implementing subinterfaces.
      *
      * @param clazz the super class of the desired subclasses
      * @return a non-null list of all known subclasses of className
@@ -212,11 +304,12 @@ public interface IndexView {
 
     /**
      * Returns all known classes that implement the given interface, directly and indirectly.
-     * This will all return classes that implement sub methodParameters of the interface, and
-     * sub-classes of classes that implement the interface. (In short, it will
-     * return every class that is assignable to the interface that is found in the index)
+     * This will return all classes that implement the interface and its subinterfaces,
+     * as well as subclasses of classes that implement the interface and its subinterfaces.
+     * (In short, it will return every class in the index that is assignable to the interface.)
      * <p>
-     * This will only return classes, not methodParameters.
+     * Note that this method only returns classes. Unlike {@link #getKnownDirectImplementors(DotName)},
+     * this method does not return subinterfaces of given interface.
      *
      * @param interfaceName The interface
      * @return All known implementors of the interface
@@ -225,11 +318,12 @@ public interface IndexView {
 
     /**
      * Returns all known classes that implement the given interface, directly and indirectly.
-     * This will all return classes that implement sub methodParameters of the interface, and
-     * sub-classes of classes that implement the interface. (In short, it will
-     * return every class that is assignable to the interface that is found in the index)
+     * This will return all classes that implement the interface and its subinterfaces,
+     * as well as subclasses of classes that implement the interface and its subinterfaces.
+     * (In short, it will return every class in the index that is assignable to the interface.)
      * <p>
-     * This will only return classes, not methodParameters.
+     * Note that this method only returns classes. Unlike {@link #getKnownDirectImplementors(String)},
+     * this method does not return subinterfaces of given interface.
      *
      * @param interfaceName The interface
      * @return All known implementors of the interface
@@ -240,11 +334,12 @@ public interface IndexView {
 
     /**
      * Returns all known classes that implement the given interface, directly and indirectly.
-     * This will all return classes that implement sub methodParameters of the interface, and
-     * sub-classes of classes that implement the interface. (In short, it will
-     * return every class that is assignable to the interface that is found in the index)
+     * This will return all classes that implement the interface and its subinterfaces,
+     * as well as subclasses of classes that implement the interface and its subinterfaces.
+     * (In short, it will return every class in the index that is assignable to the interface.)
      * <p>
-     * This will only return classes, not methodParameters.
+     * Note that this method only returns classes. Unlike {@link #getKnownDirectImplementors(Class)},
+     * this method does not return subinterfaces of given interface.
      *
      * @param interfaceClass The interface
      * @return All known implementors of the interface

@@ -593,6 +593,13 @@ final class IndexWriterV2 extends IndexWriterImpl {
             }
         }
 
+        if (version >= 11) {
+            stream.writePackedU32(clazz.memberClasses().size());
+            for (DotName memberClass : clazz.memberClasses()) {
+                stream.writePackedU32(positionOf(memberClass));
+            }
+        }
+
         // Annotation length is early to allow eager allocation in reader.
         stream.writePackedU32(clazz.annotationsMap().size());
 
@@ -905,6 +912,10 @@ final class IndexWriterV2 extends IndexWriterImpl {
             addString(name);
         }
         addEnclosingMethod(clazz.enclosingMethod());
+
+        for (DotName memberClass : clazz.memberClasses()) {
+            addClassName(memberClass);
+        }
 
         addMethodList(clazz.methodArray());
         names.intern(clazz.methodPositionArray());

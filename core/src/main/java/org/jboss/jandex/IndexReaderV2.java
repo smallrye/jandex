@@ -590,6 +590,17 @@ final class IndexReaderV2 extends IndexReaderImpl {
             enclosingMethod = hasEnclosingMethod ? readEnclosingMethod(stream) : null;
         }
 
+        Set<DotName> memberClasses = null;
+        if (version >= 11) {
+            int memberClassesCount = stream.readPackedU32();
+            if (memberClassesCount > 0) {
+                memberClasses = new HashSet<>(memberClassesCount);
+                for (int i = 0; i < memberClassesCount; i++) {
+                    memberClasses.add(nameTable[stream.readPackedU32()]);
+                }
+            }
+        }
+
         int size = stream.readPackedU32();
 
         Map<DotName, List<AnnotationInstance>> annotations = size > 0
@@ -603,6 +614,9 @@ final class IndexReaderV2 extends IndexReaderImpl {
             // Version 8 and earlier records inner type info regardless of
             // whether or not it is an inner type
             clazz.setInnerClassInfo(enclosingClass, simpleName, version >= 9);
+        }
+        if (memberClasses != null) {
+            clazz.setMemberClasses(memberClasses);
         }
 
         FieldInternal[] fields = readClassFields(stream, clazz);

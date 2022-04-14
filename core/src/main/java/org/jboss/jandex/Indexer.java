@@ -33,9 +33,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Analyzes and indexes the annotation and key structural information of a set
@@ -669,6 +671,7 @@ public final class Indexer {
         int numClasses = data.readUnsignedShort();
         innerClasses = numClasses > 0 ? new HashMap<DotName, InnerClassInfo>(numClasses)
                 : Collections.<DotName, InnerClassInfo> emptyMap();
+        Set<DotName> memberClasses = new HashSet<>();
         for (int i = 0; i < numClasses; i++) {
             DotName innerClass = decodeClassEntry(data.readUnsignedShort());
             int outerIndex = data.readUnsignedShort();
@@ -681,8 +684,14 @@ public final class Indexer {
                 target.setInnerClassInfo(outerClass, simpleName, true);
                 target.setFlags((short) flags);
             }
+            if (outerClass != null && outerClass.equals(target.name())) {
+                memberClasses.add(innerClass);
+            }
 
             innerClasses.put(innerClass, new InnerClassInfo(innerClass, outerClass, simpleName, flags));
+        }
+        if (!memberClasses.isEmpty()) {
+            target.setMemberClasses(memberClasses);
         }
     }
 

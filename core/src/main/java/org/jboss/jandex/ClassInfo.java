@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents a class entry in an index. A ClassInfo is only a partial view of a
@@ -74,6 +75,7 @@ public final class ClassInfo implements AnnotationTarget {
     private byte[] recordComponentPositions = EMPTY_POSITIONS;
     private boolean hasNoArgsConstructor;
     private NestingInfo nestingInfo;
+    private Set<DotName> memberClasses;
 
     /** Describes the form of nesting used by a class */
     public enum NestingType {
@@ -965,6 +967,24 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
+     * Returns a set of names of member classes declared in this class. Member classes
+     * are classes directly enclosed in another class. That is, local classes and
+     * anonymous classes are not member classes.
+     * <p>
+     * Member classes of member classes are not included in the returned set.
+     * <p>
+     * Never returns {@code null}, but may return an empty set.
+     *
+     * @return immutable set of names of this class's member classes, never {@code null}
+     */
+    public Set<DotName> memberClasses() {
+        if (memberClasses == null) {
+            return Collections.emptySet();
+        }
+        return Collections.unmodifiableSet(memberClasses);
+    }
+
+    /**
      * Returns the module information from this class if it is a module descriptor, i.e. {@code module-info}.
      *
      * @return the module descriptor for module classes, otherwise {@code null}
@@ -1160,6 +1180,10 @@ public final class ClassInfo implements AnnotationTarget {
 
         nestingInfo.enclosingClass = enclosingClass;
         nestingInfo.simpleName = simpleName;
+    }
+
+    void setMemberClasses(Set<DotName> memberClasses) {
+        this.memberClasses = memberClasses;
     }
 
     void setEnclosingMethod(EnclosingMethodInfo enclosingMethod) {

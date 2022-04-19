@@ -28,9 +28,6 @@ import java.util.List;
  * @author Jason T. Greene
  */
 final class MethodInternal {
-    static final int SYNTHETIC = 0x1000;
-    static final int MANDATED = 0x8000;
-    static final int BRIDGE = 0x0040;
     static final MethodInternal[] EMPTY_ARRAY = new MethodInternal[0];
     static final NameAndParameterComponentComparator NAME_AND_PARAMETER_COMPONENT_COMPARATOR = new NameAndParameterComponentComparator();
     static final byte[][] EMPTY_PARAMETER_NAMES = new byte[0][];
@@ -70,7 +67,8 @@ final class MethodInternal {
             }
 
             // Prefer non-synthetic methods when matching
-            return (instance.flags & (SYNTHETIC | BRIDGE)) - (instance2.flags & (SYNTHETIC | BRIDGE));
+            return (instance.flags & (Modifiers.SYNTHETIC | Modifiers.BRIDGE))
+                    - (instance2.flags & (Modifiers.SYNTHETIC | Modifiers.BRIDGE));
         }
     }
 

@@ -33,6 +33,8 @@ import java.util.List;
  */
 public final class ModuleInfo {
 
+    static final int MODULE = 0x8000;
+
     private static final int OPEN = 0x0020;
 
     private final ClassInfo moduleInfoClass;

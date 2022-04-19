@@ -18,6 +18,7 @@
 
 package org.jboss.jandex;
 
+import java.lang.reflect.Modifier;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,7 +56,6 @@ import java.util.Set;
  */
 public final class ClassInfo implements AnnotationTarget {
 
-    private static final int MODULE = 0x8000;
     private static final int MAX_POSITIONS = 256;
     private static final byte[] EMPTY_POSITIONS = new byte[0];
 
@@ -255,10 +255,18 @@ public final class ClassInfo implements AnnotationTarget {
 
     /**
      *
-     * @return {@code true} if this class was declared as an enum
+     * @return {@code true} if this class object represents an interface type
+     */
+    public final boolean isInterface() {
+        return Modifier.isInterface(flags);
+    }
+
+    /**
+     *
+     * @return {@code true} if this class object represents an enum type
      */
     public final boolean isEnum() {
-        return (flags & Modifiers.ENUM) != 0 && DotName.ENUM_NAME.equals(superName());
+        return Modifiers.isEnum(flags) && DotName.ENUM_NAME.equals(superName());
     }
 
     /**
@@ -266,11 +274,11 @@ public final class ClassInfo implements AnnotationTarget {
      * @return {@code true} if this class object represents an annotation type
      */
     public final boolean isAnnotation() {
-        return (flags & Modifiers.ANNOTATION) != 0;
+        return Modifiers.isAnnotation(flags);
     }
 
     /**
-     * @return {@code true} if this class was declared as a record
+     * @return {@code true} if this class object represents a record type
      */
     public final boolean isRecord() {
         // there's no flag for record classes, but extending java.lang.Record
@@ -282,7 +290,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @return {@code true} if this class object represents a Java module descriptor
      */
     public final boolean isModule() {
-        return (flags & MODULE) != 0;
+        return (flags & ModuleInfo.MODULE) != 0;
     }
 
     /**

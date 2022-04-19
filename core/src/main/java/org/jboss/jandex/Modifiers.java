@@ -23,9 +23,22 @@ package org.jboss.jandex;
  */
 final class Modifiers {
 
-    static final int ENUM = 0x00004000;
-    static final int SYNTHETIC = 0x00001000;
+    // @formatter:off
+    static final int BRIDGE     = 0x00000040;
+
+    static final int SYNTHETIC  = 0x00001000;
     static final int ANNOTATION = 0x00002000;
+    static final int ENUM       = 0x00004000;
+    static final int MANDATED   = 0x00008000;
+    // @formatter:on
+
+    static boolean isAnnotation(int mod) {
+        return (mod & ANNOTATION) != 0;
+    }
+
+    static boolean isEnum(int mod) {
+        return (mod & ENUM) != 0;
+    }
 
     static boolean isSynthetic(int mod) {
         return (mod & SYNTHETIC) != 0;

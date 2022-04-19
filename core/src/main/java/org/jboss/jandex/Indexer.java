@@ -711,7 +711,7 @@ public final class Indexer {
             byte[] parameterName = nameIndex == 0 ? null : decodeUtf8EntryAsBytes(nameIndex);
             int flags = data.readUnsignedShort();
             // skip synthetic/mandated params to get the same param name index as annotations/MethodParameter (which do not count them)
-            if ((flags & (MethodInternal.SYNTHETIC | MethodInternal.MANDATED)) != 0) {
+            if ((flags & (Modifiers.SYNTHETIC | Modifiers.MANDATED)) != 0) {
                 continue;
             }
 
@@ -1089,7 +1089,7 @@ public final class Indexer {
     }
 
     private boolean isBridge(MethodInfo methodInfo) {
-        int bridgeModifiers = Modifiers.SYNTHETIC | 0x40;
+        int bridgeModifiers = Modifiers.SYNTHETIC | Modifiers.BRIDGE;
         return (methodInfo.flags() & bridgeModifiers) == bridgeModifiers;
     }
 

@@ -19,7 +19,7 @@ It supports the following capabilities:
 
 ## Downloading Jandex
 
-Jandex artifacts can be [downloaded off of Maven Central](https://search.maven.org/search?q=g:io.smallrye%20a:jandex).
+Jandex artifacts can be [downloaded from Maven Central](https://search.maven.org/search?q=g:io.smallrye%20a:jandex).
 
 ## API Docs
 
@@ -36,21 +36,21 @@ Post to the [SmallRye Google group](https://groups.google.com/g/smallrye) or the
 ## Creating a Persisted Index Using the CLI
 
 The following example demonstrates indexing hibernate core, followed by the entire Java
-JDK using Jandex on the CLI:
+JDK 8 using Jandex on the CLI:
  
 ```shell
-$ java -jar target/jandex-2.0.0.Alpha1.jar hibernate-core-4.0.0.Final.jar
-   Wrote /Users/jason/devel/jandex/hibernate-core-4.0.0.Final-jar.idx in 0.9020 seconds
-         (2722 classes, 20 annotations, 1696 instances, 621565 bytes)
-$ java -jar target/jandex-2.0.0.Alpha1.jar rt.jar
-   Wrote /Users/jason/devel/jandex/rt-jar.idx in 4.2870 seconds
-         (19831 classes, 41 annotations, 1699 instances, 4413790 bytes)
+$ java -jar jandex-2.4.2.Final.jar hibernate-core-6.0.0.Final.jar 
+   Wrote hibernate-core-6.0.0.Final-jar.idx in 0.9170 seconds
+         (5746 classes, 50 annotations, 2995 instances, 61729 class usages, 1737428 bytes)
+$ java -jar jandex-2.4.2.Final.jar rt.jar 
+   Wrote rt-jar.idx in 1.7310 seconds
+         (20226 classes, 57 annotations, 2476 instances, 246298 class usages, 5890787 bytes)
 ```
 
-The above summary output tells us that this version of hibernate has 2,722 classes, and those classes contained 1,696 annotation declarations, using 20 different annotation types.
-The resulting index is 606KB uncompressed, which is only 14% of the 4.1MB compressed jar size, or 4% of the uncompressed class file data.
-If the index is stored in the jar (using the -m option) it can be compressed an additional 47%, leading to a jar growth of only 8%.
-
+The above summary output tells us that this version of Hibernate ORM has 5,746 classes, and those classes contained 2,995 annotation declarations, using 50 different annotation types.
+The resulting index is 1.7 MB uncompressed, which is only 19% of the 9.0MB compressed jar size, or 4% of the uncompressed class file data.
+If the index is stored in the jar (using the -m option) it can be compressed an additional 43%, leading to a jar growth of only 11%.
+ 
 ## Using the Ant task to index your project
 
 The following Ant task can be used with either the `maven-antrun-plugin` or an Ant build to build an index for your project:
@@ -157,7 +157,7 @@ Just add the following to your POM:
 <dependency>
     <groupId>io.smallrye</groupId>
     <artifactId>jandex</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>${version.jandex}</version>
 </dependency>
 ```
 
@@ -168,10 +168,7 @@ The following example demonstrates indexing a class and browsing its methods:
 ```java
 // Index java.util.Map
 Indexer indexer = new Indexer();
-// Normally a direct file is opened, but class-loader backed streams work as well.
-InputStream stream = getClass().getClassLoader()
-                               .getResourceAsStream("java/util/Map.class");
-indexer.index(stream);
+indexer.indexClass(Map.class);
 Index index = indexer.complete();
  
 // Retrieve Map from the index and print its declared methods
@@ -190,10 +187,7 @@ The resulting file can later be loaded and used.
 ```java
 // Index java.util.Map
 Indexer indexer = new Indexer();
-// Normally a direct file is opened, but class-loader backed streams work as well.
-InputStream stream = getClass().getClassLoader()
-                               .getResourceAsStream("java/util/Map.class");
-indexer.index(stream);
+indexer.indexClass(Map.class);
 Index index = indexer.complete();
  
 FileOutputStream out = new FileOutputStream("/tmp/index.idx");
@@ -233,12 +227,9 @@ The following example demonstrates indexing the `Thread` and `String` classes, a
 
 ```java
 Indexer indexer = new Indexer();
-InputStream stream = getClass().getClassLoader()
-                               .getResourceAsStream("java/lang/Thread.class");
-indexer.index(stream);
-stream = getClass().getClassLoader()
-                   .getResourceAsStream("java/lang/String.class");
-indexer.index(stream);
+indexer.indexClass(Thread.class);
+indexer.indexClass(String.class);
+
 Index index = indexer.complete();
 DotName deprecated = DotName.createSimple("java.lang.Deprecated");
 List<AnnotationInstance> annotations = index.getAnnotations(deprecated);
@@ -266,9 +257,7 @@ The example code, which prints `Comparable<? super T>` followed by `T`, is:
 
 ```java
 Indexer indexer = new Indexer();
-InputStream stream = getClass().getClassLoader()
-                               .getResourceAsStream("java/util/Collections.class");
-indexer.index(stream);
+indexer.indexClass(Collections.class);
 Index index = indexer.complete();
  
 // Find method
@@ -297,10 +286,8 @@ The following code will print `Name`, the annotation value associated with the t
 
 ```java
 Indexer indexer = new Indexer();
-InputStream stream = new FileInputStream("/tmp/Test.class");
-indexer.index(stream);
-stream = new FileInputStream("/tmp/Test$Label.class");
-indexer.index(stream);
+indexer.indexClass(Test.class);
+indexer.indexClass(Test.Label.class);
 Index index = indexer.complete();
  
 DotName test = DotName.createSimple("Test");
@@ -332,13 +319,10 @@ The following code locates a type annotation using a hardcoded path:
 
 ```java
 Indexer indexer = new Indexer();
- 
-InputStream stream = new FileInputStream("/tmp/Test.class");
-indexer.index(stream);
-stream = new FileInputStream("/tmp/Test$Label.class");
-indexer.index(stream);
- 
+indexer.indexClass(Test.class);
+indexer.indexClass(Test.Label.class);
 Index index = indexer.complete();
+
 DotName label DotName.createSimple("Test$Label");
 List<AnnotationInstance> annotations = index.getAnnotations(label);
 for (AnnotationInstance annotation : annotations) {

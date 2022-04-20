@@ -343,50 +343,10 @@ public final class DotName implements Comparable<DotName> {
         if (other.prefix == null && prefix == null)
             return local.equals(other.local) && innerClass == other.innerClass;
 
-        if (!other.componentized && componentized)
-            return crossEquals(other, this);
-
-        if (other.componentized && !componentized)
-            return crossEquals(this, other);
+        if (this.hash != 0 && other.hash != 0 && this.hash != other.hash)
+            return false;
 
         return componentizedEquals(this, other);
-    }
-
-    private static boolean crossEquals(final DotName simple, final DotName comp) {
-        final String exactToMatch = simple.local;
-        // We start matching from the end, as that's what we have in componentized mode:
-        int cursor = 0;
-        final int len = exactToMatch.length();
-        for (DotName d = comp; d != null && cursor - 1 <= len; d = d.prefix) {
-            cursor += 1 + d.local.length();
-        }
-
-        if (--cursor != len) {
-            return false;
-        }
-
-        DotName current = comp;
-        while (current != null) {
-            final String nextFragment = current.local;
-            final int fragLength = nextFragment.length();
-            if (!exactToMatch.regionMatches(cursor - fragLength, nextFragment, 0, fragLength)) {
-                return false;
-            }
-            //Jump by fragment match, +1 for the separator symbol:
-            cursor = cursor - fragLength - 1;
-            if (cursor == -1) {
-                //Our exactToMatch reference is finished; just verify we consumed comp completely as well::
-                return current.prefix == null;
-            }
-            final char expectNext = current.innerClass ? '$' : '.';
-            if (exactToMatch.charAt(cursor) != expectNext) {
-                return false;
-            }
-
-            current = current.prefix;
-        }
-        //And finally, verify we consumed it all:
-        return cursor == -1;
     }
 
     private static boolean componentizedEquals(DotName a, DotName b) {

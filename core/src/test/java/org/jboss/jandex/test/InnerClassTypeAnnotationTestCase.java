@@ -34,12 +34,12 @@ public class InnerClassTypeAnnotationTestCase {
 
     @Test
     public void testNoGenericsConstructIndex() throws IOException {
-        verifyIndex("NoGenericsConstruct", 1, 3);
+        verifyIndex("NoGenericsConstruct", 0, 2);
     }
 
     @Test
     public void testNoGenericsConstructRW() throws IOException {
-        verifyRW("NoGenericsConstruct", 1, 3);
+        verifyRW("NoGenericsConstruct", 0, 2);
     }
 
     @Test
@@ -64,8 +64,8 @@ public class InnerClassTypeAnnotationTestCase {
 
     private void verifyIndex(String name, int pos1, int pos2) throws IOException {
         Index index = buildIndex(name);
-        verifyTypeAnnotations(index, name, pos1);
 
+        verifyTypeAnnotations(index, name, pos1);
         if (pos2 != -1) {
             verifyTypeAnnotations(index, name, pos2);
         }

@@ -333,6 +333,9 @@ final class IndexWriterV2 extends IndexWriterImpl {
         stream.writePackedU32(receiverType == null ? 0 : positionOf(receiverType));
         stream.writePackedU32(positionOf(method.returnType()));
         stream.writePackedU32(positionOf(method.parameterTypesArray()));
+        if (version >= 11) {
+            stream.writePackedU32(positionOf(method.descriptorParameterTypesArray()));
+        }
         stream.writePackedU32(positionOf(method.exceptionArray()));
         if (version >= 7) {
             AnnotationValue defaultValue = method.defaultValue();
@@ -555,6 +558,9 @@ final class IndexWriterV2 extends IndexWriterImpl {
     private void writeClassEntry(PackedDataOutputStream stream, ClassInfo clazz) throws IOException {
         stream.writePackedU32(positionOf(clazz.name()));
         stream.writePackedU32(clazz.flags());
+        if (version >= 11) {
+            stream.writeBoolean(clazz.hasNoArgsConstructor());
+        }
         stream.writePackedU32(clazz.superClassType() == null ? 0 : positionOf(clazz.superClassType()));
 
         stream.writePackedU32(positionOf(clazz.typeParameterArray()));
@@ -1005,6 +1011,7 @@ final class IndexWriterV2 extends IndexWriterImpl {
         addType(method.receiverTypeField());
         addTypeList(method.typeParameterArray());
         addTypeList(method.parameterTypesArray());
+        addTypeList(method.descriptorParameterTypesArray());
         addTypeList(method.exceptionArray());
         AnnotationValue defaultValue = method.defaultValue();
         if (defaultValue != null) {

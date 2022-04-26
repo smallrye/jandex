@@ -22,8 +22,8 @@ package org.jboss.jandex;
  * A DotName represents a dot separated name, typically a Java package or a Java class.
  * It has two possible variants. A simple wrapper based variant allows for fast construction
  * (it simply wraps the specified name string). Whereas, a componentized variant represents
- * one or more String methodInternal that when combined with a dot character, assemble the full
- * name. The intention of the componentized variant is that the String methodInternal can be reused
+ * one or more String components that when combined with a dot character, assemble the full
+ * name. The intention of the componentized variant is that the String components can be reused
  * to offer memory efficiency. This reuse is common in Java where packages and classes follow
  * a tree structure.
  *
@@ -49,6 +49,7 @@ public final class DotName implements Comparable<DotName> {
     public static final DotName OBJECT_NAME;
     public static final DotName ENUM_NAME;
     public static final DotName RECORD_NAME;
+    public static final DotName STRING_NAME;
 
     private final DotName prefix;
     private final String local;
@@ -62,6 +63,7 @@ public final class DotName implements Comparable<DotName> {
         OBJECT_NAME = new DotName(JAVA_LANG_NAME, "Object", true, false);
         ENUM_NAME = new DotName(JAVA_LANG_NAME, "Enum", true, false);
         RECORD_NAME = new DotName(JAVA_LANG_NAME, "Record", true, false);
+        STRING_NAME = new DotName(JAVA_LANG_NAME, "String", true, false);
     }
 
     /**

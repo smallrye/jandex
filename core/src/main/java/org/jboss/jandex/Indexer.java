@@ -893,6 +893,48 @@ public final class Indexer {
         return new TypeAnnotationState(typeTarget, annotation, pathElements, genericsRequired.bool, bridgeIncompatible.bool);
     }
 
+    private void adjustMethodParameters() {
+        IdentityHashMap<MethodInfo, Object> alreadyProcessedMethods = new IdentityHashMap<>();
+        for (MethodInfo method : methods) {
+            if (alreadyProcessedMethods.containsKey(method)) {
+                continue;
+            }
+            alreadyProcessedMethods.put(method, null);
+
+            if (isInnerConstructor(method) && !signaturePresent.containsKey(method)) {
+                // inner class constructor without signature, list of parameter types is derived
+                // from the descriptor, which includes 1 mandated or synthetic parameter at the beginning
+                Type[] parameterTypes = method.methodInternal().parameterTypesArray();
+                Type[] newParameterTypes = new Type[parameterTypes.length - 1];
+                System.arraycopy(parameterTypes, 1, newParameterTypes, 0, parameterTypes.length - 1);
+                method.setParameters(intern(newParameterTypes));
+            } else if (isEnumConstructor(method) && !signaturePresent.containsKey(method)) {
+                // enum constructor without signature, list of parameter types is derived from the descriptor,
+                // which includes 2 synthetic parameters at the beginning -- let's remove those
+                // (javac typically emits the signature, while ecj does not)
+                Type[] parameterTypes = method.methodInternal().parameterTypesArray();
+                if (parameterTypes.length >= 2
+                        && parameterTypes[0].kind() == Type.Kind.CLASS
+                        && parameterTypes[0].name().equals(DotName.STRING_NAME)
+                        && parameterTypes[1].kind() == Type.Kind.PRIMITIVE
+                        && parameterTypes[1].asPrimitiveType().primitive() == PrimitiveType.Primitive.INT) {
+                    Type[] newParameterTypes;
+                    if (parameterTypes.length == 2) {
+                        newParameterTypes = Type.EMPTY_ARRAY;
+                    } else {
+                        newParameterTypes = new Type[parameterTypes.length - 2];
+                        System.arraycopy(parameterTypes, 2, newParameterTypes, 0, parameterTypes.length - 2);
+                    }
+                    method.setParameters(intern(newParameterTypes));
+                }
+            }
+        }
+    }
+
+    private static boolean isEnumConstructor(MethodInfo method) {
+        return method.declaringClass().isEnum() && Arrays.equals(INIT_METHOD_NAME, method.methodInternal().nameBytes());
+    }
+
     private void resolveTypeAnnotations() {
         for (Map.Entry<AnnotationTarget, List<TypeAnnotationState>> entry : typeAnnotations.entrySet()) {
             AnnotationTarget key = entry.getKey();
@@ -966,11 +1008,27 @@ public final class Indexer {
 
     }
 
-    private static boolean isInnerConstructor(MethodInfo method) {
+    private boolean isInnerConstructor(MethodInfo method) {
+        if (!Arrays.equals(INIT_METHOD_NAME, method.methodInternal().nameBytes())) {
+            return false;
+        }
+
         ClassInfo klass = method.declaringClass();
-        return klass.nestingType() != ClassInfo.NestingType.TOP_LEVEL
-                && !Modifier.isStatic(klass.flags())
-                && "<init>".equals(method.name());
+
+        // there's no indication in the class file whether a local or anonymous class was declared in static context,
+        // so we use a heuristic: a class was not declared in static context if it has a synthetic field named `this$N`
+        // (this seems to work both for javac and ecj)
+        if (klass.nestingType() == ClassInfo.NestingType.LOCAL
+                || klass.nestingType() == ClassInfo.NestingType.ANONYMOUS) {
+            for (FieldInfo field : fields) {
+                if (Modifiers.isSynthetic(field.flags()) && field.name().startsWith("this$")) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return klass.nestingType() == ClassInfo.NestingType.INNER && !Modifier.isStatic(klass.flags());
     }
 
     private void resolveTypeAnnotation(AnnotationTarget target, TypeAnnotationState typeAnnotationState) {
@@ -1029,20 +1087,8 @@ public final class Indexer {
             }
 
             MethodParameterTypeTarget parameter = (MethodParameterTypeTarget) typeTarget;
-            // Type annotations refer to FORMAL positions, yet without generics, a descriptor
-            // may contain extra parameters (e.g. in the case of non-static inner class constructors
-            // (to hold the outer class reference))
-            if (isInnerConstructor(method) && !signaturePresent.containsKey(method)) {
-                parameter.adjustUp();
-            }
-
             int index = parameter.position();
             Type[] types = method.copyParameters();
-
-            if (index >= types.length) {
-                return;
-            }
-
             types[index] = resolveTypePath(types[index], typeAnnotationState);
             method.setParameters(intern(types));
         } else if (typeTarget.usage() == TypeTarget.Usage.EMPTY && target instanceof FieldInfo) {
@@ -2108,6 +2154,7 @@ public final class Indexer {
             processAttributes(data, currentClass);
 
             applySignatures();
+            adjustMethodParameters(); // must be called _after_ applying signatures and _before_ fixing type annotations
             resolveTypeAnnotations();
             updateTypeTargets();
             resolveUsers();

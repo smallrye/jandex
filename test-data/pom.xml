@@ -115,4 +115,19 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>parameters</id>
+            <activation>
+                <property>
+                    <name>parameters</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <properties>
+                <maven.compiler.parameters>true</maven.compiler.parameters>
+            </properties>
+        </profile>
+    </profiles>
 </project>

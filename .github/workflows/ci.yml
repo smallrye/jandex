@@ -29,12 +29,21 @@ jobs:
         - 11
         - 17
         - 18-ea
+        compiler:
+        - javac
+        - ecj
+        parameters:
+        - true
+        - false
         os:
         - ubuntu-latest
         - windows-latest
         - macos-latest
+        exclude:
+        - java: 8
+          compiler: ecj
     runs-on: ${{ matrix.os }}
-    name: Build with JDK ${{ matrix.java }} (${{ matrix.os }})
+    name: "Build with JDK ${{ matrix.java }} using ${{ matrix.compiler}} (parameters: ${{ matrix.parameters }}) on ${{ matrix.os }}"
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -47,11 +56,9 @@ jobs:
 
     - name: Build with Maven
       shell: bash
-      run: mvn -s .github/maven-ci-settings.xml -B verify --file pom.xml
+      run: mvn -s .github/maven-ci-settings.xml -B verify --file pom.xml -Dcompiler=${{ matrix.compiler }} -Dparameters=${{ matrix.parameters }}
 
   calcite-regression:
-    name: 'Calcite regression test (JDK ${{ matrix.java }})'
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         # javac 8 and 11 might produce slightly different bytecode
@@ -60,6 +67,8 @@ jobs:
         - 11
         # fails because Groovy (used by Gradle) can't read classes compiled with Java 17
         #- 17
+    runs-on: ubuntu-latest
+    name: 'Calcite regression test (JDK ${{ matrix.java }})'
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -81,7 +90,7 @@ jobs:
 
     - name: Clone Calcite
       run: |
-        git clone --branch master --depth 100 https://github.com/apache/calcite.git ../calcite
+        git clone --branch main --depth 100 https://github.com/apache/calcite.git ../calcite
         echo 'allprojects { plugins.withType<JavaPlugin> { dependencies { "jandexClasspath"("io.smallrye:jandex:1.0.0-dev-SNAPSHOT") } } }' >> ../calcite/build.gradle.kts
 
     - name: Verify Calcite bytecode

@@ -70,19 +70,24 @@ public class AnnotationAccessTest {
         Index index = Index.of(MyAnnotation.class, MyRepeatableAnnotation.class, MyRepeatableAnnotation.List.class,
                 AnnotatedClass.class);
 
+        // some assertions have a form of `annotations.size() == M || annotations.size() == N`
+        // this is caused by ecj putting the `MyRepeatableAnnotation` and `MyRepeatableAnnotation.List` annotations
+        // on the _type_ of `AnnotatedClass.field`, contrary to how those annotations specify their `@Target`
+
         {
             ClassInfo clazz = index.getClassByName(className);
             assertTrue(clazz.hasAnnotation(myAnn));
             assertNotNull(clazz.annotation(myAnn));
             assertEquals(18, clazz.annotations(myAnn).size());
             assertEquals(18, clazz.annotationsWithRepeatable(myAnn, index).size());
-            assertEquals(24, clazz.annotations().size());
+            assertTrue(clazz.annotations().size() == 24 || clazz.annotations().size() == 28);
             assertTrue(clazz.hasDeclaredAnnotation(myAnn));
             assertNotNull(clazz.declaredAnnotation(myAnn));
             assertEquals(1, clazz.declaredAnnotationsWithRepeatable(myAnn, index).size());
             assertEquals(3, clazz.declaredAnnotations().size());
             verify(clazz.declaredAnnotations(), myAnn, "c1");
-            assertEquals(9, clazz.annotationsWithRepeatable(myRepAnn, index).size());
+            assertTrue(clazz.annotationsWithRepeatable(myRepAnn, index).size() == 9
+                    || clazz.annotationsWithRepeatable(myRepAnn, index).size() == 14);
             assertEquals(3, clazz.declaredAnnotationsWithRepeatable(myRepAnn, index).size());
             verify(clazz.declaredAnnotationsWithRepeatable(myRepAnn, index), myRepAnn, "cr1", "cr2", "cr3");
         }
@@ -94,13 +99,14 @@ public class AnnotationAccessTest {
             assertNotNull(field.annotation(myAnn));
             assertEquals(5, field.annotations(myAnn).size());
             assertEquals(5, field.annotationsWithRepeatable(myAnn, index).size());
-            assertEquals(7, field.annotations().size());
+            assertTrue(field.annotations().size() == 7 || field.annotations().size() == 11);
             assertTrue(field.hasDeclaredAnnotation(myAnn));
             assertNotNull(field.declaredAnnotation(myAnn));
             assertEquals(1, field.declaredAnnotationsWithRepeatable(myAnn, index).size());
             assertEquals(3, field.declaredAnnotations().size());
             verify(field.declaredAnnotations(), myAnn, "f1");
-            assertEquals(3, field.annotationsWithRepeatable(myRepAnn, index).size());
+            assertTrue(field.annotationsWithRepeatable(myRepAnn, index).size() == 3
+                    || field.annotationsWithRepeatable(myRepAnn, index).size() == 8);
             assertEquals(3, field.declaredAnnotationsWithRepeatable(myRepAnn, index).size());
             verify(field.declaredAnnotationsWithRepeatable(myRepAnn, index), myRepAnn, "fr1", "fr2", "fr3");
         }
@@ -112,7 +118,7 @@ public class AnnotationAccessTest {
             assertTrue(type.hasAnnotation(myAnn));
             assertNotNull(type.annotation(myAnn));
             assertEquals(1, type.annotationsWithRepeatable(myAnn, index).size());
-            assertEquals(1, type.annotations().size());
+            assertTrue(type.annotations().size() == 1 || type.annotations().size() == 5);
             verify(type.annotations(), myAnn, "f1");
         }
 

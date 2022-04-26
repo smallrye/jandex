@@ -38,7 +38,6 @@ jobs:
         os:
         - ubuntu-latest
         - windows-latest
-        - macos-latest
         exclude:
         - java: 8
           compiler: ecj

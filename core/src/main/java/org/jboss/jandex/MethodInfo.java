@@ -26,6 +26,12 @@ import java.util.List;
 
 /**
  * Represents a Java method, constructor, or static initializer.
+ * <p>
+ * Jandex makes reasonable attempts to not include implicitly declared (aka mandated)
+ * and synthetic parameters in {@link #parameters()}, {@link #parameterTypes()},
+ * {@link #parameterName(int)}, {@link #parameterType(int)} and {@link #parametersCount()}.
+ * However, {@link #descriptorParameterTypes()} and {@link #descriptorParametersCount()}
+ * may be used to obtain information about all parameters, including mandated and synthetic.
  *
  * <p>
  * <b>Thread-Safety</b>
@@ -147,9 +153,9 @@ public final class MethodInfo implements AnnotationTarget {
 
     /**
      * Returns the name of the given parameter.
-     * 
+     *
      * @param i the parameter index
-     * @return the name of the given parameter, or null
+     * @return the name of the given parameter, or {@code null} if not known
      */
     public final String parameterName(int i) {
         return methodInternal.parameterName(i);
@@ -179,8 +185,11 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns an array containing parameter types in parameter order. This method performs a defensive array
-     * copy per call, and should be avoided. Instead the {@link #parameterTypes()} method should be used.
+     * Returns an array of parameter types in declaration order.
+     * Jandex makes reasonable attempts to not include implicitly declared (aka mandated) and synthetic parameters.
+     * <p>
+     * This method performs a defensive array copy per call, and should be avoided.
+     * Instead, the {@link #parameterTypes()} method should be used.
      *
      * @deprecated use {@link #parameterTypes()}
      * @return an array copy contain parameter types
@@ -196,6 +205,7 @@ public final class MethodInfo implements AnnotationTarget {
 
     /**
      * Returns the number of parameters this method declares.
+     * Jandex makes reasonable attempts to not count implicitly declared (aka mandated) and synthetic parameters.
      *
      * @return the number of parameters this method declares
      */
@@ -204,7 +214,10 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns a list containing the types of all parameters declared on this method, in parameter order.
+     * Returns a list of types of parameters declared on this method, in declaration order.
+     * Jandex makes reasonable attempts to not include implicitly declared (aka mandated) and synthetic parameters.
+     * Positions of types in this list may be used to retrieve a name using {@link #parameterName(int)}
+     * or look for annotations.
      *
      * @return immutable list of parameter types of this method, never {@code null}
      */
@@ -213,7 +226,8 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns a list containing all parameters declared on this method, in declaration order.
+     * Returns a list of parameters declared on this method, in declaration order.
+     * Jandex makes reasonable attempts to not include implicitly declared (aka mandated) and synthetic parameters.
      *
      * @return immutable list of parameter types of this method, never {@code null}
      */
@@ -224,6 +238,26 @@ public final class MethodInfo implements AnnotationTarget {
             parameters.add(new MethodParameterInfo(this, i));
         }
         return Collections.unmodifiableList(parameters);
+    }
+
+    /**
+     * Returns the number of all parameters present on this method, based on the method descriptor.
+     * This always includes implicitly declared (aka mandated) and synthetic parameters.
+     *
+     * @return the number of all parameters present on this method
+     */
+    public final int descriptorParametersCount() {
+        return methodInternal.descriptorParameterTypesArray().length;
+    }
+
+    /**
+     * Returns a list of types of all parameters present on this method, based on the method descriptor.
+     * This always includes implicitly declared (aka mandated) and synthetic parameters. These types are
+     * never annotated and their position in the list <em>cannot</em> be used to retrieve a name using
+     * {@link #parameterName(int)} or look for annotations.
+     */
+    public final List<Type> descriptorParameterTypes() {
+        return methodInternal.descriptorParameterTypes();
     }
 
     /**

@@ -51,6 +51,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -189,6 +190,13 @@ public class BasicTestCase {
         }
     }
 
+    public enum EnumWithGenericConstructor {
+        INSTANCE(Collections.singletonList(""));
+
+        <T> EnumWithGenericConstructor(List<T> list) {
+        }
+    }
+
     // @formatter:off
     @TestAnnotation(name = "Test", ints = { 1, 2, 3, 4, 5 }, klass = Void.class, nested = @NestedAnnotation(1.34f),
             nestedArray = { @NestedAnnotation(3.14f), @NestedAnnotation(2.27f) },
@@ -242,18 +250,11 @@ public class BasicTestCase {
     @Test
     public void testIndexer() throws IOException {
         Indexer indexer = new Indexer();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName()
-                .replace('.', '/') + ".class");
-        indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(TestAnnotation.class.getName()
-                .replace('.', '/') + ".class");
-        indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(DummyClass.Nested.class.getName()
-                .replace('.', '/') + ".class");
-        indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(Enum.class.getName()
-                .replace('.', '/') + ".class");
-        indexer.index(stream);
+        indexer.indexClass(DummyClass.class);
+        indexer.indexClass(TestAnnotation.class);
+        indexer.indexClass(DummyClass.Nested.class);
+        indexer.indexClass(Enum.class);
+        indexer.indexClass(EnumWithGenericConstructor.class);
         Index index = indexer.complete();
 
         verifyDummy(index, true);
@@ -356,18 +357,11 @@ public class BasicTestCase {
     @Test
     public void testWriteRead() throws IOException {
         Indexer indexer = new Indexer();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(DummyClass.class.getName()
-                .replace('.', '/') + ".class");
-        indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(TestAnnotation.class.getName()
-                .replace('.', '/') + ".class");
-        indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(DummyClass.Nested.class.getName()
-                .replace('.', '/') + ".class");
-        indexer.index(stream);
-        stream = getClass().getClassLoader().getResourceAsStream(Enum.class.getName()
-                .replace('.', '/') + ".class");
-        indexer.index(stream);
+        indexer.indexClass(DummyClass.class);
+        indexer.indexClass(TestAnnotation.class);
+        indexer.indexClass(DummyClass.Nested.class);
+        indexer.indexClass(Enum.class);
+        indexer.indexClass(EnumWithGenericConstructor.class);
         Index index = indexer.complete();
 
         index = IndexingUtil.roundtrip(index);
@@ -645,25 +639,19 @@ public class BasicTestCase {
 
             ClassInfo nested = index.getClassByName(DotName.createSimple(DummyClass.Nested.class.getName()));
             assertNotNull(nested);
-            // synthetic param counts here
-            MethodInfo nestedConstructor1 = nested.method("<init>",
-                    Type.create(DotName.createSimple(DummyClass.class.getName()), Type.Kind.CLASS), PrimitiveType.INT);
+            MethodInfo nestedConstructor1 = nested.method("<init>", PrimitiveType.INT);
             assertNotNull(nestedConstructor1);
-            // synthetic param counts here
-            assertEquals(2, nestedConstructor1.parametersCount());
-            assertEquals(2, nestedConstructor1.parameterTypes().size());
-            assertEquals(2, nestedConstructor1.parameters().size());
-            // synthetic param does not counts here
+            assertEquals(1, nestedConstructor1.parametersCount());
+            assertEquals(1, nestedConstructor1.parameterTypes().size());
+            assertEquals(1, nestedConstructor1.parameters().size());
             assertEquals("noAnnotation", nestedConstructor1.parameterName(0));
 
-            MethodInfo nestedConstructor2 = nested.method("<init>",
-                    Type.create(DotName.createSimple(DummyClass.class.getName()), Type.Kind.CLASS), PrimitiveType.BYTE);
+            MethodInfo nestedConstructor2 = nested.method("<init>", PrimitiveType.BYTE);
             assertNotNull(nestedConstructor2);
             // synthetic param counts here
-            assertEquals(2, nestedConstructor2.parametersCount());
-            assertEquals(2, nestedConstructor2.parameterTypes().size());
-            assertEquals(2, nestedConstructor2.parameters().size());
-            // synthetic param does not counts here
+            assertEquals(1, nestedConstructor2.parametersCount());
+            assertEquals(1, nestedConstructor2.parameterTypes().size());
+            assertEquals(1, nestedConstructor2.parameters().size());
             assertEquals("annotated", nestedConstructor2.parameterName(0));
 
             AnnotationInstance paramAnnotation = nestedConstructor2
@@ -679,39 +667,29 @@ public class BasicTestCase {
             assertEquals(0, nestedParamAnnotated.position());
             assertTrue(nestedParamAnnotated.hasAnnotation(DotName.createSimple(ParameterAnnotation.class.getName())));
             assertNotNull(nestedParamAnnotated.annotation(DotName.createSimple(ParameterAnnotation.class.getName())));
-            assertEquals(1, nestedParamAnnotated.annotations().size());
+            assertTrue(nestedParamAnnotated.annotations().size() == 1 || nestedParamAnnotated.annotations().size() == 2);
+            if (nestedParamAnnotated.annotations().size() == 1) {
+                // javac DOESN'T put the annotation on the _type_ of the parameter
+                assertTrue(nestedParamAnnotated.type().annotations().isEmpty());
+                assertNull(nestedParamAnnotated.type().annotation(DotName.createSimple(ParameterAnnotation.class.getName())));
+            } else {
+                // ecj DOES put the annotation on the _type_ of the parameter, contrary to how the annotation specify its `@Target`
+                assertTrue(
+                        nestedParamAnnotated.type().hasAnnotation(DotName.createSimple(ParameterAnnotation.class.getName())));
+                assertNotNull(
+                        nestedParamAnnotated.type().annotation(DotName.createSimple(ParameterAnnotation.class.getName())));
+            }
 
             ClassInfo enumClass = index.getClassByName(DotName.createSimple(Enum.class.getName()));
             assertNotNull(enumClass);
-            // synthetic param counts here (for ECJ)
-            MethodInfo enumConstructor1 = enumClass.method("<init>",
-                    Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS), PrimitiveType.INT,
-                    PrimitiveType.INT);
-            if (enumConstructor1 == null) {
-                enumConstructor1 = enumClass.method("<init>", PrimitiveType.INT);
-                assertNotNull(enumConstructor1);
-                // synthetic param does not found here
-                assertEquals(1, enumConstructor1.parametersCount());
-            } else {
-                // synthetic param counts here
-                assertEquals(3, enumConstructor1.parametersCount());
-            }
-            // synthetic param does not counts here
+            MethodInfo enumConstructor1 = enumClass.method("<init>", PrimitiveType.INT);
+            assertNotNull(enumConstructor1);
+            assertEquals(1, enumConstructor1.parametersCount());
             assertEquals("noAnnotation", enumConstructor1.parameterName(0));
 
-            MethodInfo enumConstructor2 = enumClass.method("<init>",
-                    Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS), PrimitiveType.INT,
-                    PrimitiveType.BYTE);
-            if (enumConstructor2 == null) {
-                enumConstructor2 = enumClass.method("<init>", PrimitiveType.BYTE);
-                assertNotNull(enumConstructor2);
-                // synthetic param does not found here
-                assertEquals(1, enumConstructor2.parametersCount());
-            } else {
-                // synthetic param counts here
-                assertEquals(3, enumConstructor2.parametersCount());
-            }
-            // synthetic param does not counts here
+            MethodInfo enumConstructor2 = enumClass.method("<init>", PrimitiveType.BYTE);
+            assertNotNull(enumConstructor2);
+            assertEquals(1, enumConstructor2.parametersCount());
             assertEquals("annotated", enumConstructor2.parameterName(0));
 
             paramAnnotation = enumConstructor2.annotation(DotName.createSimple(ParameterAnnotation.class.getName()));
@@ -719,6 +697,18 @@ public class BasicTestCase {
             assertEquals(Kind.METHOD_PARAMETER, paramAnnotation.target().kind());
             assertEquals("annotated", paramAnnotation.target().asMethodParameter().name());
             assertEquals(0, paramAnnotation.target().asMethodParameter().position());
+
+            ClassInfo enumWithGenericConstructorClass = index.getClassByName(EnumWithGenericConstructor.class.getName());
+            assertNotNull(enumWithGenericConstructorClass);
+            MethodInfo ctor = enumWithGenericConstructorClass.firstMethod("<init>");
+            assertNotNull(ctor);
+            assertEquals(1, ctor.parametersCount());
+            assertEquals(Type.Kind.PARAMETERIZED_TYPE, ctor.parameterType(0).kind());
+            assertEquals("java.util.List", ctor.parameterType(0).asParameterizedType().name().toString());
+            assertEquals(1, ctor.parameterType(0).asParameterizedType().arguments().size());
+            assertEquals(Type.Kind.TYPE_VARIABLE, ctor.parameterType(0).asParameterizedType().arguments().get(0).kind());
+            assertEquals("T", ctor.parameterType(0).asParameterizedType().arguments().get(0).asTypeVariable().identifier());
+            assertEquals("list", ctor.parameterName(0));
         }
 
         // Verify hasNoArgsConstructor

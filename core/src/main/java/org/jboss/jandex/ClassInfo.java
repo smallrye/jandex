@@ -33,12 +33,10 @@ import java.util.Set;
 /**
  * Represents a class entry in an index. A ClassInfo is only a partial view of a
  * Java class, it is not intended as a complete replacement for Java reflection.
- * Only the methods and fields which are references by an annotation are stored.
- *
  * <p>
  * Global information including the parent class, implemented interfaces, and
  * access flags are also provided since this information is often necessary.
- *
+ * Implicitly declared (aka mandated) and synthetic members are included as well.
  * <p>
  * Note that a parent class and interface may exist outside of the scope of the
  * index (e.g. classes in a different jar) so the references are stored as names
@@ -82,7 +80,9 @@ public final class ClassInfo implements AnnotationTarget {
         /** A standard class declared within its own source unit */
         TOP_LEVEL,
 
-        /** A named class enclosed by another class */
+        /** A named class directly enclosed within another class */
+        // better name would be MEMBER, because this includes static nested classes (which are _not_ inner)
+        // and doesn't include local/anonymous classes (which _are_ inner)
         INNER,
 
         /** A named class enclosed within a code block */
@@ -903,11 +903,17 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns a boolean indicating the presence of a no-arg constructor, if supported by the underlying index store.
+     * Returns whether this class declares a zero-parameter constructor. This is determined from
+     * constructor descriptors, so mandated and synthetic parameters are also taken into account.
+     * In other words, this method never returns {@code true} for inner classes (that is, non-static
+     * member classes, local classes and anonymous classes). In such case, a constructor may exist
+     * among {@link #methods()} that has no {@link MethodInfo#parameters()}, but
+     * {@link MethodInfo#descriptorParameterTypes()} would reveal that some implicitly declared
+     * (aka mandated) or synthetic parameters exist.
+     * <p>
      * This information is available in indexes produced by Jandex 1.2.0 and later.
      *
-     * @return <code>true</code> in case of the Java class has a no-copyParameters constructor, <code>false</code>
-     *         if it does not, or it is not known
+     * @return {@code true} if this class has a zero-parameter constructor, {@code false} if it does not
      * @since 1.2.0
      */
     public final boolean hasNoArgsConstructor() {
@@ -915,14 +921,12 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns the nesting type of this class, which could either be a standard top level class, an inner class,
-     * an anonymous class, or a local class.
-     *
+     * Returns the nesting type of this class, which could either be a standard top level class, a member class
+     * ({@code NestingType.INNER}), an anonymous class, or a local class.
      * <p>
-     * For historical reasons, static nested classes are returned as <code>INNER</code>. You can differentiate
-     * between a non-static nested class (inner class) and a static nested class by calling
-     * {@link java.lang.reflect.Modifier#isStatic(int)} on the return of {@link #flags()}
-     * </p>
+     * For historical reasons, static member classes are also returned as {@code INNER}.
+     * You can differentiate between a non-static member class (inner class) and a static member class by calling
+     * {@link java.lang.reflect.Modifier#isStatic(int)} on the return value of {@link #flags()}.
      *
      * @return the nesting type of this class
      */
@@ -939,10 +943,10 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns the source declared name of this class if it is an inner class, or a local class. Otherwise
-     * this method will return null.
+     * Returns the source declared name of this class if it is a top-level class, member class or a local class.
+     * Otherwise returns {@code null}.
      *
-     * @return the simple name of a top-level, local, or inner class, or null if this is an anonymous class
+     * @return the simple name of a top-level, member or local class, or {@code null} if this is an anonymous class
      */
     public String simpleName() {
         return nestingInfo != null ? nestingInfo.simpleName : name.local();
@@ -953,22 +957,22 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns the enclosing class if this is an inner class, or null if this is an anonymous, a local, or
-     * a top level class.
+     * Returns the enclosing class if this is a member class, or {@code null} if this is a top-level,
+     * local or anonymous class.
      *
-     * @return the enclosing class if this class is an inner class
+     * @return the enclosing class if this class is a member class
      */
     public DotName enclosingClass() {
         return nestingInfo != null ? nestingInfo.enclosingClass : null;
     }
 
     /**
-     * Returns the enclosing method of this class if it is a local, or anonymous class, and it is declared
-     * within the body of a method or constructor. It will return null if this class is a top level, or an inner class.
-     * It will also return null if the local or anonymous class is on an initializer.
+     * Returns the enclosing method of this class if it is a local or anonymous class declared
+     * within the body of a method or constructor. Returns {@code null} if this class is a top level or a member class
+     * or if the local or anonymous class is declared within a class or instance initializer.
      *
-     * @return the enclosing method/constructor, if this class is local or anonymous, and it is within a
-     *         method/constructor
+     * @return the enclosing method/constructor, if this class is a local or anonymous class
+     *         declared within a method or constructor, otherwise {@code null}
      */
     public EnclosingMethodInfo enclosingMethod() {
         return nestingInfo != null ? nestingInfo.enclosingMethod : null;
@@ -1177,7 +1181,7 @@ public final class ClassInfo implements AnnotationTarget {
         boolean setValues = enclosingClass != null || simpleName != null;
 
         // Always init known inner types since we might have an anonymous type
-        // with a method-less encloser (static block).
+        // with a method-less encloser (static or instance initializer)
         if (nestingInfo == null && (knownInnerClass || setValues)) {
             nestingInfo = new NestingInfo();
         }

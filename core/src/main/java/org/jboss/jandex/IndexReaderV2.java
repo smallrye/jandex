@@ -509,6 +509,10 @@ final class IndexReaderV2 extends IndexReaderImpl {
         Type receiverType = typeTable[reference];
         Type returnType = typeTable[stream.readPackedU32()];
         Type[] parameters = typeListTable[stream.readPackedU32()];
+        Type[] descriptorParameters = parameters;
+        if (version >= 11) {
+            descriptorParameters = typeListTable[stream.readPackedU32()];
+        }
         Type[] exceptions = typeListTable[stream.readPackedU32()];
         AnnotationValue defaultValue = null;
         if (version >= 7) {
@@ -530,10 +534,11 @@ final class IndexReaderV2 extends IndexReaderImpl {
 
         MethodInfo methodInfo = new MethodInfo();
         AnnotationInstance[] annotations = readAnnotations(stream, methodInfo);
-        MethodInternal methodInternal = new MethodInternal(name, methodParameterBytes, parameters, returnType, flags,
+        MethodInternal methodInternal = new MethodInternal(name, methodParameterBytes, descriptorParameters, returnType, flags,
                 receiverType, typeParameters,
                 exceptions, annotations, defaultValue);
         methodInfo.setMethodInternal(methodInternal);
+        methodInfo.setParameters(parameters);
         return methodInternal;
     }
 
@@ -564,6 +569,10 @@ final class IndexReaderV2 extends IndexReaderImpl {
             Map<DotName, List<AnnotationInstance>> masterAnnotations) throws IOException {
         DotName name = nameTable[stream.readPackedU32()];
         short flags = (short) stream.readPackedU32();
+        boolean hasNoArgsConstructor = false;
+        if (version >= 11) {
+            hasNoArgsConstructor = stream.readBoolean();
+        }
         Type superType = typeTable[stream.readPackedU32()];
         Type[] typeParameters = typeListTable[stream.readPackedU32()];
         Type[] interfaceTypes = typeListTable[stream.readPackedU32()];
@@ -607,6 +616,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
                 ? new HashMap<DotName, List<AnnotationInstance>>(size)
                 : Collections.<DotName, List<AnnotationInstance>> emptyMap();
         ClassInfo clazz = new ClassInfo(name, superType, flags, interfaceTypes);
+        clazz.setHasNoArgsConstructor(hasNoArgsConstructor);
         clazz.setTypeParameters(typeParameters);
 
         if (hasNesting) {
@@ -794,7 +804,8 @@ final class IndexReaderV2 extends IndexReaderImpl {
             updateAnnotationTargetInfo(method.annotationArray(), clazz);
             methods[i] = method;
 
-            if (method.parameterTypesArray().length == 0 && Arrays.equals(INIT_METHOD_NAME, method.nameBytes())) {
+            if (version < 11 && method.parameterTypesArray().length == 0
+                    && Arrays.equals(INIT_METHOD_NAME, method.nameBytes())) {
                 clazz.setHasNoArgsConstructor(true);
             }
         }

@@ -83,6 +83,8 @@ final class MethodInternal {
     private AnnotationValue defaultValue;
     private short flags;
 
+    private final Type[] descriptorParameterTypes;
+
     MethodInternal(byte[] name, byte[][] parameterNames, Type[] parameterTypes, Type returnType, short flags) {
         this(name, parameterNames, parameterTypes, returnType, flags, Type.EMPTY_ARRAY, Type.EMPTY_ARRAY);
     }
@@ -106,6 +108,8 @@ final class MethodInternal {
         this.typeParameters = typeParameters;
         this.receiverType = receiverType;
         this.defaultValue = defaultValue;
+
+        this.descriptorParameterTypes = this.parameterTypes;
     }
 
     @Override
@@ -137,6 +141,9 @@ final class MethodInternal {
         if (!Arrays.equals(parameterTypes, methodInternal.parameterTypes)) {
             return false;
         }
+        if (!Arrays.equals(descriptorParameterTypes, methodInternal.descriptorParameterTypes)) {
+            return false;
+        }
         if (receiverType != null ? !receiverType.equals(methodInternal.receiverType) : methodInternal.receiverType != null) {
             return false;
         }
@@ -154,6 +161,7 @@ final class MethodInternal {
         int result = Arrays.hashCode(name);
         result = 31 * result + Arrays.deepHashCode(parameterNames);
         result = 31 * result + Arrays.hashCode(parameterTypes);
+        result = 31 * result + Arrays.hashCode(descriptorParameterTypes);
         result = 31 * result + returnType.hashCode();
         result = 31 * result + Arrays.hashCode(exceptions);
         result = 31 * result + (receiverType != null ? receiverType.hashCode() : 0);
@@ -200,6 +208,14 @@ final class MethodInternal {
 
     final List<Type> parameterTypes() {
         return Collections.unmodifiableList(Arrays.asList(parameterTypes));
+    }
+
+    final List<Type> descriptorParameterTypes() {
+        return Collections.unmodifiableList(Arrays.asList(descriptorParameterTypes));
+    }
+
+    final Type[] descriptorParameterTypesArray() {
+        return descriptorParameterTypes;
     }
 
     final Type returnType() {

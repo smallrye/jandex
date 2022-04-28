@@ -1,0 +1,94 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.smallrye</groupId>
+        <artifactId>jandex-parent</artifactId>
+        <version>3.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>jandex-benchmarks</artifactId>
+
+    <name>Jandex: Microbenchmarks</name>
+
+    <properties>
+        <groupId.jandex>${project.groupId}</groupId.jandex>
+
+        <version.exec-maven-plugin>3.0.0</version.exec-maven-plugin>
+        <version.gson>2.8.6</version.gson>
+        <version.jandex>${project.version}</version.jandex>
+        <version.jmh>1.35</version.jmh>
+        <version.jmh-maven-plugin>0.2.2</version.jmh-maven-plugin>
+        <version.xchart>3.8.1</version.xchart>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>${groupId.jandex}</groupId>
+            <artifactId>jandex</artifactId>
+            <version>${version.jandex}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${version.gson}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.knowm.xchart</groupId>
+            <artifactId>xchart</artifactId>
+            <version>${version.xchart}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>de.erichseifert.vectorgraphics2d</groupId>
+                    <artifactId>VectorGraphics2D</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>${version.jmh}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip> <!-- no actual tests in this module, just JMH-generated stuff -->
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>${version.exec-maven-plugin}</version>
+            </plugin>
+            <plugin>
+                <groupId>pw.krejci</groupId>
+                <artifactId>jmh-maven-plugin</artifactId>
+                <version>${version.jmh-maven-plugin}</version>
+            </plugin>
+
+            <!-- this module shouldn't be released -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <configuration>
+                    <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

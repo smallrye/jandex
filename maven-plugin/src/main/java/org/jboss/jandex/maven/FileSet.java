@@ -25,15 +25,15 @@ public class FileSet {
         return excludes;
     }
 
-    public void setDirectory(final File directory) {
+    public void setDirectory(File directory) {
         this.directory = directory;
     }
 
-    public void setIncludes(final List<String> includes) {
+    public void setIncludes(List<String> includes) {
         this.includes = includes;
     }
 
-    public void setExcludes(final List<String> excludes) {
+    public void setExcludes(List<String> excludes) {
         this.excludes = excludes;
     }
 
@@ -41,8 +41,7 @@ public class FileSet {
         return useDefaultExcludes;
     }
 
-    public void setUseDefaultExcludes(final boolean useDefaultExcludes) {
+    public void setUseDefaultExcludes(boolean useDefaultExcludes) {
         this.useDefaultExcludes = useDefaultExcludes;
     }
-
 }

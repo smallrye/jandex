@@ -10,7 +10,7 @@
   </parent>
 
   <groupId>org.jboss.jandex</groupId>
-  <artifactId>jandex-maven-plugin-filesets</artifactId>
+  <artifactId>jandex-maven-plugin-noFilesets</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <build>

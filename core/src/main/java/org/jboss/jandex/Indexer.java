@@ -710,7 +710,7 @@ public final class Indexer {
             int nameIndex = data.readUnsignedShort();
             byte[] parameterName = nameIndex == 0 ? null : decodeUtf8EntryAsBytes(nameIndex);
             int flags = data.readUnsignedShort();
-            // skip synthetic/mandated params to get the same param name index as annotations/MethodParameter (which do not count them)
+            // skip synthetic/mandated params to get the same param name index as annotations (which do not count them)
             if ((flags & (Modifiers.SYNTHETIC | Modifiers.MANDATED)) != 0) {
                 continue;
             }
@@ -995,7 +995,7 @@ public final class Indexer {
         throw new IllegalStateException("Type annotation referred to type parameters on an invalid target: " + target);
     }
 
-    private void setTypeParameters(AnnotationTarget target, Type[] typeParameters) {
+    private static void setTypeParameters(AnnotationTarget target, Type[] typeParameters) {
         if (target instanceof ClassInfo) {
             ((ClassInfo) target).setTypeParameters(typeParameters);
             return;
@@ -2193,6 +2193,9 @@ public final class Indexer {
      */
     public Index complete() {
         initIndexMaps();
+
+        propagateTypeParameterBounds();
+
         try {
             return new Index(masterAnnotations, subclasses, subinterfaces, implementors, classes, modules, users);
         } finally {
@@ -2208,4 +2211,150 @@ public final class Indexer {
         }
     }
 
+    private void propagateTypeParameterBounds() {
+        List<ClassInfo> classes = new ArrayList<>(this.classes.values());
+        classes.sort(new Comparator<ClassInfo>() {
+            private boolean isEnclosedIn(ClassInfo c1, ClassInfo c2) {
+                if (c1.enclosingClass() != null) {
+                    if (c2.name().equals(c1.enclosingClass())) {
+                        return true;
+                    }
+
+                    ClassInfo c1EnclosingClass = Indexer.this.classes.get(c1.enclosingClass());
+                    if (c1EnclosingClass != null) {
+                        return isEnclosedIn(c1EnclosingClass, c2);
+                    }
+                }
+
+                if (c1.enclosingMethod() != null) {
+                    if (c2.name().equals(c1.enclosingMethod().enclosingClass())) {
+                        return true;
+                    }
+
+                    ClassInfo enclosingMethodClass = Indexer.this.classes.get(c1.enclosingMethod().enclosingClass());
+                    if (enclosingMethodClass != null) {
+                        return isEnclosedIn(enclosingMethodClass, c2);
+                    }
+                }
+
+                return false;
+            }
+
+            @Override
+            public int compare(ClassInfo c1, ClassInfo c2) {
+                if (isEnclosedIn(c1, c2)) {
+                    // c1 is enclosed in c2, so c2 must be processed sooner
+                    return 1;
+                } else if (isEnclosedIn(c2, c1)) {
+                    // c2 is enclosed in c1, so c1 must be processed sooner
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+        });
+
+        for (ClassInfo clazz : classes) {
+            propagateTypeParameterBounds(clazz);
+            for (MethodInfo method : clazz.methods()) {
+                propagateTypeParameterBounds(method);
+            }
+        }
+    }
+
+    private void propagateTypeParameterBounds(AnnotationTarget target) {
+        Type[] typeParameters = copyTypeParameters(target);
+        for (int i = 0; i < typeParameters.length; i++) {
+            TypeVariable typeParameter = (TypeVariable) typeParameters[i];
+            Type[] typeParameterBounds = typeParameter.boundArray().clone();
+            for (int j = 0; j < typeParameterBounds.length; j++) {
+                Type typeParameterBound = typeParameterBounds[j];
+                if (typeParameterBound.kind() == Type.Kind.TYPE_VARIABLE
+                        || typeParameterBound.kind() == Type.Kind.UNRESOLVED_TYPE_VARIABLE) {
+                    String boundIdentifier = getTypeVariableIdentifier(typeParameterBound);
+                    TypeVariable resolvedBound = findTypeParameter(typeParameters, boundIdentifier);
+                    if (resolvedBound == null) {
+                        resolvedBound = resolveTypeParameter(target, boundIdentifier);
+                    }
+                    if (resolvedBound != null) {
+                        Type newTypeParameterBound = intern(resolvedBound.copyType(typeParameterBound.annotationArray()));
+                        Type newTypeParameter = intern(typeParameter.copyType(j, newTypeParameterBound));
+                        typeParameters[i] = newTypeParameter;
+
+                        // retarget type parameter annotations
+                        for (AnnotationInstance annotation : target.annotations()) {
+                            if (annotation.target() instanceof TypeParameterTypeTarget
+                                    && ((TypeParameterTypeTarget) annotation.target()).target() == typeParameter) {
+                                ((TypeParameterTypeTarget) annotation.target()).setTarget(newTypeParameter);
+                            } else if (annotation.target() instanceof TypeParameterBoundTypeTarget
+                                    && ((TypeParameterBoundTypeTarget) annotation.target()).target() == typeParameterBound) {
+                                ((TypeParameterBoundTypeTarget) annotation.target()).setTarget(newTypeParameterBound);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        setTypeParameters(target, intern(typeParameters));
+    }
+
+    private TypeVariable findTypeParameter(Type[] typeParameters, String identifier) {
+        for (Type typeParameter : typeParameters) {
+            if (typeParameter.kind() == Type.Kind.TYPE_VARIABLE) {
+                if (typeParameter.asTypeVariable().identifier().equals(identifier)) {
+                    return typeParameter.asTypeVariable();
+                }
+            }
+        }
+        return null;
+    }
+
+    private TypeVariable resolveTypeParameter(AnnotationTarget target, String identifier) {
+        if (target.kind() == AnnotationTarget.Kind.CLASS) {
+            ClassInfo clazz = target.asClass();
+            for (TypeVariable it : clazz.typeParameters()) {
+                if (it.identifier().equals(identifier)) {
+                    return it;
+                }
+            }
+            if (!Modifier.isStatic(clazz.flags())) {
+                if (clazz.enclosingClass() != null) {
+                    ClassInfo enclosingClass = this.classes.get(clazz.enclosingClass());
+                    if (enclosingClass != null) {
+                        return resolveTypeParameter(enclosingClass, identifier);
+                    }
+                } else if (clazz.enclosingMethod() != null) {
+                    ClassInfo enclosingClass = this.classes.get(clazz.enclosingMethod().enclosingClass());
+                    if (enclosingClass != null) {
+                        MethodInfo enclosingMethod = enclosingClass.method(clazz.enclosingMethod().name(),
+                                clazz.enclosingMethod().parametersArray());
+                        if (enclosingMethod != null) {
+                            return resolveTypeParameter(enclosingMethod, identifier);
+                        }
+                    }
+                }
+            }
+        } else if (target.kind() == AnnotationTarget.Kind.METHOD) {
+            MethodInfo method = target.asMethod();
+            for (TypeVariable it : method.typeParameters()) {
+                if (it.identifier().equals(identifier)) {
+                    return it;
+                }
+            }
+            if (!Modifier.isStatic(method.flags())) {
+                return resolveTypeParameter(method.declaringClass(), identifier);
+            }
+        }
+        return null;
+    }
+
+    private String getTypeVariableIdentifier(Type typeVariable) {
+        if (typeVariable.kind() == Type.Kind.TYPE_VARIABLE) {
+            return typeVariable.asTypeVariable().identifier();
+        } else if (typeVariable.kind() == Type.Kind.UNRESOLVED_TYPE_VARIABLE) {
+            return typeVariable.asUnresolvedTypeVariable().identifier();
+        } else {
+            return null;
+        }
+    }
 }

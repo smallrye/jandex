@@ -85,7 +85,7 @@ public final class UnresolvedTypeVariable extends Type {
 
         UnresolvedTypeVariable other = (UnresolvedTypeVariable) o;
 
-        return name.equals(other.name);
+        return super.equals(other) && name.equals(other.name);
 
     }
 

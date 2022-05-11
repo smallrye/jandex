@@ -148,6 +148,25 @@ For any `fileSet`, you can also fine-tune the classes that are processed using t
     <useDefaultExcludes>false</useDefaultExcludes>
 </fileSet>
 ```
+         
+A `fileSet` may specify a _dependency_ instead of a directory.
+That dependency must exist among the set of dependencies of the Maven project being built.
+A `groupId` and `artifactId` are mandatory, a `classifier` is optional:
+
+```xml
+<fileSet>
+    <dependency>
+        <groupId>com.example</groupId>
+        <artifactId>my-project</artifactId>
+    </dependency>
+    <includes>
+        <include>com/example/my/project/api/**/*.class</include>
+    </includes>
+    <excludes>
+        <exclude>com/example/**/_private/*.class</exclude>
+    </excludes>
+</fileSet>
+```
 
 ## Adding the Jandex API to your Maven project
 

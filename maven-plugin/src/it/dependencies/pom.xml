@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.smallrye</groupId>
+    <artifactId>smallrye-build-parent</artifactId>
+    <version>31</version>
+  </parent>
+
+  <groupId>org.jboss.jandex</groupId>
+  <artifactId>jandex-maven-plugin-dependencies</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jandex</artifactId>
+      <version>2.4.0.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus.gizmo</groupId>
+      <artifactId>gizmo</artifactId>
+      <version>1.0.10.Final</version>
+      <type>test-jar</type>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>@project.groupId@</groupId>
+        <artifactId>@project.artifactId@</artifactId>
+        <version>@project.version@</version>
+        <executions>
+          <execution>
+            <id>make-index</id>
+            <goals>
+              <goal>jandex</goal>
+            </goals>
+            <configuration>
+              <fileSets>
+                <fileSet>
+                  <dependency>
+                    <groupId>org.jboss</groupId>
+                    <artifactId>jandex</artifactId>
+                  </dependency>
+                  <includes>
+                    <include>org/jboss/jandex/MethodParameter*.class</include>
+                  </includes>
+                  <excludes>
+                    <exclude>org/jboss/jandex/MethodParameterTypeTarget.class</exclude>
+                  </excludes>
+                </fileSet>
+                <fileSet>
+                  <dependency>
+                    <groupId>io.quarkus.gizmo</groupId>
+                    <artifactId>gizmo</artifactId>
+                    <classifier>tests</classifier>
+                  </dependency>
+                  <includes>
+                    <include>io/quarkus/gizmo/Exception*.class</include>
+                  </includes>
+                  <excludes>
+                    <exclude>io/quarkus/gizmo/ExceptionThrowingTestCase.class</exclude>
+                  </excludes>
+                </fileSet>
+              </fileSets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

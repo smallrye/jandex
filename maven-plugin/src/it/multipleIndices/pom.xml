@@ -10,7 +10,7 @@
   </parent>
 
   <groupId>org.jboss.jandex</groupId>
-  <artifactId>jandex-maven-plugin-defaultFileset</artifactId>
+  <artifactId>jandex-maven-plugin-multipleIndices</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <build>
@@ -51,9 +51,15 @@
             <goals>
               <goal>jandex</goal>
             </goals>
+          </execution>
+          <execution>
+            <id>make-second-index</id>
+            <goals>
+              <goal>jandex</goal>
+            </goals>
             <configuration>
-              <processDefaultFileSet>false</processDefaultFileSet>
               <indexDir>${project.build.directory}/dependency</indexDir>
+              <processDefaultFileSet>false</processDefaultFileSet>
               <fileSets>
                 <fileSet>
                   <directory>${project.build.directory}/dependency</directory>

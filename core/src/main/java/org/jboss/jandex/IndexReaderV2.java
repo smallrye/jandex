@@ -263,7 +263,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
 
     private AnnotationValue[] readAnnotationValues(PackedDataInputStream stream) throws IOException {
         int numValues = stream.readPackedU32();
-        AnnotationValue[] values = numValues > 0 ? new AnnotationValue[numValues] : AnnotationValue.EMPTY_VALUE_ARRAY;
+        AnnotationValue[] values = numValues > 0 ? new AnnotationValue[numValues] : AnnotationValue.EMPTY_ARRAY;
 
         for (int i = 0; i < numValues; i++) {
             AnnotationValue value = readAnnotationValue(stream);

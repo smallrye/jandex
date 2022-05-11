@@ -1,12 +1,12 @@
 package org.jboss.jandex.chart;
 
-import org.jboss.jandex.json.BenchmarkDto;
-import org.openjdk.jmh.annotations.Mode;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.jboss.jandex.json.BenchmarkDto;
+import org.openjdk.jmh.annotations.Mode;
 
 public class AllBenchmarks {
     public final Map<Mode, List<BenchmarksForVersion>> map = new HashMap<>();

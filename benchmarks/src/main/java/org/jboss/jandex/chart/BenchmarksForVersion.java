@@ -1,9 +1,9 @@
 package org.jboss.jandex.chart;
 
-import org.jboss.jandex.json.BenchmarkDto;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.jboss.jandex.json.BenchmarkDto;
 
 public class BenchmarksForVersion {
     public final String version;

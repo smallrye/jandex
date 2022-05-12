@@ -94,7 +94,7 @@ public class JandexGoal extends AbstractMojo {
     private boolean processDefaultFileSet;
 
     /**
-     * Print verbose output (debug output without needing to enable -X for the whole build)
+     * Print verbose output (debug output without needing to enable -X for the whole build).
      */
     @Parameter(defaultValue = "false")
     private boolean verbose;
@@ -116,7 +116,7 @@ public class JandexGoal extends AbstractMojo {
      * Skip execution if set.
      */
     @Parameter(property = "jandex.skip", defaultValue = "false")
-    private boolean skip = true;
+    private boolean skip;
 
     public void execute() throws MojoExecutionException {
         if (skip) {

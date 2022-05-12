@@ -19,6 +19,7 @@
 package org.jboss.jandex;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * An annotation value represents a specific name and value combination in the
@@ -71,7 +72,7 @@ import java.util.Arrays;
  *
  */
 public abstract class AnnotationValue {
-    static final AnnotationValue[] EMPTY_VALUE_ARRAY = new AnnotationValue[0];
+    static final AnnotationValue[] EMPTY_ARRAY = new AnnotationValue[0];
 
     /**
      * Specifies the kind of annotation value, which can be used to determine the underlying Java type.
@@ -175,6 +176,10 @@ public abstract class AnnotationValue {
 
     public static AnnotationValue createArrayValue(String name, AnnotationValue[] values) {
         return new ArrayValue(name, values);
+    }
+
+    public static AnnotationValue createArrayValue(String name, List<AnnotationValue> values) {
+        return createArrayValue(name, values.toArray(EMPTY_ARRAY));
     }
 
     public static AnnotationValue createNestedAnnotationValue(String name, AnnotationInstance instance) {
@@ -1213,7 +1218,7 @@ public abstract class AnnotationValue {
 
         ArrayValue(String name, AnnotationValue value[]) {
             super(name);
-            this.value = value.length > 0 ? value : EMPTY_VALUE_ARRAY;
+            this.value = value.length > 0 ? value : EMPTY_ARRAY;
         }
 
         public AnnotationValue[] value() {

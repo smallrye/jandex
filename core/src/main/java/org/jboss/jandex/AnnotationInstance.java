@@ -39,7 +39,6 @@ import java.util.List;
  *
  */
 public final class AnnotationInstance {
-    private static final AnnotationValue[] ANNOTATION_VALUES_TYPE = new AnnotationValue[0];
     static final NameComparator NAME_COMPARATOR = new NameComparator();
     static final AnnotationInstance[] EMPTY_ARRAY = new AnnotationInstance[0];
 
@@ -57,7 +56,7 @@ public final class AnnotationInstance {
     private AnnotationInstance(DotName name, AnnotationTarget target, AnnotationValue[] values, boolean runtimeVisible) {
         this.name = name;
         this.target = target;
-        this.values = values != null && values.length > 0 ? values : AnnotationValue.EMPTY_VALUE_ARRAY;
+        this.values = values != null && values.length > 0 ? values : AnnotationValue.EMPTY_ARRAY;
         this.runtimeVisible = runtimeVisible;
     }
 
@@ -137,7 +136,7 @@ public final class AnnotationInstance {
         if (values == null)
             throw new IllegalArgumentException("Values can't be null");
 
-        return create(name, visible, target, values.toArray(ANNOTATION_VALUES_TYPE));
+        return create(name, visible, target, values.toArray(AnnotationValue.EMPTY_ARRAY));
     }
 
     static AnnotationInstance binarySearch(AnnotationInstance[] annotations, DotName name) {

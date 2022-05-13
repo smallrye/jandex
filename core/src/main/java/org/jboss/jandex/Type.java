@@ -183,14 +183,13 @@ public abstract class Type {
 
     /**
      * Returns the raw name of this type. Primitives and void are returned as the
-     * Java reserved word (void, boolean, byte, short, char, int, long, float,
-     * double). Arrays are returned using the Java reflection array syntax
-     * (e.g. "[[[Ljava.lang.String;") Classes are returned as a normal <code>DotName</code>.
-     *
+     * Java keyword (void, boolean, byte, short, int, long, float, double, char).
+     * Arrays are returned using the Java reflection array syntax (e.g.
+     * {@code [[[Ljava.lang.String;}) Classes are returned as a normal {@code DotName}.
      * <p>
      * Generic values are returned as the underlying raw value. For example,
-     * a wildcard such as <code>? extends Number</code>, has a raw type of
-     * <code>Number</code>
+     * a wildcard such as {@code ? extends Number} has a raw type of
+     * {@code Number}.
      *
      * @return the name of this type
      */

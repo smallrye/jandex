@@ -18,9 +18,9 @@
 package org.jboss.jandex;
 
 /**
- * Represents a type variable that could not be resolved during indexing. This type will only occur
- * as a result of a bug, or a non-compliant Java class file. It is provided in order to prevent
- * failure.
+ * Represents a type variable that could not be resolved during indexing. This type may occur
+ * when indexing an incomplete classpath, or as a result of a bug, or a non-compliant Java class file.
+ * It is provided in order to prevent failure.
  *
  * @author Jason T. Greene
  */

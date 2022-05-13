@@ -57,20 +57,24 @@ public class WildcardType extends Type {
     }
 
     /**
-     * Returns the extends (upper) bound of this wildcard. If this wildcard declares a super (lower)
-     * bound, this method will return <code>java.lang.Object</code>
+     * Returns the upper bound of this wildcard (e.g. {@code SomeType} for {@code ? extends SomeType}).
+     * <p>
+     * Returns {@code java.lang.Object} if this wildcard declares a lower bound
+     * ({@code ? super SomeType}).
      *
-     * @return the extends bound, or Object if this wildcard has a super bound
+     * @return the upper bound, or {@code Object} if this wildcard has a lower bound
      */
     public Type extendsBound() {
         return isExtends ? bound : OBJECT;
     }
 
     /**
-     * Returns the super (lower) bound of this wildcard. If this wildcard declares an extends (upper)
-     * bound, this method will return nnull
+     * Returns the lower bound of this wildcard (e.g. {@code SomeType} for {@code ? super SomeType}).
+     * <p>
+     * Returns {@code null} if this wildcard declares an upper bound
+     * ({@code ? extends SomeType}).
      *
-     * @return the super bound, or null if this wildcard has a extends bound
+     * @return the lower bound, or {@code null} if this wildcard has an uper bound
      */
     public Type superBound() {
         return isExtends ? null : bound;

@@ -52,8 +52,13 @@ public final class ArrayType extends Type {
     }
 
     /**
-     * Returns the component type of the array. As an example, <code>String[]</code>
-     * has a component type of <code>String</code>
+     * Returns the component type of the array. For example, {@code String[]} has
+     * a component type of {@code String}.
+     * <p>
+     * It is possible for an {@code ArrayType} to have another {@code ArrayType}
+     * as its component type. This happens when an array has some of its dimensions
+     * annotated (e.g. {@code String[] @Ann []}). In such case, having multiple nested
+     * {@code ArrayType}s is necessary to faithfully represent the annotations.
      *
      * @return the component type
      */
@@ -64,17 +69,24 @@ public final class ArrayType extends Type {
     @Override
     public DotName name() {
         StringBuilder builder = new StringBuilder();
-        int dimensions = this.dimensions;
-        while (dimensions-- > 0) {
-            builder.append('[');
+
+        Type type = this;
+        while (type.kind() == Kind.ARRAY) {
+            int dimensions = type.asArrayType().dimensions;
+            while (dimensions-- > 0) {
+                builder.append('[');
+            }
+            type = type.asArrayType().component;
         }
-        if (component instanceof PrimitiveType) {
-            builder.append(((PrimitiveType) component).toCode());
+
+        // here, `type` is an element type of the array, i.e., never array
+        if (type.kind() == Kind.PRIMITIVE) {
+            builder.append(type.asPrimitiveType().toCode());
         } else {
             // This relies on name() representing the erased type name
             // For historical 1.x reasons, we follow the Java reflection format
             // instead of the Java descriptor format.
-            builder.append('L').append(component.name().toString()).append(';');
+            builder.append('L').append(type.name().toString()).append(';');
         }
 
         return DotName.createSimple(builder.toString());

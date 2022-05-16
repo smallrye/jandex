@@ -115,7 +115,7 @@ class GenericSignatureParser {
      *
      */
     // @formatter:on
-    private static WildcardType UNBOUNDED_WILDCARD = new WildcardType(null, true);
+    private static final WildcardType UNBOUNDED_WILDCARD = new WildcardType(null, true);
     private String signature;
     private int pos;
     private NameTable names;
@@ -245,6 +245,7 @@ class GenericSignatureParser {
         this.signature = signature;
         this.typeParameters = this.classTypeParameters;
         this.typeParameters.clear();
+        this.elementTypeParameters.clear();
         this.pos = 0;
         Type[] parameters = parseTypeParameters();
         Type superClass = names.intern(parseClassTypeSignature());

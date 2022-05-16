@@ -2192,7 +2192,7 @@ public final class Indexer {
      * @return the master index for all scanned class streams
      */
     public Index complete() {
-        initIndexMaps();
+        initIndexMaps(); // if no class was indexed before calling `complete()`
 
         propagateTypeParameterBounds();
 

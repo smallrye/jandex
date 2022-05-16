@@ -19,6 +19,7 @@
 package org.jboss.jandex;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * The basic contract for accessing Jandex indexed information.
@@ -479,5 +480,77 @@ public interface IndexView {
      */
     default Collection<ClassInfo> getKnownUsers(Class<?> clazz) {
         return getKnownUsers(DotName.createSimple(clazz.getName()));
+    }
+
+    /**
+     * Returns all {@linkplain ClassInfo classes} known to this index that are present in given package.
+     * Classes present in subpackages of given package are not returned. Classes present in the unnamed
+     * package may be looked up using {@code null} as the package name. If this index does not contain
+     * any class in given package, returns an empty collection.
+     * <p>
+     * In the default {@link Index} implementation, this information is not stored in the index initially.
+     * Instead, an index of classes by package name is constructed on demand (on the first invocation
+     * of this method).
+     *
+     * @param packageName package name in the common, dot-separated form (e.g. {@code com.example.foobar});
+     *        {@code null} means the unnamed package
+     * @return immutable collection of classes present in given package, never {@code null}
+     */
+    Collection<ClassInfo> getClassesInPackage(DotName packageName);
+
+    /**
+     * Returns all {@linkplain ClassInfo classes} known to this index that are present in given package.
+     * Classes present in subpackages of given package are not returned. Classes present in the unnamed
+     * package may be looked up using {@code null} as the package name. If this index does not contain
+     * any class in given package, returns an empty collection.
+     * <p>
+     * In the default {@link Index} implementation, this information is not stored in the index initially.
+     * Instead, an index of classes by package name is constructed on demand (on the first invocation
+     * of this method).
+     *
+     * @param packageName package name in the common, dot-separated form (e.g. {@code com.example.foobar});
+     *        {@code null} means the unnamed package
+     * @return immutable collection of classes present in given package, never {@code null}
+     */
+    default Collection<ClassInfo> getClassesInPackage(String packageName) {
+        return getClassesInPackage(DotName.createSimple(packageName));
+    }
+
+    /**
+     * Returns a set of packages known to this index that are direct subpackages of given package.
+     * Indirect subpackages of given package (subpackages of subpackages) are not returned.
+     * If this index does not contain any class in a direct or indirect subpackage of given package,
+     * returns an empty collection.
+     * <p>
+     * Given that the unnamed package may not contain subpackages, passing {@code null} as the package
+     * name is permitted, but always results in an empty set.
+     * <p>
+     * In the default {@link Index} implementation, this information is not stored in the index initially.
+     * Instead, an index of packages is constructed on demand (on the first invocation of this method).
+     *
+     * @param packageName package name in the common, dot-separated form (e.g. {@code com.example.foobar});
+     *        {@code null} means the unnamed package
+     * @return immutable set of subpackages of given package, never {@code null}
+     */
+    Set<DotName> getSubpackages(DotName packageName);
+
+    /**
+     * Returns a set of packages known to this index that are direct subpackages of given package.
+     * Indirect subpackages of given package (subpackages of subpackages) are not returned.
+     * If this index does not contain any class in a direct or indirect subpackage of given package,
+     * returns an empty collection.
+     * <p>
+     * Given that the unnamed package may not contain subpackages, passing {@code null} as the package
+     * name is permitted, but always results in an empty set.
+     * <p>
+     * In the default {@link Index} implementation, this information is not stored in the index initially.
+     * Instead, an index of packages is constructed on demand (on the first invocation of this method).
+     *
+     * @param packageName package name in the common, dot-separated form (e.g. {@code com.example.foobar});
+     *        {@code null} means the unnamed package
+     * @return immutable set of subpackages of given package, never {@code null}
+     */
+    default Set<DotName> getSubpackages(String packageName) {
+        return getSubpackages(DotName.createSimple(packageName));
     }
 }

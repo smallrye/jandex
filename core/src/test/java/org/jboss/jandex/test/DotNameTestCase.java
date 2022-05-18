@@ -184,7 +184,7 @@ public class DotNameTestCase {
     }
 
     @Test
-    public void testpackgePrefix() {
+    public void testPackagePrefix() {
         DotName foo = DotName.createComponentized(DotName.createComponentized(null, "root"), "thefoo");
         foo = DotName.createComponentized(foo, "Foo");
         assertEquals("root.thefoo", foo.packagePrefix());
@@ -194,6 +194,19 @@ public class DotNameTestCase {
         assertEquals("root.thefoo", inner2.packagePrefix());
         assertEquals("foo.bar.baz", DotName.createSimple("foo.bar.baz.Foo").packagePrefix());
         assertNull(DotName.createSimple("Foo").packagePrefix());
+    }
+
+    @Test
+    public void testPackagePrefixName() {
+        DotName foo = DotName.createComponentized(DotName.createComponentized(null, "root"), "thefoo");
+        foo = DotName.createComponentized(foo, "Foo");
+        assertEquals(DotName.createSimple("root.thefoo"), foo.packagePrefixName());
+        DotName inner = DotName.createComponentized(foo, "Inner", true);
+        DotName inner2 = DotName.createComponentized(inner, "Inner2", true);
+        assertEquals(DotName.createSimple("root.thefoo"), inner.packagePrefixName());
+        assertEquals(DotName.createSimple("root.thefoo"), inner2.packagePrefixName());
+        assertEquals(DotName.createSimple("foo.bar.baz"), DotName.createSimple("foo.bar.baz.Foo").packagePrefixName());
+        assertNull(DotName.createSimple("Foo").packagePrefixName());
     }
 
     @Test

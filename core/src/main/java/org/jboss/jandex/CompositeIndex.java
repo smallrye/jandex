@@ -320,4 +320,33 @@ public class CompositeIndex implements IndexView {
         }
         return Collections.unmodifiableCollection(users);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<ClassInfo> getClassesInPackage(DotName packageName) {
+        List<ClassInfo> result = new ArrayList<>();
+        Set<DotName> alreadySeen = new HashSet<>();
+        for (IndexView index : indexes) {
+            for (ClassInfo clazz : index.getClassesInPackage(packageName)) {
+                if (alreadySeen.add(clazz.name())) {
+                    result.add(clazz);
+                }
+            }
+        }
+        return Collections.unmodifiableCollection(result);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<DotName> getSubpackages(DotName packageName) {
+        Set<DotName> result = new HashSet<>();
+        for (IndexView index : indexes) {
+            result.addAll(index.getSubpackages(packageName));
+        }
+        return Collections.unmodifiableSet(result);
+    }
 }

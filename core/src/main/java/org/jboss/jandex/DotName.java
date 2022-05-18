@@ -188,7 +188,7 @@ public final class DotName implements Comparable<DotName> {
     }
 
     /**
-     * Returns the package portion of this DotName.
+     * Returns the package portion of this {@link DotName}.
      *
      * @return the package name or null if this {@link DotName} has no package prefix
      * @since 2.4
@@ -202,6 +202,25 @@ public final class DotName implements Comparable<DotName> {
         } else {
             int index = local.lastIndexOf('.');
             return index == -1 ? null : local.substring(0, index);
+        }
+    }
+
+    /**
+     * Returns the package portion of this {@link DotName}. This is a {@code DotName}-returning
+     * variant of {@link #packagePrefix()}.
+     *
+     * @return the package name or {@code null} if this {@link DotName} has no package prefix
+     * @since 3.0
+     */
+    public DotName packagePrefixName() {
+        if (componentized) {
+            if (innerClass) {
+                return prefix.packagePrefixName();
+            }
+            return prefix;
+        } else {
+            int index = local.lastIndexOf('.');
+            return index == -1 ? null : DotName.createSimple(local.substring(0, index));
         }
     }
 

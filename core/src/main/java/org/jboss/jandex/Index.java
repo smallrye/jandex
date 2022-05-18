@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -72,6 +73,10 @@ public final class Index implements IndexView {
     final Map<DotName, ClassInfo> classes;
     final Map<DotName, ModuleInfo> modules;
     final Map<DotName, List<ClassInfo>> users;
+
+    // populated lazily
+    volatile Map<DotName, Collection<ClassInfo>> classesInPackage;
+    volatile Map<DotName, Set<DotName>> subpackages;
 
     Index(Map<DotName, List<AnnotationInstance>> annotations, Map<DotName, List<ClassInfo>> subclasses,
             Map<DotName, List<ClassInfo>> subinterfaces, Map<DotName, List<ClassInfo>> implementors,
@@ -429,6 +434,56 @@ public final class Index implements IndexView {
             return EMPTY_CLASSINFO_LIST;
         }
         return Collections.unmodifiableList(ret);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public Collection<ClassInfo> getClassesInPackage(DotName packageName) {
+        if (classesInPackage == null) {
+            synchronized (this) {
+                if (classesInPackage == null) {
+                    Map<DotName, Collection<ClassInfo>> map = new HashMap<>();
+                    for (ClassInfo clazz : classes.values()) {
+                        DotName pkg = clazz.name().packagePrefixName();
+                        map.computeIfAbsent(pkg, ignored -> new ArrayList<>()).add(clazz);
+                    }
+                    classesInPackage = Collections.unmodifiableMap(map);
+                }
+            }
+        }
+
+        Collection<ClassInfo> result = classesInPackage.get(packageName);
+        return result != null ? Collections.unmodifiableCollection(result) : EMPTY_CLASSINFO_LIST;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public Set<DotName> getSubpackages(DotName packageName) {
+        if (subpackages == null) {
+            synchronized (this) {
+                if (subpackages == null) {
+                    Map<DotName, Set<DotName>> map = new HashMap<>();
+                    for (ClassInfo clazz : classes.values()) {
+                        DotName pkg = clazz.name().packagePrefixName();
+                        while (pkg != null) {
+                            DotName superPkg = pkg.packagePrefixName();
+                            if (superPkg != null) {
+                                map.computeIfAbsent(superPkg, ignored -> new HashSet<>()).add(pkg);
+                            }
+                            pkg = superPkg;
+                        }
+                    }
+                    subpackages = Collections.unmodifiableMap(map);
+                }
+            }
+        }
+
+        Set<DotName> result = subpackages.get(packageName);
+        return result != null ? Collections.unmodifiableSet(result) : Collections.emptySet();
     }
 
     // ---

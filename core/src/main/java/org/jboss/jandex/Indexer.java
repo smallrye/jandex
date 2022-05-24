@@ -250,13 +250,13 @@ public final class Indexer {
 
     private static class InnerClassInfo {
         private InnerClassInfo(DotName innerClass, DotName enclosingClass, String simpleName, int flags) {
-            this.innnerClass = innerClass;
+            this.innerClass = innerClass;
             this.enclosingClass = enclosingClass;
             this.simpleName = simpleName;
             this.flags = flags;
         }
 
-        private final DotName innnerClass;
+        private final DotName innerClass;
         private DotName enclosingClass;
         private String simpleName;
         private int flags;
@@ -669,8 +669,7 @@ public final class Indexer {
 
     private void processInnerClasses(DataInputStream data, ClassInfo target) throws IOException {
         int numClasses = data.readUnsignedShort();
-        innerClasses = numClasses > 0 ? new HashMap<DotName, InnerClassInfo>(numClasses)
-                : Collections.<DotName, InnerClassInfo> emptyMap();
+        innerClasses = numClasses > 0 ? new HashMap<>(numClasses) : Collections.emptyMap();
         Set<DotName> memberClasses = new HashSet<>();
         for (int i = 0; i < numClasses; i++) {
             DotName innerClass = decodeClassEntry(data.readUnsignedShort());
@@ -1151,6 +1150,35 @@ public final class Indexer {
         PathElementStack elements = typeAnnotationState.pathElements;
         PathElement element = elements.pop();
         if (element == null) {
+            // need to check:
+            // 1. if the type path is empty (and since `rebuildNestedType` calls `resolveTypePath`
+            // with the path element stack depleted, `element == null` is not enough);
+            // 2. and if so, if the type can possibly be nested;
+            // 3. and if so, if the type is nested or not
+            boolean isTypePathEmpty = elements.pathElements.isEmpty();
+            boolean canBeNested = type.kind() == Type.Kind.CLASS
+                    || type.kind() == Type.Kind.PARAMETERIZED_TYPE;
+            boolean isNestedType = canBeNested && innerClasses != null && innerClasses.containsKey(type.name());
+            if (isTypePathEmpty && isNestedType) {
+                // the annotation targets the outermost type where type annotations are admissible
+                ArrayDeque<InnerClassInfo> innerClasses = buildClassesQueue(type);
+                InnerClassInfo outermostInfo = innerClasses.getFirst();
+                if (Modifier.isStatic(outermostInfo.flags)) {
+                    // we'll handle this type immediately, hence `rebuildNestedType` shouldn't see it
+                    //
+                    // we don't have to do this for a non-static class, because in that case, the outermost
+                    // annotable type is an _enclosing_ type of the first type in the `innerClasses` list,
+                    // which `rebuildNestedType` never looks at
+                    innerClasses.pollFirst();
+                }
+                DotName outermostName = Modifier.isStatic(outermostInfo.flags) ? outermostInfo.innerClass
+                        : outermostInfo.enclosingClass;
+                Type outermost = intern(new ClassType(outermostName));
+                outermost = intern(outermost.addAnnotation(AnnotationInstance.create(typeAnnotationState.annotation, null)));
+                return rebuildNestedType(outermost, innerClasses, type, 0, typeAnnotationState);
+            }
+
+            // the annotation targets the type itself
             type = intern(type.addAnnotation(AnnotationInstance.create(typeAnnotationState.annotation, null)));
             typeAnnotationState.target.setTarget(type); // FIXME
             // Clone the instance with a null target so that it can be interned
@@ -1188,8 +1216,7 @@ public final class Indexer {
             }
             case NESTED: {
                 int depth = popNestedDepth(elements);
-
-                return rebuildNestedType(type, depth, typeAnnotationState);
+                return rebuildNestedType(null, buildClassesQueue(type), type, depth, typeAnnotationState);
             }
         }
 
@@ -1271,6 +1298,22 @@ public final class Indexer {
         PathElementStack elements = typeAnnotationState.pathElements;
         PathElement element = elements.pop();
         if (element == null) {
+            // need to check:
+            // 1. if the type path is empty (and since `searchNestedType` calls `searchTypePath`
+            // with the path element stack depleted, `element == null` is not enough);
+            // 2. and if so, if the type can possibly be nested;
+            // 3. and if so, if the type is nested or not
+            boolean isTypePathEmpty = elements.pathElements.isEmpty();
+            boolean canBeNested = type.kind() == Type.Kind.CLASS
+                    || type.kind() == Type.Kind.PARAMETERIZED_TYPE;
+            boolean isNestedType = canBeNested && innerClasses != null && innerClasses.containsKey(type.name());
+            if (isTypePathEmpty && isNestedType) {
+                // the annotation targets the outermost type where type annotations are admissible
+                DotName outermostName = outermostAnnotableTypeName(type);
+                return buildOwnerMap(type).get(outermostName);
+            }
+
+            // the annotation targets the type itself
             return type;
         }
 
@@ -1300,20 +1343,19 @@ public final class Indexer {
         throw new IllegalStateException("Unknown path element");
     }
 
-    private Type rebuildNestedType(Type type, int depth, TypeAnnotationState typeAnnotationState) {
-        DotName name = type.name();
+    private Type rebuildNestedType(Type last, ArrayDeque<InnerClassInfo> classes, Type type, int depth,
+            TypeAnnotationState typeAnnotationState) {
         Map<DotName, Type> ownerMap = buildOwnerMap(type);
-        ArrayDeque<InnerClassInfo> classes = buildClassesQueue(name);
 
-        Type last = null;
+        // the first type in the list of enclosing types may be static
+        if (!classes.isEmpty() && Modifier.isStatic(classes.getFirst().flags)) {
+            depth++;
+        }
+
         for (InnerClassInfo current : classes) {
-            DotName currentName = current.innnerClass;
+            DotName currentName = current.innerClass;
             Type oType = ownerMap.get(currentName);
-
-            // Static classes do not count for NESTED path elements
-            if (depth > 0 && !Modifier.isStatic(current.flags)) {
-                --depth;
-            }
+            depth--;
 
             if (last != null) {
                 last = intern(oType != null ? convertParameterized(oType).copyType(last)
@@ -1340,6 +1382,11 @@ public final class Indexer {
         if (depth > 0 && hasAnonymousEncloser(typeAnnotationState)) {
             return resolveTypePath(type, typeAnnotationState);
         }
+        // UGLY HACK -- javac emits a type path containing a "nested" instruction for local
+        // classes, even though the enclosing classes can't be denoted or annotated
+        if (depth > 0 && hasLocalEncloser(typeAnnotationState)) {
+            return resolveTypePath(type, typeAnnotationState);
+        }
 
         if (last == null) {
             throw new IllegalStateException("Required class information is missing on: "
@@ -1354,30 +1401,41 @@ public final class Indexer {
     }
 
     private Type searchNestedType(Type type, int depth, TypeAnnotationState typeAnnotationState) {
-        DotName name = type.name();
         Map<DotName, Type> ownerMap = buildOwnerMap(type);
-        ArrayDeque<InnerClassInfo> classes = buildClassesQueue(name);
+        ArrayDeque<InnerClassInfo> classes = buildClassesQueue(type);
 
+        // the first type in the list of enclosing types may be static
+        if (!classes.isEmpty() && Modifier.isStatic(classes.getFirst().flags)) {
+            depth++;
+        }
+
+        Type last = null;
         for (InnerClassInfo current : classes) {
-            DotName currentName = current.innnerClass;
+            DotName currentName = current.innerClass;
+            depth--;
 
-            // Static classes do not count for NESTED path elements
-            if (depth > 0 && !Modifier.isStatic(current.flags)) {
-                --depth;
+            if (ownerMap.containsKey(currentName)) {
+                last = ownerMap.get(currentName);
             }
 
             if (depth == 0) {
-                Type owner = ownerMap.get(currentName);
-                return searchTypePath(owner == null ? type : owner, typeAnnotationState);
+                return searchTypePath(last == null ? type : last, typeAnnotationState);
             }
         }
 
-        // UGLY HACK - see comment in rebuildNestedType
+        // UGLY HACKS, see comment in rebuildNestedType
         if (hasAnonymousEncloser(typeAnnotationState)) {
             return searchTypePath(type, typeAnnotationState);
         }
+        if (depth > 0 && hasLocalEncloser(typeAnnotationState)) {
+            return searchTypePath(type, typeAnnotationState);
+        }
 
-        throw new IllegalStateException("Required class information is missing");
+        if (last == null) {
+            throw new IllegalStateException("Required class information is missing");
+        }
+
+        return last;
     }
 
     private boolean hasAnonymousEncloser(TypeAnnotationState typeAnnotationState) {
@@ -1385,31 +1443,94 @@ public final class Indexer {
                 && typeAnnotationState.target.enclosingTarget().asClass().nestingType() == ClassInfo.NestingType.ANONYMOUS;
     }
 
-    private ArrayDeque<InnerClassInfo> buildClassesQueue(DotName name) {
-        ArrayDeque<InnerClassInfo> classes = new ArrayDeque<InnerClassInfo>();
+    private boolean hasLocalEncloser(TypeAnnotationState typeAnnotationState) {
+        if (typeAnnotationState.target instanceof ClassExtendsTypeTarget
+                && typeAnnotationState.target.enclosingTarget().asClass().nestingType() == ClassInfo.NestingType.LOCAL) {
+            return true;
+        }
 
-        InnerClassInfo info = innerClasses.get(name);
-        while (info != null) {
-            classes.addFirst(info);
+        AnnotationTarget enclosingTarget = typeAnnotationState.target.enclosingTarget();
+
+        ClassInfo enclosingClass = null;
+        if (enclosingTarget.kind() == AnnotationTarget.Kind.FIELD) {
+            enclosingClass = enclosingTarget.asField().declaringClass();
+        } else if (enclosingTarget.kind() == AnnotationTarget.Kind.METHOD) {
+            enclosingClass = enclosingTarget.asMethod().declaringClass();
+        } else if (enclosingTarget.kind() == AnnotationTarget.Kind.METHOD_PARAMETER) {
+            enclosingClass = enclosingTarget.asMethodParameter().method().declaringClass();
+        } else if (enclosingTarget.kind() == AnnotationTarget.Kind.RECORD_COMPONENT) {
+            enclosingClass = enclosingTarget.asRecordComponent().declaringClass();
+        }
+
+        return enclosingClass != null && enclosingClass.nestingType() == ClassInfo.NestingType.LOCAL;
+    }
+
+    /**
+     * Returns the name of the outermost type that encloses given {@code type} and on which
+     * type annotations are admissible. This is either the nearest enclosing {@code static}
+     * nested class, or the enclosing top-level class. If {@code type} is not a nested type,
+     * returs its name.
+     * <p>
+     * This could easily be implemented by calling {@link #buildClassesQueue(Type)} and looking
+     * at the first element. The only difference is that the present implementation doesn't
+     * allocate and is probably a little faster.
+     */
+    private DotName outermostAnnotableTypeName(Type type) {
+        DotName name = type.name();
+        if (!innerClasses.containsKey(name)) {
+            return name;
+        }
+
+        while (true) {
+            InnerClassInfo info = innerClasses.get(name);
+            if (Modifier.isStatic(info.flags)) {
+                return info.innerClass;
+            }
+
             name = info.enclosingClass;
+            if (!innerClasses.containsKey(name)) {
+                return name;
+            }
+        }
+    }
+
+    /**
+     * Returns a list of {@link InnerClassInfo}s representing types enclosing given {@code type}.
+     * Only types on which type annotations are admissible are present in the result. That is,
+     * the first element of the list represents the outermost type on which type annotations are admissible,
+     * and the last element of the list is an {@code InnerClassInfo} representing {@code type} itself.
+     * Returns an empty list if {@code type} is not a nested type.
+     */
+    private ArrayDeque<InnerClassInfo> buildClassesQueue(Type type) {
+        ArrayDeque<InnerClassInfo> result = new ArrayDeque<>();
+
+        InnerClassInfo info = innerClasses.get(type.name());
+        while (info != null) {
+            result.addFirst(info);
+            if (Modifier.isStatic(info.flags)) {
+                // this inner class is static, so even if an enclosing class existed,
+                // type annotations would not be admissible on it
+                break;
+            }
+
+            DotName name = info.enclosingClass;
             info = name != null ? innerClasses.get(name) : null;
         }
-        return classes;
+
+        return result;
     }
 
     private Map<DotName, Type> buildOwnerMap(Type type) {
-        Map<DotName, Type> pTypeTree = new HashMap<DotName, Type>();
-
-        Type nextType = type;
+        Map<DotName, Type> owners = new HashMap<>();
         do {
-            pTypeTree.put(nextType.name(), nextType);
-            nextType = nextType instanceof ParameterizedType ? nextType.asParameterizedType().owner() : null;
-        } while (nextType != null);
-        return pTypeTree;
+            owners.put(type.name(), type);
+            type = type instanceof ParameterizedType ? type.asParameterizedType().owner() : null;
+        } while (type != null);
+        return owners;
     }
 
     private static class PathElement {
-        private static enum Kind {
+        private enum Kind {
             ARRAY,
             NESTED,
             WILDCARD_BOUND,

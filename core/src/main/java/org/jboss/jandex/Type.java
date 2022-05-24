@@ -319,8 +319,12 @@ public abstract class Type {
 
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
+        String packagePrefix = name.packagePrefix();
+        if (packagePrefix != null) {
+            builder.append(packagePrefix).append('.');
+        }
         appendAnnotations(builder);
-        builder.append(name);
+        builder.append(name.withoutPackagePrefix());
 
         return builder.toString();
     }

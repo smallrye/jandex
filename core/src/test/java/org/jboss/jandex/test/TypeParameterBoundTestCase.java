@@ -42,7 +42,7 @@ public class TypeParameterBoundTestCase {
     public void listConsumer() throws IOException {
         ClassInfo info = IndexingUtil.indexSingle(getClassBytes("test/TypeParameterBoundExample$ListConsumer.class"));
         assertEquals(
-                "T extends @Nullable java.util.List",
+                "T extends java.util.@Nullable List",
                 info.typeParameters().get(0).toString());
     }
 
@@ -50,7 +50,7 @@ public class TypeParameterBoundTestCase {
     public void arrayListConsumer() throws IOException {
         ClassInfo info = IndexingUtil.indexSingle(getClassBytes("test/TypeParameterBoundExample$ArrayListConsumer.class"));
         assertEquals(
-                "T extends @Nullable java.util.ArrayList",
+                "T extends java.util.@Nullable ArrayList",
                 info.typeParameters().get(0).toString());
     }
 
@@ -59,21 +59,21 @@ public class TypeParameterBoundTestCase {
         ClassInfo info = IndexingUtil
                 .indexSingle(getClassBytes("test/TypeParameterBoundExample$SerializableListConsumer.class"));
         assertEquals(
-                "T extends @Nullable java.util.List & @Untainted java.io.Serializable",
+                "T extends java.util.@Nullable List & java.io.@Untainted Serializable",
                 info.typeParameters().get(0).toString());
     }
 
     @Test
     public void classExtendsOnInner() throws IOException {
         ClassInfo info = IndexingUtil.indexSingle(getClassBytes("test/TypeParameterBoundExample$IteratorSupplier.class"));
-        assertEquals("java.util.function.Supplier<java.util.function.Consumer<@Nullable java.lang.Object[]>>",
+        assertEquals("java.util.function.Supplier<java.util.function.Consumer<java.lang.@Nullable Object[]>>",
                 info.interfaceTypes().get(0).toString());
     }
 
     @Test
     public void classExtendsOnAnonInInner() throws IOException {
         ClassInfo info = IndexingUtil.indexSingle(getClassBytes("test/TypeParameterBoundExample$IteratorSupplier$1.class"));
-        assertEquals("java.util.function.Consumer<@Nullable java.lang.Object[]>",
+        assertEquals("java.util.function.Consumer<java.lang.@Nullable Object[]>",
                 info.interfaceTypes().get(0).toString());
     }
 
@@ -81,11 +81,11 @@ public class TypeParameterBoundTestCase {
     public void classExtendsNestAnonExtendsInner() throws IOException {
         ClassInfo info = IndexingUtil.indexSingle(getClassBytes("test/TypeParameterBoundExample$Nest1$Nest2$Nest3$1$1.class"));
         assertEquals(
-                "test.TypeParameterBoundExample$Nest1<java.lang.String>.Nest2<java.lang.Object[]>.Nest3<@Nullable java.lang.Integer>",
+                "test.TypeParameterBoundExample$Nest1<java.lang.String>.Nest2<java.lang.Object[]>.Nest3<java.lang.@Nullable Integer>",
                 info.superClassType().toString());
         info = IndexingUtil.indexSingle(getClassBytes("test/TypeParameterBoundExample$Nest1$Nest2$Nest3$1$2.class"));
         assertEquals(
-                "test.TypeParameterBoundExample$Nest1<java.lang.String>.Nest2<@Nullable java.lang.Object[]>.Nest3<java.lang.Integer>",
+                "test.TypeParameterBoundExample$Nest1<java.lang.String>.Nest2<java.lang.@Nullable Object[]>.Nest3<java.lang.Integer>",
                 info.superClassType().toString());
     }
 
@@ -110,7 +110,7 @@ public class TypeParameterBoundTestCase {
 
     private void verifySerializableListConsumerDA(ClassInfo info) {
         assertEquals(
-                "T extends @Nullable @Untainted java.util.List & @Untainted java.io.Serializable",
+                "T extends java.util.@Nullable @Untainted List & java.io.@Untainted Serializable",
                 info.typeParameters().get(0).toString());
 
         List<AnnotationInstance> annotationInstances = info.annotationsMap().get(DotName.createSimple("test.Nullable"));

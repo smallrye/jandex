@@ -140,8 +140,12 @@ public class ParameterizedType extends Type {
             appendAnnotations(builder);
             builder.append(name().local());
         } else {
+            String packagePrefix = name().packagePrefix();
+            if (packagePrefix != null) {
+                builder.append(packagePrefix).append('.');
+            }
             appendAnnotations(builder);
-            builder.append(name());
+            builder.append(name().withoutPackagePrefix());
         }
 
         if (arguments.length > 0) {

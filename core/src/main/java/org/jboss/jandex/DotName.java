@@ -195,6 +195,9 @@ public final class DotName implements Comparable<DotName> {
      */
     public String packagePrefix() {
         if (componentized) {
+            if (prefix == null) {
+                return null;
+            }
             if (innerClass) {
                 return prefix.packagePrefix();
             }
@@ -214,6 +217,9 @@ public final class DotName implements Comparable<DotName> {
      */
     public DotName packagePrefixName() {
         if (componentized) {
+            if (prefix == null) {
+                return null;
+            }
             if (innerClass) {
                 return prefix.packagePrefixName();
             }

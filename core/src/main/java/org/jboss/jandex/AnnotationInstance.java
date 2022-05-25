@@ -336,7 +336,11 @@ public final class AnnotationInstance {
     public String toString(boolean simple) {
         StringBuilder builder = new StringBuilder("@").append(simple ? name.local() : name);
 
-        if (values.length > 0) {
+        if (simple && values.length == 1 && values[0].name().equals("value")) {
+            builder.append("(");
+            builder.append(values[0].toString(false));
+            builder.append(')');
+        } else if (values.length > 0) {
             builder.append("(");
             for (int i = 0; i < values.length; i++) {
                 builder.append(values[i]);

@@ -527,8 +527,12 @@ public abstract class AnnotationValue {
     }
 
     public String toString() {
+        return toString(true);
+    }
+
+    String toString(boolean includeName) {
         StringBuilder builder = new StringBuilder();
-        if (name.length() > 0)
+        if (includeName && name.length() > 0)
             builder.append(name).append(" = ");
         return builder.append(value()).toString();
     }
@@ -581,9 +585,9 @@ public abstract class AnnotationValue {
             return Kind.STRING;
         }
 
-        public String toString() {
+        String toString(boolean includeName) {
             StringBuilder builder = new StringBuilder();
-            if (super.name.length() > 0)
+            if (includeName && super.name.length() > 0)
                 builder.append(super.name).append(" = ");
 
             return builder.append('"').append(value).append('"').toString();
@@ -1239,9 +1243,9 @@ public abstract class AnnotationValue {
             return value;
         }
 
-        public String toString() {
+        String toString(boolean includeName) {
             StringBuilder builder = new StringBuilder();
-            if (super.name.length() > 0)
+            if (includeName && super.name.length() > 0)
                 builder.append(super.name).append(" = ");
             builder.append('[');
             for (int i = 0; i < value.length; i++) {

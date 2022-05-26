@@ -66,8 +66,7 @@ jobs:
         java:
         - 8
         - 11
-        # fails because Groovy (used by Gradle) can't read classes compiled with Java 17
-        #- 17
+        - 17
     runs-on: ubuntu-latest
     name: 'Calcite regression test (JDK ${{ matrix.java }})'
     steps:

@@ -47,7 +47,7 @@ public class BridgeMethodTestCase {
                 "test/BridgeMethods$NestedConsumer.class",
                 "accept",
                 TypeTarget.Usage.METHOD_PARAMETER, "java.lang.Object",
-                "@Nullable test.BridgeMethods$NestedConsumer");
+                "test.@Nullable BridgeMethods$NestedConsumer");
     }
 
     @Test
@@ -56,7 +56,7 @@ public class BridgeMethodTestCase {
                 "test/BridgeMethods$ArrayWithNullableElementsConsumer.class",
                 "accept",
                 TypeTarget.Usage.METHOD_PARAMETER, "java.lang.Object",
-                "@Nullable java.lang.Object[]");
+                "java.lang.@Nullable Object[]");
     }
 
     @Test
@@ -64,7 +64,7 @@ public class BridgeMethodTestCase {
         verifyMethodSignature(
                 "test/BridgeMethods$NullableArrayConsumer.class",
                 "accept",
-                TypeTarget.Usage.METHOD_PARAMETER, "@Nullable java.lang.Object",
+                TypeTarget.Usage.METHOD_PARAMETER, "java.lang.@Nullable Object",
                 "java.lang.Object @Nullable []");
     }
 
@@ -73,8 +73,8 @@ public class BridgeMethodTestCase {
         verifyMethodSignature(
                 "test/BridgeMethods$NullableArrayWithNullableElementsConsumer.class",
                 "accept",
-                TypeTarget.Usage.METHOD_PARAMETER, "@Nullable java.lang.Object",
-                "@Nullable java.lang.Object @Nullable []");
+                TypeTarget.Usage.METHOD_PARAMETER, "java.lang.@Nullable Object",
+                "java.lang.@Nullable Object @Nullable []");
     }
 
     @Test
@@ -84,7 +84,7 @@ public class BridgeMethodTestCase {
                 "get",
                 TypeTarget.Usage.EMPTY,
                 "java.lang.Object",
-                "@Nullable java.lang.Object[]");
+                "java.lang.@Nullable Object[]");
     }
 
     @Test
@@ -93,7 +93,7 @@ public class BridgeMethodTestCase {
                 "test/BridgeMethods$NullableArraySupplier.class",
                 "get",
                 TypeTarget.Usage.EMPTY,
-                "@Nullable java.lang.Object",
+                "java.lang.@Nullable Object",
                 "java.lang.Object @Nullable []");
     }
 

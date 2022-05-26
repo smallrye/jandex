@@ -326,7 +326,6 @@ public class TypeAnnotationTestCase {
         verifyHasAnnotation(nestName(clazz, "J"), type);
         assertEquals(Type.Kind.PARAMETERIZED_TYPE, type.kind());
         verifyName(nestName(clazz, "O1", "O2", "O3", "Nested"), type);
-
         type = type.asParameterizedType().owner();
         verifyHasAnnotation(nestName(clazz, "K"), type);
         assertEquals(Type.Kind.PARAMETERIZED_TYPE, type.kind());

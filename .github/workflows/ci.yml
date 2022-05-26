@@ -104,6 +104,9 @@ jobs:
           enableMavenLocal=true
           jandex.version=1.0.0-dev-SNAPSHOT
           skipJandex=false
+        maven-local-ignore-paths: |
+          org/jboss/jandex/
+          io/smallrye/jandex/
 
     - name: Prepare failure archive (if run failed)
       if: failure()

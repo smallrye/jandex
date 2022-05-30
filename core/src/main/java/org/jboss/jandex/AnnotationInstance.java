@@ -18,6 +18,9 @@
 
 package org.jboss.jandex;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,6 +44,7 @@ import java.util.List;
 public final class AnnotationInstance {
     static final NameComparator NAME_COMPARATOR = new NameComparator();
     static final AnnotationInstance[] EMPTY_ARRAY = new AnnotationInstance[0];
+    static final DotName RETENTION = new DotName(DotName.JAVA_LANG_ANNOTATION_NAME, "Retention", true, false);
 
     private final DotName name;
     private final AnnotationTarget target;
@@ -62,6 +66,68 @@ public final class AnnotationInstance {
 
     static AnnotationInstance create(AnnotationInstance instance, AnnotationTarget target) {
         return new AnnotationInstance(instance.name, target, instance.values, instance.runtimeVisible);
+    }
+
+    /**
+     * Creates a {@linkplain AnnotationInstanceBuilder builder} of annotation instances of given {@code annotationType}.
+     * This allows creating an {@code AnnotationInstance} in a nicer way than using any of the {@code create()} methods.
+     *
+     * @param annotationType the type of annotation whose instance will be created, must not be {@code null}
+     * @return a builder instance, never {@code null}
+     */
+    public static AnnotationInstanceBuilder builder(Class<? extends Annotation> annotationType) {
+        if (annotationType == null) {
+            throw new IllegalArgumentException("Annotation type can't be null");
+        }
+        DotName name = DotName.createSimple(annotationType.getName());
+        boolean visible = annotationType.isAnnotationPresent(Retention.class)
+                && annotationType.getAnnotation(Retention.class).value() == RetentionPolicy.RUNTIME;
+        return new AnnotationInstanceBuilder(name, visible);
+    }
+
+    /**
+     * Creates a {@linkplain AnnotationInstanceBuilder builder} of annotation instances of given {@code annotationType}.
+     * This allows creating an {@code AnnotationInstance} in a nicer way than using any of the {@code create()} methods.
+     *
+     * @param annotationType the type of annotation whose instance will be created, must not be {@code null}
+     * @return a builder instance, never {@code null}
+     */
+    public static AnnotationInstanceBuilder builder(ClassInfo annotationType) {
+        if (annotationType == null) {
+            throw new IllegalArgumentException("Annotation type can't be null");
+        }
+        DotName name = annotationType.name();
+        boolean visible = annotationType.hasDeclaredAnnotation(RETENTION)
+                && annotationType.declaredAnnotation(RETENTION).value().asString().equals("RUNTIME");
+        return new AnnotationInstanceBuilder(name, visible);
+    }
+
+    /**
+     * Creates a {@linkplain AnnotationInstanceBuilder builder} of annotation instances of given {@code annotationType}.
+     * This allows creating an {@code AnnotationInstance} in a nicer way than using any of the {@code create()} methods.
+     * <p>
+     * The given {@code annotationType} is assumed to have the {@linkplain RetentionPolicy#RUNTIME runtime} retention.
+     *
+     * @param annotationType the type of annotation whose instance will be created, must not be {@code null}
+     * @return a builder instance, never {@code null}
+     */
+    public static AnnotationInstanceBuilder builder(DotName annotationType) {
+        return builder(annotationType, true);
+    }
+
+    /**
+     * Creates a {@linkplain AnnotationInstanceBuilder builder} of annotation instances of given {@code annotationType}.
+     * This allows creating an {@code AnnotationInstance} in a nicer way than using any of the {@code create()} methods.
+     *
+     * @param annotationType the type of annotation whose instance will be created, must not be {@code null}
+     * @param runtimeVisible whether the annotation type has the {@linkplain RetentionPolicy#RUNTIME runtime} retention
+     * @return a builder instance, never {@code null}
+     */
+    public static AnnotationInstanceBuilder builder(DotName annotationType, boolean runtimeVisible) {
+        if (annotationType == null) {
+            throw new IllegalArgumentException("Annotation type can't be null");
+        }
+        return new AnnotationInstanceBuilder(annotationType, runtimeVisible);
     }
 
     /**

@@ -46,6 +46,7 @@ package org.jboss.jandex;
 public final class DotName implements Comparable<DotName> {
     static final DotName JAVA_NAME;
     static final DotName JAVA_LANG_NAME;
+    static final DotName JAVA_LANG_ANNOTATION_NAME;
     public static final DotName OBJECT_NAME;
     public static final DotName ENUM_NAME;
     public static final DotName RECORD_NAME;
@@ -60,6 +61,7 @@ public final class DotName implements Comparable<DotName> {
     static {
         JAVA_NAME = new DotName(null, "java", true, false);
         JAVA_LANG_NAME = new DotName(JAVA_NAME, "lang", true, false);
+        JAVA_LANG_ANNOTATION_NAME = new DotName(JAVA_LANG_NAME, "annotation", true, false);
         OBJECT_NAME = new DotName(JAVA_LANG_NAME, "Object", true, false);
         ENUM_NAME = new DotName(JAVA_LANG_NAME, "Enum", true, false);
         RECORD_NAME = new DotName(JAVA_LANG_NAME, "Record", true, false);

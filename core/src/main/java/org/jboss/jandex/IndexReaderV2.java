@@ -50,7 +50,6 @@ import java.util.Set;
 final class IndexReaderV2 extends IndexReaderImpl {
     static final int MIN_VERSION = 6;
     static final int MAX_VERSION = 11;
-    static final int MAX_DATA_VERSION = 4;
     private static final byte NULL_TARGET_TAG = 0;
     private static final byte FIELD_TAG = 1;
     private static final byte METHOD_TAG = 2;
@@ -901,9 +900,5 @@ final class IndexReaderV2 extends IndexReaderImpl {
         }
 
         return modules;
-    }
-
-    int toDataVersion(int version) {
-        return MAX_DATA_VERSION;
     }
 }

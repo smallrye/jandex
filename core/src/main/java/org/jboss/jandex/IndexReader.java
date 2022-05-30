@@ -94,32 +94,11 @@ public final class IndexReader {
     }
 
     /**
-     * Returns the version of the data contract stored in the index that was read. This version is incremented when
-     * the contract adds new information. Generally this is used to determine if the underlying index contains
-     * necessary information for analysis. As an example, generics are recorded in version 4; therefore, a tool that
-     * requires generic data would need to reject/ignore version 3 data.
-     * <br>
-     * The data contract version should not be confused with the index file version, which represents the internal
-     * storage format of the file. The index file version moves independently of the data contract.
+     * Returns the index file version. This version number marks the internal storage format and also implies
+     * the version of data contract of the index. It is incremented whenever more information are added
+     * to the index format, so it may be used to determine whether an index file contains necessary information.
      *
-     * @return The data contract version of the index that was read
-     * @throws IOException If the index could not be read
-     */
-    public int getDataVersion() throws IOException {
-        if (version == -1) {
-            readVersion();
-        }
-
-        return reader.toDataVersion(version);
-    }
-
-    /**
-     * Returns the index file version. Note that the index file version may increment even though the underlying
-     * data contract remains the same. In most cases, {@link #getDataVersion()} should be used instead of this method,
-     * since applications are typically interested in the underlying contract of the data stored, and not the internal
-     * implementation details of a Jandex index.
-     *
-     * @return the internal index file version
+     * @return the index file version
      * @throws IOException If the index could not be read
      */
     public int getIndexVersion() throws IOException {

@@ -324,10 +324,4 @@ final class IndexReaderV1 extends IndexReaderImpl {
             lastDepth = depth;
         }
     }
-
-    int toDataVersion(int version) {
-        // From 1 to 3, every version changed the available data
-
-        return version;
-    }
 }

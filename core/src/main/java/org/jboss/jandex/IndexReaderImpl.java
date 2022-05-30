@@ -26,6 +26,4 @@ import java.io.IOException;
  */
 abstract class IndexReaderImpl {
     abstract Index read() throws IOException;
-
-    abstract int toDataVersion(int version);
 }

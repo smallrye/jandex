@@ -1658,6 +1658,7 @@ public final class Indexer {
         int end = signatures.size();
 
         // Class signature should be processed first to establish class type parameters
+        signatureParser.beforeNewClass();
         if (classSignatureIndex >= 0) {
             String elementSignature = (String) signatures.get(classSignatureIndex);
             Object element = signatures.get(classSignatureIndex + 1);
@@ -1668,6 +1669,8 @@ public final class Indexer {
             if (i == classSignatureIndex) {
                 continue;
             }
+
+            signatureParser.beforeNewElement();
 
             String elementSignature = (String) signatures.get(i);
             Object element = signatures.get(i + 1);

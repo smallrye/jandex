@@ -241,11 +241,19 @@ class GenericSignatureParser {
 
     }
 
+    void beforeNewClass() {
+        this.classTypeParameters.clear();
+        this.elementTypeParameters.clear();
+    }
+
+    void beforeNewElement() {
+        this.elementTypeParameters.clear();
+    }
+
     ClassSignature parseClassSignature(String signature) {
+        beforeNewClass();
         this.signature = signature;
         this.typeParameters = this.classTypeParameters;
-        this.typeParameters.clear();
-        this.elementTypeParameters.clear();
         this.pos = 0;
         Type[] parameters = parseTypeParameters();
         Type superClass = names.intern(parseClassTypeSignature());
@@ -266,18 +274,18 @@ class GenericSignatureParser {
     }
 
     Type parseFieldSignature(String signature) {
+        beforeNewElement();
         this.signature = signature;
         this.typeParameters = this.elementTypeParameters;
-        this.typeParameters.clear();
         this.pos = 0;
 
         return parseReferenceType();
     }
 
     MethodSignature parseMethodSignature(String signature) {
+        beforeNewElement();
         this.signature = signature;
         this.typeParameters = this.elementTypeParameters;
-        this.typeParameters.clear();
         this.pos = 0;
 
         Type[] typeParameters = parseTypeParameters();
@@ -402,6 +410,10 @@ class GenericSignatureParser {
         int bound = advancePast(':');
         String name = names.intern(signature.substring(start, bound));
 
+        // when parsing a recursive type parameter, we need to remember it early,
+        // because bounds may refer to it
+        typeParameters.put(name, null);
+
         ArrayList<Type> bounds = new ArrayList<Type>();
 
         // Class bound has an optional reference type
@@ -505,8 +517,12 @@ class GenericSignatureParser {
     }
 
     private TypeVariable resolveType(String identifier) {
-        TypeVariable ret = elementTypeParameters.get(identifier);
-        return ret == null ? classTypeParameters.get(identifier) : ret;
+        if (elementTypeParameters.containsKey(identifier)) {
+            // may be `null` if the type parameter is recursive
+            // and we're in the middle of parsing it, but that's expected
+            return elementTypeParameters.get(identifier);
+        }
+        return classTypeParameters.get(identifier);
     }
 
     private Type parseJavaType() {

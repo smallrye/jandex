@@ -1,9 +1,11 @@
 package org.jboss.jandex;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.StringJoiner;
 
 /**
  * Establishes a notion of <em>equivalence</em> of Jandex objects. Two Jandex objects are equivalent if and only if
@@ -215,6 +217,24 @@ public abstract class EquivalenceKey {
     private EquivalenceKey() {
     }
 
+    String toStringWithWhere(Set<TypeVariableEquivalenceKey> typeVariables) {
+        return this.toString();
+    }
+
+    private static String toStringWhereClause(Set<TypeVariableEquivalenceKey> typeVariables) {
+        if (typeVariables == null || typeVariables.isEmpty()) {
+            return "";
+        }
+
+        StringJoiner typeVariablesJoiner = new StringJoiner(", ");
+        for (TypeVariableEquivalenceKey typeVariable : typeVariables) {
+            typeVariablesJoiner.add(typeVariable.toString());
+        }
+        return " where " + typeVariablesJoiner;
+    }
+
+    // ---
+
     public static abstract class DeclarationEquivalenceKey extends EquivalenceKey {
         private DeclarationEquivalenceKey() {
         }
@@ -285,9 +305,13 @@ public abstract class EquivalenceKey {
 
         @Override
         public String toString() {
-            return "method " + className + "#" + Utils.fromUTF8(methodName) + "("
-                    + Arrays.stream(parameterTypes).map(TypeEquivalenceKey::toString).collect(Collectors.joining(", "))
-                    + ") -> " + returnType;
+            Set<TypeVariableEquivalenceKey> typeVariables = new HashSet<>();
+            StringJoiner parameterTypesJoiner = new StringJoiner(", ", "(", ")");
+            for (TypeEquivalenceKey parameterType : parameterTypes) {
+                parameterTypesJoiner.add(parameterType.toStringWithWhere(typeVariables));
+            }
+            return "method " + className + "#" + Utils.fromUTF8(methodName) + parameterTypesJoiner + " -> "
+                    + returnType.toStringWithWhere(typeVariables) + toStringWhereClause(typeVariables);
         }
     }
 
@@ -352,7 +376,9 @@ public abstract class EquivalenceKey {
 
         @Override
         public String toString() {
-            return "field " + className + "#" + Utils.fromUTF8(fieldName) + " of type " + type;
+            Set<TypeVariableEquivalenceKey> typeVariables = new HashSet<>();
+            return "field " + className + "#" + Utils.fromUTF8(fieldName) + " of type "
+                    + type.toStringWithWhere(typeVariables) + toStringWhereClause(typeVariables);
         }
     }
 
@@ -387,7 +413,9 @@ public abstract class EquivalenceKey {
 
         @Override
         public String toString() {
-            return "record component " + className + "#" + Utils.fromUTF8(recordComponentName) + " of type " + type;
+            Set<TypeVariableEquivalenceKey> typeVariables = new HashSet<>();
+            return "record component " + className + "#" + Utils.fromUTF8(recordComponentName) + " of type "
+                    + type.toStringWithWhere(typeVariables) + toStringWhereClause(typeVariables);
         }
     }
 
@@ -422,8 +450,19 @@ public abstract class EquivalenceKey {
 
         @Override
         public String toString() {
+            Set<TypeVariableEquivalenceKey> typeVariables = new HashSet<>();
             StringBuilder result = new StringBuilder();
-            result.append(component);
+            result.append(component.toStringWithWhere(typeVariables));
+            for (int i = 0; i < dimensions; i++) {
+                result.append("[]");
+            }
+            return result + toStringWhereClause(typeVariables);
+        }
+
+        @Override
+        String toStringWithWhere(Set<TypeVariableEquivalenceKey> typeVariables) {
+            StringBuilder result = new StringBuilder();
+            result.append(component.toStringWithWhere(typeVariables));
             for (int i = 0; i < dimensions; i++) {
                 result.append("[]");
             }
@@ -487,8 +526,21 @@ public abstract class EquivalenceKey {
 
         @Override
         public String toString() {
-            return genericClass + "<"
-                    + Arrays.stream(typeArguments).map(TypeEquivalenceKey::toString).collect(Collectors.joining(", ")) + ">";
+            Set<TypeVariableEquivalenceKey> typeVariables = new HashSet<>();
+            StringJoiner typeArgumentsJoiner = new StringJoiner(", ", "<", ">");
+            for (TypeEquivalenceKey typeArgument : typeArguments) {
+                typeArgumentsJoiner.add(typeArgument.toStringWithWhere(typeVariables));
+            }
+            return genericClass + typeArgumentsJoiner.toString() + toStringWhereClause(typeVariables);
+        }
+
+        @Override
+        String toStringWithWhere(Set<TypeVariableEquivalenceKey> typeVariables) {
+            StringJoiner typeArgumentsJoiner = new StringJoiner(", ", "<", ">");
+            for (TypeEquivalenceKey typeArgument : typeArguments) {
+                typeArgumentsJoiner.add(typeArgument.toStringWithWhere(typeVariables));
+            }
+            return genericClass + typeArgumentsJoiner.toString();
         }
     }
 
@@ -551,8 +603,16 @@ public abstract class EquivalenceKey {
             if (bounds.length == 0) {
                 return name;
             }
-            return name + " extends "
-                    + Arrays.stream(bounds).map(TypeEquivalenceKey::toString).collect(Collectors.joining(" & "));
+            StringJoiner boundsJoiner = new StringJoiner(" & ");
+            for (TypeEquivalenceKey bound : bounds) {
+                boundsJoiner.add(bound.toString());
+            }
+            return name + " extends " + boundsJoiner;
+        }
+
+        String toStringWithWhere(Set<TypeVariableEquivalenceKey> typeVariables) {
+            typeVariables.add(this);
+            return name;
         }
     }
 
@@ -629,9 +689,9 @@ public abstract class EquivalenceKey {
                 return "?";
             }
             if (isExtends) {
-                return "?" + " extends " + bound;
+                return "? extends " + bound;
             }
-            return "?" + " super " + bound;
+            return "? super " + bound;
         }
     }
 }

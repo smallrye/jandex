@@ -64,11 +64,68 @@ public class EquivalenceTest {
         }
     }
 
+    static class Types {
+        void voidMethod() {
+        }
+
+        int primitiveMethod() {
+            return 0;
+        }
+
+        String classMethod() {
+            return null;
+        }
+
+        List<String> parameterizedTypeMethod() {
+            return null;
+        }
+
+        <T> T typeVariableMethod() {
+            return null;
+        }
+
+        <T extends Number> T typeVariableWithBoundMethod() {
+            return null;
+        }
+
+        <T extends Serializable & Comparable<T>> T typeVariableWithMultipleBoundsMethod() {
+            return null;
+        }
+
+        int[] primitiveArrayMethod() {
+            return null;
+        }
+
+        String[] classArrayMethod() {
+            return null;
+        }
+
+        List<String>[] parameterizedTypeArrayMethod() {
+            return null;
+        }
+
+        <T> T[] typeVariableArrayMethod() {
+            return null;
+        }
+
+        List<?> unboundedWildcardMethod() {
+            return null;
+        }
+
+        List<? extends Number> wildcardWithUpperBoundMethod() {
+            return null;
+        }
+
+        List<? super String> wildcardWithLowerBoundMethod() {
+            return null;
+        }
+    }
+
     private Index index;
 
     @BeforeEach
     public void setUp() throws IOException {
-        index = Index.of(A.class, B.class, B.A.class);
+        index = Index.of(A.class, B.class, B.A.class, Types.class);
     }
 
     @Test
@@ -135,12 +192,12 @@ public class EquivalenceTest {
         assertEquals(keyB1, EquivalenceKey.of(b1));
         assertEquals(keyB1.hashCode(), EquivalenceKey.of(b1).hashCode());
         assertEquals(
-                "method org.jboss.jandex.test.EquivalenceTest$A#b(U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable, U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable[], java.util.List<java.lang.Class<?>>) -> U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable",
+                "method org.jboss.jandex.test.EquivalenceTest$A#b(U, U[], java.util.List<java.lang.Class<?>>) -> U where U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable",
                 keyB1.toString());
 
         assertNotEquals(keyB1, keyB2);
         assertEquals(
-                "method org.jboss.jandex.test.EquivalenceTest$B$A#b(U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable, U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable[], java.util.List<java.lang.Class<?>>) -> U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable",
+                "method org.jboss.jandex.test.EquivalenceTest$B$A#b(U, U[], java.util.List<java.lang.Class<?>>) -> U where U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable",
                 keyB2.toString());
 
         MethodInfo c1 = class1.firstMethod("c");
@@ -151,10 +208,11 @@ public class EquivalenceTest {
 
         assertEquals(keyC1, EquivalenceKey.of(c1));
         assertEquals(keyC1.hashCode(), EquivalenceKey.of(c1).hashCode());
-        assertEquals("method org.jboss.jandex.test.EquivalenceTest$A#c() -> T extends java.lang.Appendable", keyC1.toString());
+        assertEquals("method org.jboss.jandex.test.EquivalenceTest$A#c() -> T where T extends java.lang.Appendable",
+                keyC1.toString());
 
         assertNotEquals(keyC1, keyC2);
-        assertEquals("method org.jboss.jandex.test.EquivalenceTest$B$A#c() -> T extends java.lang.Appendable",
+        assertEquals("method org.jboss.jandex.test.EquivalenceTest$B$A#c() -> T where T extends java.lang.Appendable",
                 keyC2.toString());
 
         MethodInfo z = index.getClassByName(DotName.createSimple(B.class.getName())).firstMethod("z");
@@ -210,12 +268,12 @@ public class EquivalenceTest {
             assertEquals(keyB1, EquivalenceKey.of(b1));
             assertEquals(keyB1.hashCode(), EquivalenceKey.of(b1).hashCode());
             assertEquals("parameter " + i
-                    + " of method org.jboss.jandex.test.EquivalenceTest$A#b(U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable, U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable[], java.util.List<java.lang.Class<?>>) -> U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable",
+                    + " of method org.jboss.jandex.test.EquivalenceTest$A#b(U, U[], java.util.List<java.lang.Class<?>>) -> U where U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable",
                     keyB1.toString());
 
             assertNotEquals(keyB1, keyB2);
             assertEquals("parameter " + i
-                    + " of method org.jboss.jandex.test.EquivalenceTest$B$A#b(U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable, U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable[], java.util.List<java.lang.Class<?>>) -> U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable",
+                    + " of method org.jboss.jandex.test.EquivalenceTest$B$A#b(U, U[], java.util.List<java.lang.Class<?>>) -> U where U extends java.lang.Number & java.lang.CharSequence & java.io.Serializable",
                     keyB2.toString());
         }
 
@@ -300,5 +358,34 @@ public class EquivalenceTest {
         assertNotEquals(ma1, fa2);
         assertNotEquals(ma2, fa1);
         assertNotEquals(ma2, fa2);
+    }
+
+    @Test
+    public void typeToString() {
+        ClassInfo types = index.getClassByName(Types.class);
+
+        assertEquals("void", equivalenceKeyStringOf(types, "voidMethod"));
+        assertEquals("int", equivalenceKeyStringOf(types, "primitiveMethod"));
+        assertEquals("java.lang.String", equivalenceKeyStringOf(types, "classMethod"));
+        assertEquals("java.util.List<java.lang.String>", equivalenceKeyStringOf(types, "parameterizedTypeMethod"));
+        assertEquals("T extends java.lang.Object", equivalenceKeyStringOf(types, "typeVariableMethod"));
+        assertEquals("T extends java.lang.Number", equivalenceKeyStringOf(types, "typeVariableWithBoundMethod"));
+        assertEquals("T extends java.io.Serializable & java.lang.Comparable<T>",
+                equivalenceKeyStringOf(types, "typeVariableWithMultipleBoundsMethod"));
+        assertEquals("int[]", equivalenceKeyStringOf(types, "primitiveArrayMethod"));
+        assertEquals("java.lang.String[]", equivalenceKeyStringOf(types, "classArrayMethod"));
+        assertEquals("java.util.List<java.lang.String>[]", equivalenceKeyStringOf(types, "parameterizedTypeArrayMethod"));
+        assertEquals("T[] where T extends java.lang.Object", equivalenceKeyStringOf(types, "typeVariableArrayMethod"));
+
+        assertEquals("?", EquivalenceKey.of(types.firstMethod("unboundedWildcardMethod")
+                .returnType().asParameterizedType().arguments().get(0)).toString());
+        assertEquals("? extends java.lang.Number", EquivalenceKey.of(types.firstMethod("wildcardWithUpperBoundMethod")
+                .returnType().asParameterizedType().arguments().get(0)).toString());
+        assertEquals("? super java.lang.String", EquivalenceKey.of(types.firstMethod("wildcardWithLowerBoundMethod")
+                .returnType().asParameterizedType().arguments().get(0)).toString());
+    }
+
+    private static String equivalenceKeyStringOf(ClassInfo typesClass, String methodName) {
+        return EquivalenceKey.of(typesClass.firstMethod(methodName).returnType()).toString();
     }
 }

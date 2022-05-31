@@ -9,7 +9,7 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.junit.jupiter.api.Test;
 
-public class SignatureSharingTest {
+public class SignatureSharingOnClassTest {
     public interface WithMethodSignature {
         <E extends Runnable> E method(E arg);
     }

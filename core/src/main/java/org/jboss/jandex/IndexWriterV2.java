@@ -854,7 +854,8 @@ final class IndexWriterV2 extends IndexWriterImpl {
             case WILDCARD_TYPE:
                 WildcardType wildcardType = type.asWildcardType();
                 stream.writePackedU32(wildcardType.isExtends() ? 1 : 0);
-                writeReference(stream, wildcardType.bound(), false);
+                boolean hasImplicitBound = wildcardType.hasImplicitObjectBound();
+                writeReference(stream, hasImplicitBound ? null : wildcardType.bound(), hasImplicitBound);
                 break;
             case PARAMETERIZED_TYPE:
                 ParameterizedType parameterizedType = type.asParameterizedType();

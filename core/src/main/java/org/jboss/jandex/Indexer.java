@@ -827,6 +827,11 @@ public final class Indexer {
             case 0x13: // FIELD
             case 0x14: // METHOD_RETURN
             case 0x15: // METHOD_RECEIVER
+                // javac has a bug in case of compact record constructors, where it targets a type annotation
+                // on a constructor parameter type to a field; in such case, just skip the annotation
+                if (target.kind() == AnnotationTarget.Kind.METHOD && targetType == 0x13) {
+                    break;
+                }
                 typeTarget = new EmptyTypeTarget(target, targetType == 0x15);
                 break;
             case 0x16: // METHOD_FORMAL_PARAMETER

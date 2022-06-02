@@ -75,7 +75,7 @@ public class RecordTestCase {
         assertEquals("name", componentAnnos.get(0).target().asRecordComponent().name());
         assertEquals("nameComponent", componentAnnos.get(0).value().asString());
 
-        assertEquals(3, rec.recordComponents().size());
+        assertEquals(4, rec.recordComponents().size());
 
         RecordComponentInfo idComponent = rec.recordComponent("id");
         assertNotNull(idComponent);

@@ -1167,14 +1167,32 @@ public final class Indexer {
                 if (Modifier.isStatic(outermostInfo.flags)) {
                     // we'll handle this type immediately, hence `rebuildNestedType` shouldn't see it
                     //
-                    // we don't have to do this for a non-static class, because in that case, the outermost
+                    // we must not do this for a non-static class, because in that case, the outermost
                     // annotable type is an _enclosing_ type of the first type in the `innerClasses` list,
                     // which `rebuildNestedType` never looks at
                     innerClasses.pollFirst();
                 }
                 DotName outermostName = Modifier.isStatic(outermostInfo.flags) ? outermostInfo.innerClass
                         : outermostInfo.enclosingClass;
-                Type outermost = intern(new ClassType(outermostName));
+
+                Type outermost = null;
+                if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+                    Type candidate = type;
+                    while (candidate != null) {
+                        if (outermostName.equals(candidate.name())) {
+                            outermost = candidate;
+                            break;
+                        }
+                        if (candidate.kind() != Type.Kind.PARAMETERIZED_TYPE) {
+                            break;
+                        }
+                        candidate = candidate.asParameterizedType().owner();
+                    }
+                }
+                if (outermost == null) {
+                    outermost = outermostName.equals(type.name()) ? type : intern(new ClassType(outermostName));
+                }
+
                 outermost = intern(outermost.addAnnotation(AnnotationInstance.create(typeAnnotationState.annotation, null)));
                 return rebuildNestedType(outermost, innerClasses, type, 0, typeAnnotationState);
             }

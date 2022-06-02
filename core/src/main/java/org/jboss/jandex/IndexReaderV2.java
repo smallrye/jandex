@@ -404,7 +404,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             }
             case WILDCARD_TYPE: {
                 boolean isExtends = stream.readPackedU32() == 1;
-                Type bound = typeTable[stream.readPackedU32()];
+                Type bound = typeTable[stream.readPackedU32()]; // may be null in case of an unbounded wildcard
                 AnnotationInstance[] annotations = readAnnotations(stream, null);
                 return new WildcardType(bound, isExtends, annotations);
 

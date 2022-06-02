@@ -108,17 +108,17 @@ public final class TypeVariable extends Type {
         return this;
     }
 
-    String toString(boolean simple) {
+    @Override
+    public String toString() {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
         builder.append(name);
 
-        // FIXME - revist this logic
-        if (!simple && bounds.length > 0 && !(bounds.length == 1 && ClassType.OBJECT_TYPE.equals(bounds[0]))) {
-            builder.append(" extends ").append(bounds[0].toString(true));
+        if (bounds.length > 0 && !(bounds.length == 1 && ClassType.OBJECT_TYPE.equals(bounds[0]))) {
+            builder.append(" extends ").append(bounds[0].toString());
 
             for (int i = 1; i < bounds.length; i++) {
-                builder.append(" & ").append(bounds[i].toString(true));
+                builder.append(" & ").append(bounds[i].toString());
             }
         }
 

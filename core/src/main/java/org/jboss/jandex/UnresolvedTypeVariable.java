@@ -65,7 +65,10 @@ public final class UnresolvedTypeVariable extends Type {
     }
 
     public String toString() {
-        return name;
+        StringBuilder builder = new StringBuilder();
+        appendAnnotations(builder);
+        builder.append(name);
+        return builder.toString();
     }
 
     @Override

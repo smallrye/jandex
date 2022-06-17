@@ -75,18 +75,15 @@ import org.junit.jupiter.api.Test;
 public class BasicTestCase {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface FieldAnnotation {
-
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     public @interface ParameterAnnotation {
-
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ ElementType.TYPE_PARAMETER, ElementType.TYPE_USE })
     public @interface TypeUseAnnotation {
-
     }
 
     @Retention(RetentionPolicy.RUNTIME)

@@ -324,7 +324,7 @@ public final class RecordComponentInfo implements AnnotationTarget {
      * @return a string representation of this record component
      */
     public String toString() {
-        return name();
+        return internal.toString(clazz);
     }
 
     @Override

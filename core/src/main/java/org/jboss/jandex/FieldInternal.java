@@ -136,11 +136,11 @@ final class FieldInternal {
 
     @Override
     public String toString() {
-        return type + " " + name();
+        return type.toString(true) + " " + name();
     }
 
     public String toString(ClassInfo clazz) {
-        return type + " " + clazz.name() + "." + name();
+        return type.toString(true) + " " + clazz.name() + "." + name();
     }
 
     void setType(Type type) {

@@ -102,17 +102,18 @@ public class WildcardType extends Type {
         return this;
     }
 
-    public String toString() {
+    @Override
+    String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
         builder.append('?');
 
         if (isExtends && bound != OBJECT) {
-            builder.append(" extends ").append(bound);
+            builder.append(" extends ").append(bound.toString(true));
         }
 
         if (!isExtends && bound != null) {
-            builder.append(" super ").append(bound);
+            builder.append(" super ").append(bound.toString(true));
         }
 
         return builder.toString();

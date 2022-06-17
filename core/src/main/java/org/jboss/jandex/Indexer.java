@@ -2343,7 +2343,10 @@ public final class Indexer {
     public Index complete() {
         initIndexMaps(); // if no class was indexed before calling `complete()`
 
+        // these 2 post-processing steps are separate so that when propagating type variables,
+        // all type parameters are already fully propagated
         propagateTypeParameterBounds();
+        propagateTypeVariables();
 
         try {
             return new Index(masterAnnotations, subclasses, subinterfaces, implementors, classes, modules, users);
@@ -2413,38 +2416,83 @@ public final class Indexer {
 
     private void propagateTypeParameterBounds(AnnotationTarget target) {
         Type[] typeParameters = copyTypeParameters(target);
+
         for (int i = 0; i < typeParameters.length; i++) {
             TypeVariable typeParameter = (TypeVariable) typeParameters[i];
             Type[] typeParameterBounds = typeParameter.boundArray().clone();
             for (int j = 0; j < typeParameterBounds.length; j++) {
                 Type typeParameterBound = typeParameterBounds[j];
-                if (typeParameterBound.kind() == Type.Kind.TYPE_VARIABLE
-                        || typeParameterBound.kind() == Type.Kind.UNRESOLVED_TYPE_VARIABLE) {
-                    String boundIdentifier = getTypeVariableIdentifier(typeParameterBound);
-                    TypeVariable resolvedBound = findTypeParameter(typeParameters, boundIdentifier);
-                    if (resolvedBound == null) {
-                        resolvedBound = resolveTypeParameter(target, boundIdentifier);
-                    }
-                    if (resolvedBound != null) {
-                        Type newTypeParameterBound = intern(resolvedBound.copyType(typeParameterBound.annotationArray()));
-                        Type newTypeParameter = intern(typeParameter.copyType(j, newTypeParameterBound));
-                        typeParameters[i] = newTypeParameter;
 
-                        // retarget type parameter annotations
-                        for (AnnotationInstance annotation : target.annotations()) {
-                            if (annotation.target() instanceof TypeParameterTypeTarget
-                                    && ((TypeParameterTypeTarget) annotation.target()).target() == typeParameter) {
-                                ((TypeParameterTypeTarget) annotation.target()).setTarget(newTypeParameter);
-                            } else if (annotation.target() instanceof TypeParameterBoundTypeTarget
-                                    && ((TypeParameterBoundTypeTarget) annotation.target()).target() == typeParameterBound) {
-                                ((TypeParameterBoundTypeTarget) annotation.target()).setTarget(newTypeParameterBound);
-                            }
+                Type newTypeParameterBound = propagateOneTypeParameterBound(typeParameterBound, typeParameters, target);
+                if (newTypeParameterBound != typeParameterBound) {
+                    Type newTypeParameter = intern(typeParameter.copyType(j, newTypeParameterBound));
+                    typeParameters[i] = newTypeParameter;
+
+                    // retarget type parameter annotations
+                    for (AnnotationInstance annotation : target.annotations()) {
+                        if (annotation.target() instanceof TypeParameterTypeTarget
+                                && ((TypeParameterTypeTarget) annotation.target()).target() == typeParameter) {
+                            ((TypeParameterTypeTarget) annotation.target()).setTarget(newTypeParameter);
+                        } else if (annotation.target() instanceof TypeParameterBoundTypeTarget
+                                && ((TypeParameterBoundTypeTarget) annotation.target()).target() == typeParameterBound) {
+                            ((TypeParameterBoundTypeTarget) annotation.target()).setTarget(newTypeParameterBound);
                         }
                     }
                 }
             }
         }
+
         setTypeParameters(target, intern(typeParameters));
+    }
+
+    // when called from outside, `type` must be a type parameter bound
+    private Type propagateOneTypeParameterBound(Type type, Type[] allTypeParams, AnnotationTarget target) {
+        if (type.kind() == Type.Kind.UNRESOLVED_TYPE_VARIABLE || type.kind() == Type.Kind.TYPE_VARIABLE) {
+            String identifier = getTypeVariableIdentifier(type);
+            TypeVariable resolved = findTypeParameter(allTypeParams, identifier);
+            if (type.kind() == Type.Kind.UNRESOLVED_TYPE_VARIABLE && resolved != null) {
+                // if an unresolved type variable exists in `allTypeParams`,
+                // it is recursive and we want to keep it unresolved
+                resolved = null;
+            } else if (resolved == null) {
+                resolved = resolveTypeParameter(target, identifier);
+            }
+            if (resolved != null) {
+                return intern(resolved.copyType(type.annotationArray()));
+            }
+        } else if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            ParameterizedType parameterized = type.asParameterizedType();
+            if (parameterized.owner() != null) {
+                Type newOwner = propagateOneTypeParameterBound(parameterized.owner(), allTypeParams, target);
+                if (parameterized.owner() != newOwner) {
+                    parameterized = (ParameterizedType) intern(parameterized.copyType(newOwner));
+                }
+            }
+            Type[] typeArguments = parameterized.argumentsArray();
+            for (int i = 0; i < typeArguments.length; i++) {
+                Type newTypeArgument = propagateOneTypeParameterBound(typeArguments[i], allTypeParams, target);
+                if (newTypeArgument != typeArguments[i]) {
+                    parameterized = (ParameterizedType) intern(parameterized.copyType(i, newTypeArgument));
+                }
+            }
+            if (parameterized != type) {
+                return parameterized;
+            }
+        } else if (type.kind() == Type.Kind.WILDCARD_TYPE) {
+            WildcardType wildcard = type.asWildcardType();
+            Type newBound = propagateOneTypeParameterBound(wildcard.bound(), allTypeParams, target);
+            if (newBound != wildcard.bound()) {
+                return intern(wildcard.copyType(newBound));
+            }
+        } else if (type.kind() == Type.Kind.ARRAY) {
+            ArrayType array = type.asArrayType();
+            Type newComponent = propagateOneTypeParameterBound(array.component(), allTypeParams, target);
+            if (newComponent != array.component()) {
+                return intern(array.copyType(newComponent, array.dimensions()));
+            }
+        }
+
+        return type;
     }
 
     private TypeVariable findTypeParameter(Type[] typeParameters, String identifier) {
@@ -2504,6 +2552,119 @@ public final class Indexer {
             return typeVariable.asUnresolvedTypeVariable().identifier();
         } else {
             return null;
+        }
+    }
+
+    private void propagateTypeVariables() {
+        for (ClassInfo clazz : classes.values()) {
+            clazz.setSuperClassType(propagateTypeVariables(clazz.superClassType(), clazz));
+
+            Type[] interfaces = clazz.interfaceTypeArray();
+            for (int i = 0; i < interfaces.length; i++) {
+                interfaces[i] = propagateTypeVariables(interfaces[i], clazz);
+            }
+            clazz.setInterfaceTypes(interfaces);
+
+            for (FieldInternal field : clazz.fieldArray()) {
+                field.setType(propagateTypeVariables(field.type(), clazz));
+            }
+
+            for (MethodInternal method : clazz.methodArray()) {
+                MethodInfo m = new MethodInfo(clazz, method);
+
+                method.setReturnType(propagateTypeVariables(method.returnType(), m));
+
+                if (method.receiverTypeField() != null) {
+                    method.setReceiverType(propagateTypeVariables(method.receiverTypeField(), m));
+                }
+
+                Type[] parameterTypes = method.parameterTypesArray();
+                for (int i = 0; i < parameterTypes.length; i++) {
+                    parameterTypes[i] = propagateTypeVariables(parameterTypes[i], m);
+                }
+                method.setParameterTypes(parameterTypes);
+
+                Type[] exceptionTypes = method.exceptionArray();
+                for (int i = 0; i < exceptionTypes.length; i++) {
+                    exceptionTypes[i] = propagateTypeVariables(exceptionTypes[i], m);
+                }
+                method.setExceptions(exceptionTypes);
+            }
+
+            for (RecordComponentInternal recordComponent : clazz.recordComponentArray()) {
+                recordComponent.setType(propagateTypeVariables(recordComponent.type(), clazz));
+            }
+        }
+    }
+
+    // `parametricEncloser` is the nearest enclosing annotation target that can have type parameters,
+    // that is, either a method or a class
+    private Type propagateTypeVariables(Type type, AnnotationTarget parametricEncloser) {
+        if (type.kind() == Type.Kind.TYPE_VARIABLE) {
+            String identifier = getTypeVariableIdentifier(type);
+            TypeVariable resolved = resolveTypeParameter(parametricEncloser, identifier);
+            if (resolved != null) {
+                Type newTypeVariable = intern(resolved.copyType(type.annotationArray()));
+                retargetTypeAnnotations(parametricEncloser, type, newTypeVariable);
+                return newTypeVariable;
+            }
+        } else if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            ParameterizedType parameterized = type.asParameterizedType();
+            if (parameterized.owner() != null) {
+                Type newOwner = propagateTypeVariables(parameterized.owner(), parametricEncloser);
+                if (parameterized.owner() != newOwner) {
+                    parameterized = (ParameterizedType) intern(parameterized.copyType(newOwner));
+                }
+            }
+            Type[] typeArguments = parameterized.argumentsArray();
+            for (int i = 0; i < typeArguments.length; i++) {
+                Type newTypeArgument = propagateTypeVariables(typeArguments[i], parametricEncloser);
+                if (newTypeArgument != typeArguments[i]) {
+                    parameterized = (ParameterizedType) intern(parameterized.copyType(i, newTypeArgument));
+                }
+            }
+            if (parameterized != type) {
+                retargetTypeAnnotations(parametricEncloser, type, parameterized);
+                return parameterized;
+            }
+        } else if (type.kind() == Type.Kind.WILDCARD_TYPE) {
+            WildcardType wildcard = type.asWildcardType();
+            Type newBound = propagateTypeVariables(wildcard.bound(), parametricEncloser);
+            if (newBound != wildcard.bound()) {
+                Type newWildcard = intern(wildcard.copyType(newBound));
+                retargetTypeAnnotations(parametricEncloser, type, newWildcard);
+                return newWildcard;
+            }
+        } else if (type.kind() == Type.Kind.ARRAY) {
+            ArrayType array = type.asArrayType();
+            Type newComponent = propagateTypeVariables(array.component(), parametricEncloser);
+            if (newComponent != array.component()) {
+                Type newArray = intern(array.copyType(newComponent, array.dimensions()));
+                retargetTypeAnnotations(parametricEncloser, type, newArray);
+                return newArray;
+            }
+        }
+
+        return type;
+    }
+
+    private void retargetTypeAnnotations(AnnotationTarget parametricEncloser, Type oldType, Type newType) {
+        ClassInfo clazz;
+        if (parametricEncloser instanceof ClassInfo) {
+            clazz = (ClassInfo) parametricEncloser;
+        } else if (parametricEncloser instanceof MethodInfo) {
+            clazz = ((MethodInfo) parametricEncloser).declaringClass();
+        } else {
+            throw new IllegalArgumentException("Expected class or method: " + parametricEncloser);
+        }
+
+        for (List<AnnotationInstance> annotationsList : clazz.annotationsMap().values()) {
+            for (AnnotationInstance annotation : annotationsList) {
+                if (annotation.target() instanceof TypeTarget
+                        && ((TypeTarget) annotation.target()).target() == oldType) {
+                    ((TypeTarget) annotation.target()).setTarget(newType);
+                }
+            }
         }
     }
 }

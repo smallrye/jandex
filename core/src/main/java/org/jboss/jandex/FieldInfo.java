@@ -367,7 +367,7 @@ public final class FieldInfo implements AnnotationTarget {
      * Returns a string representation describing this field. It is similar although not necessarily equivalent
      * to a Java source code expression representing this field.
      *
-     * @return a string representation for this field
+     * @return a string representation of this field
      */
     public String toString() {
         return internal.toString(clazz);

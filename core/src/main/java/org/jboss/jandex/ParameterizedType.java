@@ -131,7 +131,8 @@ public class ParameterizedType extends Type {
         return this;
     }
 
-    public String toString() {
+    @Override
+    String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
 
         if (owner != null) {
@@ -150,9 +151,9 @@ public class ParameterizedType extends Type {
 
         if (arguments.length > 0) {
             builder.append('<');
-            builder.append(arguments[0]);
+            builder.append(arguments[0].toString(true));
             for (int i = 1; i < arguments.length; i++) {
-                builder.append(", ").append(arguments[i]);
+                builder.append(", ").append(arguments[i].toString(true));
             }
             builder.append('>');
         }
@@ -165,8 +166,18 @@ public class ParameterizedType extends Type {
         return new ParameterizedType(name(), arguments, owner, newAnnotations);
     }
 
-    ParameterizedType copyType(Type[] parameters) {
-        return new ParameterizedType(name(), parameters, owner, annotationArray());
+    ParameterizedType copyType(Type[] arguments) {
+        return new ParameterizedType(name(), arguments, owner, annotationArray());
+    }
+
+    ParameterizedType copyType(int argumentIndex, Type argument) {
+        if (argumentIndex > this.arguments.length) {
+            throw new IllegalArgumentException("Type argument index outside of bounds");
+        }
+
+        Type[] arguments = this.arguments.clone();
+        arguments[argumentIndex] = argument;
+        return new ParameterizedType(name(), arguments, owner, annotationArray());
     }
 
     ParameterizedType copyType(Type owner) {

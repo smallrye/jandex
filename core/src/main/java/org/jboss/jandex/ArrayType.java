@@ -92,20 +92,21 @@ public final class ArrayType extends Type {
         return DotName.createSimple(builder.toString());
     }
 
-    public String toString() {
+    @Override
+    String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
 
-        appendRootComponent(builder);
+        appendRootComponent(builder, true);
         appendArraySyntax(builder);
 
         return builder.toString();
     }
 
-    private void appendRootComponent(StringBuilder builder) {
+    private void appendRootComponent(StringBuilder builder, boolean simple) {
         if (component.kind() == Kind.ARRAY) {
-            component.asArrayType().appendRootComponent(builder);
+            component.asArrayType().appendRootComponent(builder, simple);
         } else {
-            builder.append(component);
+            builder.append(component.toString(simple));
         }
     }
 

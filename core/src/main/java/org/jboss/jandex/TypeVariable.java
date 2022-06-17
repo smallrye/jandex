@@ -40,7 +40,7 @@ import java.util.List;
 public final class TypeVariable extends Type {
     // The lower 31 bits represents the hash code
     private static final int HASH_MASK = Integer.MAX_VALUE;
-    // The high bit represents the implicit object flag
+    // The high bit represents the implicit object bound flag
     private static final int IMPLICIT_MASK = Integer.MIN_VALUE;
     private final String name;
     private final Type[] bounds;
@@ -109,16 +109,16 @@ public final class TypeVariable extends Type {
     }
 
     @Override
-    public String toString() {
+    String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
         builder.append(name);
 
-        if (bounds.length > 0 && !(bounds.length == 1 && ClassType.OBJECT_TYPE.equals(bounds[0]))) {
-            builder.append(" extends ").append(bounds[0].toString());
+        if (!simple && bounds.length > 0 && !(bounds.length == 1 && ClassType.OBJECT_TYPE.equals(bounds[0]))) {
+            builder.append(" extends ").append(bounds[0].toString(true));
 
             for (int i = 1; i < bounds.length; i++) {
-                builder.append(" & ").append(bounds[i].toString());
+                builder.append(" & ").append(bounds[i].toString(true));
             }
         }
 

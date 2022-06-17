@@ -20,197 +20,197 @@ import org.jboss.jandex.TypeVariable;
 import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann1 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann2 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann3 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann4 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann5 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann6 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann7 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann8 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann9 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann10 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann11 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann12 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann13 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann14 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann15 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann16 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann17 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann18 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann19 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann20 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann21 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann22 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann23 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann24 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann25 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann26 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann27 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann28 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann29 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann30 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann31 {
-}
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE_USE)
-@interface Ann32 {
-}
-
-class ClassWithTransitiveTypeParameterBounds<@Ann1 A extends @Ann2 Number, @Ann3 B extends @Ann4 A, @Ann5 C extends @Ann6 B> {
-    <@Ann7 D extends @Ann8 C, @Ann9 E extends @Ann10 D> Class<?> method() {
-        class LocalClass<@Ann11 F extends @Ann12 E> {
-            <@Ann13 G extends @Ann14 F> void localMethod() {
-            }
-        }
-
-        return LocalClass.class;
-    }
-
-    class InnerClass<@Ann15 H extends @Ann16 C> {
-        <@Ann17 I extends @Ann18 H> void innerMethod() {
-        }
-
-        class InnerInnerClass<@Ann19 J extends @Ann20 C> {
-            <@Ann21 K extends @Ann22 C> void innerInnerMethod() {
-            }
-        }
-    }
-
-    static class NestedClass<@Ann23 A extends @Ann24 Number, @Ann25 B extends @Ann26 A> {
-    }
-
-    static <@Ann27 A extends @Ann28 Number, @Ann29 B extends @Ann30 A> Class<?> staticMethod() {
-        class StaticLocalClass<@Ann31 C extends @Ann32 B> {
-        }
-        return StaticLocalClass.class;
-    }
-}
-
 public class TransitiveTypeParameterBoundsTest {
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann1 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann2 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann3 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann4 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann5 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann6 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann7 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann8 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann9 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann10 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann11 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann12 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann13 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann14 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann15 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann16 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann17 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann18 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann19 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann20 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann21 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann22 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann23 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann24 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann25 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann26 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann27 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann28 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann29 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann30 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann31 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE_USE)
+    @interface Ann32 {
+    }
+
+    static class ClassWithTransitiveTypeParameterBounds<@Ann1 A extends @Ann2 Number, @Ann3 B extends @Ann4 A, @Ann5 C extends @Ann6 B> {
+        <@Ann7 D extends @Ann8 C, @Ann9 E extends @Ann10 D> Class<?> method() {
+            class LocalClass<@Ann11 F extends @Ann12 E> {
+                <@Ann13 G extends @Ann14 F> void localMethod() {
+                }
+            }
+
+            return LocalClass.class;
+        }
+
+        class InnerClass<@Ann15 H extends @Ann16 C> {
+            <@Ann17 I extends @Ann18 H> void innerMethod() {
+            }
+
+            class InnerInnerClass<@Ann19 J extends @Ann20 C> {
+                <@Ann21 K extends @Ann22 C> void innerInnerMethod() {
+                }
+            }
+        }
+
+        static class NestedClass<@Ann23 A extends @Ann24 Number, @Ann25 B extends @Ann26 A> {
+        }
+
+        static <@Ann27 A extends @Ann28 Number, @Ann29 B extends @Ann30 A> Class<?> staticMethod() {
+            class StaticLocalClass<@Ann31 C extends @Ann32 B> {
+            }
+            return StaticLocalClass.class;
+        }
+    }
+
     @Test
     public void test() throws IOException {
         @SuppressWarnings("rawtypes")

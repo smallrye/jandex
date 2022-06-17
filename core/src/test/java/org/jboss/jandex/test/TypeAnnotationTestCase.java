@@ -168,7 +168,7 @@ public class TypeAnnotationTestCase {
         assertEquals("R", type.asTypeVariable().identifier());
         assertEquals(0, type.annotations().size());
         type = type.asTypeVariable().bounds().get(0);
-        assertEquals(0, type.annotations().size());
+        verifyHasAnnotation(nestName(referenceClass, "H"), type);
         assertEquals(Type.Kind.TYPE_VARIABLE, type.kind());
         assertEquals("SU", type.asTypeVariable().identifier());
         type = type.asTypeVariable().bounds().get(0);

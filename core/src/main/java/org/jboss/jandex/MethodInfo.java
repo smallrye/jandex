@@ -154,7 +154,7 @@ public final class MethodInfo implements AnnotationTarget {
     /**
      * Returns the name of the given parameter.
      *
-     * @param i the parameter index
+     * @param i the parameter index, zero-based
      * @return the name of the given parameter, or {@code null} if not known
      */
     public final String parameterName(int i) {
@@ -164,7 +164,7 @@ public final class MethodInfo implements AnnotationTarget {
     /**
      * Returns the type of the given parameter.
      *
-     * @param i the parameter index
+     * @param i the parameter index, zero-based
      * @return the type of the given parameter
      */
     public final Type parameterType(int i) {

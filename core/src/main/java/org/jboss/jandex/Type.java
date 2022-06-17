@@ -314,6 +314,10 @@ public abstract class Type {
      * @return the string representation.
      */
     public String toString() {
+        return toString(false);
+    }
+
+    String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         String packagePrefix = name.packagePrefix();
         if (packagePrefix != null) {

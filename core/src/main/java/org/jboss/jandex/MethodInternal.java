@@ -223,7 +223,21 @@ final class MethodInternal {
     }
 
     final Type receiverType(ClassInfo clazz) {
-        return receiverType != null ? receiverType : new ClassType(clazz.name());
+        if (receiverType != null) {
+            return receiverType;
+        }
+
+        // don't assign the `receiverType` field here! receiver type declaration is only useful
+        // if annotated, and in that case, the type annotation processing code calls `setReceiverType`
+        if (clazz.typeParameterArray().length > 0) {
+            Type[] classTypeParameters = clazz.typeParameterArray();
+            Type[] receiverTypeArguments = new Type[classTypeParameters.length];
+            for (int i = 0; i < classTypeParameters.length; i++) {
+                receiverTypeArguments[i] = classTypeParameters[i].copyType(AnnotationInstance.EMPTY_ARRAY);
+            }
+            return new ParameterizedType(clazz.name(), receiverTypeArguments, null);
+        }
+        return new ClassType(clazz.name());
     }
 
     final Type receiverTypeField() {
@@ -276,9 +290,15 @@ final class MethodInternal {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         String name = name();
-        builder.append(returnType).append(' ').append(name).append('(');
+        builder.append(returnType.toString(true)).append(' ').append(name).append('(');
+        if (receiverType != null) {
+            builder.append(receiverType.toString(true)).append(" this");
+            if (parameterTypes.length > 0) {
+                builder.append(", ");
+            }
+        }
         for (int i = 0; i < parameterTypes.length; i++) {
-            builder.append(parameterTypes[i]);
+            builder.append(parameterTypes[i].toString(true));
             String parameterName = parameterName(i);
             if (parameterName != null) {
                 builder.append(' ');
@@ -292,7 +312,7 @@ final class MethodInternal {
         if (exceptions.length > 0) {
             builder.append(" throws ");
             for (int i = 0; i < exceptions.length; i++) {
-                builder.append(exceptions[i]);
+                builder.append(exceptions[i].toString(true));
                 if (i < exceptions.length - 1) {
                     builder.append(", ");
                 }

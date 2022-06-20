@@ -55,8 +55,7 @@ public abstract class Type {
         ARRAY,
 
         /**
-         * A Java primitive (boolean, byte, short, char, int, long, float,
-         * double)
+         * A Java primitive (boolean, byte, short, char, int, long, float, double)
          */
         PRIMITIVE,
 
@@ -73,14 +72,18 @@ public abstract class Type {
          */
         UNRESOLVED_TYPE_VARIABLE,
 
-        /** A generic wildcard type. */
+        /** A generic wildcard type */
         WILDCARD_TYPE,
 
         /** A generic parameterized type */
-        PARAMETERIZED_TYPE;
+        PARAMETERIZED_TYPE,
+
+        /** A reference to a resolved type variable occuring in the bound of a recursive type parameter */
+        TYPE_VARIABLE_REFERENCE,
+
+        ;
 
         public static Kind fromOrdinal(int ordinal) {
-
             switch (ordinal) {
                 case 0:
                     return CLASS;
@@ -99,6 +102,8 @@ public abstract class Type {
                     return WILDCARD_TYPE;
                 case 7:
                     return PARAMETERIZED_TYPE;
+                case 8:
+                    return TYPE_VARIABLE_REFERENCE;
             }
         }
     }
@@ -205,7 +210,7 @@ public abstract class Type {
     public abstract Kind kind();
 
     /**
-     * Casts this type to a {@link org.jboss.jandex.ClassType} and returns it if the kind is {@link Kind#CLASS}
+     * Casts this type to a {@link org.jboss.jandex.ClassType} and returns it if the kind is {@link Kind#CLASS}.
      * Throws an exception otherwise.
      *
      * @return a <code>ClassType</code>
@@ -218,10 +223,9 @@ public abstract class Type {
 
     /**
      * Casts this type to a {@link org.jboss.jandex.ParameterizedType} and returns it if the kind is
-     * {@link Kind#PARAMETERIZED_TYPE}
-     * Throws an exception otherwise.
+     * {@link Kind#PARAMETERIZED_TYPE}. Throws an exception otherwise.
      *
-     * @return a <code>ClassType</code>
+     * @return a {@code ParameterizedType}
      * @throws java.lang.IllegalArgumentException if not a parameterized type
      * @since 2.0
      */
@@ -230,11 +234,10 @@ public abstract class Type {
     }
 
     /**
-     * Casts this type to a {@link org.jboss.jandex.ParameterizedType} and returns it if the kind is
-     * {@link Kind#TYPE_VARIABLE}
-     * Throws an exception otherwise.
+     * Casts this type to a {@link org.jboss.jandex.TypeVariable} and returns it if the kind is
+     * {@link Kind#TYPE_VARIABLE}. Throws an exception otherwise.
      *
-     * @return a <code>ClassType</code>
+     * @return a {@code TypeVariable}
      * @throws java.lang.IllegalArgumentException if not a type variable
      * @since 2.0
      */
@@ -243,11 +246,22 @@ public abstract class Type {
     }
 
     /**
-     * Casts this type to an {@link org.jboss.jandex.ArrayType} and returns it if the kind is
-     * {@link Kind#ARRAY}
-     * Throws an exception otherwise.
+     * Casts this type to a {@link org.jboss.jandex.TypeVariableReference} and returns it if the kind is
+     * {@link Kind#TYPE_VARIABLE_REFERENCE}. Throws an exception otherwise.
      *
-     * @return a <code>ClassType</code>
+     * @return a {@code TypeVariableReference}
+     * @throws java.lang.IllegalArgumentException if not a type variable
+     * @since 2.0
+     */
+    public TypeVariableReference asTypeVariableReference() {
+        throw new IllegalArgumentException("Not a type variable reference!");
+    }
+
+    /**
+     * Casts this type to an {@link org.jboss.jandex.ArrayType} and returns it if the kind is
+     * {@link Kind#ARRAY}. Throws an exception otherwise.
+     *
+     * @return an {@code ArrayType}
      * @throws java.lang.IllegalArgumentException if not an array type
      * @since 2.0
      */
@@ -257,10 +271,9 @@ public abstract class Type {
 
     /**
      * Casts this type to a {@link org.jboss.jandex.WildcardType} and returns it if the kind is
-     * {@link Kind#WILDCARD_TYPE}
-     * Throws an exception otherwise.
+     * {@link Kind#WILDCARD_TYPE}. Throws an exception otherwise.
      *
-     * @return a <code>ClassType</code>
+     * @return a {@code WildcardType}
      * @throws java.lang.IllegalArgumentException if not a wildcard type
      * @since 2.0
      */
@@ -270,10 +283,9 @@ public abstract class Type {
 
     /**
      * Casts this type to an {@link org.jboss.jandex.UnresolvedTypeVariable} and returns it if the kind is
-     * {@link Kind#UNRESOLVED_TYPE_VARIABLE}
-     * Throws an exception otherwise.
+     * {@link Kind#UNRESOLVED_TYPE_VARIABLE}. Throws an exception otherwise.
      *
-     * @return a <code>ClassType</code>
+     * @return an {@code UnresolvedTypeVariable}
      * @throws java.lang.IllegalArgumentException if not an unresolved type
      * @since 2.0
      */
@@ -283,10 +295,9 @@ public abstract class Type {
 
     /**
      * Casts this type to a {@link org.jboss.jandex.PrimitiveType} and returns it if the kind is
-     * {@link Kind#PRIMITIVE}
-     * Throws an exception otherwise.
+     * {@link Kind#PRIMITIVE}. Throws an exception otherwise.
      *
-     * @return a <code>ClassType</code>
+     * @return a {@code PrimitiveType}
      * @throws java.lang.IllegalArgumentException if not a primitive type
      * @since 2.0
      */
@@ -296,10 +307,9 @@ public abstract class Type {
 
     /**
      * Casts this type to a {@link org.jboss.jandex.VoidType} and returns it if the kind is
-     * {@link Kind#VOID}
-     * Throws an exception otherwise.
+     * {@link Kind#VOID}. Throws an exception otherwise.
      *
-     * @return a <code>ClassType</code>
+     * @return a {@code VoidType}
      * @throws java.lang.IllegalArgumentException if not a void type
      * @since 2.0
      */

@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -216,9 +217,20 @@ final class IndexReaderV2 extends IndexReaderImpl {
     }
 
     private void readTypeTable(PackedDataInputStream stream) throws IOException {
+        Map<TypeVariableReference, Integer> references = new IdentityHashMap<>();
+
         // Null is the implicit first entry
         for (int i = 1; i < typeTable.length; i++) {
-            typeTable[i] = readTypeEntry(stream);
+            typeTable[i] = readTypeEntry(stream, references);
+        }
+
+        // patch type variable references (see IndexWriterV2#addType)
+        for (Entry<TypeVariableReference, Integer> entry : references.entrySet()) {
+            TypeVariableReference reference = entry.getKey();
+            Integer position = entry.getValue();
+            assert position != null;
+            assert typeTable[position] instanceof TypeVariable;
+            reference.setTarget((TypeVariable) typeTable[position]);
         }
     }
 
@@ -365,7 +377,8 @@ final class IndexReaderV2 extends IndexReaderImpl {
         return types;
     }
 
-    private Type readTypeEntry(PackedDataInputStream stream) throws IOException {
+    private Type readTypeEntry(PackedDataInputStream stream, Map<TypeVariableReference, Integer> references)
+            throws IOException {
         Type.Kind kind = Type.Kind.fromOrdinal(stream.readUnsignedByte());
 
         switch (kind) {
@@ -416,6 +429,14 @@ final class IndexReaderV2 extends IndexReaderImpl {
                 Type[] parameters = readTypeListReference(stream);
                 AnnotationInstance[] annotations = readAnnotations(stream, null);
                 return new ParameterizedType(name, parameters, owner, annotations);
+            }
+            case TYPE_VARIABLE_REFERENCE: {
+                String identifier = stringTable[stream.readPackedU32()];
+                int position = stream.readPackedU32();
+                AnnotationInstance[] annotations = readAnnotations(stream, null);
+                TypeVariableReference reference = new TypeVariableReference(identifier, null, annotations);
+                references.put(reference, position);
+                return reference;
             }
         }
 

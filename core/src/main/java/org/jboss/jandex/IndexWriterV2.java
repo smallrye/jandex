@@ -125,7 +125,7 @@ final class IndexWriterV2 extends IndexWriterImpl {
         private ReferenceEntry getReferenceEntry(T reference) {
             ReferenceEntry entry = references.get(reference);
             if (entry == null) {
-                throw new IllegalStateException();
+                throw new IllegalStateException("Missing in reference table: " + reference);
             }
             return entry;
         }
@@ -864,6 +864,11 @@ final class IndexWriterV2 extends IndexWriterImpl {
                 writeReference(stream, owner, true);
                 writeReferenceOrFull(stream, parameterizedType.argumentsArray());
                 break;
+            case TYPE_VARIABLE_REFERENCE:
+                TypeVariableReference reference = type.asTypeVariableReference();
+                stream.writePackedU32(positionOf(reference.identifier()));
+                stream.writePackedU32(positionOf(reference.follow()));
+                break;
         }
 
         writeAnnotations(stream, type.annotationArray());
@@ -1086,6 +1091,11 @@ final class IndexWriterV2 extends IndexWriterImpl {
                 addType(parameterizedType.owner());
                 addTypeList(parameterizedType.argumentsArray());
                 break;
+            case TYPE_VARIABLE_REFERENCE:
+                addString(type.asTypeVariableReference().identifier());
+                // do _not_ add the referenced type, it will be added later
+                // and adding it recursively here would result in an infinite regress
+                break;
             case PRIMITIVE:
             case VOID:
                 break;
@@ -1095,6 +1105,10 @@ final class IndexWriterV2 extends IndexWriterImpl {
             addAnnotation(instance);
         }
 
+        // the type is intentionally added to the type table _after_ its constituents,
+        // so that types are written (and then read) in topological order; for recursive types,
+        // this means that the reference is written _before_ the type variable it refers to,
+        // which then requires a patching pass when reading (see IndexReaderV2#readTypeTable)
         typeTable.addReference(type);
     }
 

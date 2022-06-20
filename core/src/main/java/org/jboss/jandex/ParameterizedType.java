@@ -22,26 +22,23 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Represents a generic parameterized type. The <code>name()</code> corresponds to the raw type,
- * and the arguments list corresponds to a list of type arguments passed to the parameterized type.
- *
+ * Represents a parameterized type. The {@code name()} corresponds to the raw type, and the
+ * {@code arguments()} list corresponds to the type arguments passed to the generic type
+ * in order to instantiate this parameterized type.
  * <p>
- * Additionally, a parameterized type is used to represent an inner class whose enclosing class
- * is either parameterized or has type annotations. In this case, the <code>owner()</code> method
- * will specify the type for the enclosing class. It is also possible for such a type to be parameterized
- * itself.
- *
- * <p>
- * For example, the follow declaration would have a name of "java.util.Map", and two
- * <code>ClassType</code> arguments, the first being "java.lang.String", the second "java.lang.Integer":
+ * For example, the following declaration would have a name of {@code java.util.Map} and two
+ * {@code ClassType} arguments: {@code java.lang.String} and {@code java.lang.Integer}:
  *
  * <pre class="brush:java; gutter:false">
- *     java.util.Map&lt;String, Integer&gt;
+ *     Map&lt;String, Integer&gt;
  * </pre>
- *
  * <p>
- * Another example shows the case where a parameterized type is used to represent a non-parameterized
- * class (X), whose owner (Y) is itself parameterized:
+ * Additionally, a parameterized type is used to represent an inner type whose enclosing type
+ * is either parameterized or has type annotations. In this case, the {@code owner()} method
+ * returns the type of the enclosing class. Such inner type may itself be parameterized.
+ * <p>
+ * For example, the following declaration shows the case where a parameterized type is used
+ * to represent a non-parameterized class {@code X} whose owner {@code Y} is parameterized:
  *
  * <pre class="brush:java; gutter:false">
  *     Y&lt;String&gt;.X
@@ -80,7 +77,7 @@ public class ParameterizedType extends Type {
     }
 
     /**
-     * Returns the list of arguments passed to this Parameterized type.
+     * Returns the list of type arguments used to instantiate this parameterized type.
      *
      * @return the list of type arguments, or empty if none
      */
@@ -93,27 +90,22 @@ public class ParameterizedType extends Type {
     }
 
     /**
-     * Returns the owner (enclosing) type of this parameterized type if the owner is parameterized,
-     * or contains type annotations. The latter may be a <code>ClassType</code>. Otherwise null is
-     * returned.
-     *
+     * Returns the owner (enclosing) type of this parameterized type, if the owner is parameterized
+     * or has type annotations. In the latter case, the owner may be a {@code ClassType}. Returns
+     * {@code null} otherwise.
      * <p>
-     * Note that this means that inner classes whose enclosing types are not parameterized or
-     * annotated may return null when this method is called.
-     * </p>
-     *
+     * Note that parameterized inner classes whose enclosing types are not parameterized or type-annotated
+     * have no owner and hence this method returns {@code null} in such case.
      * <p>
-     * The example below shows the case where a parameterized type is used to represent a non-parameterized
-     * class (X).
+     * This example shows the case where a parameterized type is used to represent a non-parameterized
+     * class {@code X}:
      *
      * <pre class="brush:java; gutter:false;">
      *     Y&lt;String&gt;.X
      * </pre>
      *
-     * <p>
-     * This example will return a parameterized type for "Y" when X's <code>owner()</code> method
+     * This example will return a parameterized type for {@code Y} when {@code X}'s {@code owner()} method
      * is called.
-     * </p>
      *
      * @return the owner type if the owner is parameterized or annotated, otherwise null
      */

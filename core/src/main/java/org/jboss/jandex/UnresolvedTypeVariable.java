@@ -26,7 +26,6 @@ package org.jboss.jandex;
  */
 public final class UnresolvedTypeVariable extends Type {
     private final String name;
-    private int hash;
 
     UnresolvedTypeVariable(String name) {
         this(name, null);
@@ -38,10 +37,9 @@ public final class UnresolvedTypeVariable extends Type {
     }
 
     /**
-     * The identifier of this unresolved type variable as it appears in Java source code.
-     *
+     * Returns the identifier of this unresolved type variable as it appears in Java source code.
      * <p>
-     * The following class has a type parameter, with an identifier of "T":
+     * For example, the following class has a type parameter with an identifier of {@code T}:
      *
      * <pre class="brush:java; gutter: false;">
      * class Foo&lt;T extends Number&gt; {

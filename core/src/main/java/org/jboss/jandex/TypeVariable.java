@@ -63,10 +63,20 @@ public final class TypeVariable extends Type {
     }
 
     TypeVariable(String name, Type[] bounds, AnnotationInstance[] annotations, boolean implicitObjectBound) {
-        super(bounds.length > 0 ? bounds[0].name() : DotName.OBJECT_NAME, annotations);
+        // can't get the name here, because the bound may be a not-yet-patched type variable reference
+        // (hence we also need to override the name() method, see below)
+        super(DotName.OBJECT_NAME, annotations);
         this.name = name;
         this.bounds = bounds;
         this.hash = implicitObjectBound ? Integer.MIN_VALUE : 0;
+    }
+
+    @Override
+    public DotName name() {
+        if (bounds.length > 0) {
+            return bounds[0].name();
+        }
+        return DotName.OBJECT_NAME;
     }
 
     /**

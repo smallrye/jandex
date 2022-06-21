@@ -47,6 +47,7 @@ import java.util.StringJoiner;
  * <li>{@code ParameterizedTypeEquivalenceKey}</li>
  * <li>{@code PrimitiveTypeEquivalenceKey}</li>
  * <li>{@code TypeVariableEquivalenceKey}</li>
+ * <li>{@code TypeVariableReferenceEquivalenceKey}</li>
  * <li>{@code UnresolvedTypeVariableEquivalenceKey}</li>
  * <li>{@code VoidTypeEquivalenceKey}</li>
  * <li>{@code WildcardTypeEquivalenceKey}</li>
@@ -192,6 +193,8 @@ public abstract class EquivalenceKey {
             case TYPE_VARIABLE:
                 return new TypeVariableEquivalenceKey(type.asTypeVariable().identifier(),
                         of(type.asTypeVariable().boundArray()));
+            case TYPE_VARIABLE_REFERENCE:
+                return new TypeVariableReferenceEquivalenceKey(type.asTypeVariableReference().identifier());
             case UNRESOLVED_TYPE_VARIABLE:
                 return new UnresolvedTypeVariableEquivalenceKey(type.asUnresolvedTypeVariable().identifier());
             case VOID:
@@ -612,6 +615,34 @@ public abstract class EquivalenceKey {
 
         String toStringWithWhere(Set<TypeVariableEquivalenceKey> typeVariables) {
             typeVariables.add(this);
+            return name;
+        }
+    }
+
+    public static final class TypeVariableReferenceEquivalenceKey extends TypeEquivalenceKey {
+        private final String name;
+
+        private TypeVariableReferenceEquivalenceKey(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (!(o instanceof TypeVariableReferenceEquivalenceKey))
+                return false;
+            TypeVariableReferenceEquivalenceKey that = (TypeVariableReferenceEquivalenceKey) o;
+            return Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name);
+        }
+
+        @Override
+        public String toString() {
             return name;
         }
     }

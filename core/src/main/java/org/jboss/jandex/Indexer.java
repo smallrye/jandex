@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -2428,21 +2429,18 @@ public final class Indexer {
                     Type newTypeParameter = intern(typeParameter.copyType(j, newTypeParameterBound));
                     typeParameters[i] = newTypeParameter;
 
-                    // retarget type parameter annotations
-                    for (AnnotationInstance annotation : target.annotations()) {
-                        if (annotation.target() instanceof TypeParameterTypeTarget
-                                && ((TypeParameterTypeTarget) annotation.target()).target() == typeParameter) {
-                            ((TypeParameterTypeTarget) annotation.target()).setTarget(newTypeParameter);
-                        } else if (annotation.target() instanceof TypeParameterBoundTypeTarget
-                                && ((TypeParameterBoundTypeTarget) annotation.target()).target() == typeParameterBound) {
-                            ((TypeParameterBoundTypeTarget) annotation.target()).setTarget(newTypeParameterBound);
-                        }
-                    }
+                    retargetTypeAnnotations(target, typeParameter, newTypeParameter);
                 }
             }
         }
 
         setTypeParameters(target, intern(typeParameters));
+
+        // interspersing type annotation propagation (above) with patching would lead to type variable references
+        // pointing to stale type variables, hence patching must be an extra editing pass
+        for (int i = 0; i < typeParameters.length; i++) {
+            patchTypeVariableReferences(typeParameters[i], new ArrayDeque<>(), target);
+        }
     }
 
     // when called from outside, `type` must be a type parameter bound
@@ -2450,15 +2448,16 @@ public final class Indexer {
         if (type.kind() == Type.Kind.UNRESOLVED_TYPE_VARIABLE || type.kind() == Type.Kind.TYPE_VARIABLE) {
             String identifier = getTypeVariableIdentifier(type);
             TypeVariable resolved = findTypeParameter(allTypeParams, identifier);
-            if (type.kind() == Type.Kind.UNRESOLVED_TYPE_VARIABLE && resolved != null) {
-                // if an unresolved type variable exists in `allTypeParams`,
-                // it is recursive and we want to keep it unresolved
-                resolved = null;
-            } else if (resolved == null) {
+            if (resolved == null) {
                 resolved = resolveTypeParameter(target, identifier);
             }
             if (resolved != null) {
-                return intern(resolved.copyType(type.annotationArray()));
+                // can't use resolved.copyType(), because that returns a shallow copy
+                // (and if the type variable bounds contain type variable references,
+                // they would end up shared incorrectly)
+                Type newTypeVariable = intern(deepCopyTypeIfNeeded(resolved).copyType(type.annotationArray()));
+                retargetTypeAnnotations(target, type, newTypeVariable);
+                return newTypeVariable;
             }
         } else if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
             ParameterizedType parameterized = type.asParameterizedType();
@@ -2476,17 +2475,80 @@ public final class Indexer {
                 }
             }
             if (parameterized != type) {
+                retargetTypeAnnotations(target, type, parameterized);
                 return parameterized;
             }
         } else if (type.kind() == Type.Kind.WILDCARD_TYPE) {
             WildcardType wildcard = type.asWildcardType();
             Type newBound = propagateOneTypeParameterBound(wildcard.bound(), allTypeParams, target);
             if (newBound != wildcard.bound()) {
-                return intern(wildcard.copyType(newBound));
+                Type newWildcard = intern(wildcard.copyType(newBound));
+                retargetTypeAnnotations(target, type, newWildcard);
+                return newWildcard;
             }
         } else if (type.kind() == Type.Kind.ARRAY) {
             ArrayType array = type.asArrayType();
             Type newComponent = propagateOneTypeParameterBound(array.component(), allTypeParams, target);
+            if (newComponent != array.component()) {
+                Type newArray = intern(array.copyType(newComponent, array.dimensions()));
+                retargetTypeAnnotations(target, type, newArray);
+                return newArray;
+            }
+        }
+
+        return type;
+    }
+
+    /**
+     * When {@code type} contains no type variable references, returns {@code type}. When {@code type}
+     * does contain type variable references, returns a deep copy with each reference replaced by a new one.
+     * In that case, the newly created references must be patched by the caller.
+     * <p>
+     * When called from outside, {@code type} must be a type variable.
+     */
+    private Type deepCopyTypeIfNeeded(Type type) {
+        if (type.kind() == Type.Kind.TYPE_VARIABLE_REFERENCE) {
+            // type variable references must be patched by the caller, so no need to set target here
+            return new TypeVariableReference(type.asTypeVariableReference().identifier(), null, type.annotationArray());
+        } else if (type.kind() == Type.Kind.TYPE_VARIABLE) {
+            TypeVariable typeVariable = type.asTypeVariable();
+            Type[] bounds = typeVariable.boundArray();
+            for (int i = 0; i < bounds.length; i++) {
+                Type newBound = deepCopyTypeIfNeeded(bounds[i]);
+                if (newBound != bounds[i]) {
+                    typeVariable = (TypeVariable) intern(typeVariable.copyType(i, newBound));
+                }
+            }
+            if (typeVariable != type) {
+                return typeVariable;
+            }
+        } else if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            ParameterizedType parameterized = type.asParameterizedType();
+            if (parameterized.owner() != null) {
+                Type newOwner = deepCopyTypeIfNeeded(parameterized.owner());
+                if (parameterized.owner() != newOwner) {
+                    parameterized = (ParameterizedType) intern(parameterized.copyType(newOwner));
+                }
+            }
+            Type[] typeArguments = parameterized.argumentsArray();
+            for (int i = 0; i < typeArguments.length; i++) {
+                Type newTypeArgument = deepCopyTypeIfNeeded(typeArguments[i]);
+                if (newTypeArgument != typeArguments[i]) {
+                    parameterized = (ParameterizedType) intern(parameterized.copyType(i, newTypeArgument));
+                }
+            }
+            if (parameterized != type) {
+                return parameterized;
+            }
+        } else if (type.kind() == Type.Kind.WILDCARD_TYPE) {
+            WildcardType wildcard = type.asWildcardType();
+            Type newBound = deepCopyTypeIfNeeded(wildcard.bound());
+            if (newBound != wildcard.bound()) {
+                return intern(wildcard.copyType(newBound));
+            }
+        } else if (type.kind() == Type.Kind.ARRAY) {
+            ArrayType array = type.asArrayType();
+            Type newComponent = deepCopyTypeIfNeeded(array.component());
             if (newComponent != array.component()) {
                 return intern(array.copyType(newComponent, array.dimensions()));
             }
@@ -2495,6 +2557,51 @@ public final class Indexer {
         return type;
     }
 
+    /**
+     * Patches all type variable references contained in given {@code type}. The {@code typeVarStack} is used
+     * to track enclosing type variables when traversing the structure of the type; when called from outside,
+     * it must be empty and must not be used anywhere else. The {@code parametricEncloser} is the {@code type}'s
+     * nearest enclosing annotation target that may have type parameters, that is, the nearest enclosing method or class.
+     */
+    private void patchTypeVariableReferences(Type type, Deque<TypeVariable> typeVarStack, AnnotationTarget parametricEncloser) {
+        if (type.kind() == Type.Kind.TYPE_VARIABLE_REFERENCE) {
+            String identifier = type.asTypeVariableReference().identifier();
+
+            for (TypeVariable typeVariable : typeVarStack) {
+                if (identifier.equals(typeVariable.identifier())) {
+                    type.asTypeVariableReference().setTarget(typeVariable);
+                    return;
+                }
+            }
+
+            TypeVariable typeParameter = resolveTypeParameter(parametricEncloser, identifier);
+            if (typeParameter != null) {
+                type.asTypeVariableReference().setTarget(typeParameter);
+            }
+        } else if (type.kind() == Type.Kind.TYPE_VARIABLE) {
+            typeVarStack.push(type.asTypeVariable());
+            for (Type bound : type.asTypeVariable().boundArray()) {
+                patchTypeVariableReferences(bound, typeVarStack, parametricEncloser);
+            }
+            typeVarStack.pop();
+        } else if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            if (type.asParameterizedType().owner() != null) {
+                patchTypeVariableReferences(type.asParameterizedType().owner(), typeVarStack, parametricEncloser);
+            }
+            for (Type typeArg : type.asParameterizedType().argumentsArray()) {
+                patchTypeVariableReferences(typeArg, typeVarStack, parametricEncloser);
+            }
+        } else if (type.kind() == Type.Kind.WILDCARD_TYPE) {
+            patchTypeVariableReferences(type.asWildcardType().bound(), typeVarStack, parametricEncloser);
+        } else if (type.kind() == Type.Kind.ARRAY) {
+            patchTypeVariableReferences(type.asArrayType().component(), typeVarStack, parametricEncloser);
+        }
+    }
+
+    /**
+     * Finds and returns a type variable with given {@code identifier} among given {@code typeParameters}.
+     * Returns {@code null} when none exists.
+     */
     private TypeVariable findTypeParameter(Type[] typeParameters, String identifier) {
         for (Type typeParameter : typeParameters) {
             if (typeParameter.kind() == Type.Kind.TYPE_VARIABLE) {
@@ -2506,13 +2613,18 @@ public final class Indexer {
         return null;
     }
 
+    /**
+     * Resolves a given type variable {@code identifier} against given parametric {@code target}
+     * (either a method or a class). That is, if the {@code target} has a type parameter with matching
+     * identifier, returns it; otherwise, resolves {@code identifier} against {@code target}'s nearest
+     * enclosing method or class. Returns {@code null} if the identifier can't be resolved.
+     */
     private TypeVariable resolveTypeParameter(AnnotationTarget target, String identifier) {
         if (target.kind() == AnnotationTarget.Kind.CLASS) {
             ClassInfo clazz = target.asClass();
-            for (TypeVariable it : clazz.typeParameters()) {
-                if (it.identifier().equals(identifier)) {
-                    return it;
-                }
+            TypeVariable found = findTypeParameter(clazz.typeParameterArray(), identifier);
+            if (found != null) {
+                return found;
             }
             if (!Modifier.isStatic(clazz.flags())) {
                 if (clazz.enclosingClass() != null) {
@@ -2533,10 +2645,9 @@ public final class Indexer {
             }
         } else if (target.kind() == AnnotationTarget.Kind.METHOD) {
             MethodInfo method = target.asMethod();
-            for (TypeVariable it : method.typeParameters()) {
-                if (it.identifier().equals(identifier)) {
-                    return it;
-                }
+            TypeVariable found = findTypeParameter(method.typeParameterArray(), identifier);
+            if (found != null) {
+                return found;
             }
             if (!Modifier.isStatic(method.flags())) {
                 return resolveTypeParameter(method.declaringClass(), identifier);
@@ -2597,14 +2708,18 @@ public final class Indexer {
         }
     }
 
-    // `parametricEncloser` is the nearest enclosing annotation target that can have type parameters,
-    // that is, either a method or a class
+    // `parametricEncloser` is `type`'s nearest enclosing annotation target that can have type parameters,
+    // that is, the nearest enclosing method or class
     private Type propagateTypeVariables(Type type, AnnotationTarget parametricEncloser) {
-        if (type.kind() == Type.Kind.TYPE_VARIABLE) {
+        if (type.kind() == Type.Kind.TYPE_VARIABLE || type.kind() == Type.Kind.UNRESOLVED_TYPE_VARIABLE) {
             String identifier = getTypeVariableIdentifier(type);
             TypeVariable resolved = resolveTypeParameter(parametricEncloser, identifier);
             if (resolved != null) {
-                Type newTypeVariable = intern(resolved.copyType(type.annotationArray()));
+                // can't use resolved.copyType(), because that returns a shallow copy
+                // (and if the type variable bounds contain type variable references,
+                // they would end up shared incorrectly)
+                Type newTypeVariable = intern(deepCopyTypeIfNeeded(resolved).copyType(type.annotationArray()));
+                patchTypeVariableReferences(newTypeVariable, new ArrayDeque<>(), parametricEncloser);
                 retargetTypeAnnotations(parametricEncloser, type, newTypeVariable);
                 return newTypeVariable;
             }
@@ -2660,9 +2775,13 @@ public final class Indexer {
 
         for (List<AnnotationInstance> annotationsList : clazz.annotationsMap().values()) {
             for (AnnotationInstance annotation : annotationsList) {
-                if (annotation.target() instanceof TypeTarget
-                        && ((TypeTarget) annotation.target()).target() == oldType) {
-                    ((TypeTarget) annotation.target()).setTarget(newType);
+                if (annotation.target().kind() != AnnotationTarget.Kind.TYPE) {
+                    continue;
+                }
+
+                TypeTarget typeTarget = annotation.target().asType();
+                if (typeTarget.target() == oldType) {
+                    typeTarget.setTarget(newType);
                 }
             }
         }

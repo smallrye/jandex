@@ -27,6 +27,10 @@ public class JandexReflection {
      * <li>for {@linkplain TypeVariable type variables}, returns the class object of the first bound
      * (e.g. {@code Number.class} for {@code T extends Number & Comparable<T>}), or {@code Object.class}
      * if the type variable has no bounds (e.g. just {@code T});</li>
+     * <li>for {@linkplain TypeVariableReference type variables references}, follows the reference to obtain the type
+     * variable and then returns the class object of the first bound (e.g. {@code Number.class} for
+     * {@code T extends Number & Comparable<T>}), or {@code Object.class} if the type variable has no bounds
+     * (e.g. just {@code T});</li>
      * <li>for {@linkplain UnresolvedTypeVariable unresolved type variables}, returns {@code Object.class}.</li>
      * </ul>
      *
@@ -77,6 +81,8 @@ public class JandexReflection {
                 return loadRawType(type.asWildcardType().extendsBound());
             case TYPE_VARIABLE:
                 return load(type.asTypeVariable().name());
+            case TYPE_VARIABLE_REFERENCE:
+                return load(type.asTypeVariableReference().name());
             case UNRESOLVED_TYPE_VARIABLE:
                 return Object.class; // can't do better here
             default:

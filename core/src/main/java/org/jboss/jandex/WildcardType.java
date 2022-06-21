@@ -50,10 +50,20 @@ public class WildcardType extends Type {
     }
 
     WildcardType(Type bound, boolean isExtends, AnnotationInstance[] annotations) {
-        super(isExtends && bound != null ? bound.name() : DotName.OBJECT_NAME, annotations);
+        // can't get the name here, because the bound may be a not-yet-patched type variable reference
+        // (hence we also need to override the name() method, see below)
+        super(DotName.OBJECT_NAME, annotations);
         this.bound = isExtends && bound == null ? OBJECT : bound;
         this.isExtends = isExtends;
 
+    }
+
+    @Override
+    public DotName name() {
+        if (isExtends && bound != null) {
+            return bound.name();
+        }
+        return DotName.OBJECT_NAME;
     }
 
     /**

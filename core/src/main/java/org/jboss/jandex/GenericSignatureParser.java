@@ -19,7 +19,9 @@
 package org.jboss.jandex;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,6 +124,10 @@ class GenericSignatureParser {
     private Map<String, TypeVariable> typeParameters;
     private Map<String, TypeVariable> elementTypeParameters = new HashMap<String, TypeVariable>();
     private Map<String, TypeVariable> classTypeParameters = new HashMap<String, TypeVariable>();
+
+    // used to track enclosing type variables when patching type variable references
+    // present here to avoid allocating a new stack for each type that needs to be traversed
+    private Deque<TypeVariable> typeVariableStack = new ArrayDeque<>();
 
     GenericSignatureParser(NameTable names) {
         names.intern(DotName.OBJECT_NAME, '/');
@@ -482,38 +488,169 @@ class GenericSignatureParser {
     private void resolveTypeList(ArrayList<Type> list) {
         int size = list.size();
         for (int i = 0; i < size; i++) {
-            Type type = resolveType(list.get(i));
+            boolean isRecursive = isRecursive(list.get(i));
+            Type type = resolveType(list.get(i), isRecursive);
             if (type != null) {
                 list.set(i, type);
                 typeParameters.put(type.asTypeVariable().identifier(), type.asTypeVariable());
             }
         }
+
+        // interspersing resolution (above) with patching would lead to type variable references
+        // pointing to stale type variables, hence patching must be an extra editing pass
+        for (int i = 0; i < list.size(); i++) {
+            typeVariableStack.clear(); // should not be needed, just for extra safety
+            patchTypeVariableReferences(list.get(i));
+        }
     }
 
-    private Type resolveType(Type type) {
-        if (type instanceof TypeVariable) {
-            TypeVariable typeVariable = resolveBounds(type);
-
-            return typeVariable != type ? typeVariable : null;
-        }
-
-        if (!(type instanceof UnresolvedTypeVariable)) {
-            return null;
-        }
-
-        return resolveType(((UnresolvedTypeVariable) type).identifier());
-    }
-
-    private TypeVariable resolveBounds(Type type) {
-        TypeVariable typeVariable = type.asTypeVariable();
-        Type[] bounds = typeVariable.boundArray();
-        for (int i = 0; i < bounds.length; i++) {
-            Type newType = resolveType(bounds[i]);
-            if (newType != null && newType != bounds[i]) {
-                typeVariable = typeVariable.copyType(i, newType);
+    private boolean isRecursive(Type type) {
+        if (type.kind() == Type.Kind.TYPE_VARIABLE) {
+            String identifier = type.asTypeVariable().identifier();
+            Type[] bounds = type.asTypeVariable().boundArray();
+            for (int i = 0; i < bounds.length; i++) {
+                if (typeRefersToTypeVariable(identifier, bounds[i])) {
+                    return true;
+                }
             }
         }
-        return typeVariable;
+        return false;
+    }
+
+    private boolean typeRefersToTypeVariable(String identifier, Type type) {
+        if (type.kind() == Type.Kind.TYPE_VARIABLE_REFERENCE) {
+            return identifier.equals(type.asTypeVariableReference().identifier());
+        } else if (type.kind() == Type.Kind.UNRESOLVED_TYPE_VARIABLE) {
+            String unresolvedIdentifier = type.asUnresolvedTypeVariable().identifier();
+            if (identifier.equals(unresolvedIdentifier)) {
+                return true;
+            }
+            if (typeParameters.containsKey(unresolvedIdentifier)) {
+                return typeRefersToTypeVariable(identifier, typeParameters.get(unresolvedIdentifier));
+            }
+        } else if (type.kind() == Type.Kind.TYPE_VARIABLE) {
+            if (identifier.equals(type.asTypeVariable().identifier())) {
+                return true;
+            }
+            Type[] bounds = type.asTypeVariable().boundArray();
+            for (int i = 0; i < bounds.length; i++) {
+                if (typeRefersToTypeVariable(identifier, bounds[i])) {
+                    return true;
+                }
+            }
+        } else if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            if (type.asParameterizedType().owner() != null
+                    && typeRefersToTypeVariable(identifier, type.asParameterizedType().owner())) {
+                return true;
+            }
+            Type[] typeArguments = type.asParameterizedType().argumentsArray();
+            for (int i = 0; i < typeArguments.length; i++) {
+                if (typeRefersToTypeVariable(identifier, typeArguments[i])) {
+                    return true;
+                }
+            }
+        } else if (type.kind() == Type.Kind.WILDCARD_TYPE) {
+            return typeRefersToTypeVariable(identifier, type.asWildcardType().bound());
+        } else if (type.kind() == Type.Kind.ARRAY) {
+            return typeRefersToTypeVariable(identifier, type.asArrayType().component());
+        }
+        return false;
+    }
+
+    private Type resolveType(Type type, boolean isRecursive) {
+        if (type.kind() == Type.Kind.UNRESOLVED_TYPE_VARIABLE) {
+            String identifier = type.asUnresolvedTypeVariable().identifier();
+            if (isRecursive && typeParameters.containsKey(identifier)) {
+                return new TypeVariableReference(identifier);
+            } else if (elementTypeParameters.containsKey(identifier)) {
+                return elementTypeParameters.get(identifier);
+            } else if (classTypeParameters.containsKey(identifier)) {
+                return classTypeParameters.get(identifier);
+            }
+            // otherwise the unresolved type variable can't really be resolved,
+            // which basically means it's "fully resolved", so we return `null` below
+        } else if (type.kind() == Type.Kind.TYPE_VARIABLE) {
+            TypeVariable variable = type.asTypeVariable();
+            Type[] bounds = variable.boundArray();
+            for (int i = 0; i < bounds.length; i++) {
+                Type newBound = resolveType(bounds[i], isRecursive);
+                if (newBound != null && newBound != bounds[i]) {
+                    variable = variable.copyType(i, newBound);
+                }
+            }
+            if (variable != type) {
+                return variable;
+            }
+        } else if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            ParameterizedType parameterized = type.asParameterizedType();
+            if (parameterized.owner() != null) {
+                Type newOwner = resolveType(parameterized.owner(), isRecursive);
+                if (newOwner != null && newOwner != parameterized.owner()) {
+                    parameterized = parameterized.copyType(newOwner);
+                }
+            }
+            Type[] typeArguments = parameterized.argumentsArray();
+            for (int i = 0; i < typeArguments.length; i++) {
+                Type newTypeArgument = resolveType(typeArguments[i], isRecursive);
+                if (newTypeArgument != null && newTypeArgument != typeArguments[i]) {
+                    parameterized = parameterized.copyType(i, newTypeArgument);
+                }
+            }
+            if (parameterized != type) {
+                return parameterized;
+            }
+        } else if (type.kind() == Type.Kind.WILDCARD_TYPE) {
+            WildcardType wildcard = type.asWildcardType();
+            Type newBound = resolveType(wildcard.bound(), isRecursive);
+            if (newBound != null && newBound != wildcard.bound()) {
+                return wildcard.copyType(newBound);
+            }
+        } else if (type.kind() == Type.Kind.ARRAY) {
+            ArrayType array = type.asArrayType();
+            Type newComponent = resolveType(array.component(), isRecursive);
+            if (newComponent != null && newComponent != array.component()) {
+                return array.copyType(newComponent, array.dimensions());
+            }
+        }
+
+        return null; // indicates that `type` is already fully resolved
+    }
+
+    private void patchTypeVariableReferences(Type type) {
+        if (type.kind() == Type.Kind.TYPE_VARIABLE_REFERENCE) {
+            String identifier = type.asTypeVariableReference().identifier();
+
+            for (TypeVariable typeVariable : typeVariableStack) {
+                if (identifier.equals(typeVariable.identifier())) {
+                    type.asTypeVariableReference().setTarget(typeVariable);
+                    return;
+                }
+            }
+
+            TypeVariable typeParameter = typeParameters.get(identifier);
+            if (typeParameter != null) {
+                type.asTypeVariableReference().setTarget(typeParameter);
+            }
+        } else if (type.kind() == Type.Kind.TYPE_VARIABLE) {
+            typeVariableStack.push(type.asTypeVariable());
+            Type[] bounds = type.asTypeVariable().boundArray();
+            for (int i = 0; i < bounds.length; i++) {
+                patchTypeVariableReferences(bounds[i]);
+            }
+            typeVariableStack.pop();
+        } else if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            if (type.asParameterizedType().owner() != null) {
+                patchTypeVariableReferences(type.asParameterizedType().owner());
+            }
+            Type[] typeArguments = type.asParameterizedType().argumentsArray();
+            for (int i = 0; i < typeArguments.length; i++) {
+                patchTypeVariableReferences(typeArguments[i]);
+            }
+        } else if (type.kind() == Type.Kind.WILDCARD_TYPE) {
+            patchTypeVariableReferences(type.asWildcardType().bound());
+        } else if (type.kind() == Type.Kind.ARRAY) {
+            patchTypeVariableReferences(type.asArrayType().component());
+        }
     }
 
     private TypeVariable resolveType(String identifier) {

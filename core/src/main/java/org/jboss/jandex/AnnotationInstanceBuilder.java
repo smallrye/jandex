@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Builder for {@link AnnotationInstance}. Instances of the builder are not reusable.
@@ -1138,9 +1139,28 @@ public final class AnnotationInstanceBuilder {
     // ---
 
     /**
+     * Calls given {@code action} with this builder as an argument, and returns this builder
+     * after the action finishes. This is useful to express a non-trivial control flow
+     * without breaking fluent usage.
+     *
+     * @param action an action to be performed on this builder, must not be {@code null}
+     * @return this builder
+     */
+    public AnnotationInstanceBuilder with(Consumer<AnnotationInstanceBuilder> action) {
+        if (action == null) {
+            throw new IllegalArgumentException("AnnotationInstanceBuilder#with action must be set");
+        }
+
+        action.accept(this);
+        return this;
+    }
+
+    // ---
+
+    /**
      * Returns an {@link AnnotationInstance} that includes all annotation members defined by
-     * previous method calls on this builder. The returned {@code AnnotationInstance} has no target
-     * defined. After {@code build()} is called, this builder instance should be discarded.
+     * previous method calls on this builder. The returned {@code AnnotationInstance} has no target.
+     * After {@code build()} is called, this builder instance should be discarded.
      *
      * @return the built {@link AnnotationInstance}, never {@code null}
      */
@@ -1153,6 +1173,7 @@ public final class AnnotationInstanceBuilder {
      * previous method calls on this builder. The returned {@code AnnotationInstance} has given
      * {@code target}. After {@code buildWithTarget()} is called, this builder instance should be discarded.
      *
+     * @param target the target of the built annotation instance; if {@code null}, the built annotation instance has no target
      * @return the built {@link AnnotationInstance}, never {@code null}
      */
     public AnnotationInstance buildWithTarget(AnnotationTarget target) {

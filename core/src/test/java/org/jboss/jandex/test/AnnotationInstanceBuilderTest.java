@@ -241,7 +241,7 @@ public class AnnotationInstanceBuilderTest {
 
     private static AnnotationInstance simpleAnnotation_builder(String value) {
         return AnnotationInstance.builder(SimpleAnnotation.class)
-                .value(value)
+                .with(b -> b.value(value)) // `with` not needed here, just for the sake of the test
                 .build();
     }
 }

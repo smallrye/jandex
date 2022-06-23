@@ -3,9 +3,7 @@ name: Jandex CI
 on:
   push:
     branches:
-    - master
-    # temporary, should be removed once `smallrye` becomes `main`
-    - smallrye
+    - main
     paths-ignore:
     - '.gitattributes'
     - '.gitignore'

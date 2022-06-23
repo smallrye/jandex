@@ -128,7 +128,7 @@ public abstract class Type {
      * to the Java keyword denoting the primitive type, e.g. {@code int}). If kind is
      * {@code VOID}, the {@code name} is ignored. All other kinds cause an exception.
      *
-     * @param name the name to use or parse
+     * @param name the name of type to use or parse
      * @param kind the kind of type to create
      * @return the type
      * @throws java.lang.IllegalArgumentException if the kind is no supported
@@ -184,6 +184,21 @@ public abstract class Type {
             default:
                 throw new IllegalArgumentException("Kind not supported: " + kind);
         }
+    }
+
+    /**
+     * Creates an instance of specified type with given type {@code annotations}.
+     * To create the type instance, this method delegates to {@link #create(DotName, Kind)}.
+     *
+     * @param name the name of type to use or parse
+     * @param kind the kind of type to create
+     * @param annotations the type annotations that should be present on the type instance
+     * @return the annotated type
+     * @throws java.lang.IllegalArgumentException if the kind is no supported
+     */
+    public static Type createWithAnnotations(DotName name, Kind kind, AnnotationInstance[] annotations) {
+        Type type = create(name, kind);
+        return annotations == null ? type : type.copyType(annotations);
     }
 
     /**

@@ -42,11 +42,10 @@ jobs:
         git config --global user.name "SmallRye CI"
         git config --global user.email "smallrye@googlegroups.com"
         git checkout -b release
-        sed -i -e '\|<module>benchmarks</module>|d' pom.xml
-        mvn -B release:prepare -Prelease -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}} -s maven-settings.xml
+        mvn -pl \!benchmarks -B release:prepare -Prelease -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}} -s maven-settings.xml
         git checkout ${{github.base_ref}}
         git rebase release
-        mvn -B release:perform -Prelease -s maven-settings.xml
+        mvn -pl \!benchmarks -B release:perform -Prelease -s maven-settings.xml
         git push
         git push --tags
 

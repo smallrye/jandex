@@ -42,10 +42,14 @@ jobs:
         git config --global user.name "SmallRye CI"
         git config --global user.email "smallrye@googlegroups.com"
         git checkout -b release
-        mvn -pl \!benchmarks -B release:prepare -Prelease -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}} -s maven-settings.xml
+        sed -i -e 's|<version.jandex>.*</version.jandex>|<version.jandex>${{steps.metadata.outputs.current-version}}</version.jandex>|' README.md
+        git commit -a -m 'Amendments before release'
+        mvn -B release:prepare -Prelease -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}} -s maven-settings.xml
         git checkout ${{github.base_ref}}
         git rebase release
-        mvn -pl \!benchmarks -B release:perform -Prelease -s maven-settings.xml
+        mvn -B release:perform -Prelease -s maven-settings.xml
+        sed -i -e 's|<version.jandex>.*</version.jandex>|<version.jandex>${project.version}</version.jandex>|' README.md
+        git commit -a -m 'Amendments after release'
         git push
         git push --tags
 

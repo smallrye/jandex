@@ -13,7 +13,7 @@
     <name>Jandex: Test Data</name>
 
     <properties>
-        <java.version>16</java.version>
+        <java.version>17</java.version>
 
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -59,7 +59,7 @@
                 </executions>
             </plugin>
 
-            <!-- doesn't work correctly on records and modules -->
+            <!-- doesn't work correctly on nested records, even with the `compliance` version set -->
             <plugin>
                 <groupId>net.revelc.code</groupId>
                 <artifactId>impsort-maven-plugin</artifactId>
@@ -67,6 +67,9 @@
                     <execution>
                         <id>sort-imports</id>
                         <phase>none</phase>
+                        <configuration>
+                            <compliance>${java.version}</compliance>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -112,6 +115,14 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <javadocExecutable>${custom-jdk-path}/bin/javadoc</javadocExecutable>
+                </configuration>
             </plugin>
         </plugins>
     </build>

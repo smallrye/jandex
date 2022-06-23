@@ -18,6 +18,7 @@
 
 package org.jboss.jandex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -262,7 +263,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not numerical
      */
     public short asShort() {
-        throw new IllegalArgumentException("not a number");
+        throw new IllegalArgumentException("Not a number");
     }
 
     /**
@@ -273,7 +274,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not numerical
      */
     public byte asByte() {
-        throw new IllegalArgumentException("not a number");
+        throw new IllegalArgumentException("Not a number");
     }
 
     /**
@@ -284,7 +285,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not numerical
      */
     public float asFloat() {
-        throw new IllegalArgumentException("not a number");
+        throw new IllegalArgumentException("Not a number");
     }
 
     /**
@@ -295,7 +296,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not numerical
      */
     public double asDouble() {
-        throw new IllegalArgumentException("not a number");
+        throw new IllegalArgumentException("Not a number");
     }
 
     /**
@@ -305,7 +306,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not a character
      */
     public char asChar() {
-        throw new IllegalArgumentException("not a character");
+        throw new IllegalArgumentException("Not a character");
     }
 
     /**
@@ -315,7 +316,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not a boolean
      */
     public boolean asBoolean() {
-        throw new IllegalArgumentException("not a boolean");
+        throw new IllegalArgumentException("Not a boolean");
     }
 
     /**
@@ -339,7 +340,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not an enum
      */
     public String asEnum() {
-        throw new IllegalArgumentException("not an enum");
+        throw new IllegalArgumentException("Not an enum");
     }
 
     /**
@@ -351,7 +352,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not an enum
      */
     public DotName asEnumType() {
-        throw new IllegalArgumentException("not an enum");
+        throw new IllegalArgumentException("Not an enum");
     }
 
     /**
@@ -365,7 +366,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not a Class
      */
     public Type asClass() {
-        throw new IllegalArgumentException("not a class");
+        throw new IllegalArgumentException("Not a class");
     }
 
     /**
@@ -376,10 +377,20 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not a nested annotation
      */
     public AnnotationInstance asNested() {
-        throw new IllegalArgumentException("not a nested annotation");
+        throw new IllegalArgumentException("Not a nested annotation");
     }
 
     AnnotationValue[] asArray() {
+        throw new IllegalArgumentException("Not an array");
+    }
+
+    /**
+     * Returns the underlying array value as a {@link List} of {@link AnnotationValue}.
+     *
+     * @return the underlying array value
+     * @throws IllegalArgumentException if this value is not an array
+     */
+    public List<AnnotationValue> asArrayList() {
         throw new IllegalArgumentException("Not an array");
     }
 
@@ -412,7 +423,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if this value is not a numerical array.
      */
     public short[] asShortArray() {
-        throw new IllegalArgumentException("not a numerical array");
+        throw new IllegalArgumentException("Not a numerical array");
     }
 
     /**
@@ -422,7 +433,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if this value is not a numerical array.
      */
     public byte[] asByteArray() {
-        throw new IllegalArgumentException("not a numerical array");
+        throw new IllegalArgumentException("Not a numerical array");
     }
 
     /**
@@ -432,7 +443,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if this value is not a numerical array.
      */
     public float[] asFloatArray() {
-        throw new IllegalArgumentException("not a numerical array");
+        throw new IllegalArgumentException("Not a numerical array");
     }
 
     /**
@@ -443,7 +454,7 @@ public abstract class AnnotationValue {
      */
 
     public double[] asDoubleArray() {
-        throw new IllegalArgumentException("not a numerical array");
+        throw new IllegalArgumentException("Not a numerical array");
     }
 
     /**
@@ -453,7 +464,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if this value is not a character array.
      */
     public char[] asCharArray() {
-        throw new IllegalArgumentException("not a character array");
+        throw new IllegalArgumentException("Not a character array");
     }
 
     /**
@@ -463,7 +474,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if this value is not a boolean array.
      */
     public boolean[] asBooleanArray() {
-        throw new IllegalArgumentException("not a boolean array");
+        throw new IllegalArgumentException("Not a boolean array");
     }
 
     /**
@@ -475,7 +486,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if this value is not an array
      */
     public String[] asStringArray() {
-        throw new IllegalArgumentException("not a string array");
+        throw new IllegalArgumentException("Not a string array");
     }
 
     /**
@@ -487,7 +498,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not an enum array
      */
     public String[] asEnumArray() {
-        throw new IllegalArgumentException("not an enum array");
+        throw new IllegalArgumentException("Not an enum array");
     }
 
     /**
@@ -501,7 +512,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not an enum array
      */
     public DotName[] asEnumTypeArray() {
-        throw new IllegalArgumentException("not an enum array");
+        throw new IllegalArgumentException("Not an enum array");
     }
 
     /**
@@ -512,7 +523,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not a class array
      */
     public Type[] asClassArray() {
-        throw new IllegalArgumentException("not a class array");
+        throw new IllegalArgumentException("Not a class array");
     }
 
     /**
@@ -523,7 +534,7 @@ public abstract class AnnotationValue {
      * @throws IllegalArgumentException if the value is not an annotation array
      */
     public AnnotationInstance[] asNestedArray() {
-        throw new IllegalArgumentException("not a nested annotation array");
+        throw new IllegalArgumentException("Not a nested annotation array");
     }
 
     public String toString() {
@@ -1241,6 +1252,11 @@ public abstract class AnnotationValue {
 
         AnnotationValue[] asArray() {
             return value;
+        }
+
+        @Override
+        public List<AnnotationValue> asArrayList() {
+            return new ArrayList<>(Arrays.asList(value));
         }
 
         String toString(boolean includeName) {

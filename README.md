@@ -23,7 +23,7 @@ Jandex artifacts can be [downloaded from Maven Central](https://search.maven.org
 
 ## API Docs
 
-The extensive API docs for Jandex [are available here](http://wildfly.github.io/jandex).
+The extensive API docs for Jandex [are available here](http://smallrye.io/jandex).
 
 ## Reporting issues
 

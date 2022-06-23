@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -10,7 +9,7 @@
 
     <groupId>io.smallrye</groupId>
     <artifactId>jandex-parent</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.0-RC1</version>
     <packaging>pom</packaging>
 
     <name>Jandex: Parent</name>
@@ -48,7 +47,7 @@
         <connection>scm:git:git@github.com:smallrye/jandex.git</connection>
         <developerConnection>scm:git:git@github.com:smallrye/jandex.git</developerConnection>
         <url>https://github.com/smallrye/jandex/</url>
-        <tag>HEAD</tag>
+        <tag>3.0.0-RC1</tag>
     </scm>
 
     <modules>

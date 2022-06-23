@@ -669,13 +669,11 @@ public final class ClassInfo implements AnnotationTarget {
 
     /**
      * Returns a list of all methods declared in this class. This includes constructors
-     * and static initializer blocks which have the special JVM assigned names of "&lt;init&gt;"
-     * and "&lt;clinit&gt;", respectively. It does not, however, include inherited methods.
+     * and static initializer blocks which have the special names of {@code <init>}
+     * and {@code <clinit>}, respectively. It does not, however, include inherited methods.
      * These must be discovered by traversing the class hierarchy.
-     *
      * <p>
-     * This list may be empty, but never null.
-     * </p>
+     * This list may be empty, but is never {@code null}.
      *
      * @return the list of methods declared in this class
      */
@@ -688,13 +686,10 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns a list of all constructors declared in this class (which the JVM names "&lt;init&gt;").
-     * It does not include inherited methods.
-     * These must be discovered by traversing the class hierarchy.
-     *
+     * Returns a list of all constructors declared in this class (which have the special name {@code <init>}).
+     * It does not include inherited constructors. These must be discovered by traversing the class hierarchy.
      * <p>
-     * This list may never be null.
-     * </p>
+     * This list may be empty, but is never {@code null}.
      *
      * @return the list of constructors declared in this class
      */
@@ -717,16 +712,14 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     /**
-     * Retrieves a method based on its signature, which includes a method name and an argument list.
-     * The argument list is compared based on the underlying raw type of the type arguments. As an example,
-     * a generic type parameter "T" is equivalent to <code>java.lang.Object</code>, since the raw form
+     * Retrieves a method based on its signature, which includes a method name and an parameter type list.
+     * The parameter type list is compared based on the underlying raw types. As an example,
+     * a generic type parameter {@code T} is equivalent to {@code java.lang.Object}, since the raw form
      * of a type parameter is its upper bound.
-     *
      * <p>
-     * Eligible methods include constructors and static initializer blocks which have the special JVM
-     * assigned names of "&lt;init&gt;" and "&lt;clinit&gt;", respectively. This does not, however, include
+     * Eligible methods include constructors and static initializer blocks which have the special
+     * names of {@code <init>} and {@code <clinit>}, respectively. This does not, however, include
      * inherited methods. These must be discovered by traversing the class hierarchy.
-     * </p>
      *
      * @param name the name of the method to find
      * @param parameters the type parameters of the method

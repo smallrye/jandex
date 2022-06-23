@@ -34,7 +34,7 @@
         <version.maven-invoker-plugin>3.2.2</version.maven-invoker-plugin>
         <version.maven-plugin-tools>3.6.1</version.maven-plugin-tools>
         <version.maven-shade-plugin>3.3.0</version.maven-shade-plugin>
-        <version.mvn-jlink-wrapper>1.1.0</version.mvn-jlink-wrapper>
+        <version.mvn-jlink-wrapper>1.1.1</version.mvn-jlink-wrapper>
         <version.plexus-compiler-eclipse>2.11.1</version.plexus-compiler-eclipse>
         <version.plexus-utils>3.4.1</version.plexus-utils>
     </properties>

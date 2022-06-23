@@ -2668,7 +2668,9 @@ public final class Indexer {
 
     private void propagateTypeVariables() {
         for (ClassInfo clazz : classes.values()) {
-            clazz.setSuperClassType(propagateTypeVariables(clazz.superClassType(), clazz));
+            if (clazz.superClassType() != null) {
+                clazz.setSuperClassType(propagateTypeVariables(clazz.superClassType(), clazz));
+            }
 
             Type[] interfaces = clazz.interfaceTypeArray();
             for (int i = 0; i < interfaces.length; i++) {

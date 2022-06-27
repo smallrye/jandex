@@ -143,11 +143,22 @@ public final class MethodInfo implements AnnotationTarget {
 
     /**
      * Returns the name of the given parameter.
-     * @param i the parameter index
+     *
+     * @param i the parameter index, zero-based
      * @return the name of the given parameter, or null.
      */
     public final String parameterName(int i) {
         return methodInternal.parameterName(i);
+    }
+
+    /**
+     * Returns the type of the given parameter.
+     *
+     * @param i the parameter index, zero-based
+     * @return the type of the given parameter
+     */
+    public final Type parameterType(int i) {
+        return methodInternal.parameterArray()[i];
     }
     
     public final Kind kind() {
@@ -165,7 +176,7 @@ public final class MethodInfo implements AnnotationTarget {
 
     /**
      * Returns an array containing parameter types in parameter order. This method performs a defensive array
-     * copy per call, and should be avoided. Instead the {@link #parameters()} method should be used.
+     * copy per call, and should be avoided. Instead the {@link #parameterTypes()} method should be used.
      *
      * @return an array copy contain parameter types
      */
@@ -179,11 +190,31 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     /**
+     * Returns the number of parameters this method declares.
+     *
+     * @return the number of parameters this method declares
+     */
+    public final int parametersCount() {
+        return methodInternal.parameterArray().length;
+    }
+
+    /**
+     * Returns a list of types of parameters declared on this method, in declaration order.
+     *
+     * @return immutable list of parameter types of this method, never {@code null}
+     */
+    public final List<Type> parameterTypes() {
+        return methodInternal.parameters();
+    }
+
+    /**
      * Returns a list containing the types of all parameters declared on this method, in parameter order.
      * This method may return an empty list, but never null.
      *
+     * @deprecated this method will have a different return type in Jandex 3.0, use {@link #parameterTypes()} instead
      * @return all parameter types on this method
      */
+    @Deprecated
     public final List<Type> parameters() {
         return methodInternal.parameters();
     }

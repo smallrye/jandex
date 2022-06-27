@@ -180,7 +180,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
             for (DotName intf: interfaces)
                 stream.writePackedU32(positionOf(intf));
 
-            Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotations().entrySet();
+            Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotationsMap().entrySet();
             stream.writePackedU32(entrySet.size());
             for (Entry<DotName, List<AnnotationInstance>> entry :  entrySet) {
                 stream.writePackedU32(positionOf(entry.getKey()));
@@ -308,7 +308,7 @@ final class IndexWriterV1 extends IndexWriterImpl {
             for (DotName intf: clazz.interfaces())
                 addClassName(intf);
 
-            for (Entry<DotName, List<AnnotationInstance>> entry :  clazz.annotations().entrySet()) {
+            for (Entry<DotName, List<AnnotationInstance>> entry :  clazz.annotationsMap().entrySet()) {
                 addClassName(entry.getKey());
 
                 for (AnnotationInstance instance: entry.getValue()) {

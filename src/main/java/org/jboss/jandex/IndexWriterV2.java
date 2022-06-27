@@ -592,7 +592,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         }
 
         // Annotation length is early to allow eager allocation in reader.
-        stream.writePackedU32(clazz.annotations().size());
+        stream.writePackedU32(clazz.annotationsMap().size());
 
         FieldInternal[] fields = clazz.fieldArray();
         stream.writePackedU32(fields.length);
@@ -624,7 +624,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
             stream.writePackedU32(positionOf(clazz.recordComponentPositionArray()));
         }
 
-        Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotations().entrySet();
+        Set<Entry<DotName, List<AnnotationInstance>>> entrySet = clazz.annotationsMap().entrySet();
         for (Entry<DotName, List<AnnotationInstance>> entry :  entrySet) {
             List<AnnotationInstance> value = entry.getValue();
             stream.writePackedU32(value.size());
@@ -887,7 +887,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
         addRecordComponentList(clazz.recordComponentArray());
         names.intern(clazz.recordComponentPositionArray());
 
-        for (Entry<DotName, List<AnnotationInstance>> entry :  clazz.annotations().entrySet()) {
+        for (Entry<DotName, List<AnnotationInstance>> entry :  clazz.annotationsMap().entrySet()) {
             addClassName(entry.getKey());
 
             for (AnnotationInstance instance: entry.getValue()) {

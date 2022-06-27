@@ -124,10 +124,10 @@ public class TypeParameterBoundTestCase {
                 "T extends @Nullable @Untainted java.util.List & @Untainted java.io.Serializable",
                 info.typeParameters().get(0).toString());
 
-        List<AnnotationInstance> annotationInstances = info.annotations().get(DotName.createSimple("test.Nullable"));
+        List<AnnotationInstance> annotationInstances = info.annotationsMap().get(DotName.createSimple("test.Nullable"));
         Assert.assertEquals(0,  annotationInstances.get(0).target().asType().asTypeParameterBound().boundPosition());
 
-        annotationInstances = info.annotations().get(DotName.createSimple("test.Untainted"));
+        annotationInstances = info.annotationsMap().get(DotName.createSimple("test.Untainted"));
         ArrayList<Integer> list = new ArrayList<Integer>();
         for (AnnotationInstance instance : annotationInstances) {
             TypeParameterBoundTypeTarget target = instance.target().asType().asTypeParameterBound();

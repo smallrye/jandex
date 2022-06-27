@@ -309,12 +309,28 @@ public final class ClassInfo implements AnnotationTarget {
      * Returns a map indexed by annotation name, with a value list of annotation instances.
      * The annotation instances in this map correspond to both annotations on the class,
      * and every nested element of the class (fields, types, methods, etc).
+     * <p>
+     * The target of the annotation instance can be used to determine the location of
+     * the annotation usage.
+     *
+     * @return immutable map of annotations specified on this class and its elements, never {@code null}
+     */
+    public final Map<DotName, List<AnnotationInstance>> annotationsMap() {
+        return Collections.unmodifiableMap(annotations);
+    }
+
+    /**
+     * Returns a map indexed by annotation name, with a value list of annotation instances.
+     * The annotation instances in this map correspond to both annotations on the class,
+     * and every nested element of the class (fields, types, methods, etc).
      *
      * <p>The target of the annotation instance can be used to determine the location of
      * the annotation usage.</p>
      *
+     * @deprecated this method will have a different return type in Jandex 3.0, use {@link #annotationsMap()} instead
      * @return the annotations specified on this class and its elements
      */
+    @Deprecated
     public final Map<DotName, List<AnnotationInstance>> annotations() {
         return Collections.unmodifiableMap(annotations);
     }

@@ -226,7 +226,7 @@ public class JarIndexer {
     }
 
     private static void printIndexEntryInfo(ClassInfo info, PrintStream infoStream) {
-        infoStream.println("Indexed " + info.name() + " (" + info.annotations().size() + " annotations)");
+        infoStream.println("Indexed " + info.name() + " (" + info.annotationsMap().size() + " annotations)");
     }
     
     private static void copy(InputStream in, OutputStream out) throws IOException {

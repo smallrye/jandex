@@ -189,32 +189,32 @@ public class TypeAnnotationTestCase {
     private void verifyVExampleParameterTypes(ClassInfo referenceClass, ClassInfo declaringClass) {
         MethodInfo method = declaringClass.firstMethod("bar1");
         assertNotNull(method);
-        Type type = method.parameters().get(0);
+        Type type = method.parameterTypes().get(0);
         verifyBar1(referenceClass, type);
 
         method = declaringClass.firstMethod("bar2");
         assertNotNull(method);
-        type = method.parameters().get(0);
+        type = method.parameterTypes().get(0);
         verifyBar2(referenceClass, type);
 
         method = declaringClass.firstMethod("bar3");
         assertNotNull(method);
-        type = method.parameters().get(0);
+        type = method.parameterTypes().get(0);
         verifyBar3(referenceClass, type);
 
         method = declaringClass.firstMethod("bar4");
         assertNotNull(method);
-        type = method.parameters().get(0);
+        type = method.parameterTypes().get(0);
         verifyBar4(referenceClass, type);
 
         method = declaringClass.firstMethod("bar5");
         assertNotNull(method);
-        type = method.parameters().get(0);
+        type = method.parameterTypes().get(0);
         verifyBar5(referenceClass, type);
 
         method = declaringClass.firstMethod("bar6");
         assertNotNull(method);
-        type = method.parameters().get(0);
+        type = method.parameterTypes().get(0);
         verifyBar6(referenceClass, type);
 
         // Verify receiver

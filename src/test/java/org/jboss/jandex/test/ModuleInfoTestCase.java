@@ -56,7 +56,7 @@ public class ModuleInfoTestCase {
     @Test
     public void testModuleAnnotations() throws IOException {
         ModuleInfo mod = indexModuleInfo();
-        Map<DotName, List<AnnotationInstance>> annotations = mod.moduleInfoClass().annotations();
+        Map<DotName, List<AnnotationInstance>> annotations = mod.moduleInfoClass().annotationsMap();
         assertEquals(2, annotations.size());
         assertEquals(1, annotations.get(DotName.createSimple(Deprecated.class.getName())).size());
         assertEquals(1, annotations.get(DotName.createSimple("test.ModuleAnnotation")).size());

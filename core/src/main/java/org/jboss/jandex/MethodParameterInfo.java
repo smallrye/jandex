@@ -83,6 +83,7 @@ public final class MethodParameterInfo implements AnnotationTarget {
      * Returns the type of this parameter.
      *
      * @return the type of this parameter
+     * @since 3.0
      */
     public final Type type() {
         return method.parameterType(position);

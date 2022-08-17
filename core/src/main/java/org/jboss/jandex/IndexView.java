@@ -495,6 +495,7 @@ public interface IndexView {
      * @param packageName package name in the common, dot-separated form (e.g. {@code com.example.foobar});
      *        {@code null} means the unnamed package
      * @return immutable collection of classes present in given package, never {@code null}
+     * @since 3.0
      */
     Collection<ClassInfo> getClassesInPackage(DotName packageName);
 
@@ -511,6 +512,7 @@ public interface IndexView {
      * @param packageName package name in the common, dot-separated form (e.g. {@code com.example.foobar});
      *        {@code null} means the unnamed package
      * @return immutable collection of classes present in given package, never {@code null}
+     * @since 3.0
      */
     default Collection<ClassInfo> getClassesInPackage(String packageName) {
         return getClassesInPackage(DotName.createSimple(packageName));
@@ -531,6 +533,7 @@ public interface IndexView {
      * @param packageName package name in the common, dot-separated form (e.g. {@code com.example.foobar});
      *        {@code null} means the unnamed package
      * @return immutable set of subpackages of given package, never {@code null}
+     * @since 3.0
      */
     Set<DotName> getSubpackages(DotName packageName);
 
@@ -549,6 +552,7 @@ public interface IndexView {
      * @param packageName package name in the common, dot-separated form (e.g. {@code com.example.foobar});
      *        {@code null} means the unnamed package
      * @return immutable set of subpackages of given package, never {@code null}
+     * @since 3.0
      */
     default Set<DotName> getSubpackages(String packageName) {
         return getSubpackages(DotName.createSimple(packageName));

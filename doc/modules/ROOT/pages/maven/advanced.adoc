@@ -1,0 +1,81 @@
+= Advanced Maven Plugin Usage
+
+If you need to process more than one directory of classes, you can specify multiple `fileSets` like this:
+
+[source,xml]
+----
+<build>
+    <plugins>
+        <plugin>
+            <groupId>io.smallrye</groupId>
+            <artifactId>jandex-maven-plugin</artifactId>
+            <version>${version.jandex}</version>
+            <executions>
+                <execution>
+                    <id>make-index</id>
+                    <goals>
+                        <goal>jandex</goal>
+                    </goals>
+                    <configuration>
+                        <fileSets>
+                            <fileSet>
+                                <directory>${project.build.directory}/generated-classes/foo</directory>
+                            </fileSet>
+                            <fileSet>
+                                <directory>${project.build.directory}/generated-classes/bar</directory>
+                            </fileSet>
+                        </fileSets>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+----
+
+To turn _off_ processing of `target/classes`, add the following configuration:
+
+[source,xml]
+----
+<processDefaultFileSet>false</processDefaultFileSet>
+----
+
+For any `fileSet`, you can also fine-tune the classes that are processed using the following options:
+
+[source,xml]
+----
+<fileSet>
+    <directory>${project.build.directory}/somedir</directory>
+    <!-- included globs -->
+    <includes>
+        <include>**/indexed/*.class</include>
+        <include>**/idxd/*.class</include>
+    </includes>
+    <!-- excluded globs -->
+    <excludes>
+        <exclude>**/*NotIndexed.class</exclude>
+    </excludes>
+    <!-- normally true, this excludes things like the CVS/ and .svn/ directories, log files, etc. -->
+    <useDefaultExcludes>false</useDefaultExcludes>
+</fileSet>
+----
+
+A `fileSet` may specify a _dependency_ instead of a directory.
+That dependency must exist among the set of dependencies of the Maven project being built.
+A `groupId` and `artifactId` are mandatory, a `classifier` is optional:
+
+[source,xml]
+----
+<fileSet>
+    <dependency>
+        <groupId>com.example</groupId>
+        <artifactId>my-project</artifactId>
+    </dependency>
+    <includes>
+        <include>com/example/my/project/api/**/*.class</include>
+    </includes>
+    <excludes>
+        <exclude>com/example/**/_private/*.class</exclude>
+    </excludes>
+</fileSet>
+----

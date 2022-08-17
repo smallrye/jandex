@@ -1,0 +1,72 @@
+= Indexing Classes
+
+== Creating a Persistent Index Using the API
+
+The following example demonstrates indexing a class and persisting the index to disk.
+The resulting file can later be loaded and used.
+
+[source,java]
+----
+Indexer indexer = new Indexer();
+indexer.indexClass(Map.class);
+Index index = indexer.complete();
+
+try (FileOutputStream out = new FileOutputStream("/tmp/index.idx")) {
+    IndexWriter writer = new IndexWriter(out);
+    writer.write(index);
+}
+----
+
+== Loading a Persistent Index
+
+The following example demonstrates loading the index from the previous example and using that index to print all methods on `java.util.Map`:
+
+[source,java]
+----
+Index index;
+try (FileInputStream input = new FileInputStream("/tmp/index.idx")) {
+    IndexReader reader = new IndexReader(input);
+    index = reader.read();
+}
+
+ClassInfo clazz = index.getClassByName(DotName.createSimple("java.util.Map"));
+
+for (MethodInfo method : clazz.methods()) {
+    System.out.println(method);
+}
+----
+
+== Creating a Persistent Index Using the CLI
+
+The following example demonstrates indexing hibernate core, followed by the entire Java
+JDK 8 using Jandex on the CLI:
+
+[source,bash]
+----
+$ java -jar jandex-2.4.2.Final.jar hibernate-core-6.0.0.Final.jar
+   Wrote hibernate-core-6.0.0.Final-jar.idx in 0.9170 seconds
+         (5746 classes, 50 annotations, 2995 instances, 61729 class usages, 1737428 bytes)
+$ java -jar jandex-2.4.2.Final.jar rt.jar
+   Wrote rt-jar.idx in 1.7310 seconds
+         (20226 classes, 57 annotations, 2476 instances, 246298 class usages, 5890787 bytes)
+----
+
+The above summary output tells us that this version of Hibernate ORM has 5,746 classes, and those classes contained 2,995 annotation declarations, using 50 different annotation types.
+The resulting index is 1.7 MB uncompressed, which is only 19% of the 9.0MB compressed jar size, or 4% of the uncompressed class file data.
+If the index is stored in the jar (using the -m option) it can be compressed an additional 43%, leading to a jar growth of only 11%.
+
+== Using the Ant Task to Index Your Project
+
+The following Ant task can be used with either the `maven-antrun-plugin` or an Ant build to build an index for your project:
+
+[source,xml]
+----
+<taskdef name="jandex" classname="org.jboss.jandex.JandexAntTask"/>
+<jandex run="@{jandex}">
+    <fileset dir="${location.to.index.dir}"/>
+</jandex>
+----
+
+== Using the Maven Plugin to Index Your Project
+
+See xref:maven/basic.adoc[Basic Maven Plugin Usage].

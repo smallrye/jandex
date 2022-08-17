@@ -43,12 +43,14 @@ jobs:
         git config --global user.email "smallrye@googlegroups.com"
         git checkout -b release
         sed -i -e 's|<version.jandex>.*</version.jandex>|<version.jandex>${{steps.metadata.outputs.current-version}}</version.jandex>|' benchmarks/pom.xml
+        sed -i -e 's|^version: main|version: ${{steps.metadata.outputs.current-version}}|' doc/antora.yml
         git commit -a -m 'Amendments before release'
         mvn -B release:prepare -Prelease -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}} -s maven-settings.xml
         git checkout ${{github.base_ref}}
         git rebase release
         mvn -B release:perform -Prelease -s maven-settings.xml
         sed -i -e 's|<version.jandex>.*</version.jandex>|<version.jandex>${project.version}</version.jandex>|' benchmarks/pom.xml
+        sed -i -e 's|^version: ${{steps.metadata.outputs.current-version}}|version: main|' doc/antora.yml
         git commit -a -m 'Amendments after release'
         git push
         git push --tags
@@ -58,3 +60,39 @@ jobs:
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         milestone-title: ${{steps.metadata.outputs.current-version}}
+
+  github-pages:
+    name: GitHub Pages
+    needs:
+    - release
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ref: gh-pages
+
+    - name: Set up Node.js 16
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+
+    - name: Generate and push
+      run: |
+        node --version
+        
+        curl -s -L -o antora-playbook.yml https://github.com/smallrye/jandex/blob/main/doc/antora-playbook-prod.yml?raw=true
+
+        npm install @antora/cli@3.0 @antora/site-generator-default@3.0
+        npx antora generate antora-playbook.yml
+        
+        rm -rf node_modules docs package.json package-lock.json antora-playbook.yml
+        mv -T build/site docs
+        touch docs/.nojekyll
+
+        git config --global user.name "SmallRye CI"
+        git config --global user.email "smallrye@googlegroups.com"
+        git status
+        git add -A .
+        git commit -m 'Generate documentation site'
+        git push

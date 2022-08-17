@@ -1,0 +1,39 @@
+name: Jandex GitHub Pages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  github-pages:
+    name: GitHub Pages
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ref: gh-pages
+
+    - name: Set up Node.js 16
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+
+    - name: Generate and push
+      run: |
+        node --version
+        
+        curl -s -L -o antora-playbook.yml https://github.com/smallrye/jandex/blob/main/doc/antora-playbook-prod.yml?raw=true
+
+        npm install @antora/cli@3.0 @antora/site-generator-default@3.0
+        npx antora generate antora-playbook.yml
+        
+        rm -rf node_modules docs package.json package-lock.json antora-playbook.yml
+        mv -T build/site docs
+        touch docs/.nojekyll
+
+        git config --global user.name "SmallRye CI"
+        git config --global user.email "smallrye@googlegroups.com"
+        git status
+        git add -A .
+        git commit -m 'Generate documentation site'
+        git push

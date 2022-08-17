@@ -1,0 +1,9 @@
+* xref:index.adoc[Introduction]
+* Jandex
+** xref:core/getting.adoc[Getting Jandex]
+** xref:core/browsing.adoc[Browsing Declarations and Types]
+** xref:core/indexing.adoc[Indexing Classes]
+* Jandex Maven Plugin
+** xref:maven/basic.adoc[Basic Usage]
+** xref:maven/advanced.adoc[Advanced Usage]
+** xref:maven/shading.adoc[Usage with Shading]

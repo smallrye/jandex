@@ -1,0 +1,17 @@
+# partial playbook for local development
+# usage: [npx] antora generate antora-playbook.yml
+site:
+  title: Jandex documentation
+  start_page: jandex::index.adoc
+content:
+  sources:
+  - url: ..
+    start_path: doc
+    branches: HEAD
+ui:
+  bundle:
+    url: https://github.com/smallrye/smallrye-antora-ui/blob/main/build/ui-bundle.zip?raw=true
+    snapshot: true
+asciidoc:
+  attributes:
+    page-pagination: ''

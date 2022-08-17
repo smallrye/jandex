@@ -1,0 +1,49 @@
+= Using Jandex Maven Plugin with Shading
+
+The Jandex Maven plugin has an additional goal `jandex-jar` that can be used to create an index inside an existing JAR.
+This goal is not bound to any phase by default, so you have to configure that manually.
+
+It is useful together with shading, where the Maven Shade plugin creates a JAR from multiple previously existing JARs.
+A shaded JAR may already contain a Jandex index, if at least one of the constituent JARs contains one, but that index is most likely _not_ what you want.
+First, it is an unmodified index originating in one of the constituent JARs.
+If multiple constituent JARs contain an index, only one of them makes it to the shaded JAR; the others are lost.
+Second, during shading, classes may be relocated, so the index data may become stale.
+
+There is no support for merging existing index files from the original JARs.
+Likewise, there is no support for applying class relocations over an existing index.
+
+In short, if you want a shaded JAR to have a Jandex index, you have to reindex it.
+
+[source,xml]
+----
+<plugin>
+    <groupId>io.smallrye</groupId>
+    <artifactId>jandex-maven-plugin</artifactId>
+    <version>${version.jandex}</version>
+    <executions>
+        <execution>
+            <id>uberjar-index</id>
+            <phase>package</phase>
+            <goals>
+                <goal>jandex-jar</goal>
+            </goals>
+            <configuration>
+                <jar>${project.build.directory}/${project.build.finalName}.jar</jar>
+                <includes>
+                    <include>com/example/my/project/**/*.class</include>
+                </includes>
+                <excludes>
+                    <exclude>com/example/**/_private/*.class</exclude>
+                </excludes>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+
+If we want to reindex a shaded JAR, we have to make sure that the `jandex-jar` goal of the Jandex Maven plugin executes _later_ than the `shade` goal of the Maven Shade plugin.
+In this example, we bind the `jandex-jar` goal to the `package` phase, which is also the phase in which the `shade` goal of the Maven Shade plugin executes by default.
+In such case, we have to put the `<plugin>` element of the Jandex Maven plugin _after_ the `<plugin>` element of the Maven Shade plugin.
+
+Remember that if the Jandex Maven plugin operates on a JAR that was produced by the Maven Shade plugin, and if the Maven Shade plugin is configured to perform class relocations, the Jandex Maven plugin operates on already relocated classes.
+This is important for configuring includes and excludes correctly.

@@ -1,0 +1,53 @@
+= Jandex
+
+Jandex is a space efficient Java class file indexer and offline reflection library.
+
+It supports:
+
+* Indexing a set of classes into a memory efficient representation
+* Browsing and searching for annotations, including Java 8 type annotations
+* Browsing and searching for declarations and types, including generic type information
+* Browsing and searching through the class and interface inheritance hierarchy
+* Persisting an index in a custom storage efficient format and fast loading of that format
+* Compatibility with previous API and storage format versions, as described in the <<compatibility_promise>>
+* Execution via API, command line tool, Ant, and Maven plugin
+
+Remember that Jandex has extensive API documentation in the link:https://javadoc.io/doc/io.smallrye/jandex/latest/index.html[javadoc form].
+This documentation site is currently rather incomplete, so please consult the javadoc frequently.
+
+== Requirements
+
+Jandex 3.0+ requires Java 8 to run.
+
+TIP: The runtime Java version does _not_ affect the Jandex bytecode parsing capabilities.
+Jandex running on Java 8 can still parse Java 17 bytecode.
+
+== Getting Help
+
+Issues can be reported in link:https://github.com/smallrye/jandex/issues[GitHub Issues].
+
+For discussions, use the link:https://groups.google.com/g/smallrye[SmallRye Google Group] or the link:https://quarkusio.zulipchat.com/[Quarkus Zulip chat].
+
+[[compatibility_promise]]
+== Compatibility Promise
+
+Jandex uses an `X.Y.Z` versioning scheme.
+In the following text, we call `X` a _major_ version, `Y` a _minor_ version, and `Z` a _micro_ version.
+
+=== API
+
+Jandex may break backward compatibility for _callers_ of the Jandex API in major versions.
+If you only call Jandex API, updating to a newer minor or micro version is safe.
+
+Jandex may break backward compatibility for users that _extend_ Jandex classes or _implement_ Jandex interfaces in minor or major versions.
+If you extend Jandex classes or implement Jandex interfaces, updating to a newer micro version is safe.
+
+=== Persistent Index Format
+
+The persistent index format is versioned.
+Jandex is backward compatible when it comes to reading the persistent index, but not forward compatible.
+In other words, newer Jandex can read older index, but older Jandex can't read newer index.
+
+Jandex may introduce a new persistent index format version in minor or major versions.
+If you distribute a Jandex index as part of your artifacts, updating to a newer micro version is safe.
+Updating to a newer minor or major version may require consumers of the Jandex index to also update.

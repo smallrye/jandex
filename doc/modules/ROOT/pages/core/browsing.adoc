@@ -1,0 +1,154 @@
+= Browsing Declarations and Types
+
+== Browsing a Class
+
+The following example demonstrates indexing a class and browsing its methods:
+
+[source,java]
+----
+Index index = Index.of(Map.class);
+
+ClassInfo clazz = index.getClassByName(DotName.createSimple("java.util.Map"));
+
+for (MethodInfo method : clazz.methods()) {
+    System.out.println(method);
+}
+----
+
+== Searching for Annotations
+
+The following example demonstrates indexing the `Thread` and `String` classes, and searching for methods that have been marked with `@Deprecated`:
+
+[source,java]
+----
+Indexer indexer = new Indexer();
+indexer.indexClass(Thread.class);
+indexer.indexClass(String.class);
+Index index = indexer.complete();
+
+DotName deprecated = DotName.createSimple("java.lang.Deprecated");
+List<AnnotationInstance> annotations = index.getAnnotations(deprecated);
+
+for (AnnotationInstance annotation : annotations) {
+    switch (annotation.target().kind()) {
+        case METHOD:
+            System.out.println(annotation.target());
+            break;
+    }
+}
+----
+
+== Analyzing Generics
+
+The following example demonstrates indexing the `Collections` class and printing the resolved bound on the `List<T>` method parameter, which resolves to `Comparable` from the method type parameter.
+
+The `sort()` method analyzed by the example is defined in source as:
+
+[source,java]
+----
+public static <T extends Comparable<? super T>> void sort(List<T> list)
+----
+
+The example code, which prints `Comparable<? super T>` followed by `T`, is:
+
+[source,java]
+----
+Index index = Index.of(Collections.class);
+
+ClassInfo clazz = index.getClassByName(DotName.createSimple("java.util.Collections"));
+Type listType = Type.create(DotName.createSimple("java.util.List"), Type.Kind.CLASS);
+MethodInfo sort = clazz.method("sort", listType);
+
+Type t = sort.parameterTypes().get(0).asParameterizedType() // List<T extends Comparable<? super T>>
+             .arguments().get(0).asTypeVariable()           // T extends Comparable<? super T>
+             .bounds().get(0);                              // Comparable<? super T>
+
+System.out.println(t);
+
+Type b = t.asParameterizedType()               // Comparable<? super T>
+          .arguments().get(0).asWildcardType() // ? super T
+          .superBound();                       // T
+
+System.out.println(b);
+----
+
+== Browsing Type Annotations
+
+Consider a declaration with complex nested generic type which contains a `@Label` annotation:
+
+[source,java]
+----
+Map<Integer, List<@Label("Name") String>> names;
+----
+
+The following code will print `Name`, the annotation value associated with the type:
+
+[source,java]
+----
+Indexer indexer = new Indexer();
+indexer.indexClass(Test.class);
+indexer.indexClass(Test.Label.class);
+Index index = indexer.complete();
+
+FieldInfo field = index.getClassByName(Test.class).field("names");
+System.out.println(
+        field.type().asParameterizedType()                // Map<Integer, List<@Label("Name") String>>
+                .arguments().get(1).asParameterizedType() // List<@Label("Name") String>
+                .arguments().get(0)                       // @Label("Name") String
+                .annotations().get(0)                     // @Label("Name")
+                .value().asString()                       // "Name"
+);
+----
+
+== Searching for Type Annotations
+
+A type annotation can also be located by searching for the annotation.
+The target for a found type annotation is represented as a `TypeTarget`.
+The `TypeTarget` provides a reference to the annotated type, as well as the enclosing target that contains the type.
+The target itself can be a method, a class, or a field.
+The usage of that target can be a number of places, including parameters, return types, type parameters, type arguments, class extends values, type bounds and receiver types.
+Subclasses of `TypeTarget` provide the necessary information to locate the starting point of the usage.
+
+Since the particular type use can occur at any depth, the relevant branch of the type tree constrained by the above starting point must be traversed to understand the context of the use.
+
+Consider a declaration with complex nested generic type which contains a `@Label` annotation:
+
+[source,java]
+----
+Map<Integer, List<@Label("Name") String>> names;
+----
+
+The following code locates a type annotation and then inspects its location:
+
+[source,java]
+----
+Indexer indexer = new Indexer();
+indexer.indexClass(Test.class);
+indexer.indexClass(Test.Label.class);
+Index index = indexer.complete();
+
+DotName label = DotName.createSimple("Test$Label");
+List<AnnotationInstance> annotations = index.getAnnotations(label);
+for (AnnotationInstance annotation : annotations) {
+    if (annotation.target().kind() == AnnotationTarget.Kind.TYPE) {
+        TypeTarget typeTarget = annotation.target().asType();
+        System.out.println("Type usage is located within: " + typeTarget.enclosingTarget());
+        System.out.println("Usage type: " + typeTarget.usage());
+        System.out.println("Target type: " + typeTarget.target());
+        System.out.println("Expected target? " + (typeTarget.enclosingTarget().asField().type()
+                .asParameterizedType().arguments().get(1)
+                .asParameterizedType().arguments().get(0)
+                == typeTarget.target()));
+    }
+}
+----
+
+The output is:
+
+[source]
+----
+Type usage is located within: java.util.Map<java.lang.Integer, java.util.List<java.lang.@Label("Name") String>> Test.names
+Usage type: EMPTY
+Target type: java.lang.@Label("Name") String
+Expected target? true
+----

@@ -1,0 +1,28 @@
+= Basic Maven Plugin Usage
+
+This is how you add a persistent Jandex index to your Maven project:
+
+[source,xml]
+----
+<build>
+    <plugins>
+        <plugin>
+            <groupId>io.smallrye</groupId>
+            <artifactId>jandex-maven-plugin</artifactId>
+            <version>${version.jandex}</version>
+            <executions>
+                <execution>
+                    <id>make-index</id>
+                    <goals>
+                        <goal>jandex</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+----
+
+The `jandex` goal is bound to the `process-classes` phase by default.
+
+This configuration will index all `.class` files in your `target/classes` directory, and write the index to `target/classes/META-INF/jandex.idx`.

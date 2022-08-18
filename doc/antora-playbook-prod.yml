@@ -1,0 +1,19 @@
+# production playbook for generating the documentation site
+site:
+  title: Jandex documentation
+  start_page: jandex::index.adoc
+content:
+  sources:
+  - url: https://github.com/smallrye/jandex.git
+    branches: ~
+    tags:
+    - '3*'
+    - '!*-RC*'
+    start_path: doc
+ui:
+  bundle:
+    url: https://github.com/smallrye/smallrye-antora-ui/blob/main/build/ui-bundle.zip?raw=true
+    snapshot: true
+asciidoc:
+  attributes:
+    page-pagination: ''

@@ -11,3 +11,8 @@ jdk-cache
 # IntelliJ IDEA
 .idea
 *.iml
+
+# locally installed Antora
+doc/build
+doc/node_modules
+doc/package-lock.json

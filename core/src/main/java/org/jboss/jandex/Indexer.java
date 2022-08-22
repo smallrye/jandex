@@ -2241,12 +2241,12 @@ public final class Indexer {
     }
 
     /**
-     * Analyze and index the class file data present in the passed class.
+     * Analyze and index the class file data of given {@code clazz}.
      * Each call adds information to the final complete index.
      *
      * @param clazz a previously-loaded class
      * @throws IOException if the class file data is corrupt or the underlying stream fails
-     * @throws IllegalArgumentException if clazz is null
+     * @throws IllegalArgumentException if {@code clazz} is {@code null}
      */
     public void indexClass(Class<?> clazz) throws IOException {
         if (clazz == null) {
@@ -2259,27 +2259,30 @@ public final class Indexer {
     }
 
     /**
-     * Analyze and index the class file data present in the passed input stream.
-     * Each call adds information to the final complete index.
+     * Analyze and index the class file data present in given input {@code stream}.
+     * Each call adds information to the final complete index. Closing the input stream
+     * is the caller's responsibility.
      *
-     * @param stream a stream pointing to class file data
-     * @throws IOException if the class file data is corrupt or the underlying stream fails
-     * @throws IllegalArgumentException if stream is null
+     * @param stream the class bytecode to index, must not be {@code null}
+     * @throws IOException if the class file data is corrupt or the stream fails
+     * @throws IllegalArgumentException if {@code stream} is {@code null}
      */
     public void index(InputStream stream) throws IOException {
         indexWithSummary(stream);
     }
 
     /**
-     * Analyze and index the class file data present in the passed input stream.
-     * Each call adds information to the final complete index. For reporting progress
-     * in batch indexers, this variant of {@code index} returns a summary of
-     * the just-indexed class.
+     * Analyze and index the class file data present in given input {@code stream}.
+     * Each call adds information to the final complete index. Closing the input stream
+     * is the caller's responsibility.
+     * <p>
+     * For reporting progress in batch indexers, this variant of {@code index} returns
+     * a summary of the just-indexed class.
      *
-     * @param stream a stream pointing to class file data
+     * @param stream the class bytecode to index, must not be {@code null}
      * @return a summary of the just-indexed class
-     * @throws IOException if the class file data is corrupt or the underlying stream fails
-     * @throws IllegalArgumentException if stream is null
+     * @throws IOException if the class file data is corrupt or the stream fails
+     * @throws IllegalArgumentException if {@code stream} is {@code null}
      */
     public ClassSummary indexWithSummary(InputStream stream) throws IOException {
         if (stream == null) {
@@ -2320,7 +2323,7 @@ public final class Indexer {
                 currentClass.module().setMainClass(moduleMainClass);
             }
 
-            return new ClassSummary(currentClass.name().toString(), currentClass.annotationsMap().size());
+            return new ClassSummary(currentClass.name(), currentClass.superName(), currentClass.annotationsMap().keySet());
         } finally {
             constantPool = null;
             constantPoolOffsets = null;
@@ -2337,7 +2340,7 @@ public final class Indexer {
 
     /**
      * Completes, finalizes, and returns the index after zero or more calls to
-     * index. Future calls to index will result in a new index.
+     * {@code index()}. Future calls to {@code index()} will result in a new index.
      *
      * @return the master index for all scanned class streams
      */

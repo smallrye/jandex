@@ -7,8 +7,8 @@ import java.io.IOException;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.FieldInfo;
+import org.jboss.jandex.Index;
 import org.jboss.jandex.MethodInfo;
-import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
 import net.bytebuddy.ByteBuddy;
@@ -34,7 +34,7 @@ public class ModifiersTestCase {
                 .visit(new ModifierAdjustment().withTypeModifiers(SyntheticState.SYNTHETIC))
                 .make()
                 .getBytes();
-        ClassInfo classInfo = IndexingUtil.indexSingle(syntheticClass);
+        ClassInfo classInfo = Index.singleClass(syntheticClass);
         assertTrue(classInfo.isSynthetic());
     }
 
@@ -45,7 +45,7 @@ public class ModifiersTestCase {
                 .defineMethod("ping", String.class, SyntheticState.SYNTHETIC).intercept(FixedValue.value("Hello World!"))
                 .make()
                 .getBytes();
-        ClassInfo classInfo = IndexingUtil.indexSingle(syntheticClass);
+        ClassInfo classInfo = Index.singleClass(syntheticClass);
         assertTrue(classInfo.isSynthetic());
         MethodInfo ping = null;
         for (MethodInfo m : classInfo.methods()) {
@@ -64,7 +64,7 @@ public class ModifiersTestCase {
                 .defineField("ping", String.class, SyntheticState.SYNTHETIC)
                 .make()
                 .getBytes();
-        ClassInfo classInfo = IndexingUtil.indexSingle(syntheticClass);
+        ClassInfo classInfo = Index.singleClass(syntheticClass);
         assertTrue(classInfo.isSynthetic());
         FieldInfo ping = null;
         for (FieldInfo f : classInfo.fields()) {

@@ -624,6 +624,11 @@ public final class ClassInfo implements AnnotationTarget {
         return Collections.unmodifiableMap(annotations);
     }
 
+    // maintain binary compatibility with Jandex 2.4
+    public final Map<DotName, List<AnnotationInstance>> annotations$$bridge() {
+        return annotationsMap();
+    }
+
     final void setAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {
         this.annotations = annotations;
     }

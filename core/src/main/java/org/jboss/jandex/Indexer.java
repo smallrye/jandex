@@ -2258,6 +2258,12 @@ public final class Indexer {
         }
     }
 
+    // maintain binary compatibility with Jandex 2.4
+    public ClassInfo indexClass$$bridge(Class<?> clazz) throws IOException {
+        indexClass(clazz);
+        return null;
+    }
+
     /**
      * Analyze and index the class file data present in given input {@code stream}.
      * Each call adds information to the final complete index. Closing the input stream
@@ -2269,6 +2275,12 @@ public final class Indexer {
      */
     public void index(InputStream stream) throws IOException {
         indexWithSummary(stream);
+    }
+
+    // maintain binary compatibility with Jandex 2.4
+    public ClassInfo index$$bridge(InputStream stream) throws IOException {
+        index(stream);
+        return null;
     }
 
     /**

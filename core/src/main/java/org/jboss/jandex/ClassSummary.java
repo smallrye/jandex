@@ -1,19 +1,31 @@
 package org.jboss.jandex;
 
-public final class ClassSummary {
-    private final String name;
-    private final int annotationsCount;
+import java.util.Set;
 
-    ClassSummary(String name, int annotationsCount) {
+public final class ClassSummary {
+    private final DotName name;
+    private final DotName superclassName;
+    private final Set<DotName> annotations;
+
+    ClassSummary(DotName name, DotName superclassName, Set<DotName> annotations) {
         this.name = name;
-        this.annotationsCount = annotationsCount;
+        this.superclassName = superclassName;
+        this.annotations = annotations;
     }
 
-    public String name() {
+    public DotName name() {
         return name;
     }
 
+    public DotName superclassName() {
+        return superclassName;
+    }
+
+    public Set<DotName> annotations() {
+        return annotations;
+    }
+
     public int annotationsCount() {
-        return annotationsCount;
+        return annotations.size();
     }
 }

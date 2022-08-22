@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.util.concurrent.Callable;
 
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.test.util.IndexingUtil;
+import org.jboss.jandex.Index;
 import org.junit.jupiter.api.Test;
 
 import net.bytebuddy.ByteBuddy;
@@ -27,7 +27,7 @@ public class ConstantDynamicTestCase {
                 .intercept(FixedValue.value(JavaConstant.Dynamic.ofInvocation(Object.class.getConstructor())))
                 .make()
                 .getBytes();
-        ClassInfo classInfo = IndexingUtil.indexSingle(dynamicConstantsClass);
+        ClassInfo classInfo = Index.singleClass(dynamicConstantsClass);
         assertNotNull(classInfo);
     }
 }

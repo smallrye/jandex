@@ -18,6 +18,7 @@
 
 package org.jboss.jandex;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -221,6 +222,46 @@ public final class Index implements IndexView {
         }
 
         return indexer.complete();
+    }
+
+    /**
+     * Creates a temporary {@link Indexer}, indexes given {@code clazz}, and returns
+     * the corresponding {@link ClassInfo}.
+     *
+     * @param clazz the class to index, must not be {@code null}
+     * @return the corresponding {@link ClassInfo}
+     */
+    public static ClassInfo singleClass(Class<?> clazz) throws IOException {
+        Indexer indexer = new Indexer();
+        indexer.indexClass(clazz);
+        Index index = indexer.complete();
+        return index.getKnownClasses().iterator().next();
+    }
+
+    /**
+     * Creates a temporary {@link Indexer}, indexes given {@code classData}, and returns
+     * the corresponding {@link ClassInfo}.
+     *
+     * @param classData the class bytecode to index, must not be {@code null}
+     * @return the corresponding {@link ClassInfo}
+     */
+    public static ClassInfo singleClass(byte[] classData) throws IOException {
+        return Index.singleClass(new ByteArrayInputStream(classData));
+    }
+
+    /**
+     * Creates a temporary {@link Indexer}, indexes given {@code classData}, and returns
+     * the corresponding {@link ClassInfo}. Closing the input stream is the caller's
+     * responsibility.
+     *
+     * @param classData the class bytecode to index, must not be {@code null}
+     * @return the corresponding {@link ClassInfo}
+     */
+    public static ClassInfo singleClass(InputStream classData) throws IOException {
+        Indexer indexer = new Indexer();
+        indexer.index(classData);
+        Index index = indexer.complete();
+        return index.getKnownClasses().iterator().next();
     }
 
     /**

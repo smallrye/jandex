@@ -9,7 +9,7 @@
 
     <groupId>io.smallrye</groupId>
     <artifactId>jandex-parent</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Jandex: Parent</name>
@@ -48,7 +48,7 @@
         <connection>scm:git:git@github.com:smallrye/jandex.git</connection>
         <developerConnection>scm:git:git@github.com:smallrye/jandex.git</developerConnection>
         <url>https://github.com/smallrye/jandex/</url>
-        <tag>3.0.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <modules>

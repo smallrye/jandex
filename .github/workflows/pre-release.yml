@@ -8,7 +8,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    name: pre-release
+    name: Pre-release checks
     steps:
     - name: Retrieve project metadata
       id: metadata

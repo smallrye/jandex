@@ -125,8 +125,9 @@ class GenericSignatureParser {
     private Map<String, TypeVariable> elementTypeParameters = new HashMap<String, TypeVariable>();
     private Map<String, TypeVariable> classTypeParameters = new HashMap<String, TypeVariable>();
 
-    // used to track enclosing type variables when patching type variable references
-    // present here to avoid allocating a new stack for each type that needs to be traversed
+    // used to track enclosing type variables when determining if a type is recursive
+    // and when patching type variable references; present here to avoid allocating
+    // a new stack for each type that needs to be traversed
     private Deque<TypeVariable> typeVariableStack = new ArrayDeque<>();
 
     GenericSignatureParser(NameTable names) {
@@ -488,6 +489,7 @@ class GenericSignatureParser {
     private void resolveTypeList(ArrayList<Type> list) {
         int size = list.size();
         for (int i = 0; i < size; i++) {
+            typeVariableStack.clear(); // should not be needed, just for extra safety
             boolean isRecursive = isRecursive(list.get(i));
             Type type = resolveType(list.get(i), isRecursive);
             if (type != null) {
@@ -504,55 +506,52 @@ class GenericSignatureParser {
         }
     }
 
-    private boolean isRecursive(Type type) {
-        if (type.kind() == Type.Kind.TYPE_VARIABLE) {
-            String identifier = type.asTypeVariable().identifier();
-            Type[] bounds = type.asTypeVariable().boundArray();
-            for (int i = 0; i < bounds.length; i++) {
-                if (typeRefersToTypeVariable(identifier, bounds[i])) {
-                    return true;
-                }
+    private TypeVariable findOnTypeVariableStack(String typeVariableIdentifier) {
+        for (TypeVariable typeVariable : typeVariableStack) {
+            if (typeVariable.identifier().equals(typeVariableIdentifier)) {
+                return typeVariable;
             }
         }
-        return false;
+        return null;
     }
 
-    private boolean typeRefersToTypeVariable(String identifier, Type type) {
+    private boolean isRecursive(Type type) {
         if (type.kind() == Type.Kind.TYPE_VARIABLE_REFERENCE) {
-            return identifier.equals(type.asTypeVariableReference().identifier());
+            return findOnTypeVariableStack(type.asTypeVariableReference().identifier()) != null;
         } else if (type.kind() == Type.Kind.UNRESOLVED_TYPE_VARIABLE) {
             String unresolvedIdentifier = type.asUnresolvedTypeVariable().identifier();
-            if (identifier.equals(unresolvedIdentifier)) {
+            if (findOnTypeVariableStack(unresolvedIdentifier) != null) {
                 return true;
             }
             if (typeParameters.containsKey(unresolvedIdentifier)) {
-                return typeRefersToTypeVariable(identifier, typeParameters.get(unresolvedIdentifier));
+                return isRecursive(typeParameters.get(unresolvedIdentifier));
             }
         } else if (type.kind() == Type.Kind.TYPE_VARIABLE) {
-            if (identifier.equals(type.asTypeVariable().identifier())) {
+            if (findOnTypeVariableStack(type.asTypeVariable().identifier()) != null) {
                 return true;
             }
+            typeVariableStack.push(type.asTypeVariable());
             Type[] bounds = type.asTypeVariable().boundArray();
             for (int i = 0; i < bounds.length; i++) {
-                if (typeRefersToTypeVariable(identifier, bounds[i])) {
+                if (isRecursive(bounds[i])) {
                     return true;
                 }
             }
+            typeVariableStack.pop();
         } else if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
-            if (type.asParameterizedType().owner() != null
-                    && typeRefersToTypeVariable(identifier, type.asParameterizedType().owner())) {
+            if (type.asParameterizedType().owner() != null && isRecursive(type.asParameterizedType().owner())) {
                 return true;
             }
             Type[] typeArguments = type.asParameterizedType().argumentsArray();
             for (int i = 0; i < typeArguments.length; i++) {
-                if (typeRefersToTypeVariable(identifier, typeArguments[i])) {
+                if (isRecursive(typeArguments[i])) {
                     return true;
                 }
             }
         } else if (type.kind() == Type.Kind.WILDCARD_TYPE) {
-            return typeRefersToTypeVariable(identifier, type.asWildcardType().bound());
+            return isRecursive(type.asWildcardType().bound());
         } else if (type.kind() == Type.Kind.ARRAY) {
-            return typeRefersToTypeVariable(identifier, type.asArrayType().component());
+            return isRecursive(type.asArrayType().component());
         }
         return false;
     }
@@ -620,11 +619,10 @@ class GenericSignatureParser {
         if (type.kind() == Type.Kind.TYPE_VARIABLE_REFERENCE) {
             String identifier = type.asTypeVariableReference().identifier();
 
-            for (TypeVariable typeVariable : typeVariableStack) {
-                if (identifier.equals(typeVariable.identifier())) {
-                    type.asTypeVariableReference().setTarget(typeVariable);
-                    return;
-                }
+            TypeVariable typeVariable = findOnTypeVariableStack(identifier);
+            if (typeVariable != null) {
+                type.asTypeVariableReference().setTarget(typeVariable);
+                return;
             }
 
             TypeVariable typeParameter = typeParameters.get(identifier);

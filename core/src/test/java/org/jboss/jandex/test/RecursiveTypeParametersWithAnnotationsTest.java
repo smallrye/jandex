@@ -31,6 +31,9 @@ public class RecursiveTypeParametersWithAnnotationsTest {
     static class DeepTypeParameterReference<@MyAnnotation("1") T extends @MyAnnotation("2") Collection<@MyAnnotation("3") List<@MyAnnotation("4") Queue<@MyAnnotation("5") Map<@MyAnnotation("6") ? super @MyAnnotation("7") T[] @MyAnnotation("8") [], @MyAnnotation("9") Iterable<@MyAnnotation("10") ? extends @MyAnnotation("11") T>>>>>> {
     }
 
+    static class RecursiveBoundInNonRecursiveTypeParameter<@MyAnnotation("1") T extends @MyAnnotation("2") RecursiveBoundInNonRecursiveTypeParameter<@MyAnnotation("3") ?, @MyAnnotation("4") U>, @MyAnnotation("5") U extends @MyAnnotation("6") Comparable<@MyAnnotation("7") U>> {
+    }
+
     @Test
     public void myComparable() throws IOException {
         Index index = Index.of(MyComparable.class);
@@ -220,6 +223,70 @@ public class RecursiveTypeParametersWithAnnotationsTest {
         assertEquals(
                 "@MyAnnotation(\"1\") T extends java.util.@MyAnnotation(\"2\") Collection<java.util.@MyAnnotation(\"3\") List<java.util.@MyAnnotation(\"4\") Queue<java.util.@MyAnnotation(\"5\") Map<@MyAnnotation(\"6\") ? super @MyAnnotation(\"7\") T[] @MyAnnotation(\"8\") [], java.lang.@MyAnnotation(\"9\") Iterable<@MyAnnotation(\"10\") ? extends @MyAnnotation(\"11\") T>>>>>",
                 typeParam.toString());
+    }
+
+    @Test
+    public void recursiveBoundInNonRecursiveTypeParameter() throws IOException {
+        Index index = Index.of(RecursiveBoundInNonRecursiveTypeParameter.class);
+        recursiveBoundInNonRecursiveTypeParameter(index);
+        recursiveBoundInNonRecursiveTypeParameter(IndexingUtil.roundtrip(index));
+    }
+
+    private void recursiveBoundInNonRecursiveTypeParameter(Index index) {
+        ClassInfo clazz = index.getClassByName(RecursiveBoundInNonRecursiveTypeParameter.class);
+        List<TypeVariable> typeParams = clazz.typeParameters();
+        assertEquals(2, typeParams.size());
+        {
+            TypeVariable typeParam = typeParams.get(0);
+            assertEquals("T", typeParam.identifier());
+            assertEquals(1, typeParam.bounds().size());
+            assertTypeAnnotation(typeParam, "1");
+            Type bound = typeParam.bounds().get(0);
+            assertEquals(DotName.createSimple(RecursiveBoundInNonRecursiveTypeParameter.class.getName()), bound.name());
+            assertEquals(Type.Kind.PARAMETERIZED_TYPE, bound.kind());
+            assertTypeAnnotation(bound, "2");
+            assertEquals(2, bound.asParameterizedType().arguments().size());
+            {
+                Type boundArg = bound.asParameterizedType().arguments().get(0);
+                assertEquals(Type.Kind.WILDCARD_TYPE, boundArg.kind());
+                assertTypeAnnotation(boundArg, "3");
+                assertEquals(Type.Kind.CLASS, boundArg.asWildcardType().extendsBound().kind());
+                assertEquals(DotName.OBJECT_NAME, boundArg.asWildcardType().extendsBound().name());
+                assertNull(boundArg.asWildcardType().superBound());
+            }
+            {
+                Type boundArg = bound.asParameterizedType().arguments().get(1);
+                assertEquals(Type.Kind.TYPE_VARIABLE_REFERENCE, boundArg.kind());
+                assertEquals("U", boundArg.asTypeVariableReference().identifier());
+                assertSame(typeParams.get(1), boundArg.asTypeVariableReference().follow());
+                assertTypeAnnotation(boundArg, "4");
+            }
+        }
+        {
+            TypeVariable typeParam = typeParams.get(1);
+            assertEquals("U", typeParam.identifier());
+            assertEquals(1, typeParam.bounds().size());
+            assertTypeAnnotation(typeParam, "5");
+            Type bound = typeParam.bounds().get(0);
+            assertEquals(DotName.createSimple(Comparable.class.getName()), bound.name());
+            assertEquals(Type.Kind.PARAMETERIZED_TYPE, bound.kind());
+            assertTypeAnnotation(bound, "6");
+            assertEquals(1, bound.asParameterizedType().arguments().size());
+            {
+                Type boundArg = bound.asParameterizedType().arguments().get(0);
+                assertEquals(Type.Kind.TYPE_VARIABLE_REFERENCE, boundArg.kind());
+                assertEquals("U", boundArg.asTypeVariableReference().identifier());
+                assertSame(typeParam, boundArg.asTypeVariableReference().follow());
+                assertTypeAnnotation(boundArg, "7");
+            }
+        }
+
+        assertEquals(
+                "@MyAnnotation(\"1\") T extends org.jboss.jandex.test.@MyAnnotation(\"2\") RecursiveTypeParametersWithAnnotationsTest$RecursiveBoundInNonRecursiveTypeParameter<@MyAnnotation(\"3\") ?, @MyAnnotation(\"4\") U>",
+                typeParams.get(0).toString());
+        assertEquals(
+                "@MyAnnotation(\"5\") U extends java.lang.@MyAnnotation(\"6\") Comparable<@MyAnnotation(\"7\") U>",
+                typeParams.get(1).toString());
     }
 
     private void assertTypeAnnotation(Type type, String expectedValue) {

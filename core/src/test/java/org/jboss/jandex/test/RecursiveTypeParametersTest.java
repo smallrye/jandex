@@ -62,6 +62,9 @@ public class RecursiveTypeParametersTest {
         }
     }
 
+    static class RecursiveBoundInNonRecursiveTypeParameter<T extends RecursiveBoundInNonRecursiveTypeParameter<?, U>, U extends Comparable<U>> {
+    }
+
     // ---
 
     @Test
@@ -308,5 +311,55 @@ public class RecursiveTypeParametersTest {
         assertSame(typeVariable, boundTypeArg.asTypeVariableReference().follow());
 
         assertEquals("S extends org.jboss.jandex.test.RecursiveTypeParametersTest$Score<S>", typeVariable.toString());
+    }
+
+    @Test
+    public void recursiveBoundInNonRecursiveTypeParameter() throws IOException {
+        Index index = Index.of(RecursiveBoundInNonRecursiveTypeParameter.class);
+        recursiveBoundInNonRecursiveTypeParameter(index);
+        recursiveBoundInNonRecursiveTypeParameter(IndexingUtil.roundtrip(index));
+    }
+
+    private void recursiveBoundInNonRecursiveTypeParameter(Index index) {
+        ClassInfo clazz = index.getClassByName(RecursiveBoundInNonRecursiveTypeParameter.class);
+        List<TypeVariable> typeParams = clazz.typeParameters();
+        assertEquals(2, typeParams.size());
+        {
+            TypeVariable typeParam = typeParams.get(0);
+            assertEquals("T", typeParam.identifier());
+            assertEquals(1, typeParam.bounds().size());
+            Type bound = typeParam.bounds().get(0);
+            assertEquals(DotName.createSimple(RecursiveBoundInNonRecursiveTypeParameter.class.getName()), bound.name());
+            assertEquals(Type.Kind.PARAMETERIZED_TYPE, bound.kind());
+            assertEquals(2, bound.asParameterizedType().arguments().size());
+            {
+                Type boundArg = bound.asParameterizedType().arguments().get(0);
+                assertEquals(Type.Kind.WILDCARD_TYPE, boundArg.kind());
+                assertEquals(Type.Kind.CLASS, boundArg.asWildcardType().extendsBound().kind());
+                assertEquals(DotName.OBJECT_NAME, boundArg.asWildcardType().extendsBound().name());
+                assertNull(boundArg.asWildcardType().superBound());
+            }
+            {
+                Type boundArg = bound.asParameterizedType().arguments().get(1);
+                assertEquals(Type.Kind.TYPE_VARIABLE_REFERENCE, boundArg.kind());
+                assertEquals("U", boundArg.asTypeVariableReference().identifier());
+                assertSame(typeParams.get(1), boundArg.asTypeVariableReference().follow());
+            }
+        }
+        {
+            TypeVariable typeParam = typeParams.get(1);
+            assertEquals("U", typeParam.identifier());
+            assertEquals(1, typeParam.bounds().size());
+            Type bound = typeParam.bounds().get(0);
+            assertEquals(DotName.createSimple(Comparable.class.getName()), bound.name());
+            assertEquals(Type.Kind.PARAMETERIZED_TYPE, bound.kind());
+            assertEquals(1, bound.asParameterizedType().arguments().size());
+            {
+                Type boundArg = bound.asParameterizedType().arguments().get(0);
+                assertEquals(Type.Kind.TYPE_VARIABLE_REFERENCE, boundArg.kind());
+                assertEquals("U", boundArg.asTypeVariableReference().identifier());
+                assertSame(typeParam, boundArg.asTypeVariableReference().follow());
+            }
+        }
     }
 }

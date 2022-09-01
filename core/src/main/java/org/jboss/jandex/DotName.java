@@ -78,6 +78,20 @@ public final class DotName implements Comparable<DotName> {
     }
 
     /**
+     * Constructs a simple {@link DotName} which stores the name of given class in its entirety.
+     * This variant is ideal for temporary usage, such as looking up an entry in a {@code Map}
+     * or an {@linkplain Index index}.
+     * <p>
+     * This method is a shortcut for {@code DotName.createSimple(clazz.getName())}.
+     *
+     * @param clazz a class whose fully qualified name is returned; must not be {@code null}
+     * @return a simple {@code DotName} that wraps the name of given {@code clazz}; never {@code null}
+     */
+    public static DotName createSimple(Class<?> clazz) {
+        return createSimple(clazz.getName());
+    }
+
+    /**
      * Constructs a componentized {@link DotName}. Such {@code DotName} refers to
      * a parent prefix (or {@code null} if there is no further prefix) in addition
      * to a local name that has no dot separator. The fully qualified name this

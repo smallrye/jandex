@@ -30,7 +30,7 @@ package org.jboss.jandex;
  * <p>
  * Consider the following example involving a type target using the "Bar" annotation:
  *
- * <pre class="brush:java; gutter: false;">
+ * <pre class="brush:java">
  * class Foo&lt;T&gt; implements List&lt;@Bar T&gt; {
  * }
  * </pre>

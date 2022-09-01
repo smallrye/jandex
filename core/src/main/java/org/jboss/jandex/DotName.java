@@ -19,29 +19,27 @@
 package org.jboss.jandex;
 
 /**
- * A DotName represents a dot separated name, typically a Java package or a Java class.
+ * A {@code DotName} represents a dot separated name, typically a Java package or a Java class.
  * It has two possible variants. A simple wrapper based variant allows for fast construction
  * (it simply wraps the specified name string). Whereas, a componentized variant represents
- * one or more String components that when combined with a dot character, assemble the full
- * name. The intention of the componentized variant is that the String components can be reused
- * to offer memory efficiency. This reuse is common in Java where packages and classes follow
- * a tree structure.
- *
+ * one or more {@code String} components that, when combined with a dot character, assemble the
+ * full name. The intention of the componentized variant is that the {@code String} components
+ * can be reused to offer memory efficiency. This reuse is common in Java where packages
+ * and classes follow a tree structure.
  * <p>
  * Both the simple and componentized variants are considered semantically equivalent if they
- * refer to the same logical name. More specifically the equals and hashCode methods return the
- * same values for the same semantic name regardless of the variant used. Which variant to use
- * when depends on the specific performance and overhead objectives of the specific use pattern.
- *
+ * refer to the same logical name. More specifically, the {@code equals} and {@code hashCode}
+ * methods return the same values for the same semantic name regardless of the variant used.
+ * Which variant to use when depends on the specific performance and overhead objectives
+ * of the specific use pattern.
  * <p>
- * Simple names are cheap to construct (just a an additional wrapper object), so are ideal for
- * temporary use, like looking for an entry in a Map. Componentized names however require that
- * they be split in advance, and so require some additional time to construct. However the memory
+ * Simple names are cheap to construct (just an additional wrapper object), so are ideal for
+ * temporary use, like looking for an entry in a {@code Map}. Componentized names however require
+ * that they be split in advance, and so require some additional time to construct. However, the memory
  * benefits of reusing component strings make them desirable when stored in a longer term area
  * such as in a Java data structure.
  *
  * @author Jason T. Greene
- *
  */
 public final class DotName implements Comparable<DotName> {
     static final DotName JAVA_NAME;
@@ -69,64 +67,64 @@ public final class DotName implements Comparable<DotName> {
     }
 
     /**
-     * Constructs a simple DotName which stores the string in it's entirety. This variant is ideal
-     * for temporary usage, such as looking up an entry in a Map.
+     * Constructs a simple {@link DotName} which stores the string in its entirety. This variant is ideal
+     * for temporary usage, such as looking up an entry in a {@code Map} or an {@linkplain Index index}.
      *
-     * @param name A fully qualified non-null name (with dots)
-     * @return a simple DotName that wraps name
+     * @param name a fully qualified name (with dots); must not be {@code null}
+     * @return a simple {@code DotName} that wraps given {@code name}; never {@code null}
      */
     public static DotName createSimple(String name) {
         return new DotName(null, name, false, false);
     }
 
     /**
-     * Constructs a componentized DotName. Each DotName refers to a parent
-     * prefix (or null if there is no further prefix) in addition to a local
-     * name that has no dot separator. The fully qualified name this DotName
-     * represents is constructed by recursing all parent prefixes and joining all
-     * local name values with the '.' character.
+     * Constructs a componentized {@link DotName}. Such {@code DotName} refers to
+     * a parent prefix (or {@code null} if there is no further prefix) in addition
+     * to a local name that has no dot separator. The fully qualified name this
+     * {@code DotName} represents is constructed by recursing all parent prefixes
+     * and joining all local names with the {@code '.'} character.
      *
-     * @param prefix Another DotName that is the portion to the left of
-     *        localName, this may be null if there is not one
-     * @param localName the local non-null portion of this name, which does not contain
-     *        '.'
-     * @return a componentized DotName.
+     * @param prefix another {@code DotName} that is the portion of the final name to the left of {@code localName}; may be
+     *        {@code null} if there is no prefix
+     * @param localName the local portion of this name; must not be {@code null} and must not contain {@code '.'}
+     * @return a componentized {@code DotName}; never {@code null}
      */
     public static DotName createComponentized(DotName prefix, String localName) {
         if (localName.indexOf('.') != -1)
-            throw new IllegalArgumentException("A componentized DotName can not contain '.' characters in a local name");
+            throw new IllegalArgumentException("A componentized DotName must not contain '.' characters in a local name");
 
         return new DotName(prefix, localName, true, false);
     }
 
     /**
-     * Constructs a componentized DotName. Each DotName refers to a parent
-     * prefix (or null if there is no further prefix) in addition to a local
-     * name that has no dot separator. The fully qualified name this DotName
-     * represents is consructed by recursing all parent prefixes and joining all
-     * local name values with the '.' character.
+     * Constructs a componentized {@link DotName}. Such {@code DotName} refers to
+     * a parent prefix (or {@code null} if there is no further prefix) in addition
+     * to a local name that has no dot separator. The fully qualified name this
+     * {@code DotName} represents is constructed by recursing all parent prefixes
+     * and joining all local names with the {@code '.'} character.
      *
-     * @param prefix Another DotName that is the portion to the left of
-     *        localName, this may be null if there is not one
-     * @param localName the local non-null portion of this name, which does not contain
-     *        '.'
-     * @param innerClass whether or not this localName is an inner class style name, requiring '$' vs '.'
-     * @return a componentized DotName.
+     * @param prefix another {@code DotName} that is the portion of the final name to the left of {@code localName}; may be
+     *        {@code null} if there is no prefix
+     * @param localName the local portion of this name; must not be {@code null} and must not contain {@code '.'}
+     * @param innerClass whether the {@code localName} is an inner class style name, which is joined to the prefix using
+     *        {@code '$'} instead of {@code '.'}
+     * @return a componentized {@code DotName}; never {@code null}
      */
     public static DotName createComponentized(DotName prefix, String localName, boolean innerClass) {
-        if (localName.indexOf('.') != -1)
-            throw new IllegalArgumentException("A componentized DotName can not contain '.' characters in a local name");
+        if (localName.indexOf('.') != -1) {
+            throw new IllegalArgumentException("A componentized DotName must not contain '.' characters in a local name");
+        }
 
         return new DotName(prefix, localName, true, innerClass);
     }
 
     DotName(DotName prefix, String local, boolean noDots, boolean innerClass) {
         if (local == null) {
-            throw new IllegalArgumentException("Local string can not be null");
+            throw new IllegalArgumentException("Local name must not be null");
         }
 
         if (prefix != null && !prefix.componentized) {
-            throw new IllegalArgumentException("A componentized DotName must have a componentized prefix, or null");
+            throw new IllegalArgumentException("A componentized DotName must not have a non-componentized prefix");
         }
 
         this.prefix = prefix;
@@ -136,38 +134,37 @@ public final class DotName implements Comparable<DotName> {
     }
 
     /**
-     * Returns the parent prefix for this DotName or null if there is none.
-     * Simple DotName variants never have a prefix.
+     * Returns the parent prefix for this {@link DotName} or {@code null} if there is none.
+     * Simple {@code DotName} variants never have a prefix.
      *
-     * @return the parent prefix for this DotName
+     * @return the parent prefix for this {@code DotName}; may be {@code null}
      */
     public DotName prefix() {
         return prefix;
     }
 
     /**
-     * Returns the local portion of this DotName. In simple variants, the entire
-     * fully qualified string is returned. In componentized variants, just the
-     * right most portion not including a separator (either . or $) is returned.
-     *
+     * Returns the local portion of this {@link DotName}. In simple variants,
+     * the entire fully qualified string is returned. In componentized variants,
+     * just the rightmost portion not including a separator (either {@code '.'}
+     * or {@code '$'}) is returned.
      * <p>
      * Use {@link #withoutPackagePrefix()} instead of this method if the
-     * desired value is simply the right most portion (including dollar signs if
-     * present) after a '.' delimiter.
-     * </p>
+     * desired value is the part of the string (including {@code '$'} signs
+     * if present) after the rightmost {@code '.'} delimiter.
      *
-     * @return the non-null local portion of this DotName
+     * @return the local portion of this {@code DotName}; never {@code null}
      */
     public String local() {
         return local;
     }
 
     /**
-     * Returns the portion of this DotName that does not contain a package prefix.
-     * In the case of an inner class syntax name, the $ portion is included in
+     * Returns the portion of this {@link DotName} that does not contain a package prefix.
+     * In the case of an inner class syntax name, the {@code '$'} portion is included in
      * the return value.
      *
-     * @return the portion of the name that is not package prefixed
+     * @return the portion of the fully qualified name that does not include a package name
      * @since 2.1.1
      */
     public String withoutPackagePrefix() {
@@ -192,7 +189,7 @@ public final class DotName implements Comparable<DotName> {
     /**
      * Returns the package portion of this {@link DotName}.
      *
-     * @return the package name or null if this {@link DotName} has no package prefix
+     * @return the package name or {@code null} if this {@link DotName} has no package prefix
      * @since 2.4
      */
     public String packagePrefix() {
@@ -233,30 +230,31 @@ public final class DotName implements Comparable<DotName> {
     }
 
     /**
-     * Returns whether this DotName is a componentized variant.
+     * Returns whether this {@link DotName} is a componentized variant.
      *
-     * @return true if it is componentized, false if it is a simple DotName
+     * @return {@code true} if it is componentized, {@code false} if it is a simple {@code DotName}
      */
     public boolean isComponentized() {
         return componentized;
     }
 
     /**
-     * Returns whether the local portion of a componentized DotName is separated
-     * by an inner class style delimiter ('$"). This should not be used to test
-     * whether the name truly refers to an inner class, only that the dollar
-     * sign delimits the value. Java class names are allowed to contain dollar
-     * signs, so the local value could simply be a fragment of a class name, and
-     * not an actual inner class. The correct way to determine whether or not a
-     * name refers to an actual inner class is to lookup a ClassInfo in the
-     * index and call and examine the nesting type like so:
+     * Returns whether the local portion of a componentized {@link DotName} is separated
+     * by an inner class style delimiter ({@code '$'}). The result is undefined when this
+     * {@code DotName} is not componentized.
+     * <p>
+     * This should not be used to test whether the name truly refers to an inner class,
+     * only that the dollar sign delimits the value. Java class names are allowed to contain
+     * {@code '$'} signs, so the local value could simply be a fragment of a class name,
+     * and not an actual inner class. The correct way to determine whether a name refers
+     * to an actual inner class is to look up a {@link ClassInfo} in the index and examine
+     * the nesting type like so:
      *
-     * <code><pre>
-     *    index.get(name).nestingType() != TOP_LEVEL;
-     * </pre></code>
+     * <pre class="brush:java">
+     * index.getClassByName(name).nestingType() != TOP_LEVEL;
+     * </pre>
      *
-     *
-     * @return true if local is an inner class style delimited name, false otherwise
+     * @return {@code true} if local is an inner class style delimited name, {@code false} otherwise
      */
     public boolean isInner() {
         return innerClass;
@@ -291,21 +289,25 @@ public final class DotName implements Comparable<DotName> {
     }
 
     /**
-     * Returns a hash code which is based on the semantic representation of this <code>DotName</code>.
-     * Whether or not a <code>DotName</code> is componentized has no impact on the calculated hash code.
+     * Returns a hash code which is based on the semantic representation of this {@link DotName}.
+     * <p>
+     * Whether a {@code DotName} is componentized has no impact on the calculated hash code.
+     * In other words, a componentized {@code DotName} and a simple {@code DotName} that
+     * represent the same fully qualified name have the same hash code.
      *
      * @return a hash code representing this object
      * @see Object#hashCode()
      */
     public int hashCode() {
         int hash = this.hash;
-        if (hash != 0)
+        if (hash != 0) {
             return hash;
+        }
 
         if (prefix != null) {
             hash = prefix.hashCode() * 31 + (innerClass ? '$' : '.');
 
-            // Luckily String.hashCode documents the algorithm it follows
+            // luckily String.hashCode documents the algorithm it follows
             for (int i = 0; i < local.length(); i++) {
                 hash = 31 * hash + local.charAt(i);
             }
@@ -317,11 +319,11 @@ public final class DotName implements Comparable<DotName> {
     }
 
     /**
-     * Compares a <code>DotName</code> to another <code>DotName</code> and returns whether this DotName
-     * is lesser than, greater than, or equal to the specified DotName. If this <code>DotName</code> is lesser,
+     * Compares a {@link DotName} to another {@code DotName} and returns whether this {@code DotName}
+     * is lesser than, greater than, or equal to the specified DotName. If this {@code DotName} is lesser,
      * a negative value is returned. If greater, a positive value is returned. If equal, zero is returned.
      *
-     * @param other the DotName to compare to
+     * @param other the {@code DotName} to compare to
      * @return a negative number if this is less than the specified object, a positive if greater, and zero if equal
      *
      * @see Comparable#compareTo(Object)
@@ -350,11 +352,11 @@ public final class DotName implements Comparable<DotName> {
     }
 
     /**
-     * Compares a DotName to another DotName and returns true if the represent
-     * the same underlying semantic name. In other words, whether or not a
+     * Compares a {@link DotName} to another {@code DotName} and returns {@code true}
+     * if they represent the same underlying semantic name. In other words, whether a
      * name is componentized or simple has no bearing on the comparison.
      *
-     * @param o the DotName object to compare to
+     * @param o the {@code DotName} object to compare to
      * @return true if equal, false if not
      *
      * @see Object#equals(Object)
@@ -399,9 +401,6 @@ public final class DotName implements Comparable<DotName> {
         // no prefix): we still need to compare whether the `innerClass` flags match, but there's no need
         // to write a special case for it, we just treat a prefix-less `DotName` that is _not_ flagged `innerClass`
         // as having an extra '.' character at the beginning
-        //
-        // the same algorithm could also be used for `crossEquals`, but that method is supposedly more efficient
-        // for its special case
 
         String aLocal = a.local;
         String bLocal = b.local;

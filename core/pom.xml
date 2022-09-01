@@ -77,7 +77,7 @@
                     <footer><![CDATA[
                          <script type="text/javascript">
                            SyntaxHighlighter.defaults["auto-links"] = false;
-                           SyntaxHighlighter.defaults["tab-size"] = 2;
+                           SyntaxHighlighter.defaults["gutter"] = false;
                            SyntaxHighlighter.defaults["toolbar"] = false;
                            SyntaxHighlighter.all();
                          </script>

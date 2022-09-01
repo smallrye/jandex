@@ -29,8 +29,8 @@ import java.util.List;
  * For example, the following declaration would have a name of {@code java.util.Map} and two
  * {@code ClassType} arguments: {@code java.lang.String} and {@code java.lang.Integer}:
  *
- * <pre class="brush:java; gutter:false">
- *     Map&lt;String, Integer&gt;
+ * <pre class="brush:java">
+ * Map&lt;String, Integer&gt;
  * </pre>
  * <p>
  * Additionally, a parameterized type is used to represent an inner type whose enclosing type
@@ -40,8 +40,8 @@ import java.util.List;
  * For example, the following declaration shows the case where a parameterized type is used
  * to represent a non-parameterized class {@code X} whose owner {@code Y} is parameterized:
  *
- * <pre class="brush:java; gutter:false">
- *     Y&lt;String&gt;.X
+ * <pre class="brush:java">
+ * Y&lt;String&gt;.X
  * </pre>
  *
  * @since 2.0
@@ -100,8 +100,8 @@ public class ParameterizedType extends Type {
      * This example shows the case where a parameterized type is used to represent a non-parameterized
      * class {@code X}:
      *
-     * <pre class="brush:java; gutter:false;">
-     *     Y&lt;String&gt;.X
+     * <pre class="brush:java">
+     * Y&lt;String&gt;.X
      * </pre>
      *
      * This example will return a parameterized type for {@code Y} when {@code X}'s {@code owner()} method

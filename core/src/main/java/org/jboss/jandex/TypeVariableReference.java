@@ -9,7 +9,7 @@ package org.jboss.jandex;
  * variable. For example, the recursive type parameter in the following class includes
  * one type variable reference:
  *
- * <pre class="brush:java; gutter: false;">
+ * <pre class="brush:java">
  * abstract class Builder&lt;T, THIS extends Builder&lt;T, THIS&gt;&gt; {
  *     abstract T build();
  *
@@ -63,7 +63,7 @@ public final class TypeVariableReference extends Type {
      * <p>
      * For example, the following class has a recursive type parameter {@code E} with one reference:
      *
-     * <pre class="brush:java; gutter: false;">
+     * <pre class="brush:java">
      * abstract class MyEnum&lt;E extends MyEnum&lt;E&gt;&gt; {
      * }
      * </pre>

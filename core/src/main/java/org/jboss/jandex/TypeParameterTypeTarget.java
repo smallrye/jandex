@@ -26,7 +26,7 @@ package org.jboss.jandex;
  * <p>
  * Consider the following example involving a type target using the "Bar" annotation:
  *
- * <pre class="brush:java; gutter: false;">
+ * <pre class="brush:java">
  * public &lt;@Bar T&gt; void foo(List&lt;T&gt;) { ... }
  * </pre>
  *

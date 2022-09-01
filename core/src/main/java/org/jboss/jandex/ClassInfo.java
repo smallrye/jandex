@@ -341,23 +341,23 @@ public final class ClassInfo implements AnnotationTarget {
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
      * 
-     * <pre class="brush:java; gutter: false;">
-     *     {@literal @}MyClassAnnotation
-     *     public class Foo&lt;{@literal @}MyTypeAnnotation T&gt; {
-     *         {@literal @}MyFieldAnnotation
-     *         public String foo;
+     * <pre class="brush:java">
+     * {@literal @}MyClassAnnotation
+     * public class Foo&lt;{@literal @}MyTypeAnnotation T&gt; {
+     *     {@literal @}MyFieldAnnotation
+     *     public String foo;
      *
-     *         public List&lt;{@literal @}MyTypeAnnotation String&gt; bar;
+     *     public List&lt;{@literal @}MyTypeAnnotation String&gt; bar;
      *
-     *         {@literal @}MyMethodAnnotation
-     *         public void foo() {...}
+     *     {@literal @}MyMethodAnnotation
+     *     public void foo() {...}
      *
-     *         public void foo({@literal @}MyParamAnnotation int param) {...}
+     *     public void foo({@literal @}MyParamAnnotation int param) {...}
      *
-     *         public void foo(List&lt;{@literal @}MyTypeAnnotation String&gt; list) {...}
+     *     public void foo(List&lt;{@literal @}MyTypeAnnotation String&gt; list) {...}
      *
-     *         public &lt;{@literal @}MyTypeAnnotation T&gt; void foo(T t) {...}
-     *     }
+     *     public &lt;{@literal @}MyTypeAnnotation T&gt; void foo(T t) {...}
+     * }
      * </pre>
      * <p>
      * In case an annotation with given name occurs more than once, the result of this method is not deterministic.
@@ -383,23 +383,23 @@ public final class ClassInfo implements AnnotationTarget {
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
      * 
-     * <pre class="brush:java; gutter: false;">
-     *     {@literal @}MyClassAnnotation
-     *     public class Foo&lt;{@literal @}MyTypeAnnotation T&gt; {
-     *         {@literal @}MyFieldAnnotation
-     *         public String foo;
+     * <pre class="brush:java">
+     * {@literal @}MyClassAnnotation
+     * public class Foo&lt;{@literal @}MyTypeAnnotation T&gt; {
+     *     {@literal @}MyFieldAnnotation
+     *     public String foo;
      *
-     *         public List&lt;{@literal @}MyTypeAnnotation String&gt; bar;
+     *     public List&lt;{@literal @}MyTypeAnnotation String&gt; bar;
      *
-     *         {@literal @}MyMethodAnnotation
-     *         public void foo() {...}
+     *     {@literal @}MyMethodAnnotation
+     *     public void foo() {...}
      *
-     *         public void foo({@literal @}MyParamAnnotation int param) {...}
+     *     public void foo({@literal @}MyParamAnnotation int param) {...}
      *
-     *         public void foo(List&lt;{@literal @}MyTypeAnnotation String&gt; list) {...}
+     *     public void foo(List&lt;{@literal @}MyTypeAnnotation String&gt; list) {...}
      *
-     *         public &lt;{@literal @}MyTypeAnnotation T&gt; void foo(T t) {...}
-     *     }
+     *     public &lt;{@literal @}MyTypeAnnotation T&gt; void foo(T t) {...}
+     * }
      * </pre>
      *
      * @param name name of the annotation type, must not be {@code null}
@@ -466,23 +466,23 @@ public final class ClassInfo implements AnnotationTarget {
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
      * 
-     * <pre class="brush:java; gutter: false;">
-     *     {@literal @}MyClassAnnotation
-     *     public class Foo&lt;{@literal @}MyTypeAnnotation T&gt; {
-     *         {@literal @}MyFieldAnnotation
-     *         public String foo;
+     * <pre class="brush:java">
+     * {@literal @}MyClassAnnotation
+     * public class Foo&lt;{@literal @}MyTypeAnnotation T&gt; {
+     *     {@literal @}MyFieldAnnotation
+     *     public String foo;
      *
-     *         public List&lt;{@literal @}MyTypeAnnotation String&gt; bar;
+     *     public List&lt;{@literal @}MyTypeAnnotation String&gt; bar;
      *
-     *         {@literal @}MyMethodAnnotation
-     *         public void foo() {...}
+     *     {@literal @}MyMethodAnnotation
+     *     public void foo() {...}
      *
-     *         public void foo({@literal @}MyParamAnnotation int param) {...}
+     *     public void foo({@literal @}MyParamAnnotation int param) {...}
      *
-     *         public void foo(List&lt;{@literal @}MyTypeAnnotation String&gt; list) {...}
+     *     public void foo(List&lt;{@literal @}MyTypeAnnotation String&gt; list) {...}
      *
-     *         public &lt;{@literal @}MyTypeAnnotation T&gt; void foo(T t) {...}
-     *     }
+     *     public &lt;{@literal @}MyTypeAnnotation T&gt; void foo(T t) {...}
+     * }
      * </pre>
      *
      * @return immutable list of annotation instances, never {@code null}

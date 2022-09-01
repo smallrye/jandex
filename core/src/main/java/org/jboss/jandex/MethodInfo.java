@@ -323,15 +323,15 @@ public final class MethodInfo implements AnnotationTarget {
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
      * 
-     * <pre class="brush:java; gutter: false;">
-     *     {@literal @}MyMethodAnnotation
-     *     public void foo() {...}
+     * <pre class="brush:java">
+     * {@literal @}MyMethodAnnotation
+     * public void foo() {...}
      *
-     *     public void foo({@literal @}MyParamAnnotation int param) {...}
+     * public void foo({@literal @}MyParamAnnotation int param) {...}
      *
-     *     public void foo(List&lt;{@literal @}MyTypeAnnotation String&gt; list) {...}
+     * public void foo(List&lt;{@literal @}MyTypeAnnotation String&gt; list) {...}
      *
-     *     public &lt;{@literal @}MyTypeAnnotation T&gt; void foo(T t) {...}
+     * public &lt;{@literal @}MyTypeAnnotation T&gt; void foo(T t) {...}
      * </pre>
      * <p>
      * In case an annotation with given name occurs more than once, the result of this method is not deterministic.
@@ -353,15 +353,15 @@ public final class MethodInfo implements AnnotationTarget {
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
      * 
-     * <pre class="brush:java; gutter: false;">
-     *     {@literal @}MyMethodAnnotation
-     *     public void foo() {...}
+     * <pre class="brush:java">
+     * {@literal @}MyMethodAnnotation
+     * public void foo() {...}
      *
-     *     public void foo({@literal @}MyParamAnnotation int param) {...}
+     * public void foo({@literal @}MyParamAnnotation int param) {...}
      *
-     *     public void foo(List&lt;{@literal @}MyTypeAnnotation String&gt; list) {...}
+     * public void foo(List&lt;{@literal @}MyTypeAnnotation String&gt; list) {...}
      *
-     *     public &lt;{@literal @}MyTypeAnnotation T&gt; void foo(T t) {...}
+     * public &lt;{@literal @}MyTypeAnnotation T&gt; void foo(T t) {...}
      * </pre>
      *
      * @param name name of the annotation type, must not be {@code null}
@@ -427,15 +427,15 @@ public final class MethodInfo implements AnnotationTarget {
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
      * 
-     * <pre class="brush:java; gutter: false;">
-     *     {@literal @}MyMethodAnnotation
-     *     public void foo() {...}
+     * <pre class="brush:java">
+     * {@literal @}MyMethodAnnotation
+     * public void foo() {...}
      *
-     *     public void foo({@literal @}MyParamAnnotation int param) {...}
+     * public void foo({@literal @}MyParamAnnotation int param) {...}
      *
-     *     public void foo(List&lt;{@literal @}MyTypeAnnotation String&gt; list) {...}
+     * public void foo(List&lt;{@literal @}MyTypeAnnotation String&gt; list) {...}
      *
-     *     public &lt;{@literal @}AnotherTypeAnnotation T&gt; void foo(T t) {...}
+     * public &lt;{@literal @}AnotherTypeAnnotation T&gt; void foo(T t) {...}
      * </pre>
      *
      * @return immutable list of annotation instances, never {@code null}

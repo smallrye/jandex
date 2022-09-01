@@ -22,17 +22,17 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Represents a resolved type parameter or type argument. The <code>name()</code> of this type variable
+ * Represents a resolved type parameter or type argument. The {@code name()} of this type variable
  * corresponds to the raw type name. For type variables, the raw type name is the first upper bound. The
- * <code>identifier()</code> specifies the name of the type variable as specified in the source code.
+ * {@code identifier()} is the name of the type variable as present in the source code.
  * <p>
- * For example, consider the type variable:
+ * For example:
  *
  * <pre class="brush:java">
  * T extends Number
  * </pre>
  *
- * The <code>identifier()</code> is "T", while the <code>name()</code> is "java.lang.Number".
+ * In this case, the identifier is {@code T}, while the name is {@code java.lang.Number}.
  *
  * @since 2.0
  * @author Jason T. Greene
@@ -46,12 +46,10 @@ public final class TypeVariable extends Type {
     private final Type[] bounds;
 
     // MSB is stolen to represent an implicit object bound (signature with ::Interface)
-    // This is not persisted since bound type targets are adjusted
     private int hash;
 
     TypeVariable(String name) {
         this(name, EMPTY_ARRAY);
-
     }
 
     TypeVariable(String name, Type[] bounds) {
@@ -85,7 +83,7 @@ public final class TypeVariable extends Type {
      * <p>
      * The following class has a type parameter, with an identifier of "T":
      *
-     * <pre class="brush:java; gutter:false;">
+     * <pre class="brush:java">
      * class Foo&lt;T extends Number&gt; {
      * }
      * </pre>

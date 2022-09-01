@@ -41,7 +41,7 @@ public final class UnresolvedTypeVariable extends Type {
      * <p>
      * For example, the following class has a type parameter with an identifier of {@code T}:
      *
-     * <pre class="brush:java; gutter: false;">
+     * <pre class="brush:java">
      * class Foo&lt;T extends Number&gt; {
      * }
      * </pre>

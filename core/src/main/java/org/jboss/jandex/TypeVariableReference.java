@@ -1,5 +1,8 @@
 package org.jboss.jandex;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 /**
  * Represents a reference to a type variable in the bound of a recursive type parameter.
  * For example, if a class or method declares a type parameter {@code T extends Comparable<T>},
@@ -97,16 +100,23 @@ public final class TypeVariableReference extends Type {
     }
 
     @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new TypeVariableReference(name, target, newAnnotations);
+    }
+
+    void setTarget(TypeVariable target) {
+        if (target == null) {
+            throw new IllegalArgumentException("Type variable reference target must not be null");
+        }
+        this.target = target;
+    }
+
+    @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
         builder.append(name);
         return builder.toString();
-    }
-
-    @Override
-    Type copyType(AnnotationInstance[] newAnnotations) {
-        return new TypeVariableReference(name, target, newAnnotations);
     }
 
     // unlike all other subclasses of `Type`, this class is mutable,
@@ -119,12 +129,5 @@ public final class TypeVariableReference extends Type {
     @Override
     public int hashCode() {
         return System.identityHashCode(this);
-    }
-
-    void setTarget(TypeVariable target) {
-        if (target == null) {
-            throw new IllegalArgumentException("Type variable reference target must not be null");
-        }
-        this.target = target;
     }
 }

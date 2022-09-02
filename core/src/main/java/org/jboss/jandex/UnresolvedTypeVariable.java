@@ -63,16 +63,16 @@ public final class UnresolvedTypeVariable extends Type {
     }
 
     @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new UnresolvedTypeVariable(name, newAnnotations);
+    }
+
+    @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
         builder.append(name);
         return builder.toString();
-    }
-
-    @Override
-    Type copyType(AnnotationInstance[] newAnnotations) {
-        return new UnresolvedTypeVariable(name, newAnnotations);
     }
 
     @Override
@@ -88,7 +88,6 @@ public final class UnresolvedTypeVariable extends Type {
         UnresolvedTypeVariable other = (UnresolvedTypeVariable) o;
 
         return super.equals(other) && name.equals(other.name);
-
     }
 
     @Override

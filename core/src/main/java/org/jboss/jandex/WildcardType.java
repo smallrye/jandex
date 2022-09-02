@@ -113,6 +113,15 @@ public class WildcardType extends Type {
     }
 
     @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new WildcardType(bound, isExtends, newAnnotations);
+    }
+
+    Type copyType(Type bound) {
+        return new WildcardType(bound, isExtends, annotationArray());
+    }
+
+    @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
@@ -127,15 +136,6 @@ public class WildcardType extends Type {
         }
 
         return builder.toString();
-    }
-
-    @Override
-    Type copyType(AnnotationInstance[] newAnnotations) {
-        return new WildcardType(bound, isExtends, newAnnotations);
-    }
-
-    Type copyType(Type bound) {
-        return new WildcardType(bound, isExtends, annotationArray());
     }
 
     @Override

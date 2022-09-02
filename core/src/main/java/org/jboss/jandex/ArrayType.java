@@ -92,6 +92,35 @@ public final class ArrayType extends Type {
         return DotName.createSimple(builder.toString());
     }
 
+    /**
+     * The number of dimensions this array type has. For example, <code>String[][]</code>, would return a value
+     * of 2.
+     *
+     * @return the number of dimensions of this array type
+     */
+    public int dimensions() {
+        return dimensions;
+    }
+
+    @Override
+    public Kind kind() {
+        return Kind.ARRAY;
+    }
+
+    @Override
+    public ArrayType asArrayType() {
+        return this;
+    }
+
+    @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new ArrayType(component, dimensions, newAnnotations);
+    }
+
+    Type copyType(Type component, int dimensions) {
+        return new ArrayType(component, dimensions, annotationArray());
+    }
+
     @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
@@ -123,26 +152,6 @@ public final class ArrayType extends Type {
         }
     }
 
-    /**
-     * The number of dimensions this array type has. For example, <code>String[][]</code>, would return a value
-     * of 2.
-     *
-     * @return the number of dimensions of this array type
-     */
-    public int dimensions() {
-        return dimensions;
-    }
-
-    @Override
-    public Kind kind() {
-        return Kind.ARRAY;
-    }
-
-    @Override
-    public ArrayType asArrayType() {
-        return this;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -168,14 +177,5 @@ public final class ArrayType extends Type {
         hash = 31 * hash + component.hashCode();
         hash = 31 * hash + dimensions;
         return this.hash = hash;
-    }
-
-    @Override
-    Type copyType(AnnotationInstance[] newAnnotations) {
-        return new ArrayType(component, dimensions, newAnnotations);
-    }
-
-    Type copyType(Type component, int dimensions) {
-        return new ArrayType(component, dimensions, annotationArray());
     }
 }

@@ -124,6 +124,29 @@ public class ParameterizedType extends Type {
     }
 
     @Override
+    ParameterizedType copyType(AnnotationInstance[] newAnnotations) {
+        return new ParameterizedType(name(), arguments, owner, newAnnotations);
+    }
+
+    ParameterizedType copyType(Type[] arguments) {
+        return new ParameterizedType(name(), arguments, owner, annotationArray());
+    }
+
+    ParameterizedType copyType(int argumentIndex, Type argument) {
+        if (argumentIndex > this.arguments.length) {
+            throw new IllegalArgumentException("Type argument index outside of bounds");
+        }
+
+        Type[] arguments = this.arguments.clone();
+        arguments[argumentIndex] = argument;
+        return new ParameterizedType(name(), arguments, owner, annotationArray());
+    }
+
+    ParameterizedType copyType(Type owner) {
+        return new ParameterizedType(name(), arguments, owner, annotationArray());
+    }
+
+    @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
 
@@ -151,29 +174,6 @@ public class ParameterizedType extends Type {
         }
 
         return builder.toString();
-    }
-
-    @Override
-    ParameterizedType copyType(AnnotationInstance[] newAnnotations) {
-        return new ParameterizedType(name(), arguments, owner, newAnnotations);
-    }
-
-    ParameterizedType copyType(Type[] arguments) {
-        return new ParameterizedType(name(), arguments, owner, annotationArray());
-    }
-
-    ParameterizedType copyType(int argumentIndex, Type argument) {
-        if (argumentIndex > this.arguments.length) {
-            throw new IllegalArgumentException("Type argument index outside of bounds");
-        }
-
-        Type[] arguments = this.arguments.clone();
-        arguments[argumentIndex] = argument;
-        return new ParameterizedType(name(), arguments, owner, annotationArray());
-    }
-
-    ParameterizedType copyType(Type owner) {
-        return new ParameterizedType(name(), arguments, owner, annotationArray());
     }
 
     public boolean equals(Object o) {

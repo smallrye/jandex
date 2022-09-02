@@ -332,61 +332,6 @@ public abstract class Type {
         throw new IllegalArgumentException("Not a void type!");
     }
 
-    /**
-     * Returns a string representation for this type. It is similar, yet not equivalent
-     * to a Java source code representation.
-     *
-     * @return the string representation.
-     */
-    public String toString() {
-        return toString(false);
-    }
-
-    String toString(boolean simple) {
-        StringBuilder builder = new StringBuilder();
-        String packagePrefix = name.packagePrefix();
-        if (packagePrefix != null) {
-            builder.append(packagePrefix).append('.');
-        }
-        appendAnnotations(builder);
-        builder.append(name.withoutPackagePrefix());
-
-        return builder.toString();
-    }
-
-    void appendAnnotations(StringBuilder builder) {
-        AnnotationInstance[] annotations = this.annotations;
-        if (annotations.length > 0) {
-            for (AnnotationInstance instance : annotations) {
-                builder.append(instance.toString(true)).append(' ');
-            }
-        }
-    }
-
-    /**
-     * Compares this Type with another type, and returns true if they are equivalent.
-     * A type is equivalent to another type if it is the same kind, and all of its
-     * fields are equal. This includes annotations, which must be equal as well.
-     *
-     * @param o the type to compare to
-     * @return true if equal
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        Type type = (Type) o;
-
-        return name.equals(type.name) && Arrays.equals(annotations, type.annotations);
-    }
-
     AnnotationInstance[] annotationArray() {
         return annotations;
     }
@@ -487,6 +432,61 @@ public abstract class Type {
     }
 
     abstract Type copyType(AnnotationInstance[] newAnnotations);
+
+    /**
+     * Returns a string representation for this type. It is similar, yet not equivalent
+     * to a Java source code representation.
+     *
+     * @return the string representation.
+     */
+    public String toString() {
+        return toString(false);
+    }
+
+    String toString(boolean simple) {
+        StringBuilder builder = new StringBuilder();
+        String packagePrefix = name.packagePrefix();
+        if (packagePrefix != null) {
+            builder.append(packagePrefix).append('.');
+        }
+        appendAnnotations(builder);
+        builder.append(name.withoutPackagePrefix());
+
+        return builder.toString();
+    }
+
+    void appendAnnotations(StringBuilder builder) {
+        AnnotationInstance[] annotations = this.annotations;
+        if (annotations.length > 0) {
+            for (AnnotationInstance instance : annotations) {
+                builder.append(instance.toString(true)).append(' ');
+            }
+        }
+    }
+
+    /**
+     * Compares this Type with another type, and returns true if they are equivalent.
+     * A type is equivalent to another type if it is the same kind, and all of its
+     * fields are equal. This includes annotations, which must be equal as well.
+     *
+     * @param o the type to compare to
+     * @return true if equal
+     * @see Object#equals(Object)
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Type type = (Type) o;
+
+        return name.equals(type.name) && Arrays.equals(annotations, type.annotations);
+    }
 
     /**
      * Computes a hash code representing this type.

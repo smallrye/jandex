@@ -117,6 +117,21 @@ public final class TypeVariable extends Type {
     }
 
     @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new TypeVariable(name, bounds, newAnnotations, hasImplicitObjectBound());
+    }
+
+    TypeVariable copyType(int boundIndex, Type bound) {
+        if (boundIndex > bounds.length) {
+            throw new IllegalArgumentException("Bound index outside of bounds");
+        }
+
+        Type[] bounds = this.bounds.clone();
+        bounds[boundIndex] = bound;
+        return new TypeVariable(name, bounds, annotationArray(), hasImplicitObjectBound());
+    }
+
+    @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
@@ -147,21 +162,6 @@ public final class TypeVariable extends Type {
 
         return name.equals(that.name) && Arrays.equals(bounds, that.bounds)
                 && hasImplicitObjectBound() == that.hasImplicitObjectBound();
-    }
-
-    @Override
-    Type copyType(AnnotationInstance[] newAnnotations) {
-        return new TypeVariable(name, bounds, newAnnotations, hasImplicitObjectBound());
-    }
-
-    TypeVariable copyType(int boundIndex, Type bound) {
-        if (boundIndex > bounds.length) {
-            throw new IllegalArgumentException("Bound index outside of bounds");
-        }
-
-        Type[] bounds = this.bounds.clone();
-        bounds[boundIndex] = bound;
-        return new TypeVariable(name, bounds, annotationArray(), hasImplicitObjectBound());
     }
 
     @Override

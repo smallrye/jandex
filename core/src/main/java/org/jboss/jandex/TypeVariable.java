@@ -178,4 +178,28 @@ public final class TypeVariable extends Type {
         this.hash |= hash;
         return hash;
     }
+
+    @Override
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!super.internEquals(o)) {
+            return false;
+        }
+
+        TypeVariable that = (TypeVariable) o;
+
+        return name.equals(that.name) && Interned.arrayEquals(bounds, that.bounds)
+                && hasImplicitObjectBound() == that.hasImplicitObjectBound();
+    }
+
+    @Override
+    public int internHashCode() {
+        int hash = super.internHashCode();
+        hash = 31 * hash + name.hashCode();
+        hash = 31 * hash + Interned.arrayHashCode(bounds);
+        return hash;
+    }
 }

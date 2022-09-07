@@ -731,8 +731,8 @@ public final class ClassInfo implements AnnotationTarget {
     /**
      * Retrieves a method based on its signature, which includes a method name and an parameter type list.
      * The parameter type list is compared based on the underlying raw types. As an example,
-     * a generic type parameter {@code T} is equivalent to {@code java.lang.Object}, since the raw form
-     * of a type parameter is its upper bound.
+     * a generic type parameter {@code T} is considered equal to {@code java.lang.Object}, since the raw form
+     * of a type variable is its upper bound.
      * <p>
      * Eligible methods include constructors and static initializer blocks which have the special
      * names of {@code <init>} and {@code <clinit>}, respectively. This does not, however, include

@@ -580,7 +580,7 @@ public final class MethodInfo implements AnnotationTarget {
 
     /**
      * Returns a string representation describing this field. It is similar although not
-     * necessarily equivalent to a Java source code expression representing this field.
+     * necessarily identical to a Java source code expression representing this field.
      *
      * @return a string representation for this field
      */

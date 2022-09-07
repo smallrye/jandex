@@ -163,4 +163,25 @@ public class WildcardType extends Type {
         hash = 31 * hash + bound.hashCode();
         return this.hash = hash;
     }
+
+    @Override
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!super.internEquals(o)) {
+            return false;
+        }
+
+        WildcardType other = (WildcardType) o;
+        return isExtends == other.isExtends && bound.internEquals(other.bound);
+    }
+
+    @Override
+    public int internHashCode() {
+        int hash = super.internHashCode();
+        hash = 31 * hash + (isExtends ? 1 : 0);
+        hash = 31 * hash + bound.internHashCode();
+        return hash;
+    }
 }

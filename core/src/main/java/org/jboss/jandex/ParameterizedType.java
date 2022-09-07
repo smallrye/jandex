@@ -176,6 +176,7 @@ public class ParameterizedType extends Type {
         return builder.toString();
     }
 
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -191,6 +192,7 @@ public class ParameterizedType extends Type {
                 && Arrays.equals(arguments, other.arguments);
     }
 
+    @Override
     public int hashCode() {
         int hash = this.hash;
         if (hash != 0) {
@@ -201,5 +203,29 @@ public class ParameterizedType extends Type {
         hash = 31 * hash + Arrays.hashCode(arguments);
         hash = 31 * hash + (owner != null ? owner.hashCode() : 0);
         return this.hash = hash;
+    }
+
+    @Override
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!super.internEquals(o)) {
+            return false;
+        }
+
+        ParameterizedType other = (ParameterizedType) o;
+
+        return (owner == other.owner || (owner != null && owner.internEquals(other.owner)))
+                && Interned.arrayEquals(arguments, other.arguments);
+    }
+
+    @Override
+    public int internHashCode() {
+        int hash = super.internHashCode();
+        hash = 31 * hash + Interned.arrayHashCode(arguments);
+        hash = 31 * hash + (owner != null ? owner.internHashCode() : 0);
+        return hash;
     }
 }

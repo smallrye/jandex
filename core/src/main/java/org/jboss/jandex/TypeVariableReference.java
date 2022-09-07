@@ -1,8 +1,5 @@
 package org.jboss.jandex;
 
-import java.util.Arrays;
-import java.util.Objects;
-
 /**
  * Represents a reference to a type variable in the bound of a recursive type parameter.
  * For example, if a class or method declares a type parameter {@code T extends Comparable<T>},
@@ -80,7 +77,7 @@ public final class TypeVariableReference extends Type {
     }
 
     /**
-     * Returns the type variable refered to by this reference.
+     * Returns the type variable referred to by this reference.
      */
     public TypeVariable follow() {
         if (target == null) {
@@ -119,15 +116,45 @@ public final class TypeVariableReference extends Type {
         return builder.toString();
     }
 
-    // unlike all other subclasses of `Type`, this class is mutable,
-    // so identity equality and hash code are the only option
     @Override
     public boolean equals(Object o) {
-        return this == o;
+        if (this.target == null) {
+            throw new IllegalStateException("Type variable reference " + name + " was not patched correctly");
+        }
+
+        if (this == o) {
+            return true;
+        }
+
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        TypeVariableReference that = (TypeVariableReference) o;
+
+        return name.equals(that.name);
     }
 
     @Override
     public int hashCode() {
+        if (this.target == null) {
+            throw new IllegalStateException("Type variable reference " + name + " was not patched correctly");
+        }
+
+        int hash = super.hashCode();
+        hash = 31 * hash + name.hashCode();
+        return hash;
+    }
+
+    // unlike all other subclasses of `Type`, this class is mutable,
+    // so identity equality and hash code are the only option
+    @Override
+    public boolean internEquals(Object o) {
+        return this == o;
+    }
+
+    @Override
+    public int internHashCode() {
         return System.identityHashCode(this);
     }
 }

@@ -36,7 +36,7 @@ import java.util.List;
  *
  * @author Jason T. Greene
  */
-public abstract class Type {
+public abstract class Type implements Interned {
     public static final Type[] EMPTY_ARRAY = new Type[0];
     private static final AnnotationInstance[] EMPTY_ANNOTATIONS = new AnnotationInstance[0];
     private final DotName name;
@@ -434,7 +434,7 @@ public abstract class Type {
     abstract Type copyType(AnnotationInstance[] newAnnotations);
 
     /**
-     * Returns a string representation for this type. It is similar, yet not equivalent
+     * Returns a string representation for this type. It is similar, yet not identical
      * to a Java source code representation.
      *
      * @return the string representation.
@@ -465,9 +465,9 @@ public abstract class Type {
     }
 
     /**
-     * Compares this Type with another type, and returns true if they are equivalent.
-     * A type is equivalent to another type if it is the same kind, and all of its
-     * fields are equal. This includes annotations, which must be equal as well.
+     * Compares this {@code Type} with another type. A type is equal to another type
+     * if it is of the same kind, and all of their fields are equal. This includes
+     * annotations, which must be equal as well.
      *
      * @param o the type to compare to
      * @return true if equal
@@ -495,6 +495,28 @@ public abstract class Type {
      */
     @Override
     public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + Arrays.hashCode(annotations);
+        return result;
+    }
+
+    @Override
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Type type = (Type) o;
+
+        return name.equals(type.name) && Arrays.equals(annotations, type.annotations);
+    }
+
+    @Override
+    public int internHashCode() {
         int result = name.hashCode();
         result = 31 * result + Arrays.hashCode(annotations);
         return result;

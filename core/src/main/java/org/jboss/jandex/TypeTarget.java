@@ -205,8 +205,8 @@ public abstract class TypeTarget implements AnnotationTarget {
      * Returns whether an annotation instance with given name is declared on this type usage.
      * <p>
      * Note that unlike other {@code AnnotationTarget}s, this method doesn't inspect nested annotation targets,
-     * even though array types, parameterized types and wildcard types may contain other types inside them.
-     * In other words, this method is equivalent to {@link #hasDeclaredAnnotation(DotName)}.
+     * even though array types, parameterized types, type variables and wildcard types may contain other types
+     * inside them. In other words, this method is equivalent to {@link #hasDeclaredAnnotation(DotName)}.
      *
      * @param name name of the annotation type to look for, must not be {@code null}
      * @return {@code true} if the annotation is present, {@code false} otherwise
@@ -225,8 +225,8 @@ public abstract class TypeTarget implements AnnotationTarget {
      * Returns the annotation instance with given name declared on this type usage.
      * <p>
      * Note that unlike other {@code AnnotationTarget}s, this method doesn't inspect nested annotation targets,
-     * even though array types, parameterized types and wildcard types may contain other types inside them.
-     * In other words, this method is equivalent to {@link #declaredAnnotation(DotName)}.
+     * even though array types, parameterized types, type variables and wildcard types may contain other types
+     * inside them. In other words, this method is equivalent to {@link #declaredAnnotation(DotName)}.
      *
      * @param name name of the annotation type to look for, must not be {@code null}
      * @return the annotation instance, or {@code null} if not found
@@ -245,9 +245,9 @@ public abstract class TypeTarget implements AnnotationTarget {
      * Returns the annotation instances with given name declared on this type usage.
      * <p>
      * Note that unlike other {@code AnnotationTarget}s, this method doesn't inspect nested annotation targets,
-     * even though array types, parameterized types and wildcard types may contain other types inside them.
-     * In other words, this method is equivalent to {@link #annotation(DotName)} and {@link #declaredAnnotation(DotName)},
-     * except it returns a list.
+     * even though array types, parameterized types, type variables and wildcard types may contain other types
+     * inside them. In other words, this method is equivalent to {@link #annotation(DotName)} and
+     * {@link #declaredAnnotation(DotName)}, except it returns a list.
      *
      * @param name name of the annotation type, must not be {@code null}
      * @return immutable list of annotation instances, never {@code null}
@@ -271,8 +271,8 @@ public abstract class TypeTarget implements AnnotationTarget {
      * instance.
      * <p>
      * Note that unlike other {@code AnnotationTarget}s, this method doesn't inspect nested annotation targets,
-     * even though array types, parameterized types and wildcard types may contain other types inside them.
-     * In other words, this method is equivalent to {@link #declaredAnnotationsWithRepeatable(DotName, IndexView)}.
+     * even though array types, parameterized types, type variables and wildcard types may contain other types
+     * inside them. In other words, this method is equivalent to {@link #declaredAnnotationsWithRepeatable(DotName, IndexView)}.
      *
      * @param name name of the annotation type, must not be {@code null}
      * @param index index used to obtain the annotation type, must not be {@code null}
@@ -295,8 +295,8 @@ public abstract class TypeTarget implements AnnotationTarget {
      * Returns the annotation instances declared on this type usage.
      * <p>
      * Note that unlike other {@code AnnotationTarget}s, this method doesn't inspect nested annotation targets,
-     * even though array types, parameterized types and wildcard types may contain other types inside them.
-     * In other words, this method is equivalent to {@link #declaredAnnotations()}.
+     * even though array types, parameterized types, type variables and wildcard types may contain other types
+     * inside them. In other words, this method is equivalent to {@link #declaredAnnotations()}.
      *
      * @return immutable list of annotation instances, never {@code null}
      * @since 3.0

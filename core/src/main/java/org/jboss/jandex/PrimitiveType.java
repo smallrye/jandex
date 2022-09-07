@@ -205,4 +205,25 @@ public final class PrimitiveType extends Type {
         result = 31 * result + primitive.hashCode();
         return result;
     }
+
+    @Override
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof PrimitiveType)) {
+            return false;
+        }
+
+        PrimitiveType that = (PrimitiveType) o;
+        return super.internEquals(o) && primitive == that.primitive;
+    }
+
+    @Override
+    public int internHashCode() {
+        int result = super.internHashCode();
+        result = 31 * result + primitive.hashCode();
+        return result;
+    }
 }

@@ -30,7 +30,7 @@ import java.util.NoSuchElementException;
  * This can be used to conserve memory by eliminating duplicate objects (those that are equal
  * but have different identity). It however holds strong references to every item in the pool,
  * so it must be cleared to allow for GC.
- *
+ * <p>
  * Note: It is very important to use a smaller load factor than you normally
  * would for HashSet, since the implementation is open-addressed with linear
  * probing. With a 50% load-factor a get is expected to return in only 2 probes.
@@ -128,6 +128,14 @@ class StrongInternPool<E> implements Cloneable, Serializable {
             return true;
         }
 
+        if (o1 instanceof Interned[] && o2 instanceof Interned[]) {
+            return Interned.arrayEquals((Type[]) o1, (Type[]) o2);
+        }
+
+        if (o1 instanceof Interned && o2 instanceof Interned) {
+            return ((Interned) o1).internEquals(o2);
+        }
+
         if (o1 instanceof Object[] && o2 instanceof Object[]) {
             return Arrays.equals((Object[]) o1, (Object[]) o2);
         }
@@ -149,17 +157,27 @@ class StrongInternPool<E> implements Cloneable, Serializable {
 
     // The normal bit spreader...
     private static int hash(Object o) {
-        int h = o instanceof Object[] ? Arrays.hashCode((Object[]) o)
-                : o instanceof byte[] ? Arrays.hashCode((byte[]) o) : o.hashCode();
+        int h;
+        if (o instanceof Interned[]) {
+            return Interned.arrayHashCode((Interned[]) o);
+        } else if (o instanceof Interned) {
+            return ((Interned) o).internHashCode();
+        } else if (o instanceof Object[]) {
+            h = Arrays.hashCode((Object[]) o);
+        } else if (o instanceof byte[]) {
+            h = Arrays.hashCode((byte[]) o);
+        } else {
+            h = o.hashCode();
+        }
         return ((h << 1) - (h << 8));
     }
 
     @SuppressWarnings("unchecked")
-    private static final <K> K maskNull(K key) {
+    private static <K> K maskNull(K key) {
         return key == null ? (K) NULL : key;
     }
 
-    private static final <K> K unmaskNull(K key) {
+    private static <K> K unmaskNull(K key) {
         return key == NULL ? null : key;
     }
 
@@ -168,7 +186,7 @@ class StrongInternPool<E> implements Cloneable, Serializable {
         return index;
     }
 
-    private static final int index(int hashCode, int length) {
+    private static int index(int hashCode, int length) {
         return hashCode & (length - 1);
     }
 
@@ -224,11 +242,11 @@ class StrongInternPool<E> implements Cloneable, Serializable {
 
     /***
      * Internalizes the specified object by always returning the first ever stored.
-     * Equivalent objects (via .equals) but with different identity (aka duplicates)
-     * can be eliminated with this method.
+     * Equal objects with different identity (aka duplicates) can be eliminated
+     * with this method.
      *
      * @param entry the object to internalize
-     * @return the one true unique (and equivalent) object
+     * @return the one true unique object (equal to {@code entry})
      */
     @SuppressWarnings("unchecked")
     public E intern(E entry) {
@@ -495,13 +513,13 @@ class StrongInternPool<E> implements Cloneable, Serializable {
         private int expectedCount = modCount;
         private int current = -1;
         private boolean hasNext;
-        Object table[] = StrongInternPool.this.table;
+        Object[] table = StrongInternPool.this.table;
 
         public boolean hasNext() {
-            if (hasNext == true)
+            if (hasNext)
                 return true;
 
-            Object table[] = this.table;
+            Object[] table = this.table;
             for (int i = next; i < table.length; i++) {
                 if (table[i] != null) {
                     next = i;

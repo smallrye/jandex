@@ -2449,6 +2449,9 @@ public final class Indexer {
             }
         }
 
+        // must be set before patching type variable references, because the patching process
+        // sometimes needs to look up type variables from `target`, and those must be the already
+        // propagated ones
         setTypeParameters(target, intern(typeParameters));
 
         // interspersing type annotation propagation (above) with patching would lead to type variable references

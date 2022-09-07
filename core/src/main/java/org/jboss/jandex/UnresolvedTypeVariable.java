@@ -92,6 +92,30 @@ public final class UnresolvedTypeVariable extends Type {
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        int hash = super.hashCode();
+        hash = 31 * hash + name.hashCode();
+        return hash;
+    }
+
+    @Override
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof UnresolvedTypeVariable)) {
+            return false;
+        }
+
+        UnresolvedTypeVariable other = (UnresolvedTypeVariable) o;
+
+        return super.internEquals(other) && name.equals(other.name);
+    }
+
+    @Override
+    public int internHashCode() {
+        int hash = super.internHashCode();
+        hash = 31 * hash + name.hashCode();
+        return hash;
     }
 }

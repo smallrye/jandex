@@ -23,16 +23,15 @@ package org.jboss.jandex;
  * any depth of the type tree at this location, the corresponding type reference is also included.
  *
  * <p>
- * Consider the following example involving a type target using the "Bar" annotation:
+ * Consider the following example involving a type target using the {@code Bar} annotation:
  *
  * <pre class="brush:java">
- * public void foo(List&lt;@Bar T&gt; { ... }
+ * public void foo(List&lt;@Bar T&gt; l) { ... }
  * </pre>
  *
  * <p>
- * This example would be represented as a <code>MethodParameterTypeTarget</code> with an enclosing target
- * of foo's <code>MethodInfo</code>, and <code>position()</code> would return 0. The "Bar" annotation
- * would appear on the type variable T.
+ * This example would be represented as a {@code MethodParameterTypeTarget} with an enclosing target
+ * of the {@code MethodInfo} of {@code foo}, and {@code position()} would be 0.
  *
  * @since 2.0
  * @author Jason T. Greene

@@ -686,6 +686,18 @@ public final class ClassInfo implements AnnotationTarget {
         return new MethodInfoGenerator(this, methods, EMPTY_POSITIONS);
     }
 
+    /**
+     * Returns a list of all methods declared in this class, in the declaration order.
+     * See {@link #methods()} for more information.
+     * <p>
+     * Note that for the result to actually be in declaration order, the index must be produced
+     * by at least Jandex 2.4. Previous Jandex versions do not store method positions. At most 256
+     * methods may be present; if there's more, order is undefined. This also assumes that the bytecode
+     * order corresponds to declaration order, which is not guaranteed, but practically always holds.
+     *
+     * @return a list of methods
+     * @since 2.4
+     */
     public final List<MethodInfo> unsortedMethods() {
         return new MethodInfoGenerator(this, methods, methodPositions);
     }
@@ -786,6 +798,18 @@ public final class ClassInfo implements AnnotationTarget {
         return new FieldInfoGenerator(this, fields, EMPTY_POSITIONS);
     }
 
+    /**
+     * Returns a list of all fields declared in this class, in the declaration order.
+     * See {@link #fields()} for more information.
+     * <p>
+     * Note that for the result to actually be in declaration order, the index must be produced
+     * by at least Jandex 2.4. Previous Jandex versions do not store field positions. At most 256
+     * fields may be present; if there's more, order is undefined. This also assumes that the bytecode
+     * order corresponds to declaration order, which is not guaranteed, but practically always holds.
+     *
+     * @return a list of fields
+     * @since 2.4
+     */
     public final List<FieldInfo> unsortedFields() {
         return new FieldInfoGenerator(this, fields, fieldPositions);
     }
@@ -823,6 +847,19 @@ public final class ClassInfo implements AnnotationTarget {
         return new RecordComponentInfoGenerator(this, recordComponents, EMPTY_POSITIONS);
     }
 
+    /**
+     * Returns a list of all record components declared in this class, in the declaration order.
+     * See {@link #recordComponents()} for more information.
+     * <p>
+     * Note that for the result to actually be in declaration order, the index must be produced
+     * by at least Jandex 2.4. Previous Jandex versions do not store record component positions.
+     * At most 256 record components may be present; if there's more, order is undefined. This also
+     * assumes that the bytecode order corresponds to declaration order, which is not guaranteed,
+     * but practically always holds.
+     *
+     * @return a list of record components
+     * @since 2.4
+     */
     public final List<RecordComponentInfo> unsortedRecordComponents() {
         return new RecordComponentInfoGenerator(this, recordComponents, recordComponentPositions);
     }
@@ -833,6 +870,57 @@ public final class ClassInfo implements AnnotationTarget {
 
     final byte[] recordComponentPositionArray() {
         return recordComponentPositions;
+    }
+
+    /**
+     * Returns a list of enum constants declared by this enum class, represented as {@link FieldInfo}.
+     * Enum constants are returned in declaration order.
+     * <p>
+     * If this class is not an enum, returns an empty list.
+     * <p>
+     * Note that for the result to actually be in declaration order, the index must be produced
+     * by at least Jandex 2.4. Previous Jandex versions do not store field positions. At most 256
+     * fields may be present in the class; if there's more, order is undefined. This also assumes
+     * that the bytecode order corresponds to declaration order, which is not guaranteed,
+     * but practically always holds.
+     *
+     * @return immutable list of enum constants, never {@code null}
+     * @since 3.0.1
+     */
+    public final List<FieldInfo> enumConstants() {
+        if (!isEnum()) {
+            return Collections.emptyList();
+        }
+
+        List<FieldInfo> result = new ArrayList<>();
+        byte[] positions = fieldPositions;
+        for (int i = 0; i < fields.length; i++) {
+            FieldInternal field = (positions.length > 0) ? fields[positions[i] & 0xFF] : fields[i];
+            if (field.isEnumConstant()) {
+                result.add(new FieldInfo(this, field));
+            }
+        }
+        return Collections.unmodifiableList(result);
+    }
+
+    final int enumConstantOrdinal(FieldInternal enumConstant) {
+        if (!isEnum()) {
+            return -1;
+        }
+
+        int counter = 0;
+        byte[] positions = fieldPositions;
+        for (int i = 0; i < fields.length; i++) {
+            FieldInternal field = (positions.length > 0) ? fields[positions[i] & 0xFF] : fields[i];
+            if (field.isEnumConstant()) {
+                if (field.equals(enumConstant)) {
+                    return counter;
+                } else {
+                    counter++;
+                }
+            }
+        }
+        return -1;
     }
 
     /**

@@ -134,6 +134,10 @@ final class FieldInternal {
         return flags;
     }
 
+    final boolean isEnumConstant() {
+        return (flags & Modifiers.ENUM) != 0;
+    }
+
     @Override
     public String toString() {
         return type.toString(true) + " " + name();

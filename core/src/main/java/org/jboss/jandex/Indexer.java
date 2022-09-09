@@ -2687,11 +2687,11 @@ public final class Indexer {
                 clazz.setSuperClassType(propagateTypeVariables(clazz.superClassType(), clazz));
             }
 
-            Type[] interfaces = clazz.interfaceTypeArray();
+            Type[] interfaces = clazz.interfaceTypeArray().clone();
             for (int i = 0; i < interfaces.length; i++) {
                 interfaces[i] = propagateTypeVariables(interfaces[i], clazz);
             }
-            clazz.setInterfaceTypes(interfaces);
+            clazz.setInterfaceTypes(intern(interfaces));
 
             for (FieldInternal field : clazz.fieldArray()) {
                 field.setType(propagateTypeVariables(field.type(), clazz));
@@ -2700,23 +2700,25 @@ public final class Indexer {
             for (MethodInternal method : clazz.methodArray()) {
                 MethodInfo m = new MethodInfo(clazz, method);
 
+                // no need to propagate type parameters, those were handled before (see `propagateTypeParameterBounds`)
+
                 method.setReturnType(propagateTypeVariables(method.returnType(), m));
 
                 if (method.receiverTypeField() != null) {
                     method.setReceiverType(propagateTypeVariables(method.receiverTypeField(), m));
                 }
 
-                Type[] parameterTypes = method.parameterTypesArray();
+                Type[] parameterTypes = method.parameterTypesArray().clone();
                 for (int i = 0; i < parameterTypes.length; i++) {
                     parameterTypes[i] = propagateTypeVariables(parameterTypes[i], m);
                 }
-                method.setParameterTypes(parameterTypes);
+                method.setParameterTypes(intern(parameterTypes));
 
-                Type[] exceptionTypes = method.exceptionArray();
+                Type[] exceptionTypes = method.exceptionArray().clone();
                 for (int i = 0; i < exceptionTypes.length; i++) {
                     exceptionTypes[i] = propagateTypeVariables(exceptionTypes[i], m);
                 }
-                method.setExceptions(exceptionTypes);
+                method.setExceptions(intern(exceptionTypes));
             }
 
             for (RecordComponentInternal recordComponent : clazz.recordComponentArray()) {

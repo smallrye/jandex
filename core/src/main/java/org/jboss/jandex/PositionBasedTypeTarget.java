@@ -23,6 +23,7 @@ package org.jboss.jandex;
  * subclass for information on the meaning of the position value.
  *
  * @see org.jboss.jandex.ClassExtendsTypeTarget
+ * @see org.jboss.jandex.MethodParameterTypeTarget
  * @see org.jboss.jandex.TypeParameterTypeTarget
  * @see org.jboss.jandex.TypeParameterBoundTypeTarget
  * @see org.jboss.jandex.ThrowsTypeTarget

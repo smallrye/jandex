@@ -32,9 +32,9 @@ import java.util.List;
  *
  * @see org.jboss.jandex.EmptyTypeTarget
  * @see org.jboss.jandex.ClassExtendsTypeTarget
+ * @see org.jboss.jandex.MethodParameterTypeTarget
  * @see org.jboss.jandex.TypeParameterTypeTarget
  * @see org.jboss.jandex.TypeParameterBoundTypeTarget
- * @see org.jboss.jandex.MethodParameterTypeTarget
  * @see org.jboss.jandex.ThrowsTypeTarget
  *
  * @since 2.0
@@ -50,7 +50,7 @@ public abstract class TypeTarget implements AnnotationTarget {
         /** Indicates a type annotation occurs within a field, method receiver, or method return type */
         EMPTY,
 
-        /** Indicates a type annotation occurs within class' extends or implements clause */
+        /** Indicates a type annotation occurs within class' {@code extends} or {@code implements} clause */
         CLASS_EXTENDS,
 
         /** Indicates a type annotation occurs within a method parameter */
@@ -62,7 +62,7 @@ public abstract class TypeTarget implements AnnotationTarget {
         /** Indicates a type annotation occurs within the bound of a method or class type parameter */
         TYPE_PARAMETER_BOUND,
 
-        /** Indicates a type annotation occurs within the throws clause of a method */
+        /** Indicates a type annotation occurs within the {@code throws} clause of a method */
         THROWS
     }
 

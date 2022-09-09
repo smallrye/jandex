@@ -19,22 +19,20 @@
 package org.jboss.jandex;
 
 /**
- * Represents a type annotation target which occurs within a throwable type on a method. This class conveys
- * the enclosing method and the zero-based position of the throwable that is thrown. Since type targets
- * can appear at any depth of the type tree at this location, the corresponding type reference is also included.
+ * Represents a target of type annotation which occurs in the {@code throws} clause of an enclosing method.
+ * This class conveys the enclosing method and the zero-based position of the throwable type.
+ * The corresponding type reference is also included.
  *
  * <p>
- * Consider the following example involving a type target using the "Bar" annotation:
+ * Consider the following example involving a type target using the {@code Bar} annotation:
  *
  * <pre class="brush:java">
- * public void foo(List&lt;T&gt;) throws FooException&lt;@Bar T&gt; { ... }
+ * public void foo(List&lt;T&gt; l) throws @Bar FooException { ... }
  * </pre>
  *
  * <p>
- * This example would be represented as a <code>ThrowsTypeTarget</code> with an enclosing target
- * of foo's <code>MethodInfo</code>, and <code>position()</code> would return 0, indicating the first
- * entry of the list returned by <code>exceptions()</code>. The "Bar" annotation would appear on the
- * type variable T.
+ * This example would be represented as a {@code ThrowsTypeTarget} with an enclosing target
+ * of the {@code MethodInfo} of {@code foo}, and {@code position()} would be 0.
  *
  * @author Jason T. Greene
  * @since 2.0

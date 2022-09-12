@@ -343,7 +343,7 @@ public final class FieldInfo implements AnnotationTarget {
      * @see java.lang.reflect.Field#isEnumConstant()
      */
     public final boolean isEnumConstant() {
-        return (flags() & Modifiers.ENUM) != 0;
+        return internal.isEnumConstant();
     }
 
     /**
@@ -361,6 +361,26 @@ public final class FieldInfo implements AnnotationTarget {
      */
     public final boolean isSynthetic() {
         return Modifiers.isSynthetic(internal.flags());
+    }
+
+    /**
+     * Returns an ordinal of this enum constant, that is, the zero-based position in the enum declaration.
+     * This is currently very inefficient (requires traversing fields of the declaring class),
+     * but may be improved in the future.
+     * <p>
+     * If this field is not an enum constant, returns -1.
+     * <p>
+     * Note that for the result to actually be the ordinal value, the index must be produced
+     * by at least Jandex 2.4. Previous Jandex versions do not store field positions. At most 256
+     * fields may be present in the class; if there's more, outcome is undefined. This also assumes
+     * that the bytecode order corresponds to declaration order, which is not guaranteed,
+     * but practically always holds.
+     *
+     * @return ordinal of this enum constant, or -1 if this field is not an enum constant
+     * @since 3.0.1
+     */
+    public int enumConstantOrdinal() {
+        return clazz.enumConstantOrdinal(internal);
     }
 
     /**

@@ -174,6 +174,8 @@ public final class TypeVariable extends Type {
         hash = super.hashCode();
         hash = 31 * hash + name.hashCode();
         hash = 31 * hash + Arrays.hashCode(bounds);
-        return this.hash |= (hash & HASH_MASK);
+        hash &= HASH_MASK;
+        this.hash |= hash;
+        return hash;
     }
 }

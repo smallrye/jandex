@@ -22,7 +22,7 @@ import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
 public class RecursiveTypeParametersWithAnnotationsTest {
-    static class MyComparable<@MyAnnotation("1") T extends @MyAnnotation("2") Comparable<@MyAnnotation("3") T>> {
+    static class MyComparable<@MyAnnotation("1") T extends @MyAnnotation("2") MyComparable<@MyAnnotation("3") T>> {
     }
 
     static class MyBuilder<@MyAnnotation("1") T, @MyAnnotation("2") THIS extends @MyAnnotation("3") MyBuilder<@MyAnnotation("4") T, @MyAnnotation("5") THIS>> {
@@ -52,7 +52,7 @@ public class RecursiveTypeParametersWithAnnotationsTest {
         assertEquals(1, typeParam.bounds().size());
         Type bound = typeParam.bounds().get(0);
         assertEquals(Type.Kind.PARAMETERIZED_TYPE, bound.kind());
-        assertEquals(DotName.createSimple(Comparable.class.getName()), bound.asParameterizedType().name());
+        assertEquals(DotName.createSimple(MyComparable.class.getName()), bound.asParameterizedType().name());
         assertEquals(1, bound.asParameterizedType().arguments().size());
         assertTypeAnnotation(bound, "2");
 
@@ -64,7 +64,7 @@ public class RecursiveTypeParametersWithAnnotationsTest {
         assertSame(typeParam, boundTypeArg.asTypeVariableReference().follow());
 
         assertEquals(
-                "@MyAnnotation(\"1\") T extends java.lang.@MyAnnotation(\"2\") Comparable<@MyAnnotation(\"3\") T>",
+                "@MyAnnotation(\"1\") T extends org.jboss.jandex.test.@MyAnnotation(\"2\") RecursiveTypeParametersWithAnnotationsTest$MyComparable<@MyAnnotation(\"3\") T>",
                 typeParam.toString());
     }
 

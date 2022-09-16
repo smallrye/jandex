@@ -22,7 +22,7 @@ import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
 public class RecursiveTypeParametersTest {
-    static class MyComparable<T extends Comparable<T>> {
+    static class MyComparable<T extends MyComparable<T>> {
     }
 
     static class DeepTypeParameterReference<T extends Collection<List<Queue<Map<? super T[][], Iterable<? extends T>>>>>> {
@@ -83,14 +83,14 @@ public class RecursiveTypeParametersTest {
         assertEquals(1, typeParam.bounds().size());
         Type bound = typeParam.bounds().get(0);
         assertEquals(Type.Kind.PARAMETERIZED_TYPE, bound.kind());
-        assertEquals(DotName.createSimple(Comparable.class.getName()), bound.asParameterizedType().name());
+        assertEquals(DotName.createSimple(MyComparable.class.getName()), bound.asParameterizedType().name());
         assertEquals(1, bound.asParameterizedType().arguments().size());
         Type boundTypeArg = bound.asParameterizedType().arguments().get(0);
         assertEquals(Type.Kind.TYPE_VARIABLE_REFERENCE, boundTypeArg.kind());
         assertEquals("T", boundTypeArg.asTypeVariableReference().identifier());
         assertNotNull(boundTypeArg.asTypeVariableReference().follow());
         assertSame(typeParam, boundTypeArg.asTypeVariableReference().follow());
-        assertEquals("T extends java.lang.Comparable<T>", typeParam.toString());
+        assertEquals("T extends org.jboss.jandex.test.RecursiveTypeParametersTest$MyComparable<T>", typeParam.toString());
     }
 
     @Test

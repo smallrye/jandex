@@ -109,29 +109,8 @@ public final class PrimitiveType extends Type {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-
-        if (!(o instanceof PrimitiveType)) {
-            return false;
-        }
-
-        PrimitiveType that = (PrimitiveType) o;
-        return super.equals(o) && primitive == that.primitive;
-    }
-
-    @Override
     Type copyType(AnnotationInstance[] newAnnotations) {
         return new PrimitiveType(primitive, newAnnotations);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + primitive.hashCode();
-        return result;
     }
 
     char toCode() {
@@ -204,5 +183,47 @@ public final class PrimitiveType extends Type {
             default:
                 throw new IllegalArgumentException();
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof PrimitiveType)) {
+            return false;
+        }
+
+        PrimitiveType that = (PrimitiveType) o;
+        return super.equals(o) && primitive == that.primitive;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + primitive.hashCode();
+        return result;
+    }
+
+    @Override
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof PrimitiveType)) {
+            return false;
+        }
+
+        PrimitiveType that = (PrimitiveType) o;
+        return super.internEquals(o) && primitive == that.primitive;
+    }
+
+    @Override
+    public int internHashCode() {
+        int result = super.internHashCode();
+        result = 31 * result + primitive.hashCode();
+        return result;
     }
 }

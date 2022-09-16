@@ -77,7 +77,7 @@ public final class TypeVariableReference extends Type {
     }
 
     /**
-     * Returns the type variable refered to by this reference.
+     * Returns the type variable referred to by this reference.
      */
     public TypeVariable follow() {
         if (target == null) {
@@ -97,6 +97,18 @@ public final class TypeVariableReference extends Type {
     }
 
     @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new TypeVariableReference(name, target, newAnnotations);
+    }
+
+    void setTarget(TypeVariable target) {
+        if (target == null) {
+            throw new IllegalArgumentException("Type variable reference target must not be null");
+        }
+        this.target = target;
+    }
+
+    @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
@@ -105,26 +117,44 @@ public final class TypeVariableReference extends Type {
     }
 
     @Override
-    Type copyType(AnnotationInstance[] newAnnotations) {
-        return new TypeVariableReference(name, target, newAnnotations);
+    public boolean equals(Object o) {
+        if (this.target == null) {
+            throw new IllegalStateException("Type variable reference " + name + " was not patched correctly");
+        }
+
+        if (this == o) {
+            return true;
+        }
+
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        TypeVariableReference that = (TypeVariableReference) o;
+
+        return name.equals(that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        if (this.target == null) {
+            throw new IllegalStateException("Type variable reference " + name + " was not patched correctly");
+        }
+
+        int hash = super.hashCode();
+        hash = 31 * hash + name.hashCode();
+        return hash;
     }
 
     // unlike all other subclasses of `Type`, this class is mutable,
     // so identity equality and hash code are the only option
     @Override
-    public boolean equals(Object o) {
+    public boolean internEquals(Object o) {
         return this == o;
     }
 
     @Override
-    public int hashCode() {
+    public int internHashCode() {
         return System.identityHashCode(this);
-    }
-
-    void setTarget(TypeVariable target) {
-        if (target == null) {
-            throw new IllegalArgumentException("Type variable reference target must not be null");
-        }
-        this.target = target;
     }
 }

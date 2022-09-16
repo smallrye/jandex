@@ -28,7 +28,7 @@ import java.util.List;
  *
  * @author Jason T. Greene
  */
-final class FieldInternal {
+final class FieldInternal implements Interned {
     static final FieldInternal[] EMPTY_ARRAY = new FieldInternal[0];
     private final byte[] name;
     private Type type;
@@ -97,6 +97,42 @@ final class FieldInternal {
     public int hashCode() {
         int result = Arrays.hashCode(name);
         result = 31 * result + type.hashCode();
+        result = 31 * result + (int) flags;
+        result = 31 * result + Arrays.hashCode(annotations);
+        return result;
+    }
+
+    @Override
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        FieldInternal that = (FieldInternal) o;
+
+        if (flags != that.flags) {
+            return false;
+        }
+        if (!Arrays.equals(annotations, that.annotations)) {
+            return false;
+        }
+        if (!Arrays.equals(name, that.name)) {
+            return false;
+        }
+        if (!type.internEquals(that.type)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int internHashCode() {
+        int result = Arrays.hashCode(name);
+        result = 31 * result + type.internHashCode();
         result = 31 * result + (int) flags;
         result = 31 * result + Arrays.hashCode(annotations);
         return result;

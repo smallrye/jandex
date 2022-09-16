@@ -63,16 +63,16 @@ public final class UnresolvedTypeVariable extends Type {
     }
 
     @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new UnresolvedTypeVariable(name, newAnnotations);
+    }
+
+    @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
         builder.append(name);
         return builder.toString();
-    }
-
-    @Override
-    Type copyType(AnnotationInstance[] newAnnotations) {
-        return new UnresolvedTypeVariable(name, newAnnotations);
     }
 
     @Override
@@ -88,11 +88,34 @@ public final class UnresolvedTypeVariable extends Type {
         UnresolvedTypeVariable other = (UnresolvedTypeVariable) o;
 
         return super.equals(other) && name.equals(other.name);
-
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        int hash = super.hashCode();
+        hash = 31 * hash + name.hashCode();
+        return hash;
+    }
+
+    @Override
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof UnresolvedTypeVariable)) {
+            return false;
+        }
+
+        UnresolvedTypeVariable other = (UnresolvedTypeVariable) o;
+
+        return super.internEquals(other) && name.equals(other.name);
+    }
+
+    @Override
+    public int internHashCode() {
+        int hash = super.internHashCode();
+        hash = 31 * hash + name.hashCode();
+        return hash;
     }
 }

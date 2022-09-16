@@ -124,6 +124,29 @@ public class ParameterizedType extends Type {
     }
 
     @Override
+    ParameterizedType copyType(AnnotationInstance[] newAnnotations) {
+        return new ParameterizedType(name(), arguments, owner, newAnnotations);
+    }
+
+    ParameterizedType copyType(Type[] arguments) {
+        return new ParameterizedType(name(), arguments, owner, annotationArray());
+    }
+
+    ParameterizedType copyType(int argumentIndex, Type argument) {
+        if (argumentIndex > this.arguments.length) {
+            throw new IllegalArgumentException("Type argument index outside of bounds");
+        }
+
+        Type[] arguments = this.arguments.clone();
+        arguments[argumentIndex] = argument;
+        return new ParameterizedType(name(), arguments, owner, annotationArray());
+    }
+
+    ParameterizedType copyType(Type owner) {
+        return new ParameterizedType(name(), arguments, owner, annotationArray());
+    }
+
+    @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
 
@@ -154,28 +177,6 @@ public class ParameterizedType extends Type {
     }
 
     @Override
-    ParameterizedType copyType(AnnotationInstance[] newAnnotations) {
-        return new ParameterizedType(name(), arguments, owner, newAnnotations);
-    }
-
-    ParameterizedType copyType(Type[] arguments) {
-        return new ParameterizedType(name(), arguments, owner, annotationArray());
-    }
-
-    ParameterizedType copyType(int argumentIndex, Type argument) {
-        if (argumentIndex > this.arguments.length) {
-            throw new IllegalArgumentException("Type argument index outside of bounds");
-        }
-
-        Type[] arguments = this.arguments.clone();
-        arguments[argumentIndex] = argument;
-        return new ParameterizedType(name(), arguments, owner, annotationArray());
-    }
-
-    ParameterizedType copyType(Type owner) {
-        return new ParameterizedType(name(), arguments, owner, annotationArray());
-    }
-
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -191,6 +192,7 @@ public class ParameterizedType extends Type {
                 && Arrays.equals(arguments, other.arguments);
     }
 
+    @Override
     public int hashCode() {
         int hash = this.hash;
         if (hash != 0) {
@@ -201,5 +203,29 @@ public class ParameterizedType extends Type {
         hash = 31 * hash + Arrays.hashCode(arguments);
         hash = 31 * hash + (owner != null ? owner.hashCode() : 0);
         return this.hash = hash;
+    }
+
+    @Override
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!super.internEquals(o)) {
+            return false;
+        }
+
+        ParameterizedType other = (ParameterizedType) o;
+
+        return (owner == other.owner || (owner != null && owner.internEquals(other.owner)))
+                && Interned.arrayEquals(arguments, other.arguments);
+    }
+
+    @Override
+    public int internHashCode() {
+        int hash = super.internHashCode();
+        hash = 31 * hash + Interned.arrayHashCode(arguments);
+        hash = 31 * hash + (owner != null ? owner.internHashCode() : 0);
+        return hash;
     }
 }

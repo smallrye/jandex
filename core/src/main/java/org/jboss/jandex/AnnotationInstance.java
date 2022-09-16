@@ -421,7 +421,7 @@ public final class AnnotationInstance {
 
     /**
      * Returns a string representation for this annotation instance. This method is equivalent
-     * to calling {@link #toString(boolean)} with a value of true.
+     * to calling {@link #toString(boolean)} with a value of {@code true}.
      *
      * @return a simple string representation for this annotation instance
      */
@@ -433,9 +433,9 @@ public final class AnnotationInstance {
     // the annotation type identity (the name) already includes that information
 
     /**
-     * Returns whether or not this annotation instance is equivalent to another instance.
-     * An annotation instance is equivalent if its name and values are equal, and it shares
-     * the exact same <code>AnnotationTarget</code> instance. The latter restriction
+     * Returns whether this annotation instance is equal to another instance.
+     * Two annotation instances are equal if their names and values of their members are equal,
+     * and they share the exact same {@code AnnotationTarget} instance. The latter restriction
      * may be softened in future versions.
      *
      * @param o the annotation instance to compare to.

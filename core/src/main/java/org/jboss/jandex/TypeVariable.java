@@ -117,6 +117,21 @@ public final class TypeVariable extends Type {
     }
 
     @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new TypeVariable(name, bounds, newAnnotations, hasImplicitObjectBound());
+    }
+
+    TypeVariable copyType(int boundIndex, Type bound) {
+        if (boundIndex > bounds.length) {
+            throw new IllegalArgumentException("Bound index outside of bounds");
+        }
+
+        Type[] bounds = this.bounds.clone();
+        bounds[boundIndex] = bound;
+        return new TypeVariable(name, bounds, annotationArray(), hasImplicitObjectBound());
+    }
+
+    @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
@@ -150,21 +165,6 @@ public final class TypeVariable extends Type {
     }
 
     @Override
-    Type copyType(AnnotationInstance[] newAnnotations) {
-        return new TypeVariable(name, bounds, newAnnotations, hasImplicitObjectBound());
-    }
-
-    TypeVariable copyType(int boundIndex, Type bound) {
-        if (boundIndex > bounds.length) {
-            throw new IllegalArgumentException("Bound index outside of bounds");
-        }
-
-        Type[] bounds = this.bounds.clone();
-        bounds[boundIndex] = bound;
-        return new TypeVariable(name, bounds, annotationArray(), hasImplicitObjectBound());
-    }
-
-    @Override
     public int hashCode() {
         int hash = this.hash & HASH_MASK;
         if (hash != 0) {
@@ -176,6 +176,30 @@ public final class TypeVariable extends Type {
         hash = 31 * hash + Arrays.hashCode(bounds);
         hash &= HASH_MASK;
         this.hash |= hash;
+        return hash;
+    }
+
+    @Override
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!super.internEquals(o)) {
+            return false;
+        }
+
+        TypeVariable that = (TypeVariable) o;
+
+        return name.equals(that.name) && Interned.arrayEquals(bounds, that.bounds)
+                && hasImplicitObjectBound() == that.hasImplicitObjectBound();
+    }
+
+    @Override
+    public int internHashCode() {
+        int hash = super.internHashCode();
+        hash = 31 * hash + name.hashCode();
+        hash = 31 * hash + Interned.arrayHashCode(bounds);
         return hash;
     }
 }

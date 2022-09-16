@@ -113,6 +113,15 @@ public class WildcardType extends Type {
     }
 
     @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new WildcardType(bound, isExtends, newAnnotations);
+    }
+
+    Type copyType(Type bound) {
+        return new WildcardType(bound, isExtends, annotationArray());
+    }
+
+    @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
@@ -127,15 +136,6 @@ public class WildcardType extends Type {
         }
 
         return builder.toString();
-    }
-
-    @Override
-    Type copyType(AnnotationInstance[] newAnnotations) {
-        return new WildcardType(bound, isExtends, newAnnotations);
-    }
-
-    Type copyType(Type bound) {
-        return new WildcardType(bound, isExtends, annotationArray());
     }
 
     @Override
@@ -162,5 +162,26 @@ public class WildcardType extends Type {
         hash = 31 * hash + (isExtends ? 1 : 0);
         hash = 31 * hash + bound.hashCode();
         return this.hash = hash;
+    }
+
+    @Override
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!super.internEquals(o)) {
+            return false;
+        }
+
+        WildcardType other = (WildcardType) o;
+        return isExtends == other.isExtends && bound.internEquals(other.bound);
+    }
+
+    @Override
+    public int internHashCode() {
+        int hash = super.internHashCode();
+        hash = 31 * hash + (isExtends ? 1 : 0);
+        hash = 31 * hash + bound.internHashCode();
+        return hash;
     }
 }

@@ -92,6 +92,39 @@ public final class ArrayType extends Type {
         return DotName.createSimple(builder.toString());
     }
 
+    /**
+     * The number of dimensions this array type has. For example, this method would return 2
+     * for an array type of {@code String[][]}.
+     * <p>
+     * Note that an {@code ArrayType} may have another {@code ArrayType} as its component type
+     * (see {@link #component()}). For example, {@code String[] @Ann []} is an array type
+     * with 1 dimension and a component type of another array type, also with 1 dimension.
+     *
+     * @return the number of dimensions of this array type
+     */
+    public int dimensions() {
+        return dimensions;
+    }
+
+    @Override
+    public Kind kind() {
+        return Kind.ARRAY;
+    }
+
+    @Override
+    public ArrayType asArrayType() {
+        return this;
+    }
+
+    @Override
+    Type copyType(AnnotationInstance[] newAnnotations) {
+        return new ArrayType(component, dimensions, newAnnotations);
+    }
+
+    Type copyType(Type component, int dimensions) {
+        return new ArrayType(component, dimensions, annotationArray());
+    }
+
     @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
@@ -123,26 +156,6 @@ public final class ArrayType extends Type {
         }
     }
 
-    /**
-     * The number of dimensions this array type has. For example, <code>String[][]</code>, would return a value
-     * of 2.
-     *
-     * @return the number of dimensions of this array type
-     */
-    public int dimensions() {
-        return dimensions;
-    }
-
-    @Override
-    public Kind kind() {
-        return Kind.ARRAY;
-    }
-
-    @Override
-    public ArrayType asArrayType() {
-        return this;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -171,11 +184,24 @@ public final class ArrayType extends Type {
     }
 
     @Override
-    Type copyType(AnnotationInstance[] newAnnotations) {
-        return new ArrayType(component, dimensions, newAnnotations);
+    public boolean internEquals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof ArrayType)) {
+            return false;
+        }
+        ArrayType arrayType = (ArrayType) o;
+
+        return super.internEquals(o) && dimensions == arrayType.dimensions && component.internEquals(arrayType.component);
     }
 
-    Type copyType(Type component, int dimensions) {
-        return new ArrayType(component, dimensions, annotationArray());
+    @Override
+    public int internHashCode() {
+        int hash = super.internHashCode();
+        hash = 31 * hash + component.internHashCode();
+        hash = 31 * hash + dimensions;
+        return hash;
     }
 }

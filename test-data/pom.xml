@@ -21,43 +21,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>com.igormaznitsa</groupId>
-                <artifactId>mvn-jlink-wrapper</artifactId>
-                <version>${version.mvn-jlink-wrapper}</version>
-                <executions>
-                    <execution>
-                        <id>download-jdk</id>
-                        <goals>
-                            <goal>cache-jdk</goal>
-                        </goals>
-                        <configuration>
-                            <jdkCachePath>${project.basedir}/jdk-cache</jdkCachePath>
-                            <jdkPathProperty>custom-jdk-path</jdkPathProperty>
-                            <provider>ADOPT</provider>
-                            <providerConfig>
-                                <release>${java.version}</release>
-                                <arch>x64</arch> <!-- TODO select automatically, but how? -->
-                            </providerConfig>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default-compile</id>
-                        <configuration>
-                            <executable>${custom-jdk-path}/bin/javac</executable>
-                            <fork>true</fork>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <!-- doesn't work correctly on nested records, even with the `compliance` version set -->
             <plugin>
                 <groupId>net.revelc.code</groupId>
@@ -71,57 +34,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-
-            <!-- exclude `module-info.class`, otherwise Maven JAR plugin invokes current JDK's `jar`, which may fail -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>module-info.class</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-
-            <!-- add `module-info.class` and the module attributes using custom JDK's `jar` -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>${version.exec-maven-plugin}</version>
-                <executions>
-                    <execution>
-                        <id>jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${custom-jdk-path}/bin/jar</executable>
-                            <workingDirectory>${project.build.directory}</workingDirectory>
-                            <arguments>
-                                <argument>--update</argument>
-                                <argument>--file</argument>
-                                <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
-                                <argument>--main-class</argument>
-                                <argument>test.exec.Main</argument>
-                                <argument>--module-version</argument>
-                                <argument>1.0</argument>
-                                <argument>-C</argument>
-                                <argument>${project.build.outputDirectory}</argument>
-                                <argument>module-info.class</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <javadocExecutable>${custom-jdk-path}/bin/javadoc</javadocExecutable>
-                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -138,6 +50,145 @@
             <properties>
                 <maven.compiler.parameters>true</maven.compiler.parameters>
             </properties>
+        </profile>
+
+        <profile>
+            <id>fix-module-info</id>
+            <activation>
+                <jdk>[17,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>${version.exec-maven-plugin}</version>
+                        <executions>
+                            <execution>
+                                <id>jar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${env.JAVA_HOME}/bin/jar</executable>
+                                    <workingDirectory>${project.build.directory}</workingDirectory>
+                                    <arguments>
+                                        <argument>--update</argument>
+                                        <argument>--file</argument>
+                                        <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
+                                        <argument>--main-class</argument>
+                                        <argument>test.exec.Main</argument>
+                                        <argument>--module-version</argument>
+                                        <argument>1.0</argument>
+                                        <argument>-C</argument>
+                                        <argument>${project.build.outputDirectory}</argument>
+                                        <argument>module-info.class</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>build-with-downloaded-jdk17</id>
+            <activation>
+                <jdk>(,17)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.igormaznitsa</groupId>
+                        <artifactId>mvn-jlink-wrapper</artifactId>
+                        <version>${version.mvn-jlink-wrapper}</version>
+                        <executions>
+                            <execution>
+                                <id>download-jdk</id>
+                                <goals>
+                                    <goal>cache-jdk</goal>
+                                </goals>
+                                <configuration>
+                                    <jdkCachePath>${project.basedir}/jdk-cache</jdkCachePath>
+                                    <jdkPathProperty>custom-jdk-path</jdkPathProperty>
+                                    <provider>ADOPT</provider>
+                                    <providerConfig>
+                                        <release>${java.version}</release>
+                                        <arch>x64</arch> <!-- TODO select automatically, but how? -->
+                                    </providerConfig>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-compile</id>
+                                <configuration>
+                                    <executable>${custom-jdk-path}/bin/javac</executable>
+                                    <fork>true</fork>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- exclude `module-info.class`, otherwise Maven JAR plugin invokes current JDK's `jar`, which may fail -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>module-info.class</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+
+                    <!-- add `module-info.class` and the module attributes using custom JDK's `jar` -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>${version.exec-maven-plugin}</version>
+                        <executions>
+                            <execution>
+                                <id>jar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${custom-jdk-path}/bin/jar</executable>
+                                    <workingDirectory>${project.build.directory}</workingDirectory>
+                                    <arguments>
+                                        <argument>--update</argument>
+                                        <argument>--file</argument>
+                                        <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
+                                        <argument>--main-class</argument>
+                                        <argument>test.exec.Main</argument>
+                                        <argument>--module-version</argument>
+                                        <argument>1.0</argument>
+                                        <argument>-C</argument>
+                                        <argument>${project.build.outputDirectory}</argument>
+                                        <argument>module-info.class</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <javadocExecutable>${custom-jdk-path}/bin/javadoc</javadocExecutable>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

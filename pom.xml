@@ -1,0 +1,22 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-parent</artifactId>
+        <version>12</version>
+    </parent>
+
+    <groupId>org.jboss</groupId>
+    <artifactId>jandex</artifactId>
+    <version>3.0.0</version>
+    <packaging>pom</packaging>
+
+    <distributionManagement>
+        <relocation>
+            <groupId>io.smallrye</groupId>
+            <message>Jandex has moved to SmallRye, see https://smallrye.io/blog/jandex-3-0-0/</message>
+        </relocation>
+    </distributionManagement>
+</project>

@@ -26,9 +26,8 @@ jobs:
         - 8
         - 11
         - 17
-        - 18
-        # https://github.com/actions/setup-java/issues/323
-        #- 19-ea
+        - 19
+        - 20-ea
         compiler:
         - javac
         - ecj

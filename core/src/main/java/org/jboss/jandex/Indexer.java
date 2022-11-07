@@ -1108,7 +1108,19 @@ public final class Indexer {
                 if (skipBridge(typeAnnotationState, method)) {
                     return;
                 }
-                method.setReturnType(resolveTypePath(returnType, typeAnnotationState));
+                if (!method.isConstructor()) {
+                    method.setReturnType(resolveTypePath(returnType, typeAnnotationState));
+                } else {
+                    // create a synthetic `ClassType` for the purpose of resolving the type path,
+                    // which would fail on a `VoidType` if the path points to a nested type
+                    // (this happens on inner class constructors with type annotations)
+                    Type newType = new ClassType(method.declaringClass().name());
+                    newType = resolveTypePath(newType, typeAnnotationState);
+                    returnType = returnType.copyType(newType.annotationArray());
+                    // fixup, `resolveTypePath` sets `typeAnnotationState.target` to the synthetic `ClassType`
+                    typeAnnotationState.target.setTarget(returnType);
+                    method.setReturnType(returnType);
+                }
             }
         } else if (typeTarget.usage() == TypeTarget.Usage.EMPTY && target instanceof RecordComponentInfo) {
             RecordComponentInfo recordComponent = (RecordComponentInfo) target;
@@ -1275,6 +1287,9 @@ public final class Indexer {
                     MethodInfo method = (MethodInfo) enclosingTarget;
                     type = target.asEmpty().isReceiver() ? method.receiverType() : method.returnType();
                     if (skipBridge(typeAnnotationState, method)) {
+                        return;
+                    }
+                    if (method.isConstructor()) {
                         return;
                     }
                 }

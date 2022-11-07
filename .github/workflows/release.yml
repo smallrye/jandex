@@ -35,7 +35,7 @@ jobs:
 
     - name: Maven release ${{steps.metadata.outputs.current-version}}
       run: |
-        export MAVEN_OPTS=--add-opens=java.base/java.util=ALL-UNNAMED
+        export MAVEN_OPTS=--add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
         java -version
         gpg --quiet --batch --yes --decrypt --passphrase="${{secrets.SECRET_PASSPHRASE}}" --output smallrye-sign.asc .github/release/smallrye-sign.asc.gpg
         gpg --quiet --batch --yes --decrypt --passphrase="${{secrets.SECRET_PASSPHRASE}}" --output maven-settings.xml .github/release/maven-settings.xml.gpg

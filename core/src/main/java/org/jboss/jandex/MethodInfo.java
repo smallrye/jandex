@@ -21,6 +21,7 @@ package org.jboss.jandex;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -576,6 +577,13 @@ public final class MethodInfo implements AnnotationTarget {
      */
     public final boolean isSynthetic() {
         return Modifiers.isSynthetic(methodInternal.flags());
+    }
+
+    /**
+     * @return {@code true} if this method is a constructor
+     */
+    public boolean isConstructor() {
+        return Arrays.equals(Utils.INIT_METHOD_NAME, methodInternal.nameBytes());
     }
 
     /**

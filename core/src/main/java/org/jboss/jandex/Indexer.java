@@ -248,8 +248,6 @@ public final class Indexer {
     private final static int HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATION = 17;
     private final static int HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION = 18;
 
-    private final static byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
-
     private static class InnerClassInfo {
         private InnerClassInfo(DotName innerClass, DotName enclosingClass, String simpleName, int flags) {
             this.innerClass = innerClass;
@@ -396,7 +394,7 @@ public final class Indexer {
             MethodInfo method = new MethodInfo(currentClass, name, MethodInternal.EMPTY_PARAMETER_NAMES, parameters, returnType,
                     flags);
 
-            if (parameters.length == 0 && Arrays.equals(INIT_METHOD_NAME, name)) {
+            if (parameters.length == 0 && Arrays.equals(Utils.INIT_METHOD_NAME, name)) {
                 currentClass.setHasNoArgsConstructor(true);
             }
             methodParameterNames = debugParameterNames = null;
@@ -938,7 +936,7 @@ public final class Indexer {
     }
 
     private static boolean isEnumConstructor(MethodInfo method) {
-        return method.declaringClass().isEnum() && Arrays.equals(INIT_METHOD_NAME, method.methodInternal().nameBytes());
+        return method.declaringClass().isEnum() && method.isConstructor();
     }
 
     private void resolveTypeAnnotations() {
@@ -1015,7 +1013,7 @@ public final class Indexer {
     }
 
     private boolean isInnerConstructor(MethodInfo method) {
-        if (!Arrays.equals(INIT_METHOD_NAME, method.methodInternal().nameBytes())) {
+        if (!method.isConstructor()) {
             return false;
         }
 
@@ -1110,7 +1108,19 @@ public final class Indexer {
                 if (skipBridge(typeAnnotationState, method)) {
                     return;
                 }
-                method.setReturnType(resolveTypePath(returnType, typeAnnotationState));
+                if (!method.isConstructor()) {
+                    method.setReturnType(resolveTypePath(returnType, typeAnnotationState));
+                } else {
+                    // create a synthetic `ClassType` for the purpose of resolving the type path,
+                    // which would fail on a `VoidType` if the path points to a nested type
+                    // (this happens on inner class constructors with type annotations)
+                    Type newType = new ClassType(method.declaringClass().name());
+                    newType = resolveTypePath(newType, typeAnnotationState);
+                    returnType = returnType.copyType(newType.annotationArray());
+                    // fixup, `resolveTypePath` sets `typeAnnotationState.target` to the synthetic `ClassType`
+                    typeAnnotationState.target.setTarget(returnType);
+                    method.setReturnType(returnType);
+                }
             }
         } else if (typeTarget.usage() == TypeTarget.Usage.EMPTY && target instanceof RecordComponentInfo) {
             RecordComponentInfo recordComponent = (RecordComponentInfo) target;
@@ -1277,6 +1287,9 @@ public final class Indexer {
                     MethodInfo method = (MethodInfo) enclosingTarget;
                     type = target.asEmpty().isReceiver() ? method.receiverType() : method.returnType();
                     if (skipBridge(typeAnnotationState, method)) {
+                        return;
+                    }
+                    if (method.isConstructor()) {
                         return;
                     }
                 }

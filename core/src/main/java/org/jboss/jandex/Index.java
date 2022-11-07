@@ -478,7 +478,7 @@ public final class Index implements IndexView {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public Collection<ClassInfo> getClassesInPackage(DotName packageName) {
@@ -500,7 +500,7 @@ public final class Index implements IndexView {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public Set<DotName> getSubpackages(DotName packageName) {

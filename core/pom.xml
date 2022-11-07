@@ -51,13 +51,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                    <doclet>org.jboss.apiviz.APIviz</doclet>
-                    <docletArtifact>
-                        <groupId>org.jboss.apiviz</groupId>
-                        <artifactId>apiviz</artifactId>
-                        <version>${version.apiviz}</version>
-                    </docletArtifact>
-                    <useStandardDocletOptions>true</useStandardDocletOptions>
                     <charset>UTF-8</charset>
                     <encoding>UTF-8</encoding>
                     <docencoding>UTF-8</docencoding>
@@ -66,7 +59,7 @@
                     <author>true</author>
                     <keywords>true</keywords>
                     <additionalOptions>
-                        -sourceclasspath ${project.build.outputDirectory}
+                        --allow-script-in-comments
                     </additionalOptions>
                     <docfilessubdirs>true</docfilessubdirs>
                     <top><![CDATA[
@@ -74,14 +67,14 @@
                          <script src="doc-files/shCore.js" type="text/javascript"></script>
                          <script src="doc-files/shBrushJava.js" type="text/javascript"></script>
                     ]]></top>
-                    <footer><![CDATA[
+                    <bottom><![CDATA[
                          <script type="text/javascript">
                            SyntaxHighlighter.defaults["auto-links"] = false;
                            SyntaxHighlighter.defaults["gutter"] = false;
                            SyntaxHighlighter.defaults["toolbar"] = false;
                            SyntaxHighlighter.all();
                          </script>
-                    ]]></footer>
+                    ]]></bottom>
                 </configuration>
             </plugin>
             <plugin>

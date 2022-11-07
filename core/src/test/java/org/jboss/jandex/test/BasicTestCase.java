@@ -621,6 +621,7 @@ public class BasicTestCase {
             assertEquals("somethingelse", overrideValue.asString());
 
             assertNotNull(method);
+            assertFalse(method.isConstructor());
             assertEquals(3, method.annotations().size());
             assertEquals(MethodAnnotation1.class.getName(),
                     method.annotation(DotName.createSimple(MethodAnnotation1.class.getName())).name().toString());
@@ -638,6 +639,7 @@ public class BasicTestCase {
             assertNotNull(nested);
             MethodInfo nestedConstructor1 = nested.method("<init>", PrimitiveType.INT);
             assertNotNull(nestedConstructor1);
+            assertTrue(nestedConstructor1.isConstructor());
             assertEquals(1, nestedConstructor1.parametersCount());
             assertEquals(1, nestedConstructor1.parameterTypes().size());
             assertEquals(1, nestedConstructor1.parameters().size());
@@ -645,6 +647,7 @@ public class BasicTestCase {
 
             MethodInfo nestedConstructor2 = nested.method("<init>", PrimitiveType.BYTE);
             assertNotNull(nestedConstructor2);
+            assertTrue(nestedConstructor2.isConstructor());
             // synthetic param counts here
             assertEquals(1, nestedConstructor2.parametersCount());
             assertEquals(1, nestedConstructor2.parameterTypes().size());
@@ -681,11 +684,13 @@ public class BasicTestCase {
             assertNotNull(enumClass);
             MethodInfo enumConstructor1 = enumClass.method("<init>", PrimitiveType.INT);
             assertNotNull(enumConstructor1);
+            assertTrue(enumConstructor1.isConstructor());
             assertEquals(1, enumConstructor1.parametersCount());
             assertEquals("noAnnotation", enumConstructor1.parameterName(0));
 
             MethodInfo enumConstructor2 = enumClass.method("<init>", PrimitiveType.BYTE);
             assertNotNull(enumConstructor2);
+            assertTrue(enumConstructor2.isConstructor());
             assertEquals(1, enumConstructor2.parametersCount());
             assertEquals("annotated", enumConstructor2.parameterName(0));
 
@@ -699,6 +704,7 @@ public class BasicTestCase {
             assertNotNull(enumWithGenericConstructorClass);
             MethodInfo ctor = enumWithGenericConstructorClass.firstMethod("<init>");
             assertNotNull(ctor);
+            assertTrue(ctor.isConstructor());
             assertEquals(1, ctor.parametersCount());
             assertEquals(Type.Kind.PARAMETERIZED_TYPE, ctor.parameterType(0).kind());
             assertEquals("java.util.List", ctor.parameterType(0).asParameterizedType().name().toString());

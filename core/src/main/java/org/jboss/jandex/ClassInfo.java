@@ -711,9 +711,9 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the list of constructors declared in this class
      */
     public final List<MethodInfo> constructors() {
-        List<MethodInfo> constructors = new ArrayList<MethodInfo>(1);
+        List<MethodInfo> constructors = new ArrayList<>(1);
         for (MethodInfo method : methods()) {
-            if ("<init>".equals(method.name())) {
+            if (method.isConstructor()) {
                 constructors.add(method);
             }
         }

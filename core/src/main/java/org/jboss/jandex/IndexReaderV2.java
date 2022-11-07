@@ -77,7 +77,6 @@ final class IndexReaderV2 extends IndexReaderImpl {
     private static final int AVALUE_ARRAY = 12;
     private static final int AVALUE_NESTED = 13;
     private static final int HAS_ENCLOSING_METHOD = 1;
-    private final static byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
 
     private final PackedDataInputStream input;
     private final int version;
@@ -825,7 +824,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             methods[i] = method;
 
             if (version < 11 && method.parameterTypesArray().length == 0
-                    && Arrays.equals(INIT_METHOD_NAME, method.nameBytes())) {
+                    && Arrays.equals(Utils.INIT_METHOD_NAME, method.nameBytes())) {
                 clazz.setHasNoArgsConstructor(true);
             }
         }

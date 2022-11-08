@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Basic Maven Plugin Usage :: Jandex documentation</title>
-    <link rel="prev" href="../core/indexing.html">
-    <link rel="next" href="advanced.html">
+    <title>Advanced Maven Plugin Usage :: Jandex documentation</title>
+    <link rel="prev" href="basic.html">
+    <link rel="next" href="shading.html">
     <meta name="generator" content="Antora 3.0.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -19,10 +19,10 @@
       <a class="navbar-item title" href="../index.html">Jandex</a>
 
       <div class="navbar-item has-dropdown is-hoverable">
-        <span class="navbar-link">3.0.1</span>
+        <span class="navbar-link">3.0.2</span>
         <div class="navbar-dropdown navbar-menu">
-            <a class="navbar-item " href="../../3.0.2/index.html">3.0.2</a>
-            <a class="navbar-item  is-current" href="../index.html">3.0.1</a>
+            <a class="navbar-item  is-current" href="../index.html">3.0.2</a>
+            <a class="navbar-item " href="../../3.0.1/index.html">3.0.1</a>
             <a class="navbar-item " href="../../3.0.0/index.html">3.0.0</a>
         </div>
       </div>
@@ -44,7 +44,7 @@
   </nav>
 </header>
 <div class="body">
-<div class="nav-container" data-component="jandex" data-version="3.0.1">
+<div class="nav-container" data-component="jandex" data-version="3.0.2">
   <aside class="nav">
     <div class="panels">
 <div class="nav-panel-menu is-active" data-panel="menu">
@@ -72,10 +72,10 @@
   <li class="nav-item nav-item-level-1">
     <span class="nav-text">Jandex Maven Plugin</span>
 <ul class="nav-list nav-list-level-2">
-  <li class="nav-item nav-item-level-2 is-current-page">
+  <li class="nav-item nav-item-level-2">
     <a class="nav-link" href="basic.html">Basic Usage</a>
   </li>
-  <li class="nav-item nav-item-level-2">
+  <li class="nav-item nav-item-level-2 is-current-page">
     <a class="nav-link" href="advanced.html">Advanced Usage</a>
   </li>
   <li class="nav-item nav-item-level-2">
@@ -97,12 +97,12 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-  <a href="https://github.com/smallrye/jandex/blob/3.0.1/doc/modules/ROOT/pages/maven/basic.adoc" class="edit-this-page" title="Edit this page">
+  <a href="https://github.com/smallrye/jandex/blob/3.0.2/doc/modules/ROOT/pages/maven/advanced.adoc" class="edit-this-page" title="Edit this page">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
   </a>
-<h1 class="page">Basic Maven Plugin Usage</h1>
+<h1 class="page">Advanced Maven Plugin Usage</h1>
 <div class="paragraph">
-<p>This is how you add a persistent Jandex index to your Maven project:</p>
+<p>If you need to process more than one directory of classes, you can specify multiple <code>fileSets</code> like this:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -118,6 +118,16 @@
                     &lt;goals&gt;
                         &lt;goal&gt;jandex&lt;/goal&gt;
                     &lt;/goals&gt;
+                    &lt;configuration&gt;
+                        &lt;fileSets&gt;
+                            &lt;fileSet&gt;
+                                &lt;directory&gt;${project.build.directory}/generated-classes/foo&lt;/directory&gt;
+                            &lt;/fileSet&gt;
+                            &lt;fileSet&gt;
+                                &lt;directory&gt;${project.build.directory}/generated-classes/bar&lt;/directory&gt;
+                            &lt;/fileSet&gt;
+                        &lt;/fileSets&gt;
+                    &lt;/configuration&gt;
                 &lt;/execution&gt;
             &lt;/executions&gt;
         &lt;/plugin&gt;
@@ -126,14 +136,58 @@
 </div>
 </div>
 <div class="paragraph">
-<p>The <code>jandex</code> goal is bound to the <code>process-classes</code> phase by default.</p>
+<p>To turn <em>off</em> processing of <code>target/classes</code>, add the following configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;processDefaultFileSet&gt;false&lt;/processDefaultFileSet&gt;</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>This configuration will index all <code>.class</code> files in your <code>target/classes</code> directory, and write the index to <code>target/classes/META-INF/jandex.idx</code>.</p>
+<p>For any <code>fileSet</code>, you can also fine-tune the classes that are processed using the following options:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;fileSet&gt;
+    &lt;directory&gt;${project.build.directory}/somedir&lt;/directory&gt;
+    &lt;!-- included globs --&gt;
+    &lt;includes&gt;
+        &lt;include&gt;**/indexed/*.class&lt;/include&gt;
+        &lt;include&gt;**/idxd/*.class&lt;/include&gt;
+    &lt;/includes&gt;
+    &lt;!-- excluded globs --&gt;
+    &lt;excludes&gt;
+        &lt;exclude&gt;**/*NotIndexed.class&lt;/exclude&gt;
+    &lt;/excludes&gt;
+    &lt;!-- normally true, this excludes things like the CVS/ and .svn/ directories, log files, etc. --&gt;
+    &lt;useDefaultExcludes&gt;false&lt;/useDefaultExcludes&gt;
+&lt;/fileSet&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A <code>fileSet</code> may specify a <em>dependency</em> instead of a directory.
+That dependency must exist among the set of dependencies of the Maven project being built.
+A <code>groupId</code> and <code>artifactId</code> are mandatory, a <code>classifier</code> is optional:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;fileSet&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;com.example&lt;/groupId&gt;
+        &lt;artifactId&gt;my-project&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;includes&gt;
+        &lt;include&gt;com/example/my/project/api/**/*.class&lt;/include&gt;
+    &lt;/includes&gt;
+    &lt;excludes&gt;
+        &lt;exclude&gt;com/example/**/_private/*.class&lt;/exclude&gt;
+    &lt;/excludes&gt;
+&lt;/fileSet&gt;</code></pre>
+</div>
 </div>
 <nav class="pagination">
-  <span class="prev"><a href="../core/indexing.html">Indexing Classes</a></span>
-  <span class="next"><a href="advanced.html">Advanced Usage</a></span>
+  <span class="prev"><a href="basic.html">Basic Usage</a></span>
+  <span class="next"><a href="shading.html">Usage with Shading</a></span>
 </nav>
 </article>
   </div>

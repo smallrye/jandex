@@ -908,10 +908,19 @@ public final class Indexer {
             if (isInnerConstructor(method) && !signaturePresent.containsKey(method)) {
                 // inner class constructor without signature, list of parameter types is derived
                 // from the descriptor, which includes 1 mandated or synthetic parameter at the beginning
+                DotName enclosingClass = null;
+                if (method.declaringClass().enclosingClass() != null) {
+                    enclosingClass = method.declaringClass().enclosingClass();
+                } else if (method.declaringClass().enclosingMethod() != null) {
+                    enclosingClass = method.declaringClass().enclosingMethod().enclosingClass();
+                }
+
                 Type[] parameterTypes = method.methodInternal().parameterTypesArray();
-                Type[] newParameterTypes = new Type[parameterTypes.length - 1];
-                System.arraycopy(parameterTypes, 1, newParameterTypes, 0, parameterTypes.length - 1);
-                method.setParameters(intern(newParameterTypes));
+                if (parameterTypes.length > 0 && parameterTypes[0].name().equals(enclosingClass)) {
+                    Type[] newParameterTypes = new Type[parameterTypes.length - 1];
+                    System.arraycopy(parameterTypes, 1, newParameterTypes, 0, parameterTypes.length - 1);
+                    method.setParameters(intern(newParameterTypes));
+                }
             } else if (isEnumConstructor(method) && !signaturePresent.containsKey(method)) {
                 // enum constructor without signature, list of parameter types is derived from the descriptor,
                 // which includes 2 synthetic parameters at the beginning -- let's remove those

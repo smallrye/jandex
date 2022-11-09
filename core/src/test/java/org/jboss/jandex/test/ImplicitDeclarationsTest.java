@@ -156,12 +156,14 @@ public class ImplicitDeclarationsTest {
 
             assertTrue(foo.hasAnnotation(MyAnnotation.DOT_NAME));
             assertEquals("enum: foo", foo.annotation(MyAnnotation.DOT_NAME).value().asString());
-            assertTrue(foo.annotations().size() == 1 || foo.annotations().size() == 2);
-            if (foo.annotations().size() == 1) {
+            if (!CompiledWith.ecj()) {
                 // javac DOESN'T put the annotation on the _type_ of the implicitly declared field
+                assertEquals(1, foo.annotations().size());
                 assertTrue(foo.type().annotations().isEmpty());
             } else {
-                // ecj DOES put the annotation on the _type_ of the implicitly declared field
+                // ecj DOES put the annotation on the _type_ of the implicitly declared field,
+                // contrary to the `@Target` declaration
+                assertEquals(2, foo.annotations().size());
                 assertFalse(foo.type().annotations().isEmpty());
                 assertTrue(foo.type().hasAnnotation(MyAnnotation.DOT_NAME));
                 assertEquals("enum: foo", foo.type().annotation(MyAnnotation.DOT_NAME).value().asString());
@@ -178,12 +180,14 @@ public class ImplicitDeclarationsTest {
 
             assertTrue(bar.hasAnnotation(MyAnnotation.DOT_NAME));
             assertEquals("enum: bar", bar.annotation(MyAnnotation.DOT_NAME).value().asString());
-            assertTrue(bar.annotations().size() == 1 || bar.annotations().size() == 2);
-            if (bar.annotations().size() == 1) {
+            if (!CompiledWith.ecj()) {
                 // javac DOESN'T put the annotation on the _type_ of the implicitly declared field
+                assertEquals(1, bar.annotations().size());
                 assertTrue(bar.type().annotations().isEmpty());
             } else {
-                // ecj DOES put the annotation on the _type_ of the implicitly declared field
+                // ecj DOES put the annotation on the _type_ of the implicitly declared field,
+                // contrary to the `@Target` declaration
+                assertEquals(2, bar.annotations().size());
                 assertFalse(bar.type().annotations().isEmpty());
                 assertTrue(bar.type().hasAnnotation(MyAnnotation.DOT_NAME));
                 assertEquals("enum: bar", bar.type().annotation(MyAnnotation.DOT_NAME).value().asString());
@@ -384,15 +388,13 @@ public class ImplicitDeclarationsTest {
         // and an anonymous constructor is specified to also accept the enclosing instance
         //
         // Jandex only strips the 1st enclosing instance
-        assertTrue(constructor.parametersCount() == 1 || constructor.parametersCount() == 2);
-        int parameterIndex = constructor.parametersCount() == 1 ? 0 : 1;
-        assertEquals("int", constructor.parameterType(parameterIndex).name().toString());
+        assertEquals(CompiledWith.ecj() ? 2 : 1, constructor.parametersCount());
+        assertEquals("int", constructor.parameterType(CompiledWith.ecj() ? 1 : 0).name().toString());
         // intentionally _not_ testing parameter names, those are not defined in any way
-        assertTrue(constructor.descriptorParametersCount() == 2 || constructor.descriptorParametersCount() == 3);
+        assertEquals(CompiledWith.ecj() ? 3 : 2, constructor.descriptorParametersCount());
         assertEquals(ImplicitDeclarationsExample.class.getName(),
                 constructor.descriptorParameterTypes().get(0).name().toString());
-        parameterIndex = constructor.descriptorParametersCount() == 2 ? 1 : 2;
-        assertEquals("int", constructor.descriptorParameterTypes().get(parameterIndex).name().toString());
+        assertEquals("int", constructor.descriptorParameterTypes().get(CompiledWith.ecj() ? 2 : 1).name().toString());
     }
 
     // parameter `name` of the `valueOf` method which is implicitly declared in an enum
@@ -404,6 +406,7 @@ public class ImplicitDeclarationsTest {
         assertEquals(String.class.getName(), method.parameterType(0).name().toString());
         if (method.parameterName(0) != null) {
             // ecj DOESN'T emit the parameter name, not even to the local variable table
+            // plus we also ignore emitted parameter names for mandated/synthetic parameters
             assertEquals("name", method.parameterName(0));
         }
         assertEquals(1, method.descriptorParametersCount());

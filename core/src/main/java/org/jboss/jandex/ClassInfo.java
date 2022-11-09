@@ -991,11 +991,11 @@ public final class ClassInfo implements AnnotationTarget {
     /**
      * Returns whether this class declares a zero-parameter constructor. This is determined from
      * constructor descriptors, so mandated and synthetic parameters are also taken into account.
-     * In other words, this method never returns {@code true} for inner classes (that is, non-static
-     * member classes, local classes and anonymous classes). In such case, a constructor may exist
-     * among {@link #methods()} that has no {@link MethodInfo#parameters()}, but
-     * {@link MethodInfo#descriptorParameterTypes()} would reveal that some implicitly declared
-     * (aka mandated) or synthetic parameters exist.
+     * In other words, for Java classes (other JVM languages may differ), this method never returns
+     * {@code true} for inner classes (that is, non-static member classes, local classes and
+     * anonymous classes). In such case, a constructor may exist among {@link #methods()} that has
+     * no {@link MethodInfo#parameters()}, but {@link MethodInfo#descriptorParameterTypes()} would
+     * reveal that some implicitly declared (aka mandated) or synthetic parameters exist.
      * <p>
      * This information is available in indexes produced by Jandex 1.2.0 and later.
      *

@@ -36,7 +36,7 @@ public class SyntheticDeclarationsTest {
                     .orElse(null);
             assertNotNull(constructor);
 
-            assertTrue(constructor.parametersCount() == 1 || constructor.parametersCount() == 2);
+            assertEquals(CompiledWith.ecj() ? 2 : 1, constructor.parametersCount());
             assertEquals("int", constructor.parameterType(0).name().toString());
             assertEquals("num", constructor.parameterName(0));
             assertEquals(2, constructor.descriptorParametersCount());
@@ -57,7 +57,7 @@ public class SyntheticDeclarationsTest {
                     .orElse(null);
             assertNotNull(constructor);
 
-            assertTrue(constructor.parametersCount() == 2 || constructor.parametersCount() == 3);
+            assertEquals(CompiledWith.ecj() ? 3 : 2, constructor.parametersCount());
             assertEquals(Object.class.getName(), constructor.parameterType(0).name().toString());
             assertEquals(Integer.class.getName(), constructor.parameterType(1).name().toString());
             assertEquals("ignored", constructor.parameterName(0));
@@ -101,8 +101,8 @@ public class SyntheticDeclarationsTest {
         }
     }
 
-    // a local class not declared in static context has a synthetic first parameter (the enclosing instance)
-    // and for each captured variable, one synthetic parameter at the end
+    // constructor of a local class not declared in static context has a synthetic first parameter
+    // (the enclosing instance) and for each captured variable, one synthetic parameter at the end
     @Test
     public void localClassNotInStaticContext() {
         List<MethodInfo> constructors = index.getClassByName(obj.localClassNotInStaticContext)
@@ -119,7 +119,7 @@ public class SyntheticDeclarationsTest {
                     .orElse(null);
             assertNotNull(constructor);
 
-            assertTrue(constructor.parametersCount() == 1 || constructor.parametersCount() == 2);
+            assertEquals(CompiledWith.ecj() ? 2 : 1, constructor.parametersCount());
             assertEquals("int", constructor.parameterType(0).name().toString());
             assertEquals("num", constructor.parameterName(0));
             assertEquals(3, constructor.descriptorParametersCount());
@@ -142,7 +142,7 @@ public class SyntheticDeclarationsTest {
                     .orElse(null);
             assertNotNull(constructor);
 
-            assertTrue(constructor.parametersCount() == 2 || constructor.parametersCount() == 3);
+            assertEquals(CompiledWith.ecj() ? 3 : 2, constructor.parametersCount());
             assertEquals(Object.class.getName(), constructor.parameterType(0).name().toString());
             assertEquals(Integer.class.getName(), constructor.parameterType(1).name().toString());
             assertEquals("ignored", constructor.parameterName(0));

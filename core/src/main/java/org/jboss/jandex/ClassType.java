@@ -26,6 +26,21 @@ public final class ClassType extends Type {
 
     public static final ClassType OBJECT_TYPE = new ClassType(DotName.OBJECT_NAME);
 
+    /**
+     * Create an instance of a class type with given {@code name}.
+     * <p>
+     * Note that an inner class type enclosed in a parameterized type or in a type
+     * annotated with a type annotation is represented as {@link ParameterizedType},
+     * where the enclosing type is the owner of the parameterized type.
+     *
+     * @param name the name of this class type
+     * @return the class type
+     * @since 3.0.4
+     */
+    public static ClassType create(DotName name) {
+        return new ClassType(name);
+    }
+
     ClassType(DotName name) {
         this(name, null);
     }

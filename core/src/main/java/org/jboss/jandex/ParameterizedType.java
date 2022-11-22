@@ -26,23 +26,34 @@ import java.util.List;
  * {@code arguments()} list corresponds to the type arguments passed to the generic type
  * in order to instantiate this parameterized type.
  * <p>
- * For example, the following declaration would have a name of {@code java.util.Map} and two
- * {@code ClassType} arguments: {@code java.lang.String} and {@code java.lang.Integer}:
- *
- * <pre class="brush:java">
- * Map&lt;String, Integer&gt;
- * </pre>
+ * For example, the parameterized type {@code Map<String, Integer>} would have a name of
+ * {@code java.util.Map} and two {@code ClassType} arguments: {@code java.lang.String} and
+ * {@code java.lang.Integer}.
  * <p>
  * Additionally, a parameterized type is used to represent an inner type whose enclosing type
  * is either parameterized or has type annotations. In this case, the {@code owner()} method
  * returns the type of the enclosing class. Such inner type may itself be parameterized.
  * <p>
- * For example, the following declaration shows the case where a parameterized type is used
- * to represent a non-parameterized class {@code X} whose owner {@code Y} is parameterized:
- *
+ * For example, assume the following declarations:
  * <pre class="brush:java">
- * Y&lt;String&gt;.X
+ * class A&lt;T&gt; {
+ *     class B {
+ *     }
+ * }
+ *
+ * class C {
+ *     class D {
+ *     }
+ * }
  * </pre>
+ *
+ * Then, the type {@code A<String>.B} is reprezented as a parameterized type, even though
+ * {@code B} is not parameterized, because the enclosing type is parameterized. The owner
+ * of this type is the parameterized type {@code A<String>}.
+ * <p>
+ * Similarly, the type {@code @TypeAnn C.D} is reprezented as a parameterized type, even
+ * though neither {@code C} nor {@code D} are parameterized, because the enclosing type
+ * has a type annotation. The owner of this type is the class type {@code @TypeAnn C}.
  *
  * @since 2.0
  * @author Jason T. Greene
@@ -50,12 +61,17 @@ import java.util.List;
 public class ParameterizedType extends Type {
 
     /**
-     * Create a new mock instance.
+     * Create an instance of a parameterized type with given {@code name}, which denotes
+     * a generic class, and given type {@code arguments}.
+     * <p>
+     * An {@code owner} may be supplied when the new instance is supposed to represent
+     * an inner type, in case the enclosing type is either parameterized or annotated
+     * with a type annotation.
      *
-     * @param name the name of this type
-     * @param arguments an array of types representing arguments to this type
-     * @param owner the enclosing type if annotated or parameterized, otherwise null
-     * @return the mock instance
+     * @param name the name of this parameterized type
+     * @param arguments an array of type arguments applied to a generic class to form this type
+     * @param owner the enclosing type if annotated or parameterized, otherwise {@code null}
+     * @return the parameterized type
      * @since 2.1
      */
     public static ParameterizedType create(DotName name, Type[] arguments, Type owner) {

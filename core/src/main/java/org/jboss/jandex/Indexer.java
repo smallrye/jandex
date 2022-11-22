@@ -1223,9 +1223,9 @@ public final class Indexer {
             }
 
             // the annotation targets the type itself
+            // clone the annotation instance with a null target so that it can be interned
             type = intern(type.addAnnotation(AnnotationInstance.create(typeAnnotationState.annotation, null)));
-            typeAnnotationState.target.setTarget(type); // FIXME
-            // Clone the instance with a null target so that it can be interned
+            typeAnnotationState.target.setTarget(type);
             return type;
         }
 
@@ -1243,6 +1243,14 @@ public final class Indexer {
                 return intern(arrayType.copyType(nested, arrayType.dimensions() - dimensions));
             }
             case PARAMETERIZED: {
+                // hack for Kotlin which emits a wrong type annotation path
+                // (see KotlinTypeAnnotationWrongTypePathTest)
+                if (type.kind() == Type.Kind.WILDCARD_TYPE
+                        && type.asWildcardType().bound() != null
+                        && type.asWildcardType().bound().kind() == Type.Kind.PARAMETERIZED_TYPE) {
+                    return type;
+                }
+
                 ParameterizedType parameterizedType = type.asParameterizedType();
                 Type[] arguments = parameterizedType.argumentsArray().clone();
                 int pos = element.pos;
@@ -1375,6 +1383,14 @@ public final class Indexer {
                 return searchTypePath(arrayType.component(), typeAnnotationState);
             }
             case PARAMETERIZED: {
+                // hack for Kotlin which emits a wrong type annotation path
+                // (see KotlinTypeAnnotationWrongTypePathTest)
+                if (type.kind() == Type.Kind.WILDCARD_TYPE
+                        && type.asWildcardType().bound() != null
+                        && type.asWildcardType().bound().kind() == Type.Kind.PARAMETERIZED_TYPE) {
+                    return type;
+                }
+
                 ParameterizedType parameterizedType = type.asParameterizedType();
                 return searchTypePath(parameterizedType.argumentsArray()[element.pos], typeAnnotationState);
             }

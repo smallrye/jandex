@@ -18,9 +18,7 @@ import org.jboss.jandex.MethodParameterInfo;
 import org.junit.jupiter.api.Test;
 
 import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.NamingStrategy;
 import net.bytebuddy.description.annotation.AnnotationDescription;
-import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.implementation.StubMethod;
 
@@ -36,13 +34,8 @@ public class TooManyMethodParametersTest {
     @Test
     public void test() throws IOException {
         DynamicType.Builder.MethodDefinition.ParameterDefinition<Object> builder = new ByteBuddy()
-                .with(new NamingStrategy.AbstractBase() {
-                    @Override
-                    protected String name(TypeDescription superClass) {
-                        return TEST_CLASS;
-                    }
-                })
                 .subclass(Object.class)
+                .name(TEST_CLASS)
                 .defineMethod("hugeMethod", void.class)
                 .withParameter(String.class, "p0")
                 .annotateParameter(AnnotationDescription.Builder.ofType(MyAnnotation.class).define("value", "0").build());
@@ -51,13 +44,13 @@ public class TooManyMethodParametersTest {
                     .annotateParameter(
                             AnnotationDescription.Builder.ofType(MyAnnotation.class).define("value", "" + i).build());
         }
-        byte[] syntheticClass = builder
+        byte[] bytes = builder
                 .intercept(StubMethod.INSTANCE)
                 .make()
                 .getBytes();
 
         Indexer indexer = new Indexer();
-        indexer.index(new ByteArrayInputStream(syntheticClass));
+        indexer.index(new ByteArrayInputStream(bytes));
         Index index = indexer.complete();
 
         ClassInfo clazz = index.getClassByName(DotName.createSimple(TEST_CLASS));

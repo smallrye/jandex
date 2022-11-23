@@ -36,7 +36,7 @@
         <version.nexus-staging-maven-plugin>1.6.13</version.nexus-staging-maven-plugin>
         <version.mvn-jlink-wrapper>1.1.1</version.mvn-jlink-wrapper>
         <version.plexus-compiler-eclipse>2.11.1</version.plexus-compiler-eclipse>
-        <version.plexus-utils>3.4.1</version.plexus-utils>
+        <version.plexus-utils>3.5.0</version.plexus-utils>
     </properties>
 
     <issueManagement>

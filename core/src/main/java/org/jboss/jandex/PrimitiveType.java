@@ -202,7 +202,7 @@ public final class PrimitiveType extends Type {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + primitive.hashCode();
+        result = 31 * result + primitive.name().hashCode();
         return result;
     }
 
@@ -223,7 +223,7 @@ public final class PrimitiveType extends Type {
     @Override
     public int internHashCode() {
         int result = super.internHashCode();
-        result = 31 * result + primitive.hashCode();
+        result = 31 * result + primitive.name().hashCode();
         return result;
     }
 }

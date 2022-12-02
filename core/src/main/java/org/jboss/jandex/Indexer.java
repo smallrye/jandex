@@ -2448,14 +2448,18 @@ public final class Indexer {
 
             @Override
             public int compare(ClassInfo c1, ClassInfo c2) {
-                if (isEnclosedIn(c1, c2)) {
+                if (c1.name().equals(c2.name())) {
+                    return 0;
+                } else if (isEnclosedIn(c1, c2)) {
                     // c1 is enclosed in c2, so c2 must be processed sooner
                     return 1;
                 } else if (isEnclosedIn(c2, c1)) {
                     // c2 is enclosed in c1, so c1 must be processed sooner
                     return -1;
                 } else {
-                    return 0;
+                    // we really only need partial order here,
+                    // but `Comparator` must establish total order
+                    return c1.name().compareTo(c2.name());
                 }
             }
         });

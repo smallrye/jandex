@@ -587,10 +587,10 @@ public final class MethodInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns a string representation describing this field. It is similar although not
-     * necessarily identical to a Java source code expression representing this field.
+     * Returns a string representation describing this method. It is similar although not
+     * necessarily identical to a Java source code declaration of this method.
      *
-     * @return a string representation for this field
+     * @return a string representation of this method
      */
     public String toString() {
         return methodInternal.toString();

@@ -319,7 +319,8 @@ public final class RecordComponentInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns a string representation describing this record component.
+     * Returns a string representation describing this record component. It is similar although not
+     * necessarily identical to a Java source code declaration of this record component.
      *
      * @return a string representation of this record component
      */

@@ -331,9 +331,10 @@ public final class MethodParameterInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns a string representation describing this method parameter
+     * Returns a string representation describing this method parameter. It is similar although not
+     * necessarily identical to a Java source code declaration of this method parameter.
      *
-     * @return a string representation of this parameter
+     * @return a string representation of this method parameter
      */
     public String toString() {
         return method + " #" + position;

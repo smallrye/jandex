@@ -222,21 +222,26 @@ public final class ClassInfo implements AnnotationTarget {
         return Kind.CLASS;
     }
 
+    /**
+     * Returns the binary name of this class.
+     *
+     * @return the binary name of this class
+     */
     public String toString() {
         return name.toString();
     }
 
     /**
-     * Returns the name of the class
+     * Returns the binary name of the class as a {@link DotName}.
      *
-     * @return the name of the class
+     * @return the binary name of the class as a {@link DotName}
      */
     public final DotName name() {
         return name;
     }
 
     /**
-     * Returns the access flags for this class. The standard {@link java.lang.reflect.Modifier}
+     * Returns the access flags for this class. The {@link java.lang.reflect.Modifier} methods
      * can be used to decode the value.
      *
      * @return the access flags

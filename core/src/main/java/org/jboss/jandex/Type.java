@@ -202,16 +202,28 @@ public abstract class Type implements Interned {
     }
 
     /**
-     * Returns the raw name of this type. Primitives and void are returned as the
-     * Java keyword (void, boolean, byte, short, int, long, float, double, char).
-     * Arrays are returned using the Java reflection array syntax (e.g.
-     * {@code [[[Ljava.lang.String;}) Classes are returned as a normal {@code DotName}.
-     * <p>
-     * Generic values are returned as the underlying raw value. For example,
-     * a wildcard such as {@code ? extends Number} has a raw type of
-     * {@code Number}.
+     * Returns the name of this type (or its erasure in case of generic types) as a {@link DotName},
+     * using the {@link Class#getName()} format. Specifically:
+     * <ul>
+     * <li>for primitive types and the void pseudo-type, the corresponding Java keyword
+     * is returned ({@code void}, {@code boolean}, {@code byte}, {@code short}, {@code int},
+     * {@code long}, {@code float}, {@code double}, {@code char});
+     * <li>for class types, the binary name of the class is returned;</li>
+     * <li>for array types, a string is returned that consists of one or more {@code [}
+     * characters corresponding to the number of dimensions of the array type,
+     * followed by the element type as a single-character code for primitive types
+     * or {@code L<binary class name>;} for class types (for example, {@code [I} for {@code int[]}
+     * or {@code [[Ljava.lang.String;} for {@code String[][]});</li>
+     * <li>for parameterized types, the binary name of the generic class is returned
+     * (for example, {@code java.util.List} for {@code List<String>});</li>
+     * <li>for type variables, the name of the first bound of the type variable is returned,
+     * or {@code java.lang.Object} for type variables that have no bound;</li>
+     * <li>for wildcard types, the name of the upper bound is returned,
+     * or {@code java.lang.Object} if the wildcard type does not have an upper bound
+     * (for example, {@code java.lang.Number} for {@code ? extends Number}).</li>
+     * </ul>
      *
-     * @return the name of this type
+     * @return the name of this type (or its erasure in case of generic types)
      */
     public DotName name() {
         return name;

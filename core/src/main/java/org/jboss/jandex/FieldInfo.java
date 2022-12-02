@@ -384,8 +384,8 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     /**
-     * Returns a string representation describing this field. It is similar although not necessarily identical
-     * to a Java source code expression representing this field.
+     * Returns a string representation describing this field. It is similar although not
+     * necessarily identical to a Java source code declaration of this field.
      *
      * @return a string representation of this field
      */

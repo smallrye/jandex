@@ -29,6 +29,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Represents a class entry in an index. A ClassInfo is only a partial view of a
@@ -52,7 +53,7 @@ import java.util.Set;
  * @author Jason T. Greene
  *
  */
-public final class ClassInfo implements AnnotationTarget {
+public final class ClassInfo implements AnnotationTarget, Descriptor, GenericSignature {
 
     private static final int MAX_POSITIONS = 256;
     private static final byte[] EMPTY_POSITIONS = new byte[0];
@@ -1094,6 +1095,53 @@ public final class ClassInfo implements AnnotationTarget {
      */
     public ModuleInfo module() {
         return nestingInfo != null ? nestingInfo.module : null;
+    }
+
+    /**
+     * Returns whether this class must have a generic signature. That is, whether the Java compiler
+     * when compiling this class had to emit the {@code Signature} bytecode attribute.
+     *
+     * @return whether this class must have a generic signature
+     */
+    @Override
+    public boolean requiresGenericSignature() {
+        return GenericSignatureReconstruction.requiresGenericSignature(this);
+    }
+
+    /**
+     * Returns a generic signature of this class, possibly without any generic-related information.
+     * That is, produces a correct generic signature even if this class is not generic
+     * and does not use any type variables.
+     * <p>
+     * Signatures of type variables are substituted for signatures of types provided by the substitution
+     * function {@code typeVariableSubstitution}. If the substitution function returns {@code null}
+     * for some type variable identifier, no substitution happens and the type variable signature is used
+     * unmodified.
+     * <p>
+     * Note that the return value does not come directly from bytecode. Jandex does not store the signature
+     * strings. Instead, the return value is reconstructed from the Jandex object model.
+     *
+     * @param typeVariableSubstitution a substitution function from type variable identifiers to types
+     * @return a generic signature of this class with type variables substituted, never {@code null}
+     */
+    @Override
+    public String genericSignature(Function<String, Type> typeVariableSubstitution) {
+        return GenericSignatureReconstruction.reconstructGenericSignature(this, typeVariableSubstitution);
+    }
+
+    /**
+     * Returns a bytecode descriptor of the type introduced by this class.
+     * <p>
+     * Note that the return value does not come directly from bytecode. Jandex does not store the descriptor
+     * strings. Instead, the return value is reconstructed from the Jandex object model.
+     *
+     * @return the bytecode descriptor of this class's type
+     */
+    @Override
+    public String descriptor(Function<String, Type> typeVariableSubstitution) {
+        StringBuilder result = new StringBuilder();
+        DescriptorReconstruction.objectTypeDescriptor(name, result);
+        return result.toString();
     }
 
     @Override

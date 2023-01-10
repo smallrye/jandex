@@ -275,23 +275,29 @@ public final class DotName implements Comparable<DotName> {
     }
 
     /**
-     * Returns the regular fully qualifier class name.
+     * Returns the regular binary class name.
      *
-     * @return The fully qualified class name
+     * @return the binary class name
      */
     public String toString() {
         return toString('.');
     }
 
+    /**
+     * Returns the regular binary class name where {@code delim} is used as a package separator.
+     *
+     * @param delim the package separator; typically {@code .}, but may be e.g. {@code /}
+     *        to construct a bytecode descriptor
+     * @return the binary class name with given character used as a package separator
+     */
     public String toString(char delim) {
-        String string = local;
-        if (prefix != null) {
+        if (componentized) {
             StringBuilder builder = new StringBuilder();
             buildString(delim, builder);
-            string = builder.toString();
+            return builder.toString();
+        } else {
+            return delim == '.' ? local : local.replace('.', delim);
         }
-
-        return string;
     }
 
     private void buildString(char delim, StringBuilder builder) {

@@ -23,7 +23,7 @@ import java.util.List;
 
 /**
  * Represents a parameterized type. The {@code name()} corresponds to the raw type, and the
- * {@code arguments()} list corresponds to the type arguments passed to the generic type
+ * {@code arguments()} list corresponds to the type arguments applied to the generic class
  * in order to instantiate this parameterized type.
  * <p>
  * For example, the parameterized type {@code Map<String, Integer>} would have a name of

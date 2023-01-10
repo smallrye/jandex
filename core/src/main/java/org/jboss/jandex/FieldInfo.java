@@ -22,6 +22,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Represents a field.
@@ -34,7 +35,7 @@ import java.util.List;
  * @author Jason T. Greene
  *
  */
-public final class FieldInfo implements AnnotationTarget {
+public final class FieldInfo implements AnnotationTarget, Descriptor, GenericSignature {
 
     private ClassInfo clazz;
     private FieldInternal internal;
@@ -381,6 +382,54 @@ public final class FieldInfo implements AnnotationTarget {
      */
     public int enumConstantOrdinal() {
         return clazz.enumConstantOrdinal(internal);
+    }
+
+    /**
+     * Returns whether this field must have a generic signature. That is, whether the Java compiler
+     * when compiling this field had to emit the {@code Signature} bytecode attribute.
+     *
+     * @return whether this field must have a generic signature
+     */
+    @Override
+    public boolean requiresGenericSignature() {
+        return GenericSignatureReconstruction.requiresGenericSignature(this);
+    }
+
+    /**
+     * Returns a generic signature of this field, possibly without any generic-related information.
+     * That is, produces a correct generic signature even if this field does not use any type variables.
+     * <p>
+     * Signatures of type variables are substituted for signatures of types provided by the substitution
+     * function {@code typeVariableSubstitution}. If the substitution function returns {@code null}
+     * for some type variable identifier, no substitution happens and the type variable signature is used
+     * unmodified.
+     * <p>
+     * Note that the return value does not come directly from bytecode. Jandex does not store the signature
+     * strings. Instead, the return value is reconstructed from the Jandex object model.
+     *
+     * @param typeVariableSubstitution a substitution function from type variable identifiers to types
+     * @return a generic signature of this field with type variables substituted, never {@code null}
+     */
+    @Override
+    public String genericSignature(Function<String, Type> typeVariableSubstitution) {
+        return GenericSignatureReconstruction.reconstructGenericSignature(this, typeVariableSubstitution);
+    }
+
+    /**
+     * Returns a bytecode descriptor of this field.
+     * <p>
+     * Descriptors of type variables are substituted for descriptors of types provided by the substitution
+     * function {@code typeVariableSubstitution}. If the substitution function returns {@code null}
+     * for some type variable identifier, or if it returns the type variable itself, no substitution happens
+     * and the type variable descriptor is used unmodified.
+     * <p>
+     * Note that the return value does not come directly from bytecode. Jandex does not store the descriptor
+     * strings. Instead, the return value is reconstructed from the Jandex object model.
+     *
+     * @return the bytecode descriptor of this field
+     */
+    public String descriptor(Function<String, Type> typeVariableSubstitution) {
+        return DescriptorReconstruction.fieldDescriptor(this, typeVariableSubstitution);
     }
 
     /**

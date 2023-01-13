@@ -20,6 +20,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.Scanner;
+import org.codehaus.plexus.util.io.CachingOutputStream;
 import org.jboss.jandex.ClassSummary;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexWriter;
@@ -166,7 +167,7 @@ public class JandexGoal extends AbstractMojo {
         getLog().info("Saving Jandex index: " + indexFile);
         try {
             Files.createDirectories(indexDir.toPath());
-            try (OutputStream out = Files.newOutputStream(indexFile.toPath())) {
+            try (OutputStream out = new CachingOutputStream(indexFile)) {
                 IndexWriter writer = new IndexWriter(out);
                 writer.write(index);
             }

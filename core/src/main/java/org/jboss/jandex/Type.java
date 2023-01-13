@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Represents a Java type usage that is specified on methods, fields, classes,
@@ -36,7 +37,7 @@ import java.util.List;
  *
  * @author Jason T. Greene
  */
-public abstract class Type implements Interned {
+public abstract class Type implements Descriptor, Interned {
     public static final Type[] EMPTY_ARRAY = new Type[0];
     private static final AnnotationInstance[] EMPTY_ANNOTATIONS = new AnnotationInstance[0];
     private final DotName name;
@@ -120,26 +121,36 @@ public abstract class Type implements Interned {
     }
 
     /**
-     * Creates a type instance of the specified kind. If {@code kind} is {@code CLASS},
-     * the {@code name} is used as is. If {@code kind} is {@code ARRAY}, the {@code name}
-     * must be in the Java reflection format (Java descriptor format changing {@code /}
-     * to {@code .}, e.g. {@code [[[[Ljava.lang.String;"} or {@code [[[I}). If {@code kind}
-     * is {@code PRIMITIVE}, the name must be in the Java reflection format (which is equal
-     * to the Java keyword denoting the primitive type, e.g. {@code int}). If kind is
-     * {@code VOID}, the {@code name} is ignored. All other kinds cause an exception.
+     * Creates a type of the specified kind and {@code name} in the {@link Class#getName()}
+     * format. Specifically:
+     * <ul>
+     * <li>if {@code kind} is {@code VOID}, the {@code name} is ignored;</li>
+     * <li>if {@code kind} is {@code PRIMITIVE}, the name must be the corresponding Java
+     * keyword ({@code boolean}, {@code byte}, {@code short}, {@code int}, {@code long},
+     * {@code float}, {@code double}, {@code char});
+     * <li>if {@code kind} is {@code CLASS}, the {@code name} must be a binary name
+     * of the class;</li>
+     * <li>if {@code kind} is {@code ARRAY}, the {@code name} must consists of one or
+     * more {@code [} characters corresponding to the number of dimensions of the array type,
+     * followed by the element type as a single-character code for primitive types
+     * or {@code Lbinary.name.of.TheClass;} for class types (for example, {@code [I}
+     * for {@code int[]} or {@code [[Ljava.lang.String;} for {@code String[][]});</li>
+     * <li>all other kinds cause an exception.</li>
+     * </ul>
      *
-     * @param name the name of type to use or parse
-     * @param kind the kind of type to create
+     * @param name the name of type to use or parse; must not be {@code null}
+     * @param kind the kind of type to create; must not be {@code null}
      * @return the type
-     * @throws java.lang.IllegalArgumentException if the kind is no supported
+     * @throws java.lang.IllegalArgumentException if the {@code kind} is not supported
      *
      */
     public static Type create(DotName name, Kind kind) {
-        if (name == null)
+        if (name == null) {
             throw new IllegalArgumentException("name can not be null!");
-
-        if (kind == null)
+        }
+        if (kind == null) {
             throw new IllegalArgumentException("kind can not be null!");
+        }
 
         switch (kind) {
             case ARRAY:
@@ -190,11 +201,11 @@ public abstract class Type implements Interned {
      * Creates an instance of specified type with given type {@code annotations}.
      * To create the type instance, this method delegates to {@link #create(DotName, Kind)}.
      *
-     * @param name the name of type to use or parse
-     * @param kind the kind of type to create
-     * @param annotations the type annotations that should be present on the type instance
+     * @param name the name of type to use or parse; must not be {@code null}
+     * @param kind the kind of type to create; must not be {@code null}
+     * @param annotations the type annotations that should be present on the type instance; may be {@code null}
      * @return the annotated type
-     * @throws java.lang.IllegalArgumentException if the kind is no supported
+     * @throws java.lang.IllegalArgumentException if the {@code kind} is not supported
      */
     public static Type createWithAnnotations(DotName name, Kind kind, AnnotationInstance[] annotations) {
         Type type = create(name, kind);
@@ -212,8 +223,8 @@ public abstract class Type implements Interned {
      * <li>for array types, a string is returned that consists of one or more {@code [}
      * characters corresponding to the number of dimensions of the array type,
      * followed by the element type as a single-character code for primitive types
-     * or {@code L<binary class name>;} for class types (for example, {@code [I} for {@code int[]}
-     * or {@code [[Ljava.lang.String;} for {@code String[][]});</li>
+     * or {@code Lbinary.name.of.TheClass;} for class types (for example, {@code [I}
+     * for {@code int[]} or {@code [[Ljava.lang.String;} for {@code String[][]});</li>
      * <li>for parameterized types, the binary name of the generic class is returned
      * (for example, {@code java.util.List} for {@code List<String>});</li>
      * <li>for type variables, the name of the first bound of the type variable is returned,
@@ -474,6 +485,43 @@ public abstract class Type implements Interned {
                 builder.append(instance.toString(true)).append(' ');
             }
         }
+    }
+
+    /**
+     * Returns the bytecode descriptor of this type (or its erasure in case of generic types).
+     * Specifically:
+     * <ul>
+     * <li>for primitive types and the void pseudo-type, the single-character descriptor
+     * is returned;</li>
+     * <li>for class types, the {@code Lbinary/name/of/TheClass;} string is returned;</li>
+     * <li>for array types, a string is returned that consists of one or more {@code [}
+     * characters corresponding to the number of dimensions of the array type, followed by
+     * the descriptor of the element type (for example, {@code [I} for {@code int[]} or
+     * {@code [[Ljava/lang/String;} for {@code String[][]});</li>
+     * <li>for parameterized types, the descriptor of the generic class is returned
+     * (for example, {@code Ljava/util/List;} for {@code List<String>});</li>
+     * <li>for type variables, the descriptor of the first bound of the type variable
+     * is returned, or the descriptor of the {@code java.lang.Object} class for type
+     * variables that have no bound;</li>
+     * <li>for wildcard types, the descriptor of the upper bound is returned,
+     * or the descriptor of the {@code java.lang.Object} class if the wildcard type
+     * does not have an upper bound (for example, {@code Ljava/lang/Number;} for
+     * {@code ? extends Number}).</li>
+     * </ul>
+     * Descriptors of type variables are substituted for descriptors of types provided by the substitution
+     * function {@code typeVariableSubstitution}. If the substitution function returns {@code null}
+     * for some type variable identifier, or if it returns the type variable itself, no substitution happens
+     * and the type variable descriptor is used unmodified.
+     * <p>
+     * Note that the return value does not come directly from bytecode. Jandex does not store the descriptor
+     * strings. Instead, the return value is reconstructed from the Jandex object model.
+     *
+     * @return the bytecode descriptor of this type (or its erasure in case of generic types)
+     */
+    public String descriptor(Function<String, Type> typeVariableSubstitution) {
+        StringBuilder result = new StringBuilder();
+        DescriptorReconstruction.typeDescriptor(this, typeVariableSubstitution, result);
+        return result.toString();
     }
 
     /**

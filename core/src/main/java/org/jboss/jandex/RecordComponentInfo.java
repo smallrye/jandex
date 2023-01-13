@@ -21,6 +21,7 @@ package org.jboss.jandex;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Represents an individual Java record component that was annotated.
@@ -31,7 +32,7 @@ import java.util.List;
  * This class is immutable and can be shared between threads without safe publication.
  *
  */
-public final class RecordComponentInfo implements AnnotationTarget {
+public final class RecordComponentInfo implements AnnotationTarget, Descriptor, GenericSignature {
     private ClassInfo clazz;
     private RecordComponentInternal internal;
 
@@ -316,6 +317,55 @@ public final class RecordComponentInfo implements AnnotationTarget {
             }
         }
         return Collections.unmodifiableList(instances);
+    }
+
+    /**
+     * Returns whether this record component must have a generic signature. That is, whether the Java compiler
+     * when compiling this record component had to emit the {@code Signature} bytecode attribute.
+     *
+     * @return whether this record component must have a generic signature
+     */
+    @Override
+    public boolean requiresGenericSignature() {
+        return GenericSignatureReconstruction.requiresGenericSignature(this);
+    }
+
+    /**
+     * Returns a generic signature of this record component, possibly without any generic-related information.
+     * That is, produces a correct generic signature even if this record component does not use any type variables.
+     * <p>
+     * Signatures of type variables are substituted for signatures of types provided by the substitution
+     * function {@code typeVariableSubstitution}. If the substitution function returns {@code null}
+     * for some type variable identifier, no substitution happens and the type variable signature is used
+     * unmodified.
+     * <p>
+     * Note that the return value does not come directly from bytecode. Jandex does not store the signature
+     * strings. Instead, the return value is reconstructed from the Jandex object model.
+     *
+     * @param typeVariableSubstitution a substitution function from type variable identifiers to types
+     * @return a generic signature of this record component with type variables substituted, never {@code null}
+     */
+    @Override
+    public String genericSignature(Function<String, Type> typeVariableSubstitution) {
+        return GenericSignatureReconstruction.reconstructGenericSignature(this, typeVariableSubstitution);
+    }
+
+    /**
+     * Returns a bytecode descriptor of this record component.
+     * <p>
+     * Descriptors of type variables are substituted for descriptors of types provided by the substitution
+     * function {@code typeVariableSubstitution}. If the substitution function returns {@code null}
+     * for some type variable identifier, or if it returns the type variable itself, no substitution happens
+     * and the type variable descriptor is used unmodified.
+     * <p>
+     * Note that the return value does not come directly from bytecode. Jandex does not store the descriptor
+     * strings. Instead, the return value is reconstructed from the Jandex object model.
+     *
+     * @return the bytecode descriptor of this record component
+     */
+    @Override
+    public String descriptor(Function<String, Type> typeVariableSubstitution) {
+        return DescriptorReconstruction.recordComponentDescriptor(this, typeVariableSubstitution);
     }
 
     /**

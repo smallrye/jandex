@@ -210,6 +210,19 @@ public class DotNameTestCase {
     }
 
     @Test
+    public void testToStringDelim() {
+        DotName foo = DotName.createComponentized(DotName.createComponentized(null, "root"), "thefoo");
+        foo = DotName.createComponentized(foo, "Foo");
+        assertEquals("root/thefoo/Foo", foo.toString('/'));
+        DotName inner = DotName.createComponentized(foo, "Inner", true);
+        DotName inner2 = DotName.createComponentized(inner, "Inner2", true);
+        assertEquals("root/thefoo/Foo$Inner$Inner2", inner2.toString('/'));
+
+        assertEquals("foo/bar/baz/Foo", DotName.createSimple("foo.bar.baz.Foo").toString('/'));
+        assertEquals("foo/bar/baz/Foo$Inner$Inner2", DotName.createSimple("foo.bar.baz.Foo$Inner$Inner2").toString('/'));
+    }
+
+    @Test
     public void testForNaturalComparator() {
         DotsContainer c = new DotsContainer();
         while (c.size() < 200) {
@@ -328,6 +341,7 @@ public class DotNameTestCase {
         assertNotNull(index.getClassByName(testNameSimple));
         assertNotNull(index.getClassByName(testName));
         assertEquals("$delimiters$.test.$SurroundedByDelimiters$", indexedName.toString());
+        assertEquals("$delimiters$/test/$SurroundedByDelimiters$", indexedName.toString('/'));
     }
 
     @Test

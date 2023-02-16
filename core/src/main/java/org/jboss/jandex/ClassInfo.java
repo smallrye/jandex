@@ -735,7 +735,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
     }
 
     /**
-     * Retrieves a method based on its signature, which includes a method name and an parameter type list.
+     * Retrieves a method based on its signature, which includes a method name and a parameter type list.
      * The parameter type list is compared based on the underlying raw types. As an example,
      * a generic type parameter {@code T} is considered equal to {@code java.lang.Object}, since the raw form
      * of a type variable is its upper bound.

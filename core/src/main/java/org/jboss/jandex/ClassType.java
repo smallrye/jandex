@@ -18,7 +18,11 @@
 package org.jboss.jandex;
 
 /**
- * Represents a standard raw class name.
+ * Represents a class type. Class types also include erasures of parameterized types.
+ * <p>
+ * Note that an inner class type enclosed in a parameterized type or in a type
+ * annotated with a type annotation is represented as {@link ParameterizedType},
+ * where the enclosing type is represented as the parameterized type's owner.
  *
  * @author Jason T. Greene
  */
@@ -31,14 +35,44 @@ public final class ClassType extends Type {
      * <p>
      * Note that an inner class type enclosed in a parameterized type or in a type
      * annotated with a type annotation is represented as {@link ParameterizedType},
-     * where the enclosing type is the owner of the parameterized type.
+     * where the enclosing type is represented as the parameterized type's owner.
      *
-     * @param name the name of this class type
+     * @param name the binary name of this class type
      * @return the class type
      * @since 3.0.4
      */
     public static ClassType create(DotName name) {
         return new ClassType(name);
+    }
+
+    /**
+     * Create an instance of a class type with given {@code name}.
+     * <p>
+     * Note that an inner class type enclosed in a parameterized type or in a type
+     * annotated with a type annotation is represented as {@link ParameterizedType},
+     * where the enclosing type is represented as the parameterized type's owner.
+     *
+     * @param name the binary name of this class type
+     * @return the class type
+     * @since 3.1.0
+     */
+    public static ClassType create(String name) {
+        return create(DotName.createSimple(name));
+    }
+
+    /**
+     * Create an instance of a class type for given {@code clazz}.
+     * <p>
+     * Note that an inner class type enclosed in a parameterized type or in a type
+     * annotated with a type annotation is represented as {@link ParameterizedType},
+     * where the enclosing type is represented as the parameterized type's owner.
+     *
+     * @param clazz the class
+     * @return the class type
+     * @since 3.1.0
+     */
+    public static ClassType create(Class<?> clazz) {
+        return create(DotName.createSimple(clazz.getName()));
     }
 
     ClassType(DotName name) {

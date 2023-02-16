@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -580,5 +581,42 @@ public abstract class Type implements Descriptor, Interned {
         int result = name.hashCode();
         result = 31 * result + Arrays.hashCode(annotations);
         return result;
+    }
+
+    static abstract class Builder<THIS extends Builder<THIS>> {
+
+        protected final DotName name;
+        protected final List<AnnotationInstance> annotations;
+
+        public Builder(DotName name) {
+            this.name = Objects.requireNonNull(name);
+            this.annotations = new ArrayList<>();
+        }
+
+        @SuppressWarnings("unchecked")
+        protected THIS self() {
+            return (THIS) this;
+        }
+
+        /**
+         * 
+         * @return the annotations array or {@code null} if no annotation was specified
+         */
+        protected AnnotationInstance[] annotationsArray() {
+            return annotations.isEmpty() ? null : annotations.toArray(AnnotationInstance.EMPTY_ARRAY);
+        }
+
+        /**
+         * Adds an annotation.
+         * 
+         * @param annotation
+         * @return self
+         * @see Type#annotations()
+         */
+        public THIS addAnnotation(AnnotationInstance annotation) {
+            annotations.add(Objects.requireNonNull(annotation));
+            return self();
+        }
+
     }
 }

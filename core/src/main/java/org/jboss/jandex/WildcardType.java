@@ -26,24 +26,84 @@ package org.jboss.jandex;
  * @author Jason T. Greene
  */
 public class WildcardType extends Type {
-    private static final Type OBJECT = new ClassType(DotName.OBJECT_NAME);
+
+    /**
+     * A wildcard without a bound, an equivalent of {@code ?}.
+     */
+    public static final WildcardType UNBOUNDED = new WildcardType(null, true);
+
+    /**
+     * Create a new instance of WildcardType.
+     *
+     * @param bound the bound (lower or upper)
+     * @param isExtends true if lower, false if upper (super)
+     * @return the new instance
+     *
+     * @since 2.1
+     * @deprecated Use {@link #createUpperBound(Type)} instead
+     */
+    @Deprecated
+    public static WildcardType create(Type bound, boolean isExtends) {
+        return new WildcardType(bound, isExtends);
+    }
+
+    /**
+     * Create a new instance of WildcardType.
+     *
+     * @param upperBound the upper bound
+     * @return the new instance
+     * @since 3.1.0
+     */
+    public static WildcardType createUpperBound(Type upperBound) {
+        return new WildcardType(upperBound, true);
+    }
+
+    /**
+     * Create a new instance of WildcardType.
+     *
+     * @param upperBound the upper bound
+     * @return the new instance
+     * @since 3.1.0
+     */
+    public static WildcardType createUpperBound(Class<?> upperBound) {
+        return createUpperBound(ClassType.create(upperBound));
+    }
+
+    /**
+     * Create a new instance of WildcardType.
+     *
+     * @param upperBound the lower bound
+     * @return the new instance
+     * @since 3.1.0
+     */
+    public static WildcardType createLowerBound(Type lowerBound) {
+        return new WildcardType(lowerBound, false);
+    }
+
+    /**
+     * Create a new instance of WildcardType.
+     *
+     * @param upperBound the lower bound
+     * @return the new instance
+     * @since 3.1.0
+     */
+    public static WildcardType createLowerBound(Class<?> lowerBound) {
+        return createLowerBound(ClassType.create(lowerBound));
+    }
+
+    /**
+     * Create a builder of a wildcard type.
+     * 
+     * @return the builder
+     * @since 3.1.0
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
 
     private final boolean isExtends;
     private final Type bound;
     private int hash;
-
-    /**
-     * Create a new mock instance of WildcardType.
-     *
-     * @param bound the bound (lower or upper)
-     * @param isExtends true if lower, false if upper (super)
-     * @return thew new mock instance
-     *
-     * @since 2.1
-     */
-    public static WildcardType create(Type bound, boolean isExtends) {
-        return new WildcardType(bound, isExtends);
-    }
 
     WildcardType(Type bound, boolean isExtends) {
         this(bound, isExtends, null);
@@ -53,7 +113,7 @@ public class WildcardType extends Type {
         // can't get the name here, because the bound may be a not-yet-patched type variable reference
         // (hence we also need to override the name() method, see below)
         super(DotName.OBJECT_NAME, annotations);
-        this.bound = isExtends && bound == null ? OBJECT : bound;
+        this.bound = isExtends && bound == null ? ClassType.OBJECT_TYPE : bound;
         this.isExtends = isExtends;
 
     }
@@ -75,7 +135,7 @@ public class WildcardType extends Type {
      * @return the upper bound, or {@code Object} if this wildcard has a lower bound
      */
     public Type extendsBound() {
-        return isExtends ? bound : OBJECT;
+        return isExtends ? bound : ClassType.OBJECT_TYPE;
     }
 
     /**
@@ -99,7 +159,7 @@ public class WildcardType extends Type {
     }
 
     boolean hasImplicitObjectBound() {
-        return isExtends && bound == OBJECT;
+        return isExtends && bound == ClassType.OBJECT_TYPE;
     }
 
     @Override
@@ -127,7 +187,7 @@ public class WildcardType extends Type {
         appendAnnotations(builder);
         builder.append('?');
 
-        if (isExtends && bound != OBJECT) {
+        if (isExtends && bound != ClassType.OBJECT_TYPE) {
             builder.append(" extends ").append(bound.toString(true));
         }
 
@@ -183,5 +243,43 @@ public class WildcardType extends Type {
         hash = 31 * hash + (isExtends ? 1 : 0);
         hash = 31 * hash + bound.internHashCode();
         return hash;
+    }
+
+    /**
+     * Convenient builder for {@link WildcardType}.
+     */
+    public static final class Builder extends Type.Builder<Builder> {
+
+        private boolean isExtends = true;
+        private Type bound;
+
+        Builder() {
+            super(DotName.OBJECT_NAME);
+        }
+
+        public Builder setUpperBound(Class<?> upperBound) {
+            return setUpperBound(ClassType.create(upperBound));
+        }
+
+        public Builder setUpperBound(Type upperBound) {
+            this.bound = upperBound;
+            this.isExtends = true;
+            return this;
+        }
+
+        public Builder setLowerBound(Class<?> lowerBound) {
+            return setLowerBound(ClassType.create(lowerBound));
+        }
+
+        public Builder setLowerBound(Type lowerBound) {
+            this.bound = lowerBound;
+            this.isExtends = false;
+            return this;
+        }
+
+        public WildcardType build() {
+            return new WildcardType(bound, isExtends, annotationsArray());
+        }
+
     }
 }

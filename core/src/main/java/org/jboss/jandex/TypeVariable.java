@@ -17,9 +17,11 @@
  */
 package org.jboss.jandex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a resolved type parameter or type argument. The {@code name()} of this type variable
@@ -38,11 +40,34 @@ import java.util.List;
  * @author Jason T. Greene
  */
 public final class TypeVariable extends Type {
+
+    /**
+     * Create an instance of a type variable with the given {@code identifier}.
+     * 
+     * @param identifier
+     * @return the type variable
+     * @see #identifier()
+     */
+    public static TypeVariable create(String identifier) {
+        return new TypeVariable(identifier, new Type[] { ClassType.OBJECT_TYPE });
+    }
+
+    /**
+     * Create a builder of a type variable.
+     * 
+     * @return the builder
+     * @since 3.1.0
+     */
+    public static Builder builder(String identifier) {
+        return new Builder(identifier);
+    }
+
     // The lower 31 bits represents the hash code
     private static final int HASH_MASK = Integer.MAX_VALUE;
     // The high bit represents the implicit object bound flag
     private static final int IMPLICIT_MASK = Integer.MIN_VALUE;
-    private final String name;
+
+    private final String identifier;
     private final Type[] bounds;
 
     // MSB is stolen to represent an implicit object bound (signature with ::Interface)
@@ -64,7 +89,7 @@ public final class TypeVariable extends Type {
         // can't get the name here, because the bound may be a not-yet-patched type variable reference
         // (hence we also need to override the name() method, see below)
         super(DotName.OBJECT_NAME, annotations);
-        this.name = name;
+        this.identifier = name;
         this.bounds = bounds;
         this.hash = implicitObjectBound ? Integer.MIN_VALUE : 0;
     }
@@ -91,7 +116,7 @@ public final class TypeVariable extends Type {
      * @return the identifier of this type variable
      */
     public String identifier() {
-        return name;
+        return identifier;
     }
 
     public List<Type> bounds() {
@@ -118,7 +143,7 @@ public final class TypeVariable extends Type {
 
     @Override
     Type copyType(AnnotationInstance[] newAnnotations) {
-        return new TypeVariable(name, bounds, newAnnotations, hasImplicitObjectBound());
+        return new TypeVariable(identifier, bounds, newAnnotations, hasImplicitObjectBound());
     }
 
     TypeVariable copyType(int boundIndex, Type bound) {
@@ -128,14 +153,14 @@ public final class TypeVariable extends Type {
 
         Type[] bounds = this.bounds.clone();
         bounds[boundIndex] = bound;
-        return new TypeVariable(name, bounds, annotationArray(), hasImplicitObjectBound());
+        return new TypeVariable(identifier, bounds, annotationArray(), hasImplicitObjectBound());
     }
 
     @Override
     String toString(boolean simple) {
         StringBuilder builder = new StringBuilder();
         appendAnnotations(builder);
-        builder.append(name);
+        builder.append(identifier);
 
         if (!simple && bounds.length > 0 && !(bounds.length == 1 && ClassType.OBJECT_TYPE.equals(bounds[0]))) {
             builder.append(" extends ").append(bounds[0].toString(true));
@@ -160,7 +185,7 @@ public final class TypeVariable extends Type {
 
         TypeVariable that = (TypeVariable) o;
 
-        return name.equals(that.name) && Arrays.equals(bounds, that.bounds)
+        return identifier.equals(that.identifier) && Arrays.equals(bounds, that.bounds)
                 && hasImplicitObjectBound() == that.hasImplicitObjectBound();
     }
 
@@ -172,7 +197,7 @@ public final class TypeVariable extends Type {
         }
 
         hash = super.hashCode();
-        hash = 31 * hash + name.hashCode();
+        hash = 31 * hash + identifier.hashCode();
         hash = 31 * hash + Arrays.hashCode(bounds);
         hash &= HASH_MASK;
         this.hash |= hash;
@@ -191,15 +216,46 @@ public final class TypeVariable extends Type {
 
         TypeVariable that = (TypeVariable) o;
 
-        return name.equals(that.name) && Interned.arrayEquals(bounds, that.bounds)
+        return identifier.equals(that.identifier) && Interned.arrayEquals(bounds, that.bounds)
                 && hasImplicitObjectBound() == that.hasImplicitObjectBound();
     }
 
     @Override
     public int internHashCode() {
         int hash = super.internHashCode();
-        hash = 31 * hash + name.hashCode();
+        hash = 31 * hash + identifier.hashCode();
         hash = 31 * hash + Interned.arrayHashCode(bounds);
         return hash;
+    }
+
+    /**
+     * Convenient builder for {@link TypeVariable}.
+     */
+    public static final class Builder extends Type.Builder<Builder> {
+
+        private final String identifier;
+        private final List<Type> bounds;
+
+        Builder(String identifier) {
+            super(DotName.OBJECT_NAME);
+            this.identifier = identifier;
+            this.bounds = new ArrayList<>();
+        }
+
+        public Builder addBound(Type bound) {
+            bounds.add(Objects.requireNonNull(bound));
+            return this;
+        }
+
+        public Builder addBound(Class<?> clazz) {
+            return addBound(ClassType.create(clazz));
+        }
+
+        public TypeVariable build() {
+            return new TypeVariable(identifier,
+                    bounds.isEmpty() ? new Type[] { ClassType.OBJECT_TYPE } : bounds.toArray(EMPTY_ARRAY),
+                    annotationsArray());
+        }
+
     }
 }

@@ -75,6 +75,28 @@ public final class ClassType extends Type {
         return create(DotName.createSimple(clazz.getName()));
     }
 
+    /**
+     * Create a builder of a class type with the given {@code name}.
+     * 
+     * @param name
+     * @return the builder
+     * @since 3.1.0
+     */
+    public static Builder builder(DotName name) {
+        return new Builder(name);
+    }
+
+    /**
+     * Create a builder of a class type for the given class.
+     * 
+     * @param name
+     * @return the builder
+     * @since 3.1.0
+     */
+    public static Builder builder(Class<?> clazz) {
+        return builder(DotName.createSimple(clazz.getName()));
+    }
+
     ClassType(DotName name) {
         this(name, null);
     }
@@ -100,5 +122,20 @@ public final class ClassType extends Type {
 
     ParameterizedType toParameterizedType() {
         return new ParameterizedType(name(), null, null, annotationArray());
+    }
+
+    /**
+     * Convenient builder for {@link ClassType}.
+     */
+    public static final class Builder extends Type.Builder<Builder> {
+
+        Builder(DotName name) {
+            super(name);
+        }
+
+        public ClassType build() {
+            return new ClassType(name, annotationsArray());
+        }
+
     }
 }

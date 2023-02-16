@@ -53,7 +53,7 @@ import java.util.function.Function;
  * @author Jason T. Greene
  *
  */
-public final class ClassInfo implements AnnotationTarget, Descriptor, GenericSignature {
+public final class ClassInfo implements Declaration, Descriptor, GenericSignature {
 
     private static final int MAX_POSITIONS = 256;
     private static final byte[] EMPTY_POSITIONS = new byte[0];

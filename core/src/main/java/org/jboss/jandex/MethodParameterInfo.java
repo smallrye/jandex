@@ -32,7 +32,7 @@ import java.util.List;
  *
  * @author Jason T. Greene
  */
-public final class MethodParameterInfo implements AnnotationTarget {
+public final class MethodParameterInfo implements Declaration {
     private final MethodInfo method;
     private final short position;
 

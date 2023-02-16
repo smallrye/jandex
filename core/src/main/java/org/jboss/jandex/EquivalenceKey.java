@@ -25,7 +25,7 @@ import java.util.StringJoiner;
  * <li>{@code toString()}: human readable representation of the equivalence key;
  * format of the value is not guaranteed and may change without notice</li>
  * </ul>
- * In addition, equivalence keys are structured in an inheritance hierarchy that roughly corresponds
+ * In addition, equivalence keys are structured in an inheritance hierarchy that corresponds
  * to the inheritance hierarchy of Jandex objects. Therefore, the kind of the "source" Jandex object may be found
  * by inspecting the class of the equivalence key:
  * <ul>
@@ -69,21 +69,41 @@ public abstract class EquivalenceKey {
             return null;
         }
 
-        switch (annotationTarget.kind()) {
+        if (annotationTarget.isDeclaration()) {
+            return of(annotationTarget.asDeclaration());
+        }
+        if (annotationTarget.kind() == AnnotationTarget.Kind.TYPE) {
+            return of(annotationTarget.asType());
+        }
+
+        throw new IllegalArgumentException("Unknown annotation target: " + annotationTarget);
+    }
+
+    /**
+     * Returns an equivalence key for given {@link Declaration declaration}.
+     *
+     * @param declaration the declaration, may be {@code null}
+     * @return equvalence key for given declaration, only {@code null} if {@code declaration == null}
+     * @since 3.1.0
+     */
+    public static DeclarationEquivalenceKey of(Declaration declaration) {
+        if (declaration == null) {
+            return null;
+        }
+
+        switch (declaration.kind()) {
             case CLASS:
-                return of(annotationTarget.asClass());
+                return of(declaration.asClass());
             case METHOD:
-                return of(annotationTarget.asMethod());
+                return of(declaration.asMethod());
             case METHOD_PARAMETER:
-                return of(annotationTarget.asMethodParameter());
+                return of(declaration.asMethodParameter());
             case FIELD:
-                return of(annotationTarget.asField());
+                return of(declaration.asField());
             case RECORD_COMPONENT:
-                return of(annotationTarget.asRecordComponent());
-            case TYPE:
-                return of(annotationTarget.asType());
+                return of(declaration.asRecordComponent());
             default:
-                throw new IllegalArgumentException("Unknown annotation target: " + annotationTarget);
+                throw new IllegalArgumentException("Unknown declaration: " + declaration);
         }
     }
 

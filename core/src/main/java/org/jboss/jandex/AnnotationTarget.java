@@ -23,11 +23,12 @@ import java.util.Collection;
 
 /**
  * Represents an object that can be a target of an annotation.
+ * <p>
+ * Overall, two distinct kinds of annotation targets exist: declarations and types.
+ * To refer to declarations only, the {@link Declaration} interface may be used.
  *
- * @see ClassInfo
- * @see FieldInfo
- * @see MethodInfo
- * @see MethodParameterInfo
+ * @see Declaration
+ * @see TypeTarget
  *
  * @author Jason T. Greene
  *
@@ -78,6 +79,22 @@ public interface AnnotationTarget {
      * @since 2.0
      */
     Kind kind();
+
+    /**
+     * Returns whether this annotation target is a {@linkplain Declaration declaration}.
+     *
+     * @return whether this annotation target is a declaration
+     * @since 3.1.0
+     */
+    boolean isDeclaration();
+
+    /**
+     * Casts and returns this annotation target as a {@code Declaration} if it {@linkplain #isDeclaration() is a declaration}.
+     *
+     * @return this instance cast to a declaration
+     * @since 3.1.0
+     */
+    Declaration asDeclaration();
 
     /**
      * Casts and returns this target as a {@code ClassInfo} if it is of kind {@code CLASS}

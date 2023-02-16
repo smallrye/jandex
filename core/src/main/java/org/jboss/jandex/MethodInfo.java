@@ -42,7 +42,7 @@ import java.util.function.Function;
  *
  * @author Jason T. Greene
  */
-public final class MethodInfo implements AnnotationTarget, Descriptor, GenericSignature {
+public final class MethodInfo implements Declaration, Descriptor, GenericSignature {
 
     static final String[] EMPTY_PARAMETER_NAMES = new String[0];
     private MethodInternal methodInternal;

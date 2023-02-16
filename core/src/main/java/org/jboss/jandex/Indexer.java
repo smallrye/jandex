@@ -1709,13 +1709,6 @@ public final class Indexer {
         signaturePresent.put(target, null);
     }
 
-    private void parseClassSignature(String signature, ClassInfo clazz) {
-        GenericSignatureParser.ClassSignature classSignature = signatureParser.parseClassSignature(signature);
-        clazz.setInterfaceTypes(classSignature.interfaces());
-        clazz.setSuperClassType(classSignature.superClass());
-        clazz.setTypeParameters(classSignature.parameters());
-    }
-
     private void applySignatures() {
         int end = signatures.size();
 
@@ -1747,13 +1740,44 @@ public final class Indexer {
         }
     }
 
+    private void parseClassSignature(String signature, ClassInfo clazz) {
+        GenericSignatureParser.ClassSignature classSignature;
+        try {
+            classSignature = signatureParser.parseClassSignature(signature);
+        } catch (Exception e) {
+            // invalid generic signature
+            // let's just pretend that no signature exists
+            return;
+        }
+
+        clazz.setInterfaceTypes(classSignature.interfaces());
+        clazz.setSuperClassType(classSignature.superClass());
+        clazz.setTypeParameters(classSignature.parameters());
+    }
+
     private void parseFieldSignature(String signature, FieldInfo field) {
-        Type type = signatureParser.parseFieldSignature(signature);
+        Type type;
+        try {
+            type = signatureParser.parseFieldSignature(signature);
+        } catch (Exception e) {
+            // invalid generic signature
+            // let's just pretend that no signature exists
+            return;
+        }
+
         field.setType(type);
     }
 
     private void parseMethodSignature(String signature, MethodInfo method) {
-        GenericSignatureParser.MethodSignature methodSignature = signatureParser.parseMethodSignature(signature);
+        GenericSignatureParser.MethodSignature methodSignature;
+        try {
+            methodSignature = signatureParser.parseMethodSignature(signature);
+        } catch (Exception e) {
+            // invalid generic signature
+            // let's just pretend that no signature exists
+            return;
+        }
+
         method.setParameters(methodSignature.methodParameters());
         method.setReturnType(methodSignature.returnType());
         method.setTypeParameters(methodSignature.typeParameters());
@@ -1763,8 +1787,16 @@ public final class Indexer {
     }
 
     private void parseRecordComponentSignature(String signature, RecordComponentInfo recordComponent) {
-        // per JVM Specification, signatures stored for records must be field signatures
-        Type type = signatureParser.parseFieldSignature(signature);
+        Type type = null;
+        try {
+            // per JVM Specification, signatures stored for records must be field signatures
+            type = signatureParser.parseFieldSignature(signature);
+        } catch (Exception e) {
+            // invalid generic signature
+            // let's just pretend that no signature exists
+            return;
+        }
+
         recordComponent.setType(type);
     }
 

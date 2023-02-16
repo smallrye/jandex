@@ -669,21 +669,13 @@ public final class AnnotationInstanceBuilder {
     }
 
     private void validateType(Type type) {
-        if (type instanceof VoidType) {
+        Type.Kind kind = type.kind();
+        if (kind == Type.Kind.VOID || kind == Type.Kind.PRIMITIVE || kind == Type.Kind.CLASS) {
             return;
-        } else if (type instanceof PrimitiveType) {
-            return;
-        } else if (type instanceof ClassType) {
-            return;
-        } else if (type instanceof ArrayType) {
-            ArrayType arrayType = type.asArrayType();
-            Type elementType = arrayType.component();
-            while (elementType.kind() == Type.Kind.ARRAY) {
-                elementType = elementType.asArrayType().component();
-            }
-            if (elementType instanceof PrimitiveType) {
-                return;
-            } else if (elementType instanceof ClassType) {
+        }
+        if (kind == Type.Kind.ARRAY && type.asArrayType().dimensions() == 1) {
+            Type.Kind constituent = type.asArrayType().constituent().kind();
+            if (constituent == Type.Kind.PRIMITIVE || constituent == Type.Kind.CLASS) {
                 return;
             }
         }

@@ -33,6 +33,11 @@ jobs:
         distribution: temurin
         java-version: 17
 
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@v4.5
+      with:
+        maven-version: 3.8.7
+
     - name: Maven release ${{steps.metadata.outputs.current-version}}
       run: |
         export MAVEN_OPTS="--add-opens=java.base/java.util=ALL-UNNAMED"

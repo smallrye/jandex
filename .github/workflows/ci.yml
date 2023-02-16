@@ -1,4 +1,4 @@
-name: Jandex CI
+name: Jandex
 
 on:
   push:
@@ -41,7 +41,7 @@ jobs:
         - java: 8
           compiler: ecj
     runs-on: ${{ matrix.os }}
-    name: "Build with JDK ${{ matrix.java }} using ${{ matrix.compiler}} (parameters: ${{ matrix.parameters }}) on ${{ matrix.os }}"
+    name: "JDK ${{ matrix.java }}, ${{ matrix.compiler}}, params: ${{ matrix.parameters }}, ${{ matrix.os }}"
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -51,6 +51,11 @@ jobs:
       with:
         distribution: temurin
         java-version: ${{ matrix.java }}
+
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@v4.5
+      with:
+        maven-version: 3.8.7
 
     - name: Build with Maven
       shell: bash
@@ -77,6 +82,11 @@ jobs:
       with:
         distribution: temurin
         java-version: ${{ matrix.java }}
+
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@v4.5
+      with:
+        maven-version: 3.8.7
 
     - name: Build with Maven
       run: |

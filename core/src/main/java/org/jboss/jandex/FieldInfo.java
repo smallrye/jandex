@@ -35,7 +35,7 @@ import java.util.function.Function;
  * @author Jason T. Greene
  *
  */
-public final class FieldInfo implements AnnotationTarget, Descriptor, GenericSignature {
+public final class FieldInfo implements Declaration, Descriptor, GenericSignature {
 
     private ClassInfo clazz;
     private FieldInternal internal;

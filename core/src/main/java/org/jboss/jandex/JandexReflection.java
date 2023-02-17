@@ -1,7 +1,5 @@
 package org.jboss.jandex;
 
-import java.lang.reflect.Array;
-
 /**
  * Utilities that allow moving from the Jandex world to the runtime world using reflection.
  * To maintain stratification, these methods are intentionally <em>not</em> present
@@ -67,22 +65,12 @@ public class JandexReflection {
                         throw new IllegalArgumentException("Unknown primitive type: " + type);
                 }
             case CLASS:
-                return load(type.asClassType().name());
             case PARAMETERIZED_TYPE:
-                return load(type.asParameterizedType().name());
             case ARRAY:
-                // this handles nested array types correctly, see Array.newInstance
-                // it is unfortunate that we have to instantiate the array type,
-                // but I don't know a better way
-                Class<?> component = loadRawType(type.asArrayType().component());
-                int dimensions = type.asArrayType().dimensions();
-                return Array.newInstance(component, new int[dimensions]).getClass();
             case WILDCARD_TYPE:
-                return loadRawType(type.asWildcardType().extendsBound());
             case TYPE_VARIABLE:
-                return load(type.asTypeVariable().name());
             case TYPE_VARIABLE_REFERENCE:
-                return load(type.asTypeVariableReference().name());
+                return load(type.name());
             case UNRESOLVED_TYPE_VARIABLE:
                 return Object.class; // can't do better here
             default:
@@ -112,7 +100,7 @@ public class JandexReflection {
             if (cl == null) {
                 cl = JandexReflection.class.getClassLoader();
             }
-            return cl.loadClass(name.toString());
+            return Class.forName(name.toString(), false, cl);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

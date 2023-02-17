@@ -25,7 +25,7 @@ import java.util.StringJoiner;
  * <li>{@code toString()}: human readable representation of the equivalence key;
  * format of the value is not guaranteed and may change without notice</li>
  * </ul>
- * In addition, equivalence keys are structured in an inheritance hierarchy that roughly corresponds
+ * In addition, equivalence keys are structured in an inheritance hierarchy that corresponds
  * to the inheritance hierarchy of Jandex objects. Therefore, the kind of the "source" Jandex object may be found
  * by inspecting the class of the equivalence key:
  * <ul>
@@ -69,21 +69,41 @@ public abstract class EquivalenceKey {
             return null;
         }
 
-        switch (annotationTarget.kind()) {
+        if (annotationTarget.isDeclaration()) {
+            return of(annotationTarget.asDeclaration());
+        }
+        if (annotationTarget.kind() == AnnotationTarget.Kind.TYPE) {
+            return of(annotationTarget.asType());
+        }
+
+        throw new IllegalArgumentException("Unknown annotation target: " + annotationTarget);
+    }
+
+    /**
+     * Returns an equivalence key for given {@link Declaration declaration}.
+     *
+     * @param declaration the declaration, may be {@code null}
+     * @return equvalence key for given declaration, only {@code null} if {@code declaration == null}
+     * @since 3.1.0
+     */
+    public static DeclarationEquivalenceKey of(Declaration declaration) {
+        if (declaration == null) {
+            return null;
+        }
+
+        switch (declaration.kind()) {
             case CLASS:
-                return of(annotationTarget.asClass());
+                return of(declaration.asClass());
             case METHOD:
-                return of(annotationTarget.asMethod());
+                return of(declaration.asMethod());
             case METHOD_PARAMETER:
-                return of(annotationTarget.asMethodParameter());
+                return of(declaration.asMethodParameter());
             case FIELD:
-                return of(annotationTarget.asField());
+                return of(declaration.asField());
             case RECORD_COMPONENT:
-                return of(annotationTarget.asRecordComponent());
-            case TYPE:
-                return of(annotationTarget.asType());
+                return of(declaration.asRecordComponent());
             default:
-                throw new IllegalArgumentException("Unknown annotation target: " + annotationTarget);
+                throw new IllegalArgumentException("Unknown declaration: " + declaration);
         }
     }
 
@@ -181,7 +201,7 @@ public abstract class EquivalenceKey {
 
         switch (type.kind()) {
             case ARRAY:
-                return new ArrayTypeEquivalenceKey(of(type.asArrayType().component()),
+                return new ArrayTypeEquivalenceKey(of(type.asArrayType().constituent()),
                         type.asArrayType().dimensions());
             case CLASS:
                 return new ClassTypeEquivalenceKey(type.asClassType().name());
@@ -428,11 +448,11 @@ public abstract class EquivalenceKey {
     }
 
     public static final class ArrayTypeEquivalenceKey extends TypeEquivalenceKey {
-        private final TypeEquivalenceKey component;
+        private final TypeEquivalenceKey constituent;
         private final int dimensions;
 
-        private ArrayTypeEquivalenceKey(TypeEquivalenceKey component, int dimensions) {
-            this.component = component;
+        private ArrayTypeEquivalenceKey(TypeEquivalenceKey constituent, int dimensions) {
+            this.constituent = constituent;
             this.dimensions = dimensions;
         }
 
@@ -443,19 +463,19 @@ public abstract class EquivalenceKey {
             if (!(o instanceof ArrayTypeEquivalenceKey))
                 return false;
             ArrayTypeEquivalenceKey that = (ArrayTypeEquivalenceKey) o;
-            return dimensions == that.dimensions && Objects.equals(component, that.component);
+            return dimensions == that.dimensions && Objects.equals(constituent, that.constituent);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(component, dimensions);
+            return Objects.hash(constituent, dimensions);
         }
 
         @Override
         public String toString() {
             Set<TypeVariableEquivalenceKey> typeVariables = new HashSet<>();
             StringBuilder result = new StringBuilder();
-            result.append(component.toStringWithWhere(typeVariables));
+            result.append(constituent.toStringWithWhere(typeVariables));
             for (int i = 0; i < dimensions; i++) {
                 result.append("[]");
             }
@@ -465,7 +485,7 @@ public abstract class EquivalenceKey {
         @Override
         String toStringWithWhere(Set<TypeVariableEquivalenceKey> typeVariables) {
             StringBuilder result = new StringBuilder();
-            result.append(component.toStringWithWhere(typeVariables));
+            result.append(constituent.toStringWithWhere(typeVariables));
             for (int i = 0; i < dimensions; i++) {
                 result.append("[]");
             }

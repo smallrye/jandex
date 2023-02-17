@@ -32,7 +32,7 @@ import java.util.function.Function;
  * This class is immutable and can be shared between threads without safe publication.
  *
  */
-public final class RecordComponentInfo implements AnnotationTarget, Descriptor, GenericSignature {
+public final class RecordComponentInfo implements Declaration, Descriptor, GenericSignature {
     private ClassInfo clazz;
     private RecordComponentInternal internal;
 

@@ -84,6 +84,16 @@ public abstract class TypeTarget implements AnnotationTarget {
         return Kind.TYPE;
     }
 
+    @Override
+    public boolean isDeclaration() {
+        return false;
+    }
+
+    @Override
+    public Declaration asDeclaration() {
+        throw new IllegalArgumentException("Not a declaration");
+    }
+
     /**
      * Returns the enclosing target that contains the type referred to by the {@link #target()} method.
      *

@@ -53,7 +53,7 @@ import java.util.function.Function;
  * @author Jason T. Greene
  *
  */
-public final class ClassInfo implements AnnotationTarget, Descriptor, GenericSignature {
+public final class ClassInfo implements Declaration, Descriptor, GenericSignature {
 
     private static final int MAX_POSITIONS = 256;
     private static final byte[] EMPTY_POSITIONS = new byte[0];
@@ -735,7 +735,7 @@ public final class ClassInfo implements AnnotationTarget, Descriptor, GenericSig
     }
 
     /**
-     * Retrieves a method based on its signature, which includes a method name and an parameter type list.
+     * Retrieves a method based on its signature, which includes a method name and a parameter type list.
      * The parameter type list is compared based on the underlying raw types. As an example,
      * a generic type parameter {@code T} is considered equal to {@code java.lang.Object}, since the raw form
      * of a type variable is its upper bound.

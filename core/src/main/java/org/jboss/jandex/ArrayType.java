@@ -49,22 +49,39 @@ package org.jboss.jandex;
  * @author Jason T. Greene
  */
 public final class ArrayType extends Type {
-    private final Type constituent;
-    private final int dimensions;
-    private int hash;
 
     /**
-     * Create a new mock array type instance with the specified number of dimensions
+     * Create a new array type instance with the specified number of dimensions
      * and the specified constituent type.
      *
      * @param constituent the constituent type
      * @param dimensions the number of dimensions of this array
-     * @return the new mock array type instance
+     * @return the new array type instance
      * @since 2.1
+     * @see #constituent()
+     * @see #dimensions()
      */
     public static ArrayType create(Type constituent, int dimensions) {
         return new ArrayType(constituent, dimensions);
     }
+
+    /**
+     * Create a builder of an array type.
+     *
+     * @param constituent the constituent type
+     * @param dimensions the number of dimensions of the array
+     * @return the builder
+     * @since 3.1.0
+     * @see #constituent()
+     * @see #dimensions()
+     */
+    public static Builder builder(Type constituent, int dimensions) {
+        return new Builder(constituent, dimensions);
+    }
+
+    private final Type constituent;
+    private final int dimensions;
+    private int hash;
 
     ArrayType(Type constituent, int dimensions) {
         this(constituent, dimensions, null);
@@ -306,5 +323,32 @@ public final class ArrayType extends Type {
         hash = 31 * hash + constituent.internHashCode();
         hash = 31 * hash + dimensions;
         return hash;
+    }
+
+    /**
+     * Convenient builder for {@link ArrayType}.
+     *
+     * @since 3.1.0
+     */
+    public static final class Builder extends Type.Builder<Builder> {
+
+        private final Type constituent;
+        private final int dimensions;
+
+        Builder(Type constituent, int dimensions) {
+            super(DotName.OBJECT_NAME);
+            this.constituent = constituent;
+            this.dimensions = dimensions;
+        }
+
+        /**
+         * Returns the built array type.
+         *
+         * @return the built array type
+         */
+        public ArrayType build() {
+            return new ArrayType(constituent, dimensions, annotationsArray());
+        }
+
     }
 }

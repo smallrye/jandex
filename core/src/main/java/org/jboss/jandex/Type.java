@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -580,5 +581,48 @@ public abstract class Type implements Descriptor, Interned {
         int result = name.hashCode();
         result = 31 * result + Arrays.hashCode(annotations);
         return result;
+    }
+
+    /**
+     * Base class for type builders.
+     *
+     * @param <THIS> self type
+     * @since 3.1.0
+     */
+    static abstract class Builder<THIS extends Builder<THIS>> {
+
+        protected final DotName name;
+        protected final List<AnnotationInstance> annotations;
+
+        protected Builder(DotName name) {
+            this.name = Objects.requireNonNull(name);
+            this.annotations = new ArrayList<>();
+        }
+
+        @SuppressWarnings("unchecked")
+        protected THIS self() {
+            return (THIS) this;
+        }
+
+        /**
+         * @return the annotations array or {@code null} if no annotation was specified
+         */
+        protected AnnotationInstance[] annotationsArray() {
+            return annotations.isEmpty() ? null : annotations.toArray(AnnotationInstance.EMPTY_ARRAY);
+        }
+
+        /**
+         * Adds an annotation to the type being created by this builder.
+         * Note that it becomes a <em>type annotation</em>.
+         * 
+         * @param annotation the annotation instance; can be created using {@code AnnotationInstance.builder()}
+         * @return this builder
+         * @see Type#annotations()
+         */
+        public THIS addAnnotation(AnnotationInstance annotation) {
+            annotations.add(Objects.requireNonNull(annotation));
+            return self();
+        }
+
     }
 }

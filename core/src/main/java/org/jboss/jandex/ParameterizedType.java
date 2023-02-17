@@ -17,9 +17,11 @@
  */
 package org.jboss.jandex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a parameterized type. The {@code name()} denotes the generic class, and
@@ -158,6 +160,28 @@ public class ParameterizedType extends Type {
      */
     public static ParameterizedType create(Class<?> clazz, Type[] arguments, Type owner) {
         return create(DotName.createSimple(clazz.getName()), arguments, owner);
+    }
+
+    /**
+     * Create a builder of a parameterized type with the given {@code name}.
+     * 
+     * @param name binary name of the generic class
+     * @return the builder
+     * @since 3.1.0
+     */
+    public static Builder builder(DotName name) {
+        return new Builder(name);
+    }
+
+    /**
+     * Create a builder of a parameterized type for the given generic class.
+     * 
+     * @param clazz the generic class
+     * @return the builder
+     * @since 3.1.0
+     */
+    public static Builder builder(Class<?> clazz) {
+        return builder(DotName.createSimple(clazz.getName()));
     }
 
     private final Type[] arguments;
@@ -325,5 +349,64 @@ public class ParameterizedType extends Type {
         hash = 31 * hash + Interned.arrayHashCode(arguments);
         hash = 31 * hash + (owner != null ? owner.internHashCode() : 0);
         return hash;
+    }
+
+    /**
+     * Convenient builder for {@link ParameterizedType}.
+     *
+     * @since 3.1.0
+     */
+    public static final class Builder extends Type.Builder<Builder> {
+
+        private List<Type> arguments;
+        private Type owner;
+
+        Builder(DotName name) {
+            super(name);
+            this.arguments = new ArrayList<>();
+        }
+
+        /**
+         * Adds a type argument.
+         * 
+         * @param argument the type argument, must not be {@code null}
+         * @return this builder
+         */
+        public Builder addArgument(Type argument) {
+            arguments.add(Objects.requireNonNull(argument));
+            return this;
+        }
+
+        /**
+         * Adds a {@link ClassType} argument for the given class.
+         * 
+         * @param clazz the class whose type is added as a type argument, must not be {@code null}
+         * @return this builder
+         */
+        public Builder addArgument(Class<?> clazz) {
+            return addArgument(ClassType.create(clazz));
+        }
+
+        /**
+         * Sets the owner.
+         * 
+         * @param owner the owner of the parameterized type being built, must not be {@code null}
+         * @return this builder
+         * @see ParameterizedType#owner()
+         */
+        public Builder setOwner(Type owner) {
+            this.owner = Objects.requireNonNull(owner);
+            return this;
+        }
+
+        /**
+         * Returns the built parameterized type.
+         * 
+         * @return the built parameterized type
+         */
+        public ParameterizedType build() {
+            return new ParameterizedType(name, arguments.isEmpty() ? EMPTY_ARRAY : arguments.toArray(EMPTY_ARRAY),
+                    owner, annotationsArray());
+        }
     }
 }

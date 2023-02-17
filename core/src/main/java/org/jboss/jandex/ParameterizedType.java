@@ -165,20 +165,20 @@ public class ParameterizedType extends Type {
     /**
      * Create a builder of a parameterized type with the given {@code name}.
      * 
-     * @param name
+     * @param name binary name of the generic class
      * @return the builder
-     * @since 3.0.6
+     * @since 3.1.0
      */
     public static Builder builder(DotName name) {
         return new Builder(name);
     }
 
     /**
-     * Create a builder of a parameterized type for the given class.
+     * Create a builder of a parameterized type for the given generic class.
      * 
-     * @param name
+     * @param clazz the generic class
      * @return the builder
-     * @since 3.0.6
+     * @since 3.1.0
      */
     public static Builder builder(Class<?> clazz) {
         return builder(DotName.createSimple(clazz.getName()));
@@ -353,6 +353,8 @@ public class ParameterizedType extends Type {
 
     /**
      * Convenient builder for {@link ParameterizedType}.
+     *
+     * @since 3.1.0
      */
     public static final class Builder extends Type.Builder<Builder> {
 
@@ -367,8 +369,8 @@ public class ParameterizedType extends Type {
         /**
          * Adds a type argument.
          * 
-         * @param argument
-         * @return self
+         * @param argument the type argument, must not be {@code null}
+         * @return this builder
          */
         public Builder addArgument(Type argument) {
             arguments.add(Objects.requireNonNull(argument));
@@ -378,18 +380,18 @@ public class ParameterizedType extends Type {
         /**
          * Adds a {@link ClassType} argument for the given class.
          * 
-         * @param argument
-         * @return self
+         * @param clazz the class whose type is added as a type argument, must not be {@code null}
+         * @return this builder
          */
         public Builder addArgument(Class<?> clazz) {
             return addArgument(ClassType.create(clazz));
         }
 
         /**
-         * Adds an owner.
+         * Sets the owner.
          * 
-         * @param owner
-         * @return self
+         * @param owner the owner of the parameterized type being built, must not be {@code null}
+         * @return this builder
          * @see ParameterizedType#owner()
          */
         public Builder setOwner(Type owner) {
@@ -398,12 +400,13 @@ public class ParameterizedType extends Type {
         }
 
         /**
+         * Returns the built parameterized type.
          * 
-         * @return the parameterized type
+         * @return the built parameterized type
          */
         public ParameterizedType build() {
-            return new ParameterizedType(name, arguments.isEmpty() ? EMPTY_ARRAY : arguments.toArray(EMPTY_ARRAY), owner,
-                    annotationsArray());
+            return new ParameterizedType(name, arguments.isEmpty() ? EMPTY_ARRAY : arguments.toArray(EMPTY_ARRAY),
+                    owner, annotationsArray());
         }
     }
 }

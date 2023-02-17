@@ -583,12 +583,18 @@ public abstract class Type implements Descriptor, Interned {
         return result;
     }
 
+    /**
+     * Base class for type builders.
+     *
+     * @param <THIS> self type
+     * @since 3.1.0
+     */
     static abstract class Builder<THIS extends Builder<THIS>> {
 
         protected final DotName name;
         protected final List<AnnotationInstance> annotations;
 
-        public Builder(DotName name) {
+        protected Builder(DotName name) {
             this.name = Objects.requireNonNull(name);
             this.annotations = new ArrayList<>();
         }
@@ -599,7 +605,6 @@ public abstract class Type implements Descriptor, Interned {
         }
 
         /**
-         * 
          * @return the annotations array or {@code null} if no annotation was specified
          */
         protected AnnotationInstance[] annotationsArray() {
@@ -607,10 +612,11 @@ public abstract class Type implements Descriptor, Interned {
         }
 
         /**
-         * Adds an annotation.
+         * Adds an annotation to the type being created by this builder.
+         * Note that it becomes a <em>type annotation</em>.
          * 
-         * @param annotation
-         * @return self
+         * @param annotation the annotation instance; can be created using {@code AnnotationInstance.builder()}
+         * @return this builder
          * @see Type#annotations()
          */
         public THIS addAnnotation(AnnotationInstance annotation) {

@@ -43,10 +43,12 @@ public final class TypeVariable extends Type {
 
     /**
      * Create an instance of a type variable with the given {@code identifier}.
+     * The type variable has a single bound of {@code java.lang.Object}.
      * 
-     * @param identifier
+     * @param identifier identifier of the type variable
      * @return the type variable
      * @see #identifier()
+     * @since 3.1.0
      */
     public static TypeVariable create(String identifier) {
         return new TypeVariable(identifier, new Type[] { ClassType.OBJECT_TYPE });
@@ -106,7 +108,7 @@ public final class TypeVariable extends Type {
      * The identifier of this type variable as it appears in Java source code.
      *
      * <p>
-     * The following class has a type parameter, with an identifier of "T":
+     * The following class has a type parameter with an identifier of {@code T}:
      *
      * <pre class="brush:java">
      * class Foo&lt;T extends Number&gt; {
@@ -229,7 +231,10 @@ public final class TypeVariable extends Type {
     }
 
     /**
-     * Convenient builder for {@link TypeVariable}.
+     * Convenient builder for {@link TypeVariable}. If no bound is added, the built
+     * type variable will have a single bound of {@code java.lang.Object}.
+     *
+     * @since 3.1.0
      */
     public static final class Builder extends Type.Builder<Builder> {
 
@@ -242,15 +247,32 @@ public final class TypeVariable extends Type {
             this.bounds = new ArrayList<>();
         }
 
+        /**
+         * Adds a bound.
+         *
+         * @param bound the bound, must not be {@code null}
+         * @return this builder
+         */
         public Builder addBound(Type bound) {
             bounds.add(Objects.requireNonNull(bound));
             return this;
         }
 
+        /**
+         * Adds a bound.
+         *
+         * @param clazz the class whose type is added as a bound, must not be {@code null}
+         * @return this builder
+         */
         public Builder addBound(Class<?> clazz) {
             return addBound(ClassType.create(clazz));
         }
 
+        /**
+         * Returns the built type variable.
+         *
+         * @return the built type variable
+         */
         public TypeVariable build() {
             return new TypeVariable(identifier,
                     bounds.isEmpty() ? new Type[] { ClassType.OBJECT_TYPE } : bounds.toArray(EMPTY_ARRAY),

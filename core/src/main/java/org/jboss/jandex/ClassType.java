@@ -77,8 +77,8 @@ public final class ClassType extends Type {
 
     /**
      * Create a builder of a class type with the given {@code name}.
-     * 
-     * @param name
+     *
+     * @param name binary name of the class
      * @return the builder
      * @since 3.1.0
      */
@@ -89,7 +89,7 @@ public final class ClassType extends Type {
     /**
      * Create a builder of a class type for the given class.
      * 
-     * @param name
+     * @param clazz the class
      * @return the builder
      * @since 3.1.0
      */
@@ -126,6 +126,8 @@ public final class ClassType extends Type {
 
     /**
      * Convenient builder for {@link ClassType}.
+     *
+     * @since 3.1.0
      */
     public static final class Builder extends Type.Builder<Builder> {
 
@@ -133,6 +135,11 @@ public final class ClassType extends Type {
             super(name);
         }
 
+        /**
+         * Returns the built class type.
+         *
+         * @return the built class type
+         */
         public ClassType build() {
             return new ClassType(name, annotationsArray());
         }

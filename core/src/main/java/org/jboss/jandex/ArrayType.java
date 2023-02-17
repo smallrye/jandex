@@ -56,8 +56,10 @@ public final class ArrayType extends Type {
      *
      * @param constituent the constituent type
      * @param dimensions the number of dimensions of this array
-     * @return the new mock array type instance
+     * @return the new array type instance
      * @since 2.1
+     * @see #constituent()
+     * @see #dimensions()
      */
     public static ArrayType create(Type constituent, int dimensions) {
         return new ArrayType(constituent, dimensions);
@@ -65,11 +67,13 @@ public final class ArrayType extends Type {
 
     /**
      * Create a builder of an array type.
-     * 
-     * @param component
-     * @param dimensions
+     *
+     * @param constituent the constituent type
+     * @param dimensions the number of dimensions of the array
      * @return the builder
      * @since 3.1.0
+     * @see #constituent()
+     * @see #dimensions()
      */
     public static Builder builder(Type constituent, int dimensions) {
         return new Builder(constituent, dimensions);
@@ -323,6 +327,8 @@ public final class ArrayType extends Type {
 
     /**
      * Convenient builder for {@link ArrayType}.
+     *
+     * @since 3.1.0
      */
     public static final class Builder extends Type.Builder<Builder> {
 
@@ -335,6 +341,11 @@ public final class ArrayType extends Type {
             this.dimensions = dimensions;
         }
 
+        /**
+         * Returns the built array type.
+         *
+         * @return the built array type
+         */
         public ArrayType build() {
             return new ArrayType(constituent, dimensions, annotationsArray());
         }

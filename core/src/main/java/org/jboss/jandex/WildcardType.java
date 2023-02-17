@@ -29,18 +29,20 @@ public class WildcardType extends Type {
 
     /**
      * A wildcard without a bound, an equivalent of {@code ?}.
+     *
+     * @since 3.1.0
      */
     public static final WildcardType UNBOUNDED = new WildcardType(null, true);
 
     /**
-     * Create a new instance of WildcardType.
+     * Creates a new wildcard type.
      *
      * @param bound the bound (lower or upper)
-     * @param isExtends true if lower, false if upper (super)
+     * @param isExtends true if the bound is an upper (extends) bound, false if lower (super)
      * @return the new instance
      *
      * @since 2.1
-     * @deprecated Use {@link #createUpperBound(Type)} instead
+     * @deprecated use {@link #createUpperBound(Type)} or {@link #createLowerBound(Type)} instead
      */
     @Deprecated
     public static WildcardType create(Type bound, boolean isExtends) {
@@ -48,7 +50,7 @@ public class WildcardType extends Type {
     }
 
     /**
-     * Create a new instance of WildcardType.
+     * Create a new wildcard type with an upper bound.
      *
      * @param upperBound the upper bound
      * @return the new instance
@@ -59,7 +61,7 @@ public class WildcardType extends Type {
     }
 
     /**
-     * Create a new instance of WildcardType.
+     * Create a new wildcard type with an upper bound.
      *
      * @param upperBound the upper bound
      * @return the new instance
@@ -70,9 +72,9 @@ public class WildcardType extends Type {
     }
 
     /**
-     * Create a new instance of WildcardType.
+     * Create a new wildcard type with a lower bound.
      *
-     * @param upperBound the lower bound
+     * @param lowerBound the lower bound
      * @return the new instance
      * @since 3.1.0
      */
@@ -81,9 +83,9 @@ public class WildcardType extends Type {
     }
 
     /**
-     * Create a new instance of WildcardType.
+     * Create a new wildcard type with a lower bound.
      *
-     * @param upperBound the lower bound
+     * @param lowerBound the lower bound
      * @return the new instance
      * @since 3.1.0
      */
@@ -247,6 +249,12 @@ public class WildcardType extends Type {
 
     /**
      * Convenient builder for {@link WildcardType}.
+     * <p>
+     * Note that only one bound may be set. If the {@code setUpperBound()} and
+     * {@code setLowerBound()} methods are called multiple times, only the last
+     * call is taken into account; the previously set bounds are ignored.
+     *
+     * @since 3.1.0
      */
     public static final class Builder extends Type.Builder<Builder> {
 
@@ -257,26 +265,55 @@ public class WildcardType extends Type {
             super(DotName.OBJECT_NAME);
         }
 
+        /**
+         * Sets the upper bound.
+         *
+         * @param upperBound the class whose type is set as the upper bound, must not be {@code null}
+         * @return this builder
+         */
         public Builder setUpperBound(Class<?> upperBound) {
             return setUpperBound(ClassType.create(upperBound));
         }
 
+        /**
+         * Sets the upper bound.
+         *
+         * @param upperBound the upper bound, must not be {@code null}
+         * @return this builder
+         */
         public Builder setUpperBound(Type upperBound) {
             this.bound = upperBound;
             this.isExtends = true;
             return this;
         }
 
+        /**
+         * Sets the lower bound.
+         *
+         * @param lowerBound the class whose type is set as the lower bound, must not be {@code null}
+         * @return this builder
+         */
         public Builder setLowerBound(Class<?> lowerBound) {
             return setLowerBound(ClassType.create(lowerBound));
         }
 
+        /**
+         * Sets the lower bound.
+         *
+         * @param lowerBound the lower bound, must not be {@code null}
+         * @return this builder
+         */
         public Builder setLowerBound(Type lowerBound) {
             this.bound = lowerBound;
             this.isExtends = false;
             return this;
         }
 
+        /**
+         * Returns the built wildcard type.
+         *
+         * @return the built wildcard type
+         */
         public WildcardType build() {
             return new WildcardType(bound, isExtends, annotationsArray());
         }

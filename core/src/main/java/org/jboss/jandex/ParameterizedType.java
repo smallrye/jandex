@@ -22,9 +22,9 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Represents a parameterized type. The {@code name()} corresponds to the raw type, and the
- * {@code arguments()} list corresponds to the type arguments applied to the generic class
- * in order to instantiate this parameterized type.
+ * Represents a parameterized type. The {@code name()} denotes the generic class, and
+ * {@code arguments()} is a list of type arguments applied to the generic class in order
+ * to instantiate this parameterized type.
  * <p>
  * For example, the parameterized type {@code Map<String, Integer>} would have a name of
  * {@code java.util.Map} and two {@code ClassType} arguments: {@code java.lang.String} and
@@ -65,18 +65,99 @@ public class ParameterizedType extends Type {
      * Create an instance of a parameterized type with given {@code name}, which denotes
      * a generic class, and given type {@code arguments}.
      * <p>
-     * An {@code owner} may be supplied when the new instance is supposed to represent
-     * an inner type, in case the enclosing type is either parameterized or annotated
-     * with a type annotation.
+     * The resulting parameterized type has no owner.
      *
-     * @param name the name of this parameterized type
-     * @param arguments an array of type arguments applied to a generic class to form this type
+     * @param name the binary name of the generic class
+     * @param arguments type arguments applied to the generic class to form the parameterized type
+     * @return the parameterized type
+     * @since 3.1.0
+     */
+    public static ParameterizedType create(DotName name, Type... arguments) {
+        return new ParameterizedType(name, arguments, null);
+    }
+
+    /**
+     * Create an instance of a parameterized type with given {@code name}, which denotes
+     * a generic class, and given type {@code arguments}.
+     * <p>
+     * The resulting parameterized type has no owner.
+     *
+     * @param name the binary name of the generic class
+     * @param arguments type arguments applied to the generic class to form the parameterized type
+     * @return the parameterized type
+     * @since 3.1.0
+     */
+    public static ParameterizedType create(String name, Type... arguments) {
+        return create(DotName.createSimple(name), arguments);
+    }
+
+    /**
+     * Create an instance of a parameterized type with given generic {@code clazz} and
+     * given type {@code arguments}.
+     * <p>
+     * The resulting parameterized type has no owner.
+     *
+     * @param clazz the generic class
+     * @param arguments type arguments applied to the generic class to form the parameterized type
+     * @return the parameterized type
+     * @since 3.1.0
+     */
+    public static ParameterizedType create(Class<?> clazz, Type... arguments) {
+        return create(DotName.createSimple(clazz.getName()), arguments);
+    }
+
+    /**
+     * Create an instance of a parameterized type with given {@code name}, which denotes
+     * a generic class, and given type {@code arguments}.
+     * <p>
+     * An {@code owner} may be supplied when the new instance is supposed to represent
+     * an inner type whose enclosing type is either parameterized or annotated with
+     * a type annotation.
+     *
+     * @param name the binary name of the generic class
+     * @param arguments an array of type arguments applied to a generic class to form the parameterized type
      * @param owner the enclosing type if annotated or parameterized, otherwise {@code null}
      * @return the parameterized type
      * @since 2.1
      */
     public static ParameterizedType create(DotName name, Type[] arguments, Type owner) {
         return new ParameterizedType(name, arguments, owner);
+    }
+
+    /**
+     * Create an instance of a parameterized type with given {@code name}, which denotes
+     * a generic class, and given type {@code arguments}.
+     * <p>
+     * An {@code owner} may be supplied when the new instance is supposed to represent
+     * an inner type whose enclosing type is either parameterized or annotated with
+     * a type annotation.
+     *
+     * @param name the binary name of the generic class
+     * @param arguments an array of type arguments applied to a generic class to form the parameterized type
+     * @param owner the enclosing type if annotated or parameterized, otherwise {@code null}
+     * @return the parameterized type
+     * @since 3.1.0
+     */
+    public static ParameterizedType create(String name, Type[] arguments, Type owner) {
+        return create(DotName.createSimple(name), arguments, owner);
+    }
+
+    /**
+     * Create an instance of a parameterized type with given generic {@code clazz} and
+     * given type {@code arguments}.
+     * <p>
+     * An {@code owner} may be supplied when the new instance is supposed to represent
+     * an inner type whose enclosing type is either parameterized or annotated with
+     * a type annotation.
+     *
+     * @param clazz the generic class
+     * @param arguments an array of type arguments applied to a generic class to form the parameterized type
+     * @param owner the enclosing type if annotated or parameterized, otherwise {@code null}
+     * @return the parameterized type
+     * @since 3.1.0
+     */
+    public static ParameterizedType create(Class<?> clazz, Type[] arguments, Type owner) {
+        return create(DotName.createSimple(clazz.getName()), arguments, owner);
     }
 
     private final Type[] arguments;

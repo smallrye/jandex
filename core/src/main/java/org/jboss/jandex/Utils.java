@@ -18,12 +18,15 @@
 
 package org.jboss.jandex;
 
+import java.io.DataInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Common utilities
@@ -55,5 +58,65 @@ class Utils {
 
     static <T> List<T> listOfCapacity(int capacity) {
         return capacity > 0 ? new ArrayList<T>(capacity) : Collections.<T> emptyList();
+    }
+
+    static final class ReusableBufferedDataInputStream extends DataInputStream {
+
+        private ReusableBufferedDataInputStream() {
+            super(new ReusableBufferedInputStream());
+        }
+
+        public void setInputStream(InputStream in) {
+            Objects.requireNonNull(in);
+            ((ReusableBufferedInputStream) this.in).setInputStream(in);
+        }
+
+        @Override
+        public boolean markSupported() {
+            return false;
+        }
+
+        @Override
+        @Deprecated
+        public synchronized void mark(final int readlimit) {
+            throw new UnsupportedOperationException("mark isn't supported");
+        }
+
+        @Override
+        public void close() {
+            ((ReusableBufferedInputStream) in).close();
+        }
+    }
+
+    private static final class ReusableBufferedInputStream extends java.io.BufferedInputStream {
+
+        private ReusableBufferedInputStream() {
+            super(null);
+        }
+
+        public void setInputStream(InputStream in) {
+            Objects.requireNonNull(in);
+            if (pos != 0 && this.in != null) {
+                throw new IllegalStateException("the stream cannot be reused");
+            }
+            this.in = in;
+        }
+
+        @Override
+        @Deprecated
+        public synchronized void mark(final int readlimit) {
+            throw new UnsupportedOperationException("mark isn't supported");
+        }
+
+        @Override
+        public void close() {
+            in = null;
+            count = 0;
+            pos = 0;
+        }
+    }
+
+    static ReusableBufferedDataInputStream reusableEmptyBufferedDataStream() {
+        return new ReusableBufferedDataInputStream();
     }
 }

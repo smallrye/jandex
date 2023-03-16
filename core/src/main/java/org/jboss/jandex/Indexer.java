@@ -20,7 +20,6 @@ package org.jboss.jandex;
 
 import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -301,10 +300,103 @@ public final class Indexer {
         }
     }
 
+    public static final class Factory implements AutoCloseable {
+        private static final IndexerTmpObjectsPool CLOSED = new IndexerTmpObjectsPool();
+        private IndexerTmpObjectsPool pool;
+
+        private Factory() {
+        }
+
+        public Indexer createIndexer() {
+            IndexerTmpObjectsPool pool = this.pool;
+            if (pool == CLOSED) {
+                throw new IllegalStateException("factory is already closed");
+            }
+            if (pool == null) {
+                pool = new IndexerTmpObjectsPool();
+                this.pool = pool;
+            }
+            return new Indexer(pool);
+        }
+
+        @Override
+        public void close() {
+            this.pool = CLOSED;
+        }
+    }
+
+    public static Factory factory() {
+        return new Factory();
+    }
+
+    private static final class IndexerTmpObjectsPool {
+
+        private Utils.ReusableBufferedDataInputStream dataInputStream;
+
+        private byte[] constantPoolBuf;
+        private int[] constantPoolOffsets;
+        private byte[] constantPoolAnnoAttributes;
+
+        public DataInputStream dataInputStreamOf(InputStream inputStream) {
+            Utils.ReusableBufferedDataInputStream stream = dataInputStream;
+            if (stream == null) {
+                stream = Utils.reusableEmptyBufferedDataStream();
+                this.dataInputStream = stream;
+            }
+            stream.setInputStream(inputStream);
+            return stream;
+        }
+
+        public byte[] borrowConstantPoolBuffer(int poolCount) {
+            byte[] buf = this.constantPoolBuf;
+            if (buf == null || buf.length < (20 * poolCount)) {
+                buf = new byte[20 * poolCount]; // EAGER GUESS
+            }
+            this.constantPoolBuf = null;
+            return buf;
+        }
+
+        public void recycleConstantPoolBuffer(byte[] buf) {
+            this.constantPoolBuf = buf;
+        }
+
+        public int[] borrowConstantPoolOffsets(int poolCount) {
+            int[] buf = this.constantPoolOffsets;
+            if (buf == null || buf.length < poolCount) {
+                buf = new int[poolCount];
+            } else {
+                Arrays.fill(buf, 0, poolCount, 0);
+            }
+            this.constantPoolOffsets = null;
+            return buf;
+        }
+
+        public void recycleConstantPoolOffsets(final int[] offsets) {
+            this.constantPoolOffsets = offsets;
+        }
+
+        public byte[] borrowConstantPoolAnnoAttributes(int poolCount) {
+            byte[] buf = this.constantPoolAnnoAttributes;
+            if (buf == null || buf.length < poolCount) {
+                buf = new byte[poolCount];
+            } else {
+                Arrays.fill(buf, 0, poolCount, (byte) 0);
+            }
+            this.constantPoolAnnoAttributes = null;
+            return buf;
+        }
+
+        public void recycleConstantAnnoAttributes(final byte[] attributes) {
+            this.constantPoolAnnoAttributes = attributes;
+        }
+    }
+
     // Class lifespan fields
     private byte[] constantPool;
     private int[] constantPoolOffsets;
     private byte[] constantPoolAnnoAttrributes;
+    private int poolCount;
+
     private ClassInfo currentClass;
     private HashMap<DotName, List<AnnotationInstance>> classAnnotations;
     private ArrayList<AnnotationInstance> elementAnnotations;
@@ -331,6 +423,15 @@ public final class Indexer {
     private Map<DotName, List<ClassInfo>> users;
     private NameTable names;
     private GenericSignatureParser signatureParser;
+    private final IndexerTmpObjectsPool indexerPool;
+
+    public Indexer() {
+        this(new IndexerTmpObjectsPool());
+    }
+
+    private Indexer(IndexerTmpObjectsPool indexerPool) {
+        this.indexerPool = indexerPool;
+    }
 
     private void initIndexMaps() {
         if (masterAnnotations == null)
@@ -450,6 +551,7 @@ public final class Indexer {
 
     private void processAttributes(DataInputStream data, AnnotationTarget target) throws IOException {
         int numAttrs = data.readUnsignedShort();
+        final byte[] constantPoolAnnoAttrributes = this.constantPoolAnnoAttrributes;
         for (int a = 0; a < numAttrs; a++) {
             int index = data.readUnsignedShort();
             long attributeLen = data.readInt() & 0xFFFFFFFFL;
@@ -636,8 +738,9 @@ public final class Indexer {
     }
 
     private void processCode(DataInputStream data, MethodInfo target) throws IOException {
-        int maxStack = data.readUnsignedShort();
-        int maxLocals = data.readUnsignedShort();
+        // int maxStack = data.readUnsignedShort();
+        // int maxLocals = data.readUnsignedShort();
+        data.skipBytes(4);
         long h = data.readUnsignedShort();
         long l = data.readUnsignedShort();
         long codeLength = (h << 16) | l;
@@ -645,12 +748,13 @@ public final class Indexer {
         int exceptionTableLength = data.readUnsignedShort();
         skipFully(data, exceptionTableLength * (2 + 2 + 2 + 2));
         int numAttrs = data.readUnsignedShort();
+        final byte[] constantPoolAnnoAttrributes = this.constantPoolAnnoAttrributes;
         for (int a = 0; a < numAttrs; a++) {
             int index = data.readUnsignedShort();
             long attributeLen = data.readInt() & 0xFFFFFFFFL;
             byte annotationAttribute = constantPoolAnnoAttrributes[index - 1];
             if (annotationAttribute == HAS_LOCAL_VARIABLE_TABLE && target instanceof MethodInfo) {
-                processLocalVariableTable(data, (MethodInfo) target);
+                processLocalVariableTable(data, target);
             } else {
                 skipFully(data, attributeLen);
             }
@@ -962,8 +1066,10 @@ public final class Indexer {
     private void resolveUsers() throws IOException {
         byte[] pool = constantPool;
         int[] offsets = constantPoolOffsets;
+        final int pools = poolCount;
 
-        for (int offset : offsets) {
+        for (int i = 0; i < pools; i++) {
+            int offset = offsets[i];
             if (pool[offset] == CONSTANT_CLASS) {
                 int nameIndex = (pool[++offset] & 0xFF) << 8 | (pool[++offset] & 0xFF);
                 DotName usedClass = names.convertToName(decodeUtf8Entry(nameIndex), '/');
@@ -1985,12 +2091,10 @@ public final class Indexer {
     }
 
     private void verifyMagic(DataInputStream stream) throws IOException {
-        byte[] buf = new byte[4];
-
-        stream.readFully(buf);
-        if (buf[0] != (byte) 0xCA || buf[1] != (byte) 0xFE || buf[2] != (byte) 0xBA || buf[3] != (byte) 0xBE)
+        final int magic = stream.readInt();
+        if (magic != 0xCA_FE_BA_BE) {
             throw new IOException("Invalid Magic");
-
+        }
     }
 
     private DotName decodeClassEntry(int index) throws IOException {
@@ -2200,9 +2304,9 @@ public final class Indexer {
 
     private boolean processConstantPool(DataInputStream stream) throws IOException {
         int poolCount = stream.readUnsignedShort() - 1;
-        byte[] buf = new byte[20 * poolCount]; // Guess
-        byte[] annoAttributes = new byte[poolCount];
-        int[] offsets = new int[poolCount];
+        byte[] buf = indexerPool.borrowConstantPoolBuffer(poolCount);
+        byte[] annoAttributes = indexerPool.borrowConstantPoolAnnoAttributes(poolCount);
+        int[] offsets = indexerPool.borrowConstantPoolOffsets(poolCount);
         boolean hasAnnotations = false;
 
         for (int pos = 0, offset = 0; pos < poolCount; pos++) {
@@ -2303,6 +2407,7 @@ public final class Indexer {
             }
         }
 
+        this.poolCount = poolCount;
         constantPool = buf;
         constantPoolOffsets = offsets;
         constantPoolAnnoAttrributes = annoAttributes;
@@ -2370,8 +2475,7 @@ public final class Indexer {
         if (stream == null) {
             throw new IllegalArgumentException("stream cannot be null");
         }
-        try {
-            DataInputStream data = new DataInputStream(new BufferedInputStream(stream));
+        try (DataInputStream data = indexerPool.dataInputStreamOf(stream)) {
             verifyMagic(data);
 
             // Retroweaved classes may contain annotations
@@ -2407,8 +2511,12 @@ public final class Indexer {
 
             return new ClassSummary(currentClass.name(), currentClass.superName(), currentClass.annotationsMap().keySet());
         } finally {
+            poolCount = 0;
+            indexerPool.recycleConstantPoolBuffer(constantPool);
             constantPool = null;
+            indexerPool.recycleConstantPoolOffsets(constantPoolOffsets);
             constantPoolOffsets = null;
+            indexerPool.recycleConstantAnnoAttributes(constantPoolAnnoAttrributes);
             constantPoolAnnoAttrributes = null;
             currentClass = null;
             classAnnotations = null;

@@ -2138,9 +2138,51 @@ public final class Indexer {
 
         pos++;
 
-        // DataInputStream needs to read the length again
         int len = (pool[pos] & 0xFF) << 8 | (pool[pos + 1] & 0xFF);
+        final String asciiString = tryDecodeAsciiEntry(pool, pos + 2, len);
+        if (asciiString != null) {
+            return asciiString;
+        }
+        // slow-path: TO IMPROVE!
+        // DataInputStream needs to read the length again
         return new DataInputStream(new ByteArrayInputStream(pool, pos, len + 2)).readUTF();
+    }
+
+    private static String tryDecodeAsciiEntry(byte[] chars, int pos, int len) {
+        final int longRounds = len >>> 3;
+        int off = pos;
+        for (int i = 0; i < longRounds; i++) {
+            final long batch = ((long) chars[off]) << 56 |
+                    ((long) chars[off + 1]) << 48 |
+                    ((long) chars[off + 2]) << 40 |
+                    ((long) chars[off + 3]) << 32 |
+                    chars[off + 4] << 24 |
+                    chars[off + 5] << 16 |
+                    chars[off + 6] << 8 |
+                    chars[off + 7];
+            // it's checking that each char is <= 127 in one go
+            if ((batch & 0x80_80_80_80_80_80_80_80L) != 0) {
+                return null;
+            }
+            off += Long.BYTES;
+        }
+        final int byteRounds = len & 7;
+        if (byteRounds > 0) {
+            for (int i = 0; i < byteRounds; i++) {
+                if ((chars[off + i] & 0x80) != 0) {
+                    return null;
+                }
+            }
+        }
+        // check https://bugs.openjdk.org/browse/JDK-8295496
+        if (pos == 0) {
+            if (len == chars.length) {
+                return new String(chars, 0, 0, chars.length);
+            }
+            return new String(chars, 0, 0, len);
+        }
+        // slow path :"(
+        return new String(chars, 0, pos, len);
     }
 
     private byte[] decodeUtf8EntryAsBytes(int index) {

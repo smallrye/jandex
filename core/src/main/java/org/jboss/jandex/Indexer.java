@@ -274,10 +274,26 @@ public final class Indexer {
     }
 
     private static byte[] sizeToFit(byte[] buf, int needed, int offset, int remainingEntries) {
-        if (offset + needed > buf.length) {
-            buf = Arrays.copyOf(buf, buf.length + Math.max(needed, (remainingEntries + 1) * 20));
+        int oldLength = buf.length;
+        if (offset + needed > oldLength) {
+            int newLength = newLength(oldLength, needed, oldLength >> 1);
+            buf = Arrays.copyOf(buf, newLength);
         }
         return buf;
+    }
+
+    private static int newLength(int oldLength, int minGrowth, int prefGrowth) {
+        int prefLength = oldLength + Math.max(minGrowth, prefGrowth);
+        return prefLength > 0 ? prefLength : minLength(oldLength, minGrowth);
+    }
+
+    private static int minLength(int oldLength, int minGrowth) {
+        int minLength = oldLength + minGrowth;
+        if (minLength < 0) {
+            throw new OutOfMemoryError("Cannot allocate a large enough array: " +
+                    oldLength + " + " + minGrowth + " is too large");
+        }
+        return minLength;
     }
 
     private static void skipFully(InputStream s, long n) throws IOException {

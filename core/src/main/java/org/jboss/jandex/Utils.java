@@ -18,6 +18,7 @@
 
 package org.jboss.jandex;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -62,13 +63,27 @@ class Utils {
 
     static final class ReusableBufferedDataInputStream extends DataInputStream {
 
+        private ReusableBufferedInputStream reusableBuffered = null;
+
         private ReusableBufferedDataInputStream() {
-            super(new ReusableBufferedInputStream());
+            super(null);
         }
 
         public void setInputStream(InputStream in) {
             Objects.requireNonNull(in);
-            ((ReusableBufferedInputStream) this.in).setInputStream(in);
+            // this is already buffered: let's use it directly
+            if (in instanceof BufferedInputStream) {
+                assert !(in instanceof ReusableBufferedInputStream);
+                this.in = in;
+            } else {
+                if (this.in == null) {
+                    if (reusableBuffered == null) {
+                        reusableBuffered = new ReusableBufferedInputStream();
+                    }
+                    this.in = reusableBuffered;
+                }
+                reusableBuffered.setInputStream(in);
+            }
         }
 
         @Override
@@ -84,7 +99,11 @@ class Utils {
 
         @Override
         public void close() {
-            ((ReusableBufferedInputStream) in).close();
+            if (in == reusableBuffered) {
+                reusableBuffered.close();
+            } else {
+                in = null;
+            }
         }
     }
 

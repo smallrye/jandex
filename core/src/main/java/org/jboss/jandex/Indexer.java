@@ -2113,54 +2113,14 @@ public final class Indexer {
         pos++;
 
         int len = (pool[pos] & 0xFF) << 8 | (pool[pos + 1] & 0xFF);
-        String asciiString = tryDecodeAsciiEntry(pool, pos + 2, len);
-        if (asciiString != null) {
-            return asciiString;
+        if (BitTricks.isAsciiOnly(pool, pos + 2, len)) {
+            // see also https://bugs.openjdk.org/browse/JDK-8295496
+            return new String(pool, 0, pos + 2, len);
         }
 
-        // slow-path
+        // slow path
         // DataInputStream needs to read the length again
         return new DataInputStream(new ByteArrayInputStream(pool, pos, len + 2)).readUTF();
-    }
-
-    private static String tryDecodeAsciiEntry(byte[] chars, int pos, int len) {
-        int off = pos;
-
-        int longRounds = len >>> 3;
-        for (int i = 0; i < longRounds; i++) {
-            long batch = ((long) chars[off]) << 56
-                    | ((long) chars[off + 1]) << 48
-                    | ((long) chars[off + 2]) << 40
-                    | ((long) chars[off + 3]) << 32
-                    | chars[off + 4] << 24
-                    | chars[off + 5] << 16
-                    | chars[off + 6] << 8
-                    | chars[off + 7];
-            // check that each byte is <= 127 (ASCII) in one go
-            if ((batch & 0x80_80_80_80_80_80_80_80L) != 0) {
-                return null;
-            }
-            off += Long.BYTES;
-        }
-
-        int byteRounds = len & 7;
-        if (byteRounds > 0) {
-            for (int i = 0; i < byteRounds; i++) {
-                if ((chars[off + i] & 0x80) != 0) {
-                    return null;
-                }
-            }
-        }
-
-        // see https://bugs.openjdk.org/browse/JDK-8295496
-        if (pos == 0) {
-            if (len == chars.length) {
-                return new String(chars, 0, 0, chars.length);
-            }
-            return new String(chars, 0, 0, len);
-        }
-        // slow path
-        return new String(chars, 0, pos, len);
     }
 
     private byte[] decodeUtf8EntryAsBytes(int index) {

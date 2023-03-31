@@ -90,6 +90,7 @@
                         </manifest>
                         <manifestEntries>
                             <Automatic-Module-Name>org.jboss.jandex</Automatic-Module-Name>
+                            <Multi-Release>true</Multi-Release>
                         </manifestEntries>
                     </archive>
                     <instructions>

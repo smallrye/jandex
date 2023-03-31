@@ -50,10 +50,13 @@ final class MethodInternal implements Interned {
                 return x;
             }
 
-            int min = Math.min(instance.parameterTypes.length, instance2.parameterTypes.length);
+            Type[] parameterTypes1 = instance.parameterTypes;
+            Type[] parameterTypes2 = instance2.parameterTypes;
+
+            int min = Math.min(parameterTypes1.length, parameterTypes2.length);
             for (int i = 0; i < min; i++) {
-                Type t1 = instance.parameterTypes[i];
-                Type t2 = instance2.parameterTypes[i];
+                Type t1 = parameterTypes1[i];
+                Type t2 = parameterTypes2[i];
 
                 x = t1.name().compareTo(t2.name());
                 if (x != 0) {
@@ -61,7 +64,7 @@ final class MethodInternal implements Interned {
                 }
             }
 
-            x = instance.parameterTypes.length - instance2.parameterTypes.length;
+            x = parameterTypes1.length - parameterTypes2.length;
             if (x != 0) {
                 return x;
             }

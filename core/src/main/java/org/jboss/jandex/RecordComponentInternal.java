@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * The shared internal representation for RecordComponentInfo objects.
  */
-final class RecordComponentInternal implements Interned {
+final class RecordComponentInternal {
     static final RecordComponentInternal[] EMPTY_ARRAY = new RecordComponentInternal[0];
     private final byte[] name;
     private Type type;
@@ -93,8 +93,7 @@ final class RecordComponentInternal implements Interned {
         return result;
     }
 
-    @Override
-    public boolean internEquals(Object o) {
+    boolean internEquals(Object o) {
         if (this == o) {
             return true;
         }
@@ -117,8 +116,7 @@ final class RecordComponentInternal implements Interned {
         return true;
     }
 
-    @Override
-    public int internHashCode() {
+    int internHashCode() {
         int result = Arrays.hashCode(name);
         result = 31 * result + type.internHashCode();
         result = 31 * result + Arrays.hashCode(annotations);

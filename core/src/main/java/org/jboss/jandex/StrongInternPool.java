@@ -677,12 +677,12 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
 
         @Override
         boolean eq(Type[] o1, Type[] o2) {
-            return Interned.arrayEquals(o1, o2);
+            return TypeInterning.arrayEquals(o1, o2);
         }
 
         @Override
         int hash(Type[] o) {
-            return Interned.arrayHashCode(o);
+            return TypeInterning.arrayHashCode(o);
         }
     }
 

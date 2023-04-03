@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author Jason T. Greene
  */
-final class MethodInternal implements Interned {
+final class MethodInternal {
     static final MethodInternal[] EMPTY_ARRAY = new MethodInternal[0];
     static final NameAndParameterComponentComparator NAME_AND_PARAMETER_COMPONENT_COMPARATOR = new NameAndParameterComponentComparator();
     static final byte[][] EMPTY_PARAMETER_NAMES = new byte[0][];
@@ -175,8 +175,7 @@ final class MethodInternal implements Interned {
         return result;
     }
 
-    @Override
-    public boolean internEquals(Object o) {
+    boolean internEquals(Object o) {
         if (this == o) {
             return true;
         }
@@ -192,7 +191,7 @@ final class MethodInternal implements Interned {
         if (!Arrays.equals(annotations, methodInternal.annotations)) {
             return false;
         }
-        if (!Interned.arrayEquals(exceptions, methodInternal.exceptions)) {
+        if (!TypeInterning.arrayEquals(exceptions, methodInternal.exceptions)) {
             return false;
         }
         if (!Arrays.equals(name, methodInternal.name)) {
@@ -201,10 +200,10 @@ final class MethodInternal implements Interned {
         if (!Arrays.deepEquals(parameterNames, methodInternal.parameterNames)) {
             return false;
         }
-        if (!Interned.arrayEquals(parameterTypes, methodInternal.parameterTypes)) {
+        if (!TypeInterning.arrayEquals(parameterTypes, methodInternal.parameterTypes)) {
             return false;
         }
-        if (!Interned.arrayEquals(descriptorParameterTypes, methodInternal.descriptorParameterTypes)) {
+        if (!TypeInterning.arrayEquals(descriptorParameterTypes, methodInternal.descriptorParameterTypes)) {
             return false;
         }
         if (receiverType != null ? !receiverType.internEquals(methodInternal.receiverType)
@@ -217,19 +216,18 @@ final class MethodInternal implements Interned {
         if (defaultValue != null ? !defaultValue.equals(methodInternal.defaultValue) : methodInternal.defaultValue != null) {
             return false;
         }
-        return Interned.arrayEquals(typeParameters, methodInternal.typeParameters);
+        return TypeInterning.arrayEquals(typeParameters, methodInternal.typeParameters);
     }
 
-    @Override
-    public int internHashCode() {
+    int internHashCode() {
         int result = Arrays.hashCode(name);
         result = 31 * result + Arrays.deepHashCode(parameterNames);
-        result = 31 * result + Interned.arrayHashCode(parameterTypes);
-        result = 31 * result + Interned.arrayHashCode(descriptorParameterTypes);
+        result = 31 * result + TypeInterning.arrayHashCode(parameterTypes);
+        result = 31 * result + TypeInterning.arrayHashCode(descriptorParameterTypes);
         result = 31 * result + returnType.internHashCode();
-        result = 31 * result + Interned.arrayHashCode(exceptions);
+        result = 31 * result + TypeInterning.arrayHashCode(exceptions);
         result = 31 * result + (receiverType != null ? receiverType.internHashCode() : 0);
-        result = 31 * result + Interned.arrayHashCode(typeParameters);
+        result = 31 * result + TypeInterning.arrayHashCode(typeParameters);
         result = 31 * result + Arrays.hashCode(annotations);
         result = 31 * result + (int) flags;
         result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);

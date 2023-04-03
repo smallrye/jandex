@@ -227,7 +227,7 @@ public class WildcardType extends Type {
     }
 
     @Override
-    public boolean internEquals(Object o) {
+    boolean internEquals(Object o) {
         if (this == o) {
             return true;
         }
@@ -240,7 +240,7 @@ public class WildcardType extends Type {
     }
 
     @Override
-    public int internHashCode() {
+    int internHashCode() {
         int hash = super.internHashCode();
         hash = 31 * hash + (isExtends ? 1 : 0);
         hash = 31 * hash + bound.internHashCode();

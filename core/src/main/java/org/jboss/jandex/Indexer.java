@@ -2593,15 +2593,18 @@ public final class Indexer {
             }
         });
 
+        // single shared instance to avoid needless allocations
+        Deque<TypeVariable> sharedTypeVarStack = new ArrayDeque<>();
+
         for (ClassInfo clazz : classes) {
-            propagateTypeParameterBounds(clazz);
+            propagateTypeParameterBounds(clazz, sharedTypeVarStack);
             for (MethodInfo method : clazz.methods()) {
-                propagateTypeParameterBounds(method);
+                propagateTypeParameterBounds(method, sharedTypeVarStack);
             }
         }
     }
 
-    private void propagateTypeParameterBounds(AnnotationTarget target) {
+    private void propagateTypeParameterBounds(AnnotationTarget target, Deque<TypeVariable> sharedTypeVarStack) {
         Type[] typeParameters = copyTypeParameters(target);
 
         for (int i = 0; i < typeParameters.length; i++) {
@@ -2628,7 +2631,8 @@ public final class Indexer {
         // interspersing type annotation propagation (above) with patching would lead to type variable references
         // pointing to stale type variables, hence patching must be an extra editing pass
         for (int i = 0; i < typeParameters.length; i++) {
-            patchTypeVariableReferences(typeParameters[i], new ArrayDeque<>(), target);
+            sharedTypeVarStack.clear();
+            patchTypeVariableReferences(typeParameters[i], sharedTypeVarStack, target);
         }
     }
 

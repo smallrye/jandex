@@ -66,7 +66,7 @@ public interface AnnotationTarget {
 
         /**
          * An object of type {@link org.jboss.jandex.RecordComponentInfo}
-         * 
+         *
          * @since 2.4
          */
         RECORD_COMPONENT

@@ -614,7 +614,7 @@ public abstract class Type implements Descriptor, Interned {
         /**
          * Adds an annotation to the type being created by this builder.
          * Note that it becomes a <em>type annotation</em>.
-         * 
+         *
          * @param annotation the annotation instance; can be created using {@code AnnotationInstance.builder()}
          * @return this builder
          * @see Type#annotations()

@@ -44,7 +44,7 @@ public final class TypeVariable extends Type {
     /**
      * Create an instance of a type variable with the given {@code identifier}.
      * The type variable has a single bound of {@code java.lang.Object}.
-     * 
+     *
      * @param identifier identifier of the type variable
      * @return the type variable
      * @see #identifier()
@@ -56,7 +56,7 @@ public final class TypeVariable extends Type {
 
     /**
      * Create a builder of a type variable.
-     * 
+     *
      * @return the builder
      * @since 3.1.0
      */

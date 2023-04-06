@@ -18,7 +18,7 @@
 package org.jboss.jandex;
 
 /**
- * 
+ *
  * @see java.lang.reflect.Modifier
  */
 final class Modifiers {

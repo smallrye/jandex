@@ -88,7 +88,7 @@ public final class ClassType extends Type {
 
     /**
      * Create a builder of a class type for the given class.
-     * 
+     *
      * @param clazz the class
      * @return the builder
      * @since 3.1.0

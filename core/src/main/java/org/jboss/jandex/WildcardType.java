@@ -95,7 +95,7 @@ public class WildcardType extends Type {
 
     /**
      * Create a builder of a wildcard type.
-     * 
+     *
      * @return the builder
      * @since 3.1.0
      */

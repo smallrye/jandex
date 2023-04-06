@@ -37,7 +37,7 @@ import java.util.Objects;
  * returns the type of the enclosing class. Such inner type may itself be parameterized.
  * <p>
  * For example, assume the following declarations:
- * 
+ *
  * <pre class="brush:java">
  * class A&lt;T&gt; {
  *     class B {
@@ -164,7 +164,7 @@ public class ParameterizedType extends Type {
 
     /**
      * Create a builder of a parameterized type with the given {@code name}.
-     * 
+     *
      * @param name binary name of the generic class
      * @return the builder
      * @since 3.1.0
@@ -175,7 +175,7 @@ public class ParameterizedType extends Type {
 
     /**
      * Create a builder of a parameterized type for the given generic class.
-     * 
+     *
      * @param clazz the generic class
      * @return the builder
      * @since 3.1.0
@@ -368,7 +368,7 @@ public class ParameterizedType extends Type {
 
         /**
          * Adds a type argument.
-         * 
+         *
          * @param argument the type argument, must not be {@code null}
          * @return this builder
          */
@@ -379,7 +379,7 @@ public class ParameterizedType extends Type {
 
         /**
          * Adds a {@link ClassType} argument for the given class.
-         * 
+         *
          * @param clazz the class whose type is added as a type argument, must not be {@code null}
          * @return this builder
          */
@@ -389,7 +389,7 @@ public class ParameterizedType extends Type {
 
         /**
          * Sets the owner.
-         * 
+         *
          * @param owner the owner of the parameterized type being built, must not be {@code null}
          * @return this builder
          * @see ParameterizedType#owner()
@@ -401,7 +401,7 @@ public class ParameterizedType extends Type {
 
         /**
          * Returns the built parameterized type.
-         * 
+         *
          * @return the built parameterized type
          */
         public ParameterizedType build() {

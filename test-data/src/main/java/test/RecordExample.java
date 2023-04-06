@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 import java.util.List;
 
 @RecordExample.RecordAnnotation("Example")
-public record RecordExample<T> (@Nullable Integer id,
+public record RecordExample<T>(@Nullable Integer id,
         @Nullable @ComponentAnnotation("nameComponent") @FieldAnnotation("nameField") @AccessorAnnotation("nameAccessor") String name,
         List<@Nullable String> parameterized,
         T generic) {

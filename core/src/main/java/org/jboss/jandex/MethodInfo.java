@@ -324,7 +324,7 @@ public final class MethodInfo implements Declaration, Descriptor, GenericSignatu
      * the exact location of the annotation instance.
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
-     * 
+     *
      * <pre class="brush:java">
      * {@literal @}MyMethodAnnotation
      * public void foo() {...}
@@ -354,7 +354,7 @@ public final class MethodInfo implements Declaration, Descriptor, GenericSignatu
      * the exact location of the respective annotation instance.
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
-     * 
+     *
      * <pre class="brush:java">
      * {@literal @}MyMethodAnnotation
      * public void foo() {...}
@@ -428,7 +428,7 @@ public final class MethodInfo implements Declaration, Descriptor, GenericSignatu
      * the exact location of the respective annotation instance.
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
-     * 
+     *
      * <pre class="brush:java">
      * {@literal @}MyMethodAnnotation
      * public void foo() {...}
@@ -573,7 +573,7 @@ public final class MethodInfo implements Declaration, Descriptor, GenericSignatu
     }
 
     /**
-     * 
+     *
      * @return {@code true} if this method is a synthetic method
      */
     public final boolean isSynthetic() {

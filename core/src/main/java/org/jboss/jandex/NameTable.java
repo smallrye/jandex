@@ -27,13 +27,13 @@ import java.util.Map;
  * @author Jason T. Greene
  */
 class NameTable {
-    private StrongInternPool<String> stringPool = new StrongInternPool<String>();
-    private StrongInternPool<Type> typePool = new StrongInternPool<Type>();
-    private StrongInternPool<Type[]> typeListPool = new StrongInternPool<Type[]>();
-    private StrongInternPool<byte[]> bytePool = new StrongInternPool<byte[]>();
-    private StrongInternPool<MethodInternal> methodPool = new StrongInternPool<MethodInternal>();
-    private StrongInternPool<FieldInternal> fieldPool = new StrongInternPool<FieldInternal>();
-    private StrongInternPool<RecordComponentInternal> recordComponentPool = new StrongInternPool<RecordComponentInternal>();
+    private StrongInternPool<String> stringPool = StrongInternPool.forStrings();
+    private StrongInternPool<Type> typePool = StrongInternPool.forTypes();
+    private StrongInternPool<Type[]> typeListPool = StrongInternPool.forTypeArrays();
+    private StrongInternPool<byte[]> bytePool = StrongInternPool.forByteArrays();
+    private StrongInternPool<MethodInternal> methodPool = StrongInternPool.forMethods();
+    private StrongInternPool<FieldInternal> fieldPool = StrongInternPool.forFields();
+    private StrongInternPool<RecordComponentInternal> recordComponentPool = StrongInternPool.forRecordComponents();
     private Map<String, DotName> names = new HashMap<String, DotName>();
 
     DotName convertToName(String name) {

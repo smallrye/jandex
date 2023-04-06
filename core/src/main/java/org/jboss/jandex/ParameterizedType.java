@@ -328,7 +328,7 @@ public class ParameterizedType extends Type {
     }
 
     @Override
-    public boolean internEquals(Object o) {
+    boolean internEquals(Object o) {
         if (this == o) {
             return true;
         }
@@ -340,13 +340,13 @@ public class ParameterizedType extends Type {
         ParameterizedType other = (ParameterizedType) o;
 
         return (owner == other.owner || (owner != null && owner.internEquals(other.owner)))
-                && Interned.arrayEquals(arguments, other.arguments);
+                && TypeInterning.arrayEquals(arguments, other.arguments);
     }
 
     @Override
-    public int internHashCode() {
+    int internHashCode() {
         int hash = super.internHashCode();
-        hash = 31 * hash + Interned.arrayHashCode(arguments);
+        hash = 31 * hash + TypeInterning.arrayHashCode(arguments);
         hash = 31 * hash + (owner != null ? owner.internHashCode() : 0);
         return hash;
     }

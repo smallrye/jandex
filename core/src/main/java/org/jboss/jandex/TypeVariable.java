@@ -207,7 +207,7 @@ public final class TypeVariable extends Type {
     }
 
     @Override
-    public boolean internEquals(Object o) {
+    boolean internEquals(Object o) {
         if (this == o) {
             return true;
         }
@@ -218,15 +218,15 @@ public final class TypeVariable extends Type {
 
         TypeVariable that = (TypeVariable) o;
 
-        return identifier.equals(that.identifier) && Interned.arrayEquals(bounds, that.bounds)
+        return identifier.equals(that.identifier) && TypeInterning.arrayEquals(bounds, that.bounds)
                 && hasImplicitObjectBound() == that.hasImplicitObjectBound();
     }
 
     @Override
-    public int internHashCode() {
+    int internHashCode() {
         int hash = super.internHashCode();
         hash = 31 * hash + identifier.hashCode();
-        hash = 31 * hash + Interned.arrayHashCode(bounds);
+        hash = 31 * hash + TypeInterning.arrayHashCode(bounds);
         return hash;
     }
 

@@ -38,7 +38,7 @@ import java.util.function.Function;
  *
  * @author Jason T. Greene
  */
-public abstract class Type implements Descriptor, Interned {
+public abstract class Type implements Descriptor {
     public static final Type[] EMPTY_ARRAY = new Type[0];
     private static final AnnotationInstance[] EMPTY_ANNOTATIONS = new AnnotationInstance[0];
     private final DotName name;
@@ -561,8 +561,7 @@ public abstract class Type implements Descriptor, Interned {
         return result;
     }
 
-    @Override
-    public boolean internEquals(Object o) {
+    boolean internEquals(Object o) {
         if (this == o) {
             return true;
         }
@@ -576,8 +575,7 @@ public abstract class Type implements Descriptor, Interned {
         return name.equals(type.name) && Arrays.equals(annotations, type.annotations);
     }
 
-    @Override
-    public int internHashCode() {
+    int internHashCode() {
         int result = name.hashCode();
         result = 31 * result + Arrays.hashCode(annotations);
         return result;

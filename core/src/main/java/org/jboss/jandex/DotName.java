@@ -339,39 +339,6 @@ public final class DotName implements Comparable<DotName> {
     }
 
     /**
-     * Compares a {@link DotName} to another {@code DotName} and returns whether this {@code DotName}
-     * is lesser than, greater than, or equal to the specified DotName. If this {@code DotName} is lesser,
-     * a negative value is returned. If greater, a positive value is returned. If equal, zero is returned.
-     *
-     * @param other the {@code DotName} to compare to
-     * @return a negative number if this is less than the specified object, a positive if greater, and zero if equal
-     *
-     * @see Comparable#compareTo(Object)
-     */
-    @Override
-    public int compareTo(DotName other) {
-        IndexState s1 = new IndexState();
-        IndexState s2 = new IndexState();
-
-        for (;;) {
-            int c1 = nextChar(s1, this);
-            int c2 = nextChar(s2, other);
-
-            if (c1 == -1) {
-                return c2 == -1 ? 0 : -1;
-            }
-
-            if (c2 == -1) {
-                return 1;
-            }
-
-            if (c1 != c2) {
-                return c1 - c2;
-            }
-        }
-    }
-
-    /**
      * Compares a {@link DotName} to another {@code DotName} and returns {@code true}
      * if they represent the same underlying semantic name. In other words, whether a
      * name is componentized or simple has no bearing on the comparison.
@@ -389,7 +356,7 @@ public final class DotName implements Comparable<DotName> {
             return false;
 
         DotName other = (DotName) o;
-        if (other.prefix == null && prefix == null)
+        if (this.prefix == null && other.prefix == null)
             return local.equals(other.local) && innerClass == other.innerClass;
 
         if (this.hash != 0 && other.hash != 0 && this.hash != other.hash)
@@ -455,42 +422,132 @@ public final class DotName implements Comparable<DotName> {
         return a == null && b == null;
     }
 
-    private static class IndexState {
-        DotName currentPrefix;
-        int offset;
+    /**
+     * Compares a {@link DotName} to another {@code DotName} and returns whether this {@code DotName}
+     * is lesser than, greater than, or equal to the specified DotName. If this {@code DotName} is lesser,
+     * a negative value is returned. If greater, a positive value is returned. If equal, zero is returned.
+     *
+     * @param other the {@code DotName} to compare to
+     * @return a negative number if this is less than the specified object, a positive if greater, and zero if equal
+     *
+     * @see Comparable#compareTo(Object)
+     */
+    @Override
+    public int compareTo(DotName other) {
+        // fast path for simple names
+        if (this == other) {
+            return 0;
+        }
+        if (this.prefix == null && other.prefix == null) {
+            if (this.innerClass != other.innerClass) {
+                return this.innerClass ? -1 : 1; // '$' is lesser than '.'
+            }
+            return this.local.compareTo(other.local);
+        }
+
+        return componentizedCompare(flatten(this), flatten(other));
     }
 
-    private int nextChar(IndexState state, DotName name) {
-        if (state.offset == -1) {
+    // note that `a` and `b` have one extra `null` element at the end, see the `flatten` method
+    private static int componentizedCompare(DotName[] a, DotName[] b) {
+        int aPos = 0; // current position in `a`
+        DotName aCur = a[aPos]; // always `a[aPos]`
+
+        int bPos = 0; // current position in `b`
+        DotName bCur = b[bPos]; // always `b[bPos]`
+
+        // skip shared components; after the loop, `aCur` and `bCur` may be `null`
+        while (aCur == bCur) {
+            aPos++;
+            aCur = a[aPos];
+
+            bPos++;
+            bCur = b[bPos];
+        }
+
+        String aCurLocal = null; // always `aCur.local`
+        int aCurLocalLength = 0; // always `aCurLocal.length()`
+        int aCharPos = -1; // current position in `aCurLocal`
+        if (aCur != null) {
+            aCurLocal = aCur.local;
+            aCurLocalLength = aCurLocal.length();
+        }
+
+        String bCurLocal = null; // always `bCur.local`
+        int bCurLocalLength = 0; // always `bCurLocal.length()`
+        int bCharPos = -1; // current position in `bCurLocal`
+        if (bCur != null) {
+            bCurLocal = bCur.local;
+            bCurLocalLength = bCurLocal.length();
+        }
+
+        // compare char by char until the end of the shorter name is reached
+        while (aCur != null && bCur != null) {
+            char aChar = aCharPos >= 0 ? aCurLocal.charAt(aCharPos) : (aCur.innerClass ? '$' : '.');
+            char bChar = bCharPos >= 0 ? bCurLocal.charAt(bCharPos) : (bCur.innerClass ? '$' : '.');
+            if (aChar != bChar) {
+                return aChar - bChar;
+            }
+
+            aCharPos++;
+            if (aCharPos == aCurLocalLength) {
+                aPos++;
+                aCharPos = -1;
+                aCur = a[aPos];
+                if (aCur != null) {
+                    aCurLocal = aCur.local;
+                    aCurLocalLength = aCurLocal.length();
+                }
+            }
+
+            bCharPos++;
+            if (bCharPos == bCurLocalLength) {
+                bPos++;
+                bCharPos = -1;
+                bCur = b[bPos];
+                if (bCur != null) {
+                    bCurLocal = bCur.local;
+                    bCurLocalLength = bCurLocal.length();
+                }
+            }
+        }
+
+        // all chars up to the end of the shorter name are equal
+        if (aCur == null && bCur == null) {
+            // `a` is same length as `b`, so they are equal
+            return 0;
+        } else if (aCur != null) {
+            // `a` is longer than `b`
+            return 1;
+        } else /* bCur != null */ {
+            // `a` is shorter than `b`
             return -1;
         }
-
-        if (!name.componentized) {
-            if (state.offset > name.local.length() - 1) {
-                state.offset = -1;
-                return -1;
-            }
-            return name.local.charAt(state.offset++);
-        }
-
-        DotName p = name, n = name;
-        while (n.prefix != state.currentPrefix) {
-            p = n;
-            n = n.prefix;
-        }
-
-        if (state.offset > n.local.length() - 1) {
-            if (n == name) {
-                state.offset = -1;
-                return -1;
-            } else {
-                state.offset = 0;
-                state.currentPrefix = n;
-                return p.isInner() ? '$' : '.';
-            }
-        }
-
-        return n.local.charAt(state.offset++);
     }
 
+    private static DotName[] flatten(DotName name) {
+        int count = 0;
+        {
+            DotName tmp = name;
+            while (tmp != null) {
+                count++;
+                tmp = tmp.prefix;
+            }
+        }
+
+        DotName[] result = new DotName[count + 1];
+        {
+            result[count] = null; // sentinel to prevent reaching after the end of array
+
+            DotName tmp = name;
+            int index = count - 1;
+            while (tmp != null) {
+                result[index] = tmp;
+                index--;
+                tmp = tmp.prefix;
+            }
+        }
+
+        return result;
+    }
 }

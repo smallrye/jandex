@@ -56,6 +56,11 @@ for VERSION in $VERSIONS ; do
   rm -r $TEMP
 
   mvn jmh:benchmark -Djmh.benchmarks=$BENCHMARKS -Djmh.rf=json -Djmh.rff=target/results-$VERSION.json -DgroupId.jandex=$GROUP_ID -Dversion.jandex=1.0.0-dev-SNAPSHOT
+#  mvn jmh:benchmark "-Djmh.prof=perf" -Djmh.benchmarks=$BENCHMARKS -Djmh.rf=json -Djmh.rff=target/results-$VERSION.json -DgroupId.jandex=$GROUP_ID -Dversion.jandex=1.0.0-dev-SNAPSHOT
+#  mvn jmh:benchmark "-Djmh.prof=perfasm:saveLog=true;hotThreshold=0.01" -Djmh.benchmarks=$BENCHMARKS -Djmh.rf=json -Djmh.rff=target/results-$VERSION.json -DgroupId.jandex=$GROUP_ID -Dversion.jandex=1.0.0-dev-SNAPSHOT
+#  mvn jmh:benchmark "-Djmh.prof=async:output=flamegraph;libPath=/home/ladicek/software/async-profiler/build/libasyncProfiler.so" -Djmh.benchmarks=$BENCHMARKS -Djmh.rf=json -Djmh.rff=target/results-$VERSION.json -DgroupId.jandex=$GROUP_ID -Dversion.jandex=1.0.0-dev-SNAPSHOT
+#  mvn jmh:benchmark "-Djmh.prof=async:event=alloc;rawCommand=total;output=flamegraph;libPath=/home/ladicek/software/async-profiler/build/libasyncProfiler.so" -Djmh.benchmarks=$BENCHMARKS -Djmh.rf=json -Djmh.rff=target/results-$VERSION.json -DgroupId.jandex=$GROUP_ID -Dversion.jandex=1.0.0-dev-SNAPSHOT
+#  mvn jmh:benchmark "-Djmh.prof=gc" -Djmh.benchmarks=$BENCHMARKS -Djmh.rf=json -Djmh.rff=target/results-$VERSION.json -DgroupId.jandex=$GROUP_ID -Dversion.jandex=1.0.0-dev-SNAPSHOT
 done
 
 # this requires current Jandex workspace to be built and installed to local Maven repo (`mvn clean install -DskipTests`)

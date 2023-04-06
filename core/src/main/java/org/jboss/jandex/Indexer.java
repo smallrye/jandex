@@ -20,7 +20,6 @@ package org.jboss.jandex;
 
 import static org.jboss.jandex.ClassInfo.EnclosingMethodInfo;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -275,10 +274,26 @@ public final class Indexer {
     }
 
     private static byte[] sizeToFit(byte[] buf, int needed, int offset, int remainingEntries) {
-        if (offset + needed > buf.length) {
-            buf = Arrays.copyOf(buf, buf.length + Math.max(needed, (remainingEntries + 1) * 20));
+        int oldLength = buf.length;
+        if (offset + needed > oldLength) {
+            int newLength = newLength(oldLength, needed, oldLength >> 1);
+            buf = Arrays.copyOf(buf, newLength);
         }
         return buf;
+    }
+
+    private static int newLength(int oldLength, int minGrowth, int prefGrowth) {
+        int prefLength = oldLength + Math.max(minGrowth, prefGrowth);
+        return prefLength > 0 ? prefLength : minLength(oldLength, minGrowth);
+    }
+
+    private static int minLength(int oldLength, int minGrowth) {
+        int minLength = oldLength + minGrowth;
+        if (minLength < 0) {
+            throw new OutOfMemoryError("Cannot allocate a large enough array: " +
+                    oldLength + " + " + minGrowth + " is too large");
+        }
+        return minLength;
     }
 
     private static void skipFully(InputStream s, long n) throws IOException {
@@ -301,16 +316,81 @@ public final class Indexer {
         }
     }
 
+    private static final class TmpObjects {
+        private Utils.ReusableBufferedDataInputStream dataInputStream;
+
+        private byte[] constantPool;
+        private int[] constantPoolOffsets;
+        private byte[] constantPoolAnnoAttributes;
+
+        DataInputStream dataInputStreamOf(InputStream inputStream) {
+            Utils.ReusableBufferedDataInputStream stream = dataInputStream;
+            if (stream == null) {
+                stream = new Utils.ReusableBufferedDataInputStream();
+                this.dataInputStream = stream;
+            }
+            stream.setInputStream(inputStream);
+            return stream;
+        }
+
+        byte[] borrowConstantPool(int poolSize) {
+            byte[] buf = this.constantPool;
+            if (buf == null || buf.length < (20 * poolSize)) {
+                buf = new byte[20 * poolSize]; // Guess
+            } else {
+                Arrays.fill(buf, 0, poolSize, (byte) 0);
+            }
+            this.constantPool = null;
+            return buf;
+        }
+
+        void returnConstantPool(byte[] buf) {
+            this.constantPool = buf;
+        }
+
+        int[] borrowConstantPoolOffsets(int poolSize) {
+            int[] buf = this.constantPoolOffsets;
+            if (buf == null || buf.length < poolSize) {
+                buf = new int[poolSize];
+            } else {
+                Arrays.fill(buf, 0, poolSize, 0);
+            }
+            this.constantPoolOffsets = null;
+            return buf;
+        }
+
+        void returnConstantPoolOffsets(int[] offsets) {
+            this.constantPoolOffsets = offsets;
+        }
+
+        byte[] borrowConstantPoolAnnoAttributes(int poolSize) {
+            byte[] buf = this.constantPoolAnnoAttributes;
+            if (buf == null || buf.length < poolSize) {
+                buf = new byte[poolSize];
+            } else {
+                Arrays.fill(buf, 0, poolSize, (byte) 0);
+            }
+            this.constantPoolAnnoAttributes = null;
+            return buf;
+        }
+
+        void returnConstantAnnoAttributes(byte[] attributes) {
+            this.constantPoolAnnoAttributes = attributes;
+        }
+    }
+
     // Class lifespan fields
+    private int constantPoolSize;
     private byte[] constantPool;
     private int[] constantPoolOffsets;
     private byte[] constantPoolAnnoAttrributes;
+
     private ClassInfo currentClass;
     private HashMap<DotName, List<AnnotationInstance>> classAnnotations;
     private ArrayList<AnnotationInstance> elementAnnotations;
     private IdentityHashMap<AnnotationTarget, Object> signaturePresent;
     private List<Object> signatures;
-    private int classSignatureIndex;
+    private int classSignatureIndex = -1;
     private Map<DotName, InnerClassInfo> innerClasses;
     private IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>> typeAnnotations;
     private List<MethodInfo> methods;
@@ -331,6 +411,7 @@ public final class Indexer {
     private Map<DotName, List<ClassInfo>> users;
     private NameTable names;
     private GenericSignatureParser signatureParser;
+    private final TmpObjects tmpObjects = new TmpObjects();
 
     private void initIndexMaps() {
         if (masterAnnotations == null)
@@ -363,18 +444,15 @@ public final class Indexer {
     }
 
     private void initClassFields() {
+        classAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
         elementAnnotations = new ArrayList<AnnotationInstance>();
         signaturePresent = new IdentityHashMap<AnnotationTarget, Object>();
         signatures = new ArrayList<Object>();
-        classSignatureIndex = -1;
         typeAnnotations = new IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>>();
 
         // in bytecode, record components are stored as class attributes,
         // and if the attribute is missing, processRecordComponents isn't called at all
         recordComponents = new ArrayList<RecordComponentInfo>();
-
-        modulePackages = null;
-        moduleMainClass = null;
     }
 
     private void processMethodInfo(DataInputStream data) throws IOException {
@@ -450,6 +528,7 @@ public final class Indexer {
 
     private void processAttributes(DataInputStream data, AnnotationTarget target) throws IOException {
         int numAttrs = data.readUnsignedShort();
+        byte[] constantPoolAnnoAttrributes = this.constantPoolAnnoAttrributes;
         for (int a = 0; a < numAttrs; a++) {
             int index = data.readUnsignedShort();
             long attributeLen = data.readInt() & 0xFFFFFFFFL;
@@ -636,21 +715,21 @@ public final class Indexer {
     }
 
     private void processCode(DataInputStream data, MethodInfo target) throws IOException {
-        int maxStack = data.readUnsignedShort();
-        int maxLocals = data.readUnsignedShort();
+        data.skipBytes(4); // 2 bytes for `maxStack` + 2 bytes for `maxLocals`
         long h = data.readUnsignedShort();
         long l = data.readUnsignedShort();
         long codeLength = (h << 16) | l;
         skipFully(data, codeLength);
         int exceptionTableLength = data.readUnsignedShort();
         skipFully(data, exceptionTableLength * (2 + 2 + 2 + 2));
+        byte[] constantPoolAnnoAttrributes = this.constantPoolAnnoAttrributes;
         int numAttrs = data.readUnsignedShort();
         for (int a = 0; a < numAttrs; a++) {
             int index = data.readUnsignedShort();
             long attributeLen = data.readInt() & 0xFFFFFFFFL;
             byte annotationAttribute = constantPoolAnnoAttrributes[index - 1];
             if (annotationAttribute == HAS_LOCAL_VARIABLE_TABLE && target instanceof MethodInfo) {
-                processLocalVariableTable(data, (MethodInfo) target);
+                processLocalVariableTable(data, target);
             } else {
                 skipFully(data, attributeLen);
             }
@@ -960,10 +1039,12 @@ public final class Indexer {
     }
 
     private void resolveUsers() throws IOException {
+        int poolSize = constantPoolSize;
         byte[] pool = constantPool;
         int[] offsets = constantPoolOffsets;
 
-        for (int offset : offsets) {
+        for (int i = 0; i < poolSize; i++) {
+            int offset = offsets[i];
             if (pool[offset] == CONSTANT_CLASS) {
                 int nameIndex = (pool[++offset] & 0xFF) << 8 | (pool[++offset] & 0xFF);
                 DotName usedClass = names.convertToName(decodeUtf8Entry(nameIndex), '/');
@@ -1927,7 +2008,6 @@ public final class Indexer {
         Type[] interfaceTypes = intern(interfaces.toArray(new Type[interfaces.size()]));
         Type superClassType = superName == null ? null : intern(new ClassType(superName));
 
-        this.classAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
         this.currentClass = new ClassInfo(thisName, superClassType, flags, interfaceTypes);
 
         if (superName != null)
@@ -1985,12 +2065,10 @@ public final class Indexer {
     }
 
     private void verifyMagic(DataInputStream stream) throws IOException {
-        byte[] buf = new byte[4];
-
-        stream.readFully(buf);
-        if (buf[0] != (byte) 0xCA || buf[1] != (byte) 0xFE || buf[2] != (byte) 0xBA || buf[3] != (byte) 0xBE)
+        final int magic = stream.readInt();
+        if (magic != 0xCA_FE_BA_BE) {
             throw new IOException("Invalid Magic");
-
+        }
     }
 
     private DotName decodeClassEntry(int index) throws IOException {
@@ -2034,8 +2112,14 @@ public final class Indexer {
 
         pos++;
 
-        // DataInputStream needs to read the length again
         int len = (pool[pos] & 0xFF) << 8 | (pool[pos + 1] & 0xFF);
+        if (BitTricks.isAsciiOnly(pool, pos + 2, len)) {
+            // see also https://bugs.openjdk.org/browse/JDK-8295496
+            return new String(pool, 0, pos + 2, len);
+        }
+
+        // slow path
+        // DataInputStream needs to read the length again
         return new DataInputStream(new ByteArrayInputStream(pool, pos, len + 2)).readUTF();
     }
 
@@ -2199,13 +2283,13 @@ public final class Indexer {
     }
 
     private boolean processConstantPool(DataInputStream stream) throws IOException {
-        int poolCount = stream.readUnsignedShort() - 1;
-        byte[] buf = new byte[20 * poolCount]; // Guess
-        byte[] annoAttributes = new byte[poolCount];
-        int[] offsets = new int[poolCount];
+        int size = stream.readUnsignedShort() - 1;
+        byte[] buf = tmpObjects.borrowConstantPool(size);
+        byte[] annoAttributes = tmpObjects.borrowConstantPoolAnnoAttributes(size);
+        int[] offsets = tmpObjects.borrowConstantPoolOffsets(size);
         boolean hasAnnotations = false;
 
-        for (int pos = 0, offset = 0; pos < poolCount; pos++) {
+        for (int pos = 0, offset = 0; pos < size; pos++) {
             int tag = stream.readUnsignedByte();
             offsets[pos] = offset;
             switch (tag) {
@@ -2214,7 +2298,7 @@ public final class Indexer {
                 case CONSTANT_METHODTYPE:
                 case CONSTANT_MODULE:
                 case CONSTANT_PACKAGE:
-                    buf = sizeToFit(buf, 3, offset, poolCount - pos);
+                    buf = sizeToFit(buf, 3, offset, size - pos);
                     buf[offset++] = (byte) tag;
                     stream.readFully(buf, offset, 2);
                     offset += 2;
@@ -2227,28 +2311,28 @@ public final class Indexer {
                 case CONSTANT_DYNAMIC:
                 case CONSTANT_FLOAT:
                 case CONSTANT_NAMEANDTYPE:
-                    buf = sizeToFit(buf, 5, offset, poolCount - pos);
+                    buf = sizeToFit(buf, 5, offset, size - pos);
                     buf[offset++] = (byte) tag;
                     stream.readFully(buf, offset, 4);
                     offset += 4;
                     break;
                 case CONSTANT_LONG:
                 case CONSTANT_DOUBLE:
-                    buf = sizeToFit(buf, 9, offset, poolCount - pos);
+                    buf = sizeToFit(buf, 9, offset, size - pos);
                     buf[offset++] = (byte) tag;
                     stream.readFully(buf, offset, 8);
                     offset += 8;
                     pos++; // 8 byte constant pool entries take two "virtual" slots for some reason
                     break;
                 case CONSTANT_METHODHANDLE:
-                    buf = sizeToFit(buf, 4, offset, poolCount - pos);
+                    buf = sizeToFit(buf, 4, offset, size - pos);
                     buf[offset++] = (byte) tag;
                     stream.readFully(buf, offset, 3);
                     offset += 3;
                     break;
                 case CONSTANT_UTF8:
                     int len = stream.readUnsignedShort();
-                    buf = sizeToFit(buf, len + 3, offset, poolCount - pos);
+                    buf = sizeToFit(buf, len + 3, offset, size - pos);
                     buf[offset++] = (byte) tag;
                     buf[offset++] = (byte) (len >>> 8);
                     buf[offset++] = (byte) len;
@@ -2299,10 +2383,11 @@ public final class Indexer {
                     break;
                 default:
                     throw new IllegalStateException(
-                            String.format(Locale.ROOT, "Unknown tag %s! pos = %s poolCount = %s", tag, pos, poolCount));
+                            String.format(Locale.ROOT, "Unknown tag %s! pos = %s poolSize = %s", tag, pos, size));
             }
         }
 
+        constantPoolSize = size;
         constantPool = buf;
         constantPoolOffsets = offsets;
         constantPoolAnnoAttrributes = annoAttributes;
@@ -2370,8 +2455,7 @@ public final class Indexer {
         if (stream == null) {
             throw new IllegalArgumentException("stream cannot be null");
         }
-        try {
-            DataInputStream data = new DataInputStream(new BufferedInputStream(stream));
+        try (DataInputStream data = tmpObjects.dataInputStreamOf(stream)) {
             verifyMagic(data);
 
             // Retroweaved classes may contain annotations
@@ -2407,16 +2491,29 @@ public final class Indexer {
 
             return new ClassSummary(currentClass.name(), currentClass.superName(), currentClass.annotationsMap().keySet());
         } finally {
+            constantPoolSize = 0;
+            tmpObjects.returnConstantPool(constantPool);
             constantPool = null;
+            tmpObjects.returnConstantPoolOffsets(constantPoolOffsets);
             constantPoolOffsets = null;
+            tmpObjects.returnConstantAnnoAttributes(constantPoolAnnoAttrributes);
             constantPoolAnnoAttrributes = null;
+
             currentClass = null;
             classAnnotations = null;
             elementAnnotations = null;
-            innerClasses = null;
+            signaturePresent = null;
             signatures = null;
             classSignatureIndex = -1;
-            signaturePresent = null;
+            innerClasses = null;
+            typeAnnotations = null;
+            methods = null;
+            fields = null;
+            recordComponents = null;
+            debugParameterNames = null;
+            methodParameterNames = null;
+            modulePackages = null;
+            moduleMainClass = null;
         }
     }
 
@@ -2442,10 +2539,10 @@ public final class Indexer {
             subinterfaces = null;
             implementors = null;
             classes = null;
-            signatureParser = null;
-            names = null;
             modules = null;
             users = null;
+            names = null;
+            signatureParser = null;
         }
     }
 
@@ -2496,15 +2593,18 @@ public final class Indexer {
             }
         });
 
+        // single shared instance to avoid needless allocations
+        Deque<TypeVariable> sharedTypeVarStack = new ArrayDeque<>();
+
         for (ClassInfo clazz : classes) {
-            propagateTypeParameterBounds(clazz);
+            propagateTypeParameterBounds(clazz, sharedTypeVarStack);
             for (MethodInfo method : clazz.methods()) {
-                propagateTypeParameterBounds(method);
+                propagateTypeParameterBounds(method, sharedTypeVarStack);
             }
         }
     }
 
-    private void propagateTypeParameterBounds(AnnotationTarget target) {
+    private void propagateTypeParameterBounds(AnnotationTarget target, Deque<TypeVariable> sharedTypeVarStack) {
         Type[] typeParameters = copyTypeParameters(target);
 
         for (int i = 0; i < typeParameters.length; i++) {
@@ -2531,7 +2631,8 @@ public final class Indexer {
         // interspersing type annotation propagation (above) with patching would lead to type variable references
         // pointing to stale type variables, hence patching must be an extra editing pass
         for (int i = 0; i < typeParameters.length; i++) {
-            patchTypeVariableReferences(typeParameters[i], new ArrayDeque<>(), target);
+            sharedTypeVarStack.clear();
+            patchTypeVariableReferences(typeParameters[i], sharedTypeVarStack, target);
         }
     }
 

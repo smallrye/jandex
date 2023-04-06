@@ -1,18 +1,19 @@
 package org.jboss.jandex;
 
 /**
- * Jandex types that need to implement special equality/hash code for the purpose of interning
- * should implement this interface. Note that if the equality/hash code is structural, it is
- * likely that types which use {@code Interned} types should themselves also be {@code Interned}
- * (if they are subject to the interning process, of course).
+ * Certain Jandex classes have to implement special equality/hash code for the purpose of interning.
+ * Those classes have, in addition to the usual {@code equals}/{@code hashCode} methods, also methods
+ * called {@code internEquals}/{@code internHashCode}. This directly applies to the {@link Type}
+ * hierarchy. If the equality/hash code is structural, it is likely that types which use these special
+ * types should themselves also be special (if they are subject to the interning process, of course).
+ * This applies to {@link MethodInternal}, {@link FieldInternal} and {@link RecordComponentInternal}.
  * <p>
- * The main reason why this interface exists is the {@code Type} hierarchy. Types need a different
- * equality and hash code for intering because of type variable references. To maintain structural
- * equality/hash code for external users (that is, the common {@code equals()} and {@code hashCode()}
- * methods), type variable references equality/hash code must only consider the type variable name
- * (and annotations). This is not suitable for the interning purpose, because two type variable
- * references may have the same name and annotations, yet point to different type variables
- * (e.g. because those type variables have different annotations).
+ * The reason why the {@code Type} hierarchy needs a different equality and hash code for interning
+ * is type variable references. To maintain structural equality/hash code for external users (that is,
+ * the common {@code equals} and {@code hashCode} methods), type variable references equality/hash
+ * code must only consider the type variable name (and annotations). This is not suitable for
+ * the interning purpose, because two type variable references may have the same name and annotations,
+ * yet point to different type variables (e.g. because those type variables have different annotations).
  * <p>
  * We could possibly implement a "deep" structural equality and hash code for type variable references
  * that would take into account the type variable the reference points to, but that still wouldn't be
@@ -24,14 +25,8 @@ package org.jboss.jandex;
  * Note that type variable references are only mutated during indexing. After an {@code Index} is complete,
  * type variable references must be considered "frozen".
  */
-interface Interned {
-    boolean internEquals(Object o);
-
-    int internHashCode();
-
-    // ---
-
-    static boolean arrayEquals(Interned[] a, Interned[] b) {
+class TypeInterning {
+    static boolean arrayEquals(Type[] a, Type[] b) {
         if (a == b) {
             return true;
         }
@@ -52,7 +47,7 @@ interface Interned {
         return true;
     }
 
-    static int arrayHashCode(Interned[] array) {
+    static int arrayHashCode(Type[] array) {
         if (array == null) {
             return 0;
         }
@@ -60,11 +55,10 @@ interface Interned {
         int result = 1;
 
         for (int i = 0; i < array.length; i++) {
-            Interned item = array[i];
+            Type item = array[i];
             result = 31 * result + (item == null ? 0 : item.internHashCode());
         }
 
         return result;
     }
-
 }

@@ -98,7 +98,7 @@ public final class UnresolvedTypeVariable extends Type {
     }
 
     @Override
-    public boolean internEquals(Object o) {
+    boolean internEquals(Object o) {
         if (this == o) {
             return true;
         }
@@ -113,7 +113,7 @@ public final class UnresolvedTypeVariable extends Type {
     }
 
     @Override
-    public int internHashCode() {
+    int internHashCode() {
         int hash = super.internHashCode();
         hash = 31 * hash + name.hashCode();
         return hash;

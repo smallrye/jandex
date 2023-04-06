@@ -28,7 +28,7 @@ import java.util.List;
  *
  * @author Jason T. Greene
  */
-final class FieldInternal implements Interned {
+final class FieldInternal {
     static final FieldInternal[] EMPTY_ARRAY = new FieldInternal[0];
     private final byte[] name;
     private Type type;
@@ -102,8 +102,7 @@ final class FieldInternal implements Interned {
         return result;
     }
 
-    @Override
-    public boolean internEquals(Object o) {
+    boolean internEquals(Object o) {
         if (this == o) {
             return true;
         }
@@ -129,8 +128,7 @@ final class FieldInternal implements Interned {
         return true;
     }
 
-    @Override
-    public int internHashCode() {
+    int internHashCode() {
         int result = Arrays.hashCode(name);
         result = 31 * result + type.internHashCode();
         result = 31 * result + (int) flags;

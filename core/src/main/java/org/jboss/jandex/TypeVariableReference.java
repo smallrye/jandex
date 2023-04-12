@@ -146,8 +146,7 @@ public final class TypeVariableReference extends Type {
         return hash;
     }
 
-    // unlike all other subclasses of `Type`, this class is mutable,
-    // so identity equality and hash code are the only option
+    // unlike all other subclasses of `Type`, this class is mutable, so identity is the only option
     @Override
     boolean internEquals(Object o) {
         return this == o;
@@ -155,6 +154,7 @@ public final class TypeVariableReference extends Type {
 
     @Override
     int internHashCode() {
-        return System.identityHashCode(this);
+        // must produce predictable hash code (for reproducibility) consistent with `internEquals`
+        return name.hashCode();
     }
 }

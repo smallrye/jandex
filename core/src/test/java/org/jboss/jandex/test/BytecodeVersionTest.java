@@ -6,7 +6,6 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
@@ -30,11 +29,9 @@ public class BytecodeVersionTest {
     }
 
     private void verifyMagic(DataInputStream stream) throws IOException {
-        byte[] buf = new byte[4];
-
-        stream.readFully(buf);
-        if (buf[0] != (byte) 0xCA || buf[1] != (byte) 0xFE || buf[2] != (byte) 0xBA || buf[3] != (byte) 0xBE) {
-            fail("Invalid magic value: " + Arrays.toString(buf));
+        int magic = stream.readInt();
+        if (magic != 0xCA_FE_BA_BE) {
+            fail("Invalid magic value: " + Integer.toHexString(magic));
         }
     }
 

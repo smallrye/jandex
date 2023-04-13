@@ -29,6 +29,8 @@
               <goal>jandex</goal>
             </goals>
             <configuration>
+              <!-- so that the 2nd execution of `mvn clean test` doesn't delete the previous index file -->
+              <indexDir>${project.basedir}</indexDir>
               <indexName>${indexName}</indexName>
             </configuration>
           </execution>

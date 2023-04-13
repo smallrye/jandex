@@ -24,6 +24,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Modifier;
+import java.util.List;
+import java.util.Map;
 
 public class BasicAnnotation {
     @Retention(RetentionPolicy.RUNTIME)
@@ -132,6 +134,23 @@ public class BasicAnnotation {
     public static class ApiUser {
         public void f() {
             ApiClass.superApi();
+        }
+    }
+
+    public static class GenericClass<T extends Number> {
+        public T get(Map<? super Integer, Map<? extends Number, ?>> wildcards) {
+            return null;
+        }
+
+        public <X extends T> void set(List<X> x) {
+        }
+    }
+
+    public abstract static class TypeVarRefUsage<B extends TypeVarRefUsage<B>> {
+        public void doSomething() {
+        }
+
+        public void useSelfType(B b) {
         }
     }
 }

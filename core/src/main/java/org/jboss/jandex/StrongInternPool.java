@@ -505,6 +505,13 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
             modCount = StrongInternPool.this.modCount;
         }
 
+        /**
+         * Returns a 1-based position of given entry in the table. Returns -1 if the entry is not
+         * present in the table. This indeed means that this method never returns 0.
+         *
+         * @param e the entry to find in the table
+         * @return 1-based position of {@code e} in the table, or -1 if it is not present
+         */
         public int positionOf(E e) {
             int offset = offset(e);
             return offset < 0 ? -1 : offsets[offset];

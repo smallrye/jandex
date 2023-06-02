@@ -236,15 +236,12 @@ public class SyntheticDeclarationsTest {
 
     private Index buildIndex() {
         try {
-            //            Index index = Index.of(obj.localClassNotInStaticContext);
-            //            Index index = Index.of(SyntheticDeclarationsExample.localClassInStaticContext);
             Index index = Index.of(SyntheticDeclarationsExample.class,
                     SyntheticDeclarationsExample.EnumWithConstructor.class,
                     SyntheticDeclarationsExample.localClassInStaticContext,
                     obj.localClassNotInStaticContext,
                     obj.privateInnerClass);
             return index;
-            //            return IndexingUtil.roundtrip(index);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -576,8 +576,16 @@ public final class MethodInfo implements Declaration, Descriptor, GenericSignatu
      *
      * @return {@code true} if this method is a synthetic method
      */
-    public final boolean isSynthetic() {
+    public boolean isSynthetic() {
         return Modifiers.isSynthetic(methodInternal.flags());
+    }
+
+    /**
+     *
+     * @return {@code true} if this method is a bridge method as defined by the JLS, {@code false} otherwise
+     */
+    public boolean isBridge() {
+        return Modifiers.isBridge(methodInternal.flags());
     }
 
     /**
@@ -585,6 +593,19 @@ public final class MethodInfo implements Declaration, Descriptor, GenericSignatu
      */
     public boolean isConstructor() {
         return Arrays.equals(Utils.INIT_METHOD_NAME, methodInternal.nameBytes());
+    }
+
+    /**
+     * A default method is a public non-abstract non-static method declared in an interface.
+     *
+     * @return {@code true} if this method is a default interface method, {@code false} otherwise
+     */
+    public boolean isDefault() {
+        if (!clazz.isInterface()) {
+            return false;
+        }
+        short flags = methodInternal.flags();
+        return Modifier.isPublic(flags) && !Modifier.isStatic(flags) && !Modifier.isAbstract(flags);
     }
 
     /**

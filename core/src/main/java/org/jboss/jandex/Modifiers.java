@@ -44,4 +44,8 @@ final class Modifiers {
         return (mod & SYNTHETIC) != 0;
     }
 
+    static boolean isBridge(int mod) {
+        return (mod & BRIDGE) != 0;
+    }
+
 }

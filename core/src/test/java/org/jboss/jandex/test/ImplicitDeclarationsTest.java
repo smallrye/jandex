@@ -398,6 +398,7 @@ public class ImplicitDeclarationsTest {
     }
 
     // parameter `name` of the `valueOf` method which is implicitly declared in an enum
+    // exception to the rule: we expect the mandated parameter to be present
     @Test
     public void parameterNameOfTheValueofMethodImplicitlyDeclaredOnAnEnum() {
         MethodInfo method = index.getClassByName(ImplicitDeclarationsExample.SimpleEnum.class)
@@ -414,6 +415,7 @@ public class ImplicitDeclarationsTest {
     }
 
     // parameters of a compact constructor of a record
+    // exception to the rule: we expect the mandated parameter(s) to be present
     @Test
     public void parametersOfACompactConstructorOfARecord() {
         List<MethodInfo> constructors = index

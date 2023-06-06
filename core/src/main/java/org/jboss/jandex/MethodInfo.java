@@ -34,6 +34,14 @@ import java.util.function.Function;
  * {@link #parameterName(int)}, {@link #parameterType(int)} and {@link #parametersCount()}.
  * However, {@link #descriptorParameterTypes()} and {@link #descriptorParametersCount()}
  * may be used to obtain information about all parameters, including mandated and synthetic.
+ * <p>
+ * As an exception to the rule above, in case of well known methods where no parameter
+ * is declared explicitly, the implicitly declared parameters are included. This currently
+ * applies to the implicitly declared parameters of:
+ * <ul>
+ * <li>the implicitly declared {@code valueOf()} method in enums;</li>
+ * <li>the compact constructor in records.</li>
+ * </ul>
  *
  * <p>
  * <b>Thread-Safety</b>

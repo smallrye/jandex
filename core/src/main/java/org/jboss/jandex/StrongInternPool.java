@@ -20,7 +20,6 @@ package org.jboss.jandex;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -72,8 +71,11 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
 
     /**
      * The open-addressed table
+     * <p>
+     * Must be {@code Object[]} instead of {@code E[]} to allow
+     * storing the {@code NULL} marker.
      */
-    private transient E[] table;
+    private transient Object[] table;
 
     /**
      * The current number of key-value pairs
@@ -130,7 +132,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
             threshold = (int) (c * loadFactor);
         }
 
-        this.table = (E[]) Array.newInstance(elementType, c);
+        this.table = new Object[c];
     }
 
     StrongInternPool(Class<E> elementType, int initialCapacity) {
@@ -145,9 +147,25 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         return o == null || o.getClass() == elementType;
     }
 
-    abstract boolean eq(E o1, E o2);
+    @SuppressWarnings("unchecked")
+    boolean eq(Object o1, Object o2) {
+        if (o1 == NULL || o2 == NULL) {
+            return o1 == o2;
+        }
+        return equality((E) o1, (E) o2);
+    }
 
-    abstract int hash(E o);
+    @SuppressWarnings("unchecked")
+    int hash(Object o) {
+        if (o == NULL) {
+            return 0;
+        }
+        return hashCode((E) o);
+    }
+
+    abstract boolean equality(E o1, E o2);
+
+    abstract int hashCode(E o);
 
     @SuppressWarnings("unchecked")
     private static <K> K maskNull(K key) {
@@ -175,11 +193,10 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         return size == 0;
     }
 
-    public boolean contains(Object obj) {
-        if (!mayContain(obj)) {
+    public boolean contains(Object entry) {
+        if (!mayContain(entry)) {
             return false;
         }
-        E entry = (E) obj;
 
         entry = maskNull(entry);
 
@@ -188,7 +205,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         int index = index(hash, length);
 
         for (int start = index;;) {
-            E e = table[index];
+            Object e = table[index];
             if (e == null)
                 return false;
 
@@ -201,7 +218,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         }
     }
 
-    private int offset(E entry) {
+    private int offset(Object entry) {
         entry = maskNull(entry);
 
         int hash = hash(entry);
@@ -209,7 +226,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         int index = index(hash, length);
 
         for (int start = index;;) {
-            E e = table[index];
+            Object e = table[index];
             if (e == null)
                 return -1;
 
@@ -230,21 +247,22 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
      * @param entry the object to internalize
      * @return the one true unique object (equal to {@code entry})
      */
+    @SuppressWarnings("unchecked")
     public E intern(E entry) {
         entry = maskNull(entry);
 
-        E[] table = this.table;
+        Object[] table = this.table;
         int hash = hash(entry);
         int length = table.length;
         int index = index(hash, length);
 
         for (int start = index;;) {
-            E e = table[index];
+            Object e = table[index];
             if (e == null)
                 break;
 
             if (eq(entry, e))
-                return unmaskNull(e);
+                return (E) unmaskNull(e);
 
             index = nextIndex(index, length);
             if (index == start)
@@ -266,10 +284,10 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         if (newLength > MAXIMUM_CAPACITY || newLength <= from)
             return;
 
-        E[] newTable = (E[]) Array.newInstance(elementType, newLength);
-        E[] old = table;
+        Object[] newTable = new Object[newLength];
+        Object[] old = table;
 
-        for (E e : old) {
+        for (Object e : old) {
             if (e == null)
                 continue;
 
@@ -284,21 +302,20 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         table = newTable;
     }
 
-    public boolean remove(Object obj) {
-        if (!mayContain(obj)) {
+    public boolean remove(Object o) {
+        if (!mayContain(o)) {
             return false;
         }
-        E o = (E) obj;
 
         o = maskNull(o);
 
-        E[] table = this.table;
+        Object[] table = this.table;
         int length = table.length;
         int hash = hash(o);
         int start = index(hash, length);
 
         for (int index = start;;) {
-            E e = table[index];
+            Object e = table[index];
             if (e == null)
                 return false;
 
@@ -317,12 +334,12 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
     }
 
     private void relocate(int start) {
-        E[] table = this.table;
+        Object[] table = this.table;
         int length = table.length;
         int current = nextIndex(start, length);
 
         for (;;) {
-            E e = table[current];
+            Object e = table[current];
             if (e == null)
                 return;
 
@@ -342,7 +359,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
 
     public void clear() {
         modCount++;
-        E[] table = this.table;
+        Object[] table = this.table;
         for (int i = 0; i < table.length; i++)
             table[i] = null;
 
@@ -380,7 +397,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         int totalSkew = 0;
         int maxSkew = 0;
         for (int i = 0; i < table.length; i++) {
-            E e = table[i];
+            Object e = table[i];
             if (e != null) {
 
                 total++;
@@ -488,6 +505,13 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
             modCount = StrongInternPool.this.modCount;
         }
 
+        /**
+         * Returns a 1-based position of given entry in the table. Returns -1 if the entry is not
+         * present in the table. This indeed means that this method never returns 0.
+         *
+         * @param e the entry to find in the table
+         * @return 1-based position of {@code e} in the table, or -1 if it is not present
+         */
         public int positionOf(E e) {
             int offset = offset(e);
             return offset < 0 ? -1 : offsets[offset];
@@ -499,7 +523,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         private int expectedCount = modCount;
         private int current = -1;
         private boolean hasNext;
-        E[] table = StrongInternPool.this.table;
+        Object[] table = StrongInternPool.this.table;
 
         public boolean hasNext() {
             if (hasNext)
@@ -517,6 +541,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
             return false;
         }
 
+        @SuppressWarnings("unchecked")
         public E next() {
             if (modCount != expectedCount)
                 throw new ConcurrentModificationException();
@@ -527,7 +552,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
             current = next++;
             hasNext = false;
 
-            return unmaskNull(table[current]);
+            return (E) unmaskNull(table[current]);
         }
 
         public void remove() {
@@ -546,7 +571,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
             // Start were we relocate
             next = delete;
 
-            E[] table = this.table;
+            Object[] table = this.table;
             if (table != StrongInternPool.this.table) {
                 StrongInternPool.this.remove(table[delete]);
                 table[delete] = null;
@@ -562,7 +587,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
 
             for (;;) {
                 i = nextIndex(i, length);
-                E e = table[i];
+                Object e = table[i];
                 if (e == null)
                     break;
 
@@ -573,7 +598,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
                     // iterator
                     if (i < current && current <= delete && table == StrongInternPool.this.table) {
                         int remaining = length - current;
-                        E[] newTable = (E[]) Array.newInstance(elementType, remaining);
+                        Object[] newTable = new Object[remaining];
                         System.arraycopy(table, current, newTable, 0, remaining);
 
                         // Replace iterator's table.
@@ -628,12 +653,12 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         }
 
         @Override
-        boolean eq(byte[] o1, byte[] o2) {
+        boolean equality(byte[] o1, byte[] o2) {
             return Arrays.equals(o1, o2);
         }
 
         @Override
-        int hash(byte[] o) {
+        int hashCode(byte[] o) {
             return Arrays.hashCode(o);
         }
     }
@@ -644,12 +669,12 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         }
 
         @Override
-        boolean eq(String o1, String o2) {
+        boolean equality(String o1, String o2) {
             return o1 != null && o1.equals(o2);
         }
 
         @Override
-        int hash(String o) {
+        int hashCode(String o) {
             return o.hashCode();
         }
     }
@@ -660,12 +685,12 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         }
 
         @Override
-        boolean eq(Type o1, Type o2) {
+        boolean equality(Type o1, Type o2) {
             return o1 != null && o1.internEquals(o2);
         }
 
         @Override
-        int hash(Type o) {
+        int hashCode(Type o) {
             return o.internHashCode();
         }
     }
@@ -676,12 +701,12 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         }
 
         @Override
-        boolean eq(Type[] o1, Type[] o2) {
+        boolean equality(Type[] o1, Type[] o2) {
             return TypeInterning.arrayEquals(o1, o2);
         }
 
         @Override
-        int hash(Type[] o) {
+        int hashCode(Type[] o) {
             return TypeInterning.arrayHashCode(o);
         }
     }
@@ -692,12 +717,12 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         }
 
         @Override
-        boolean eq(MethodInternal o1, MethodInternal o2) {
+        boolean equality(MethodInternal o1, MethodInternal o2) {
             return o1 != null && o1.internEquals(o2);
         }
 
         @Override
-        int hash(MethodInternal o) {
+        int hashCode(MethodInternal o) {
             return o.internHashCode();
         }
     }
@@ -708,12 +733,12 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         }
 
         @Override
-        boolean eq(FieldInternal o1, FieldInternal o2) {
+        boolean equality(FieldInternal o1, FieldInternal o2) {
             return o1 != null && o1.internEquals(o2);
         }
 
         @Override
-        int hash(FieldInternal o) {
+        int hashCode(FieldInternal o) {
             return o.internHashCode();
         }
     }
@@ -724,12 +749,12 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         }
 
         @Override
-        boolean eq(RecordComponentInternal o1, RecordComponentInternal o2) {
+        boolean equality(RecordComponentInternal o1, RecordComponentInternal o2) {
             return o1 != null && o1.internEquals(o2);
         }
 
         @Override
-        int hash(RecordComponentInternal o) {
+        int hashCode(RecordComponentInternal o) {
             return o.internHashCode();
         }
     }

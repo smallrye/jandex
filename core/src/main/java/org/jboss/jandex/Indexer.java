@@ -396,8 +396,7 @@ public final class Indexer {
     private List<MethodInfo> methods;
     private List<FieldInfo> fields;
     private List<RecordComponentInfo> recordComponents;
-    private byte[][] debugParameterNames;
-    private byte[][] methodParameterNames;
+    private IdentityHashMap<MethodInfo, MethodParamList> methodParams;
     private List<DotName> modulePackages;
     private DotName moduleMainClass;
 
@@ -453,6 +452,8 @@ public final class Indexer {
         // in bytecode, record components are stored as class attributes,
         // and if the attribute is missing, processRecordComponents isn't called at all
         recordComponents = new ArrayList<RecordComponentInfo>();
+
+        methodParams = new IdentityHashMap<>();
     }
 
     private void processMethodInfo(DataInputStream data) throws IOException {
@@ -475,16 +476,17 @@ public final class Indexer {
             if (parameters.length == 0 && Arrays.equals(Utils.INIT_METHOD_NAME, name)) {
                 currentClass.setHasNoArgsConstructor(true);
             }
-            methodParameterNames = debugParameterNames = null;
+            MethodParamList parameterList = new MethodParamList(method);
+            methodParams.put(method, parameterList);
             processAttributes(data, method);
             method.setAnnotations(elementAnnotations);
             elementAnnotations.clear();
+            parameterList.finish();
 
-            // Prefer method parameter names over debug info
-            if (methodParameterNames != null)
-                method.methodInternal().setParameterNames(methodParameterNames);
-            else if (debugParameterNames != null)
-                method.methodInternal().setParameterNames(debugParameterNames);
+            byte[][] parameterNames = parameterList.getNames();
+            if (parameterNames != null) {
+                method.methodInternal().setParameterNames(parameterNames);
+            }
 
             methods.add(method);
         }
@@ -782,30 +784,20 @@ public final class Indexer {
             // the one we just read (for extra safety, do NOT do this for compliant methods)
             numParameters = target.parametersCount();
         }
-        byte[][] parameterNames = numParameters > 0 ? new byte[numParameters][] : MethodInternal.EMPTY_PARAMETER_NAMES;
-        int filledParameters = 0;
         for (int i = 0; i < numParameters; i++) {
             int nameIndex = data.readUnsignedShort();
             byte[] parameterName = nameIndex == 0 ? null : decodeUtf8EntryAsBytes(nameIndex);
             int flags = data.readUnsignedShort();
-            // skip synthetic/mandated params to get the same param name index as annotations (which do not count them)
-            if ((flags & (Modifiers.SYNTHETIC | Modifiers.MANDATED)) != 0) {
-                continue;
+            boolean syntheticOrMandated = (flags & (Modifiers.SYNTHETIC | Modifiers.MANDATED)) != 0;
+
+            if (methodParams.containsKey(target)) { // should always be there, just being extra careful
+                methodParams.get(target).appendProper(parameterName, syntheticOrMandated);
             }
-
-            parameterNames[filledParameters++] = parameterName;
         }
-
-        byte[][] realParameterNames = filledParameters > 0 ? new byte[filledParameters][]
-                : MethodInternal.EMPTY_PARAMETER_NAMES;
-        if (filledParameters > 0)
-            System.arraycopy(parameterNames, 0, realParameterNames, 0, filledParameters);
-        this.methodParameterNames = realParameterNames;
     }
 
     private void processLocalVariableTable(DataInputStream data, MethodInfo target) throws IOException {
         int numVariables = data.readUnsignedShort();
-        byte[][] variableNames = numVariables > 0 ? new byte[numVariables][] : MethodInternal.EMPTY_PARAMETER_NAMES;
         int numParameters = 0;
         for (int i = 0; i < numVariables; i++) {
             int startPc = data.readUnsignedShort();
@@ -815,32 +807,38 @@ public final class Indexer {
             int index = data.readUnsignedShort();
 
             // parameters have startPc == 0
-            if (startPc != 0)
+            if (startPc != 0) {
                 continue;
+            }
+
             byte[] parameterName = nameIndex == 0 ? null : decodeUtf8EntryAsBytes(nameIndex);
+
             // ignore "this"
             if (numParameters == 0 && parameterName != null && parameterName.length == 4
                     && parameterName[0] == 0x74
                     && parameterName[1] == 0x68
                     && parameterName[2] == 0x69
-                    && parameterName[3] == 0x73)
+                    && parameterName[3] == 0x73) {
                 continue;
-            // ignore "this$*" that javac adds (not ECJ)
+            }
+
+            // treat "this$*" that javac adds (not ecj) as synthetic (or mandated)
+            boolean synthetic = false;
             if (numParameters == 0 && parameterName != null && parameterName.length > 5
                     && parameterName[0] == 0x74
                     && parameterName[1] == 0x68
                     && parameterName[2] == 0x69
                     && parameterName[3] == 0x73
-                    && parameterName[4] == 0x24)
-                continue;
+                    && parameterName[4] == 0x24) {
+                synthetic = true;
+            }
 
-            // here we rely on the parameters being in the right order
-            variableNames[numParameters++] = parameterName;
+            if (methodParams.containsKey(target)) { // should always be there, just being extra careful
+                methodParams.get(target).appendDebug(parameterName, synthetic);
+            }
+
+            numParameters++;
         }
-        byte[][] parameterNames = numParameters > 0 ? new byte[numParameters][] : MethodInternal.EMPTY_PARAMETER_NAMES;
-        if (numParameters > 0)
-            System.arraycopy(variableNames, 0, parameterNames, 0, numParameters);
-        this.debugParameterNames = parameterNames;
     }
 
     private void processEnclosingMethod(DataInputStream data, ClassInfo target) throws IOException {
@@ -984,9 +982,14 @@ public final class Indexer {
             }
             alreadyProcessedMethods.put(method, null);
 
-            if (isInnerConstructor(method) && !signaturePresent.containsKey(method)) {
-                // inner class constructor without signature, list of parameter types is derived
-                // from the descriptor, which includes 1 mandated or synthetic parameter at the beginning
+            if (signaturePresent.containsKey(method)) {
+                // if the method has a signature, we derived the parameter list from it,
+                // and it never includes mandated or synthetic parameters
+                continue;
+            }
+
+            if (isInnerConstructor(method)) {
+                // inner class constructor, descriptor includes 1 mandated or synthetic parameter at the beginning
                 DotName enclosingClass = null;
                 if (method.declaringClass().enclosingClass() != null) {
                     enclosingClass = method.declaringClass().enclosingClass();
@@ -1000,10 +1003,8 @@ public final class Indexer {
                     System.arraycopy(parameterTypes, 1, newParameterTypes, 0, parameterTypes.length - 1);
                     method.setParameters(intern(newParameterTypes));
                 }
-            } else if (isEnumConstructor(method) && !signaturePresent.containsKey(method)) {
-                // enum constructor without signature, list of parameter types is derived from the descriptor,
-                // which includes 2 synthetic parameters at the beginning -- let's remove those
-                // (javac typically emits the signature, while ecj does not)
+            } else if (isEnumConstructor(method)) {
+                // enum constructor, descriptor includes 2 synthetic parameters at the beginning
                 Type[] parameterTypes = method.methodInternal().parameterTypesArray();
                 if (parameterTypes.length >= 2
                         && parameterTypes[0].kind() == Type.Kind.CLASS
@@ -1021,6 +1022,48 @@ public final class Indexer {
                 }
             }
         }
+    }
+
+    private boolean isInnerConstructor(MethodInfo method) {
+        if (!method.isConstructor()) {
+            return false;
+        }
+
+        ClassInfo klass = method.declaringClass();
+
+        // there's no indication in the class file whether a local or anonymous class was declared in static context,
+        // so we use some heuristics here
+        if (klass.nestingType() == ClassInfo.NestingType.LOCAL
+                || klass.nestingType() == ClassInfo.NestingType.ANONYMOUS) {
+
+            // synthetic or mandated parameter at the beginning of the parameter list is the enclosing instance,
+            // the constructor belongs to a "non-static" class
+            //
+            // this works for:
+            // - javac with `-g` or `-parameters`
+            // - javac since JDK 21 (see https://bugs.openjdk.org/browse/JDK-8292275)
+            // - ecj with `-parameters` (see also `processLocalVariableTable`)
+            MethodParamList parameters = methodParams.get(method);
+            if (parameters != null && parameters.firstIsEnclosingInstance()) {
+                return true;
+            }
+
+            // synthetic field named `this$*` is the enclosing instance,
+            // the constructor belongs to a "non-static" class
+            //
+            // this works for:
+            // - javac until JDK 18 (see https://bugs.openjdk.org/browse/JDK-8271623)
+            // - ecj
+            for (FieldInfo field : fields) {
+                if (Modifiers.isSynthetic(field.flags()) && field.name().startsWith("this$")) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return klass.nestingType() == ClassInfo.NestingType.INNER && !Modifier.isStatic(klass.flags());
     }
 
     private static boolean isEnumConstructor(MethodInfo method) {
@@ -1100,29 +1143,6 @@ public final class Indexer {
 
         throw new IllegalStateException("Type annotation referred to type parameters on an invalid target: " + target);
 
-    }
-
-    private boolean isInnerConstructor(MethodInfo method) {
-        if (!method.isConstructor()) {
-            return false;
-        }
-
-        ClassInfo klass = method.declaringClass();
-
-        // there's no indication in the class file whether a local or anonymous class was declared in static context,
-        // so we use a heuristic: a class was not declared in static context if it has a synthetic field named `this$N`
-        // (this seems to work both for javac and ecj)
-        if (klass.nestingType() == ClassInfo.NestingType.LOCAL
-                || klass.nestingType() == ClassInfo.NestingType.ANONYMOUS) {
-            for (FieldInfo field : fields) {
-                if (Modifiers.isSynthetic(field.flags()) && field.name().startsWith("this$")) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        return klass.nestingType() == ClassInfo.NestingType.INNER && !Modifier.isStatic(klass.flags());
     }
 
     private void resolveTypeAnnotation(AnnotationTarget target, TypeAnnotationState typeAnnotationState) {
@@ -2510,8 +2530,7 @@ public final class Indexer {
             methods = null;
             fields = null;
             recordComponents = null;
-            debugParameterNames = null;
-            methodParameterNames = null;
+            methodParams = null;
             modulePackages = null;
             moduleMainClass = null;
         }

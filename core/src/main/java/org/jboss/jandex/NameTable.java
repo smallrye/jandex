@@ -101,8 +101,8 @@ class NameTable {
         return bytePool.intern(bytes);
     }
 
-    int positionOf(byte[] type) {
-        return bytePool.index().positionOf(type);
+    int positionOf(byte[] bytes) {
+        return bytePool.index().positionOf(bytes);
     }
 
     MethodInternal intern(MethodInternal methodInternal) {

@@ -14,9 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;
-import net.bytebuddy.NamingStrategy;
 import net.bytebuddy.description.annotation.AnnotationDescription;
-import net.bytebuddy.description.type.TypeDescription;
 
 public class Utf8ConstantEncodingTest {
     private static final String CLASS_NAME = "org.jboss.jandex.test.MyTestClass";
@@ -38,13 +36,8 @@ public class Utf8ConstantEncodingTest {
     public void test() throws IOException {
         byte[] clazz = new ByteBuddy()
                 .with(ClassFileVersion.JAVA_V8)
-                .with(new NamingStrategy.AbstractBase() {
-                    @Override
-                    protected String name(TypeDescription superClass) {
-                        return CLASS_NAME;
-                    }
-                })
                 .subclass(Object.class)
+                .name(CLASS_NAME)
                 .annotateType(AnnotationDescription.Builder.ofType(MyAnnotation.class)
                         .define("value", LONG_STRING)
                         .build())

@@ -778,7 +778,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             return Collections.emptyList();
         }
 
-        return Collections.unmodifiableList(Arrays.asList(annotationInstances));
+        return new ImmutableArrayList<>(annotationInstances);
     }
 
     private void addClassToMap(HashMap<DotName, List<ClassInfo>> map, DotName name, ClassInfo currentClass) {

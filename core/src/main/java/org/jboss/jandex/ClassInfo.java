@@ -139,7 +139,7 @@ public final class ClassInfo implements AnnotationTarget {
          * @return the list of parameters.
          */
         public List<Type> parameters() {
-            return Collections.unmodifiableList(Arrays.asList(parameters));
+            return new ImmutableArrayList<>(parameters);
         }
 
         Type[] parametersArray() {
@@ -957,7 +957,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @return immutable list of types declared in the {@code implements} clause of this class
      */
     public final List<Type> interfaceTypes() {
-        return Collections.unmodifiableList(Arrays.asList(interfaceTypes));
+        return new ImmutableArrayList<>(interfaceTypes);
     }
 
     final Type[] interfaceTypeArray() {
@@ -984,9 +984,8 @@ public final class ClassInfo implements AnnotationTarget {
      * @return immutable list of generic type parameters of this class
      */
     public final List<TypeVariable> typeParameters() {
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        List<TypeVariable> list = (List) Arrays.asList(typeParameters);
-        return Collections.unmodifiableList(list);
+        // type parameters are always `TypeVariable`
+        return new ImmutableArrayList(typeParameters);
     }
 
     final Type[] typeParameterArray() {

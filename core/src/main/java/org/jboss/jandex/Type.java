@@ -429,7 +429,7 @@ public abstract class Type implements Interned {
      * @since 2.0
      */
     public List<AnnotationInstance> annotations() {
-        return Collections.unmodifiableList(Arrays.asList(annotations));
+        return new ImmutableArrayList<>(annotations);
     }
 
     Type addAnnotation(AnnotationInstance annotation) {

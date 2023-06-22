@@ -19,7 +19,6 @@
 package org.jboss.jandex;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -138,7 +137,7 @@ final class RecordComponentInternal implements Interned {
     }
 
     final List<AnnotationInstance> annotations() {
-        return Collections.unmodifiableList(Arrays.asList(annotations));
+        return new ImmutableArrayList<>(annotations);
     }
 
     final AnnotationInstance[] annotationArray() {

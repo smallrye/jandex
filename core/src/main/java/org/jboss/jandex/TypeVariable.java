@@ -122,7 +122,7 @@ public final class TypeVariable extends Type {
     }
 
     public List<Type> bounds() {
-        return Collections.unmodifiableList(Arrays.asList(bounds));
+        return new ImmutableArrayList<>(bounds);
     }
 
     Type[] boundArray() {

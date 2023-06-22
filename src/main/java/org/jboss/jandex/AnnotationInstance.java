@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  * An annotation instance represents a specific usage of an annotation on a
- * target. It contains a set of values, as well as a reference to the target
+ * target. It contains a set of members, as well as a reference to the target
  * itself (e.g. class, field, method, etc).
  *
  * <p>
@@ -70,7 +70,7 @@ public final class AnnotationInstance {
      *
      * @param name the name of the annotation instance
      * @param target the thing the annotation is declared on
-     * @param values the values of this annotation instance
+     * @param values the members of this annotation instance
      * @return the new mock Annotation Instance
      */
     public static final AnnotationInstance create(DotName name, AnnotationTarget target, AnnotationValue[] values) {
@@ -97,7 +97,7 @@ public final class AnnotationInstance {
      *
      * @param name the name of the annotation instance
      * @param target the thing the annotation is declared on
-     * @param values the values of this annotation instance
+     * @param values the members of this annotation instance
      * @return the new mock Annotation Instance
      */
     public static final AnnotationInstance create(DotName name, AnnotationTarget target, List<AnnotationValue> values) {
@@ -120,10 +120,10 @@ public final class AnnotationInstance {
     }
 
     /**
-     * The Java element that this annotation was declared on. This can be
-     * a class, a field, a method, or a method parameter. In addition it may
-     * be null if this instance is a nested annotation, in which case there is
-     * no target.
+     * The program element that this annotation was declared on. This can be
+     * a class, a field, a method, a method parameter, or a type in case of
+     * type annotations. In addition, it may be {@code null} if this instance
+     * is a nested annotation, in which case there is no target.
      *
      * @return the target this annotation instance refers to
      */
@@ -132,13 +132,13 @@ public final class AnnotationInstance {
     }
 
     /**
-     * Returns a value that corresponds with the specified parameter name.
-     * If the parameter was not specified by this instance then null is
-     * returned. Note that this also applies to a defaulted parameter,
-     * which is not recorded in the target class.
+     * Returns the member of this annotation that has the specified name.
+     * If the member was not specified by this instance, {@code null} is
+     * returned. Note that this also applies to a defaulted member,
+     * whose value is not recorded in the target class file.
      *
-     * @param name the parameter name
-     * @return the value of the specified parameter, or null if not provided
+     * @param name the name of the annotation member
+     * @return the annotation member with specified name, or {@code null}
      */
     public AnnotationValue value(final String name) {
         int result = Arrays.binarySearch(values, name, new Comparator<Object>() {
@@ -150,10 +150,9 @@ public final class AnnotationInstance {
     }
 
     /**
-     * Returns the value that is associated with the special default "value"
-     * parameter.
+     * Returns the member that has the special default name {@code value}.
      *
-     * @return the "value" value
+     * @return the {@code value} member
      */
     public AnnotationValue value() {
         return value("value");
@@ -161,24 +160,23 @@ public final class AnnotationInstance {
 
 
     /**
-     * Returns a value that corresponds with the specified parameter name,
+     * Returns the member of this annotation that has the specified name,
      * accounting for its default value. Since an annotation's defaults are
      * only stored on the annotation's defining class, and not usages of the
-     * annotation, an index containing the Annotation class must be provided
+     * annotation, an index containing the annotation class must be provided
      * as a parameter. If the index does not contain the defining annotation
-     * class, then an <code>IllegalArgumentException</code> will be thrown to
+     * class, then an {@code IllegalArgumentException} will be thrown to
      * prevent non-deterministic results.
      *
      * <p>
-     * If the parameter was not specified by this instance, then the
-     * annotation's <code>ClassInfo</code> is checked for a default value.
-     * If there is a default, that value is returned. Otherwise null is
-     * returned.
+     * If the member was not specified by this annotation instance, then the
+     * annotation's {@code ClassInfo} is checked for a default value. If there
+     * is a default, that value is returned. Otherwise {@code null} is returned.
      * </p>
      *
      * @param index the index containing the defining annotation class
-     * @param name the name of the annotation parameter
-     * @return the value of the specified parameter, the default, or null
+     * @param name the name of the annotation member
+     * @return the annotation member with specified name, or {@code null}
      * @throws IllegalArgumentException if index does not contain the defining
      *                                  annotation class
      * @since 2.1
@@ -199,23 +197,22 @@ public final class AnnotationInstance {
     }
 
     /**
-     * Returns the value that is associated with the special default "value"
-     * parameter, also accounting for a value default. Since an annotation's
-     * defaults are only stored on the annotation's defining class, and not
-     * usages of the annotation, an index containing the Annotation class must
-     * be provided as a parameter. If the index does not contain the defining
-     * annotation class, then an <code>IllegalArgumentException</code> will be
-     * thrown to prevent non-deterministic results.
+     * Returns the member of this annotation that has special name {@code value},
+     * accounting for its default value. Since an annotation's defaults are only
+     * stored on the annotation's defining class, and not usages of the annotation,
+     * an index containing the annotation class must be provided as a parameter.
+     * If the index does not contain the defining annotation class, then an
+     * {@code IllegalArgumentException} will be thrown to prevent non-deterministic
+     * results.
      *
      * <p>
-     * If the "value" parameter was not specified by this instance, then the
-     * annotation's <code>ClassInfo</code> is checked for a default value.
-     * If there is a default, that value is returned. Otherwise null is
-     * returned.
+     * If the {@code value} member was not specified by this instance, then the
+     * annotation's {@code ClassInfo} is checked for a default value. If there
+     * is a default, that value is returned. Otherwise {@code null} is returned.
      * </p>
      *
      * @param index the index containing the defining annotation class
-     * @return the "value" value, or its default, or null
+     * @return the {@code value} annotation member, or {@code null}
      * @throws IllegalArgumentException if index does not contain the defining
      *                                  annotation class
      * @since 2.1
@@ -226,17 +223,17 @@ public final class AnnotationInstance {
 
 
     /**
-     * Returns a list of all parameter values on this annotation instance,
-     * including default values id defined. Since an annotation's defaults are
-     * only stored on the annotation's defining class, and not usages of the
-     * annotation, an index containing the Annotation class must be provided as
-     * a parameter. If the index does not contain the defining annotation class,
-     * then an <code>IllegalArgumentException</code> will be thrown to prevent
-     * non-deterministic results.
+     * Returns a list of all members of this annotation instance, including default
+     * values if defined. Since an annotation's defaults are only stored on the
+     * annotation's defining class, and not usages of the annotation, an index
+     * containing the annotation class must be provided as a parameter. If the index
+     * does not contain the defining annotation class, then an
+     * {@code IllegalArgumentException} will be thrown to prevent non-deterministic
+     * results.
      *
      * <p>The order of this list is undefined.</p>
      *
-     * @return the parameter values of this annotation
+     * @return immutable list of this annotation's members
      * @throws IllegalArgumentException if index does not contain the defining
      *                                  annotation class
      * @since 2.1
@@ -263,15 +260,15 @@ public final class AnnotationInstance {
     }
 
     /**
-     * Returns a list of all parameter values on this annotation instance.
+     * Returns an immutable list of all members of this annotation instance.
      * While random access is allowed, the ordering algorithm
      * of the list should not be relied upon. Although it will
      * be consistent for the life of this instance.
      *
-     * @return the parameter values of this annotation
+     * @return immutable list of this annotation's members
      */
     public List<AnnotationValue> values() {
-        return Collections.unmodifiableList(Arrays.asList(values));
+        return new ImmutableArrayList<AnnotationValue>(values);
     }
 
     AnnotationValue[] valueArray() {

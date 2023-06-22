@@ -368,7 +368,7 @@ public abstract class Type {
      * @since 2.0
      */
     public List<AnnotationInstance> annotations() {
-        return Collections.unmodifiableList(Arrays.asList(annotations));
+        return new ImmutableArrayList<AnnotationInstance>(annotations);
     }
 
     AnnotationInstance[] annotationArray() {

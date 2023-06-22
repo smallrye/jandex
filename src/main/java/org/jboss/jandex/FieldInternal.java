@@ -115,7 +115,7 @@ final class FieldInternal {
     }
 
     final List<AnnotationInstance> annotations() {
-        return Collections.unmodifiableList(Arrays.asList(annotations));
+        return new ImmutableArrayList<AnnotationInstance>(annotations);
     }
 
     final AnnotationInstance[] annotationArray() {

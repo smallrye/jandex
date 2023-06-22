@@ -195,7 +195,7 @@ final class MethodInternal {
     }
 
     final List<Type> parameters() {
-        return Collections.unmodifiableList(Arrays.asList(parameters));
+        return new ImmutableArrayList<Type>(parameters);
     }
 
     final Type returnType() {
@@ -211,7 +211,7 @@ final class MethodInternal {
     }
 
     final List<Type> exceptions() {
-        return Collections.unmodifiableList(Arrays.asList(exceptions));
+        return new ImmutableArrayList<Type>(exceptions);
     }
 
     final Type[] exceptionArray() {
@@ -219,13 +219,12 @@ final class MethodInternal {
     }
 
     final List<TypeVariable> typeParameters() {
-        @SuppressWarnings("unchecked") // type parameters will always be TypeVariable[]
-        List<TypeVariable> list = (List) Arrays.asList(typeParameters);
-        return Collections.unmodifiableList(list);
+        // type parameters are always `TypeVariable`
+        return new ImmutableArrayList(typeParameters);
     }
 
     final List<AnnotationInstance> annotations() {
-        return Collections.unmodifiableList(Arrays.asList(annotations));
+        return new ImmutableArrayList<AnnotationInstance>(annotations);
     }
 
     final AnnotationInstance[] annotationArray() {
@@ -293,7 +292,7 @@ final class MethodInternal {
     void setParameterNames(byte[][] parameterNames) {
         this.parameterNames = parameterNames;
     }
-    
+
     void setParameters(Type[] parameters) {
         this.parameters = parameters.length == 0 ? Type.EMPTY_ARRAY : parameters;
     }

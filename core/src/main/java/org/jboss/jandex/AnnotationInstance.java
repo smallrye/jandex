@@ -426,8 +426,8 @@ public final class AnnotationInstance {
         return toString(true);
     }
 
-    // runtime visibility is ignored for the purpose of equality and hash code, because
-    // the annotation type identity (the name) already includes that information
+    // runtime visibility is ignored for the purpose of equality, hash code and equivalence,
+    // because the annotation type identity (the name) already includes that information
 
     /**
      * Returns whether this annotation instance is equal to another instance.
@@ -435,8 +435,8 @@ public final class AnnotationInstance {
      * and they share the exact same {@code AnnotationTarget} instance. The latter restriction
      * may be softened in future versions.
      *
-     * @param o the annotation instance to compare to.
-     * @return true if equal, false if not
+     * @param o the annotation instance to compare to
+     * @return {@code true} if equal, {@code false} if not
      *
      * @see Object#equals(Object)
      */
@@ -464,5 +464,26 @@ public final class AnnotationInstance {
         result = 31 * result + Arrays.hashCode(values);
 
         return result;
+    }
+
+    /**
+     * Returns whether this annotation instance is equivalent to the {@code other} annotation
+     * instance. Two annotation instances are equivalent if their names and members are equal.
+     * No attention is paid to the annotation target.
+     *
+     * @param other the annotation instance to compare to
+     * @return {@code true} if equivalent, {@code false} if not
+     *
+     * @see #equals(Object)
+     */
+    public boolean equivalentTo(AnnotationInstance other) {
+        if (this == other) {
+            return true;
+        }
+        if (other == null) {
+            return false;
+        }
+
+        return name.equals(other.name) && Arrays.equals(values, other.values);
     }
 }

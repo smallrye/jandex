@@ -269,11 +269,11 @@ final class MethodInternal {
     }
 
     final List<Type> parameterTypes() {
-        return Collections.unmodifiableList(Arrays.asList(parameterTypes));
+        return new ImmutableArrayList<>(parameterTypes);
     }
 
     final List<Type> descriptorParameterTypes() {
-        return Collections.unmodifiableList(Arrays.asList(descriptorParameterTypes));
+        return new ImmutableArrayList<>(descriptorParameterTypes);
     }
 
     final Type[] descriptorParameterTypesArray() {
@@ -307,7 +307,7 @@ final class MethodInternal {
     }
 
     final List<Type> exceptions() {
-        return Collections.unmodifiableList(Arrays.asList(exceptions));
+        return new ImmutableArrayList<>(exceptions);
     }
 
     final Type[] exceptionArray() {
@@ -315,13 +315,12 @@ final class MethodInternal {
     }
 
     final List<TypeVariable> typeParameters() {
-        @SuppressWarnings("unchecked") // type parameters will always be TypeVariable[]
-        List<TypeVariable> list = (List) Arrays.asList(typeParameters);
-        return Collections.unmodifiableList(list);
+        // type parameters are always `TypeVariable`
+        return new ImmutableArrayList(typeParameters);
     }
 
     final List<AnnotationInstance> annotations() {
-        return Collections.unmodifiableList(Arrays.asList(annotations));
+        return new ImmutableArrayList<>(annotations);
     }
 
     final AnnotationInstance[] annotationArray() {

@@ -114,6 +114,12 @@ public class JandexGoal extends AbstractMojo {
     private String indexName;
 
     /**
+     * Persistent index format version to write. Defaults to max supported version.
+     */
+    @Parameter
+    private Integer indexVersion;
+
+    /**
      * Skip execution if set.
      */
     @Parameter(property = "jandex.skip", defaultValue = "false")
@@ -169,7 +175,11 @@ public class JandexGoal extends AbstractMojo {
             Files.createDirectories(indexDir.toPath());
             try (OutputStream out = new CachingOutputStream(indexFile)) {
                 IndexWriter writer = new IndexWriter(out);
-                writer.write(index);
+                if (indexVersion != null) {
+                    writer.write(index, indexVersion);
+                } else {
+                    writer.write(index);
+                }
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Could not save index " + indexFile, e);

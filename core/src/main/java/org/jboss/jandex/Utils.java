@@ -37,6 +37,8 @@ import java.util.Objects;
 class Utils {
     static final byte[] INIT_METHOD_NAME = Utils.toUTF8("<init>");
 
+    static final byte[] CLINIT_METHOD_NAME = Utils.toUTF8("<clinit>");
+
     static byte[] toUTF8(String string) {
         return string.getBytes(StandardCharsets.UTF_8);
     }

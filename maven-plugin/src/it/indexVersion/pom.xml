@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.jboss.jandex</groupId>
-  <artifactId>jandex-maven-plugin-smoketest</artifactId>
+  <artifactId>jandex-maven-plugin-indexVersion</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <properties>
@@ -33,9 +33,9 @@
             <goals>
               <goal>jandex</goal>
             </goals>
-            <!-- phase is 'process-classes by default' -->
             <configuration>
-              <!-- Nothing needed here for simple cases -->
+              <!-- oldest version of V2 index -->
+              <indexVersion>6</indexVersion>
             </configuration>
           </execution>
         </executions>

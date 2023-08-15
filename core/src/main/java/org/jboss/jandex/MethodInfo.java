@@ -604,6 +604,13 @@ public final class MethodInfo implements Declaration, Descriptor, GenericSignatu
     }
 
     /**
+     * @return {@code true} if this method is a static initializer
+     */
+    public boolean isStaticInitializer() {
+        return Arrays.equals(Utils.CLINIT_METHOD_NAME, methodInternal.nameBytes());
+    }
+
+    /**
      * A default method is a public non-abstract non-static method declared in an interface.
      *
      * @return {@code true} if this method is a default interface method, {@code false} otherwise

@@ -54,7 +54,7 @@ import java.util.TreeMap;
  */
 final class IndexWriterV2 extends IndexWriterImpl {
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 11;
+    static final int MAX_VERSION = 12;
 
     // babelfish (no h)
     private static final int MAGIC = 0xBABE1F15;
@@ -877,6 +877,9 @@ final class IndexWriterV2 extends IndexWriterImpl {
                     TypeVariableReference reference = type.asTypeVariableReference();
                     stream.writePackedU32(positionOf(reference.identifier()));
                     stream.writePackedU32(positionOf(reference.follow()));
+                    if (version >= 12) {
+                        stream.writePackedU32(positionOf(reference.internalClassName()));
+                    }
                 }
                 break;
         }
@@ -1103,6 +1106,7 @@ final class IndexWriterV2 extends IndexWriterImpl {
                 break;
             case TYPE_VARIABLE_REFERENCE:
                 addString(type.asTypeVariableReference().identifier());
+                addClassName(type.asTypeVariableReference().internalClassName());
                 // do _not_ add the referenced type, it will be added later
                 // and adding it recursively here would result in an infinite regress
                 break;

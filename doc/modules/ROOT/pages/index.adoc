@@ -62,6 +62,9 @@ It is also a maximum persistent index format version the given Jandex version ca
 |===
 |Jandex version |Persistent format version
 
+|Jandex 3.2.x
+|12
+
 |Jandex 3.0.x, 3.1.x
 |11
 

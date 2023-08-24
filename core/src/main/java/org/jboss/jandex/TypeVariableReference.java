@@ -1,5 +1,7 @@
 package org.jboss.jandex;
 
+import java.util.Objects;
+
 /**
  * Represents a reference to a type variable in the bound of a recursive type parameter.
  * For example, if a class or method declares a type parameter {@code T extends Comparable<T>},
@@ -40,14 +42,20 @@ public final class TypeVariableReference extends Type {
     private final String name;
     private TypeVariable target;
 
-    TypeVariableReference(String name) {
-        this(name, null, null);
+    // name of the class in which this type variable reference exists
+    // this is only to reduce interning hash collisions, doesn't serve any other purpose
+    private final DotName internalClassName;
+
+    TypeVariableReference(String name, DotName internalClassName) {
+        this(name, null, null, internalClassName);
     }
 
-    TypeVariableReference(String name, TypeVariable target, AnnotationInstance[] annotations) {
+    TypeVariableReference(String name, TypeVariable target, AnnotationInstance[] annotations, DotName internalClassName) {
         super(DotName.OBJECT_NAME, annotations);
         this.name = name;
         this.target = target;
+
+        this.internalClassName = internalClassName;
     }
 
     @Override
@@ -86,6 +94,10 @@ public final class TypeVariableReference extends Type {
         return target;
     }
 
+    DotName internalClassName() {
+        return internalClassName;
+    }
+
     @Override
     public Kind kind() {
         return Kind.TYPE_VARIABLE_REFERENCE;
@@ -98,7 +110,7 @@ public final class TypeVariableReference extends Type {
 
     @Override
     Type copyType(AnnotationInstance[] newAnnotations) {
-        return new TypeVariableReference(name, target, newAnnotations);
+        return new TypeVariableReference(name, target, newAnnotations, internalClassName);
     }
 
     void setTarget(TypeVariable target) {
@@ -155,6 +167,6 @@ public final class TypeVariableReference extends Type {
     @Override
     int internHashCode() {
         // must produce predictable hash code (for reproducibility) consistent with `internEquals`
-        return name.hashCode();
+        return Objects.hash(name, internalClassName);
     }
 }

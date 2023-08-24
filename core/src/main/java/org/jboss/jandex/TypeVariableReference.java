@@ -155,6 +155,6 @@ public final class TypeVariableReference extends Type {
     @Override
     int internHashCode() {
         // must produce predictable hash code (for reproducibility) consistent with `internEquals`
-        return name.hashCode();
+        return System.identityHashCode(this);
     }
 }

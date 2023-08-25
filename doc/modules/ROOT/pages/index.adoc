@@ -51,3 +51,28 @@ In other words, newer Jandex can read older index, but older Jandex can't read n
 Jandex may introduce a new persistent index format version in minor or major versions.
 If you distribute a Jandex index as part of your artifacts, updating to a newer micro version is safe.
 Updating to a newer minor or major version may require consumers of the Jandex index to also update.
+
+== Persistent Index Format Versions
+
+For reference, this table shows which Jandex version produces which persistent format version by default.
+It is also a maximum persistent index format version the given Jandex version can read.
+
+
+|===
+|Jandex version |Persistent format version
+
+|Jandex 3.0.x, 3.1.x
+|11
+
+|Jandex 2.4.x
+|10
+
+|Jandex 2.1.1+, 2.2.x, 2.3.x
+|9
+
+|Jandex 2.1.0
+|8 (version 7 only in Jandex 2.1.0.Beta1 and Beta2)
+
+|Jandex 2.0.x
+|6
+|===

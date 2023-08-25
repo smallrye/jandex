@@ -827,7 +827,12 @@ final class IndexWriterV2 extends IndexWriterImpl {
     }
 
     private void writeTypeEntry(PackedDataOutputStream stream, Type type) throws IOException {
-        stream.writeByte(type.kind().ordinal());
+        if (version < 11 && type.kind() == Type.Kind.TYPE_VARIABLE_REFERENCE) {
+            // Jandex 2 doesn't have the concept of type variable references
+            stream.writeByte(Type.Kind.UNRESOLVED_TYPE_VARIABLE.ordinal());
+        } else {
+            stream.writeByte(type.kind().ordinal());
+        }
 
         switch (type.kind()) {
             case CLASS:
@@ -865,9 +870,14 @@ final class IndexWriterV2 extends IndexWriterImpl {
                 writeReferenceOrFull(stream, parameterizedType.argumentsArray());
                 break;
             case TYPE_VARIABLE_REFERENCE:
-                TypeVariableReference reference = type.asTypeVariableReference();
-                stream.writePackedU32(positionOf(reference.identifier()));
-                stream.writePackedU32(positionOf(reference.follow()));
+                if (version < 11) {
+                    // pretend it is an unresolved type variable for Jandex 2
+                    stream.writePackedU32(positionOf(type.asTypeVariableReference().identifier()));
+                } else {
+                    TypeVariableReference reference = type.asTypeVariableReference();
+                    stream.writePackedU32(positionOf(reference.identifier()));
+                    stream.writePackedU32(positionOf(reference.follow()));
+                }
                 break;
         }
 

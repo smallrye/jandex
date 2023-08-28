@@ -6,6 +6,7 @@ assert jarFile.exists() : "File ${jarFile} does not exist"
 assert jarFile.length() > 0 : "File ${jarFile} is empty"
 
 def jar = new ZipFile(jarFile)
+assert jar.getEntry("META-INF/") != null : "JAR ${jarFile} doesn't contain a META-INF directory"
 def indexEntry = jar.getEntry("META-INF/jandex.idx")
 assert indexEntry != null : "JAR ${jarFile} doesn't contain an index"
 

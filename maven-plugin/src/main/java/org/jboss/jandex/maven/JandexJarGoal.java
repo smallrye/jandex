@@ -87,7 +87,7 @@ public class JandexJarGoal extends AbstractMojo {
             Enumeration<? extends ZipEntry> entries = zip.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
-                if (entry.isDirectory() || entry.getName().equals(indexName)) {
+                if (entry.getName().equals(indexName)) {
                     continue;
                 }
 

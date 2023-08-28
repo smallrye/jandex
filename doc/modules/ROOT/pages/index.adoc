@@ -52,6 +52,7 @@ Jandex may introduce a new persistent index format version in minor or major ver
 If you distribute a Jandex index as part of your artifacts, updating to a newer micro version is safe.
 Updating to a newer minor or major version may require consumers of the Jandex index to also update.
 
+[[persistent_index_format_versions]]
 == Persistent Index Format Versions
 
 For reference, this table shows which Jandex version produces which persistent format version by default.

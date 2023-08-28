@@ -79,3 +79,43 @@ A `groupId` and `artifactId` are mandatory, a `classifier` is optional:
     </excludes>
 </fileSet>
 ----
+
+== Index Location and Version
+
+To change where the persistent index is located, the `indexDir` and `indexName` configuration properties can be used.
+
+CAUTION: These properties should be left unchanged.
+Jandex consumers typically look for a persistent Jandex index in the default location.
+
+The `indexDir` property defaults to `${project.build.outputDirectory}/META-INF` (so `target/classes/META-INF` by default), while `indexName` defaults to `jandex.idx`.
+Therefore, the index is by default stored to `target/classes/META-INF/jandex.idx`.
+
+This example moves the index to `target/classes/index.dat`:
+
+[source,xml]
+----
+<plugin>
+    <groupId>io.smallrye</groupId>
+    <artifactId>jandex-maven-plugin</artifactId>
+    <version>${version.jandex}</version>
+    <executions>
+        <execution>
+            <id>make-index</id>
+            <goals>
+                <goal>jandex</goal>
+            </goals>
+            <configuration>
+                <indexDir>${project.build.outputDirectory}</indexDir>
+                <indexName>index.dat</indexName>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+
+The `indexVersion` property can be used to produce an older index version.
+By default, the index version produced is the latest version supported by the Jandex version.
+Possible values of the `indexVersion` property can be found in xref:index.adoc#persistent_index_format_versions[the table of persistent index format versions].
+
+CAUTION: It is usually best to leave the index version unchanged.
+Exercise care when upgrading Jandex itself.

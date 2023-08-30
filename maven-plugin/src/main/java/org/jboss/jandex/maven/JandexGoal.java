@@ -172,7 +172,7 @@ public class JandexGoal extends AbstractMojo {
         File indexFile = new File(indexDir, indexName);
         getLog().info("Saving Jandex index: " + indexFile);
         try {
-            Files.createDirectories(indexDir.toPath());
+            Files.createDirectories(indexFile.toPath().getParent());
             try (OutputStream out = new CachingOutputStream(indexFile)) {
                 IndexWriter writer = new IndexWriter(out);
                 if (indexVersion != null) {

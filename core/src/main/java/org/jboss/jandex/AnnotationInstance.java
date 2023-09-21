@@ -432,8 +432,7 @@ public final class AnnotationInstance {
     /**
      * Returns whether this annotation instance is equal to another instance.
      * Two annotation instances are equal if their names and values of their members are equal,
-     * and they share the exact same {@code AnnotationTarget} instance. The latter restriction
-     * may be softened in future versions.
+     * and they share the exact same {@code AnnotationTarget} instance.
      *
      * @param o the annotation instance to compare to
      * @return {@code true} if equal, {@code false} if not
@@ -462,6 +461,36 @@ public final class AnnotationInstance {
     public int hashCode() {
         int result = name.hashCode();
         result = 31 * result + Arrays.hashCode(values);
+
+        if (target != null) {
+            switch (target.kind()) {
+                case CLASS:
+                    result = 31 * result + target.asClass().name().hashCode();
+                    break;
+                case METHOD:
+                    result = 31 * result + target.asMethod().declaringClass().name().hashCode();
+                    result = 31 * result + target.asMethod().name().hashCode();
+                    break;
+                case FIELD:
+                    result = 31 * result + target.asField().declaringClass().name().hashCode();
+                    result = 31 * result + target.asField().name().hashCode();
+                    break;
+                case METHOD_PARAMETER:
+                    result = 31 * result + target.asMethodParameter().method().declaringClass().name().hashCode();
+                    result = 31 * result + target.asMethodParameter().method().name().hashCode();
+                    result = 31 * result + target.asMethodParameter().position();
+                    break;
+                case RECORD_COMPONENT:
+                    result = 31 * result + target.asRecordComponent().declaringClass().name().hashCode();
+                    result = 31 * result + target.asRecordComponent().name().hashCode();
+                    break;
+                case TYPE:
+                    if (target.asType().target() != null) {
+                        result = 31 * result + target.asType().target().name().hashCode();
+                    }
+                    break;
+            }
+        }
 
         return result;
     }

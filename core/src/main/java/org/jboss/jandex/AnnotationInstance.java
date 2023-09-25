@@ -515,4 +515,16 @@ public final class AnnotationInstance {
 
         return name.equals(other.name) && Arrays.equals(values, other.values);
     }
+
+    /**
+     * Returns an equivalence hash code. This is consistent with {@link #equivalentTo(AnnotationInstance)},
+     * therefore no attention is paid to the annotation target.
+     *
+     * @return hash code consistent with annotation equivalence
+     */
+    public int equivalenceHashCode() {
+        int result = name.hashCode();
+        result = 31 * result + Arrays.hashCode(values);
+        return result;
+    }
 }

@@ -1,5 +1,6 @@
 package org.jboss.jandex.test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -48,5 +49,7 @@ public class AnnotationInstanceTest {
         assertTrue(foo.equivalentTo(foo2));
         assertFalse(foo.equivalentTo(bar));
         assertFalse(foo2.equivalentTo(bar));
+
+        assertEquals(foo.equivalenceHashCode(), foo2.equivalenceHashCode());
     }
 }

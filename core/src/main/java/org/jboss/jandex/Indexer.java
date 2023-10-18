@@ -2085,9 +2085,15 @@ public final class Indexer {
     }
 
     private void verifyMagic(DataInputStream stream) throws IOException {
-        final int magic = stream.readInt();
+        final int magic;
+        try {
+            magic = stream.readInt();
+        } catch (EOFException e) {
+            throw new EOFException("Input is not a valid class file; must begin with a 4-byte integer 0xCAFEBABE");
+        }
         if (magic != 0xCA_FE_BA_BE) {
-            throw new IOException("Invalid Magic");
+            throw new IOException("Input is not a valid class file; must begin with a 4-byte integer 0xCAFEBABE, "
+                    + "but seen 0x" + Integer.toHexString(magic).toUpperCase());
         }
     }
 

@@ -286,7 +286,14 @@ class GenericSignatureParser {
         this.typeParameters = this.elementTypeParameters;
         this.pos = 0;
 
-        return parseReferenceType();
+        // the grammar in the JVMS says:
+        //
+        // FieldSignature:
+        //   ReferenceTypeSignature
+        //
+        // however, there are class files in the wild that contain
+        // a primitive type signature as a field signature
+        return parseJavaType();
     }
 
     MethodSignature parseMethodSignature(String signature) {

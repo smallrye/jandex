@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationInstanceEquivalenceProxy;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
@@ -51,5 +52,19 @@ public class AnnotationInstanceTest {
         assertFalse(foo2.equivalentTo(bar));
 
         assertEquals(foo.equivalenceHashCode(), foo2.equivalenceHashCode());
+
+        AnnotationInstanceEquivalenceProxy fooEquiv = foo.createEquivalenceProxy();
+        AnnotationInstanceEquivalenceProxy foo2Equiv = foo2.createEquivalenceProxy();
+        AnnotationInstanceEquivalenceProxy barEquiv = bar.createEquivalenceProxy();
+
+        assertNotNull(fooEquiv);
+        assertNotNull(foo2Equiv);
+        assertNotNull(barEquiv);
+
+        assertEquals(fooEquiv, foo2Equiv);
+        assertNotEquals(fooEquiv, barEquiv);
+        assertNotEquals(foo2Equiv, barEquiv);
+
+        assertEquals(fooEquiv.hashCode(), foo2Equiv.hashCode());
     }
 }

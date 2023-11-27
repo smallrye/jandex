@@ -72,6 +72,22 @@
                         <artifactId>jandex</artifactId>
                         <version>${project.version}</version>
                     </dependency>
+                    <!-- override Groovy version to support the latest JDK -->
+                    <dependency>
+                        <groupId>org.apache.groovy</groupId>
+                        <artifactId>groovy</artifactId>
+                        <version>${version.groovy}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.groovy</groupId>
+                        <artifactId>groovy-json</artifactId>
+                        <version>${version.groovy}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.groovy</groupId>
+                        <artifactId>groovy-xml</artifactId>
+                        <version>${version.groovy}</version>
+                    </dependency>
                 </dependencies>
                 <executions>
                     <execution>

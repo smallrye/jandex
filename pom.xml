@@ -22,22 +22,23 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <version.ant>1.10.11</version.ant>
+        <version.ant>1.10.14</version.ant>
         <version.bridger>1.6.Final</version.bridger>
-        <version.bytebuddy>1.11.13</version.bytebuddy>
+        <version.bytebuddy>1.14.10</version.bytebuddy>
         <version.exec-maven-plugin>3.0.0</version.exec-maven-plugin>
-        <version.junit>5.8.2</version.junit>
+        <version.groovy>4.0.16</version.groovy>
+        <version.junit>5.10.1</version.junit>
         <version.maven>3.8.1</version.maven>
         <version.maven-bundle-plugin>5.1.8</version.maven-bundle-plugin>
-        <version.maven-compiler-plugin>3.10.1</version.maven-compiler-plugin>
-        <version.maven-dependency-plugin>3.3.0</version.maven-dependency-plugin>
-        <version.maven-invoker-plugin>3.2.2</version.maven-invoker-plugin>
-        <version.maven-plugin-tools>3.6.1</version.maven-plugin-tools>
-        <version.maven-shade-plugin>3.3.0</version.maven-shade-plugin>
+        <version.maven-compiler-plugin>3.11.0</version.maven-compiler-plugin>
+        <version.maven-dependency-plugin>3.6.1</version.maven-dependency-plugin>
+        <version.maven-invoker-plugin>3.6.0</version.maven-invoker-plugin>
+        <version.maven-plugin-tools>3.10.2</version.maven-plugin-tools>
+        <version.maven-shade-plugin>3.5.1</version.maven-shade-plugin>
         <version.nexus-staging-maven-plugin>1.6.13</version.nexus-staging-maven-plugin>
         <version.mvn-jlink-wrapper>1.1.1</version.mvn-jlink-wrapper>
         <version.plexus-compiler-eclipse>2.11.1</version.plexus-compiler-eclipse>
-        <version.plexus-utils>3.5.0</version.plexus-utils>
+        <version.plexus-utils>4.0.0</version.plexus-utils>
     </properties>
 
     <issueManagement>

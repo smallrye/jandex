@@ -527,4 +527,11 @@ public final class AnnotationInstance {
         result = 31 * result + Arrays.hashCode(values);
         return result;
     }
+
+    /**
+     * Returns an {@linkplain AnnotationInstanceEquivalenceProxy equivalence proxy} for this annotation instance.
+     */
+    public AnnotationInstanceEquivalenceProxy createEquivalenceProxy() {
+        return new AnnotationInstanceEquivalenceProxy(this);
+    }
 }

@@ -28,6 +28,15 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public interface IndexView {
+    /**
+     * Returns an immutable empty index; that is, an index that doesn't contain any class.
+     * All methods return either an empty collection, or {@code null}.
+     *
+     * @since 3.2.0
+     */
+    static IndexView empty() {
+        return EmptyIndex.INSTANCE;
+    }
 
     /**
      * Gets all known classes by this index (those which were scanned).

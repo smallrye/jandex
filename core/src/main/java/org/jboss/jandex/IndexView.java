@@ -77,6 +77,8 @@ public interface IndexView {
      * <p>
      * Note that this will only pick up direct subclasses of the class. It will not
      * pick up subclasses of subclasses.
+     * <p>
+     * Also note that interfaces are considered direct subclasses of {@code java.lang.Object}.
      *
      * @param className the super class of the desired subclasses
      * @return a non-null list of all known subclasses of className
@@ -93,6 +95,8 @@ public interface IndexView {
      * <p>
      * Note that this will only pick up direct subclasses of the class. It will not
      * pick up subclasses of subclasses.
+     * <p>
+     * Also note that interfaces are considered direct subclasses of {@code java.lang.Object}.
      *
      * @param className the super class of the desired subclasses
      * @return a non-null list of all known subclasses of className
@@ -111,6 +115,8 @@ public interface IndexView {
      * <p>
      * Note that this will only pick up direct subclasses of the class. It will not
      * pick up subclasses of subclasses.
+     * <p>
+     * Also note that interfaces are considered direct subclasses of {@code java.lang.Object}.
      *
      * @param clazz the super class of the desired subclasses
      * @return a non-null list of all known subclasses of className
@@ -200,19 +206,19 @@ public interface IndexView {
      * Note that this will only pick up direct subinterfaces of the interface. It will not
      * pick up subinterfaces of subinterfaces.
      *
-     * @param iface the super interface of the desired subinterfaces
-     * @return a non-null list of all known subinterfaces of iface
+     * @param interfaceClass the super interface of the desired subinterfaces
+     * @return a non-null list of all known subinterfaces of interfaceClass
      * @since 3.0
      */
-    default Collection<ClassInfo> getKnownDirectSubinterfaces(Class<?> iface) {
-        return getKnownDirectSubinterfaces(DotName.createSimple(iface.getName()));
+    default Collection<ClassInfo> getKnownDirectSubinterfaces(Class<?> interfaceClass) {
+        return getKnownDirectSubinterfaces(DotName.createSimple(interfaceClass.getName()));
     }
 
     /**
      * Returns all known interfaces that extend the given interface, directly and indirectly.
      * I.e., returns every interface in the index that is assignable to the given interface.
      *
-     * @param interfaceName The interace
+     * @param interfaceName The interface
      * @return all known subinterfaces
      * @since 3.0
      */
@@ -222,7 +228,7 @@ public interface IndexView {
      * Returns all known interfaces that extend the given interface, directly and indirectly.
      * I.e., returns every interface in the index that is assignable to the given interface.
      *
-     * @param interfaceName The interace
+     * @param interfaceName The interface
      * @return all known subinterfaces
      * @since 3.0
      */
@@ -234,12 +240,12 @@ public interface IndexView {
      * Returns all known interfaces that extend the given interface, directly and indirectly.
      * I.e., returns every interface in the index that is assignable to the given interface.
      *
-     * @param iface The interace
+     * @param interfaceClass The interface
      * @return all known subinterfaces
      * @since 3.0
      */
-    default Collection<ClassInfo> getAllKnownSubinterfaces(Class<?> iface) {
-        return getAllKnownSubinterfaces(DotName.createSimple(iface.getName()));
+    default Collection<ClassInfo> getAllKnownSubinterfaces(Class<?> interfaceClass) {
+        return getAllKnownSubinterfaces(DotName.createSimple(interfaceClass.getName()));
     }
 
     /**
@@ -256,10 +262,10 @@ public interface IndexView {
      * Note that this will only pick up classes that directly implement given interface.
      * It will not pick up classes implementing subinterfaces.
      *
-     * @param className the super class of the desired subclasses
-     * @return a non-null list of all known subclasses of className
+     * @param interfaceName The interface
+     * @return All known direct implementors of the interface
      */
-    Collection<ClassInfo> getKnownDirectImplementors(DotName className);
+    Collection<ClassInfo> getKnownDirectImplementors(DotName interfaceName);
 
     /**
      * Gets all known direct implementors of the specified interface name. A known
@@ -275,11 +281,11 @@ public interface IndexView {
      * Note that this will only pick up classes that directly implement given interface.
      * It will not pick up classes implementing subinterfaces.
      *
-     * @param className the super class of the desired subclasses
-     * @return a non-null list of all known subclasses of className
+     * @param interfaceName The interface
+     * @return All known direct implementors of the interface
      */
-    default Collection<ClassInfo> getKnownDirectImplementors(String className) {
-        return getKnownDirectImplementors(DotName.createSimple(className));
+    default Collection<ClassInfo> getKnownDirectImplementors(String interfaceName) {
+        return getKnownDirectImplementors(DotName.createSimple(interfaceName));
     }
 
     /**
@@ -296,11 +302,11 @@ public interface IndexView {
      * Note that this will only pick up classes that directly implement given interface.
      * It will not pick up classes implementing subinterfaces.
      *
-     * @param clazz the super class of the desired subclasses
-     * @return a non-null list of all known subclasses of className
+     * @param interfaceClass The interface
+     * @return All known direct implementors of the interface
      */
-    default Collection<ClassInfo> getKnownDirectImplementors(Class<?> clazz) {
-        return getKnownDirectImplementors(DotName.createSimple(clazz.getName()));
+    default Collection<ClassInfo> getKnownDirectImplementors(Class<?> interfaceClass) {
+        return getKnownDirectImplementors(DotName.createSimple(interfaceClass.getName()));
     }
 
     /**

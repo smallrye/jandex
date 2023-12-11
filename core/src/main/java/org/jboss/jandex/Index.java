@@ -434,8 +434,8 @@ public final class Index implements IndexView {
      * {@inheritDoc}
      */
     @Override
-    public List<ClassInfo> getKnownDirectImplementors(DotName className) {
-        ClassInfo[] list = implementors.get(className);
+    public List<ClassInfo> getKnownDirectImplementors(DotName interfaceName) {
+        ClassInfo[] list = implementors.get(interfaceName);
         return list == null ? EMPTY_CLASSINFO_LIST : new ImmutableArrayList<>(list);
     }
 

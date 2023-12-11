@@ -209,6 +209,14 @@ public final class Indexer {
             0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73
     };
 
+    // "PermittedSubclasses"
+    private final static byte[] PERMITTED_SUBCLASSES = new byte[] {
+            // P     e     r     m     i     t     t     e     d
+            0x50, 0x65, 0x72, 0x6d, 0x69, 0x74, 0x74, 0x65, 0x64,
+            // S     u     b     c     l     a     s     s     e     s
+            0x53, 0x75, 0x62, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73
+    };
+
     private final static int RUNTIME_ANNOTATIONS_LEN = RUNTIME_ANNOTATIONS.length;
     private final static int RUNTIME_PARAM_ANNOTATIONS_LEN = RUNTIME_PARAM_ANNOTATIONS.length;
     private final static int RUNTIME_TYPE_ANNOTATIONS_LEN = RUNTIME_TYPE_ANNOTATIONS.length;
@@ -227,6 +235,7 @@ public final class Indexer {
     private final static int RUNTIME_INVISIBLE_ANNOTATIONS_LEN = RUNTIME_INVISIBLE_ANNOTATIONS.length;
     private final static int RUNTIME_INVISIBLE_PARAM_ANNOTATIONS_LEN = RUNTIME_INVISIBLE_PARAM_ANNOTATIONS.length;
     private final static int RUNTIME_INVISIBLE_TYPE_ANNOTATIONS_LEN = RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.length;
+    private final static int PERMITTED_SUBCLASSES_LEN = PERMITTED_SUBCLASSES.length;
 
     private final static int HAS_RUNTIME_ANNOTATION = 1;
     private final static int HAS_RUNTIME_PARAM_ANNOTATION = 2;
@@ -246,6 +255,7 @@ public final class Indexer {
     private final static int HAS_RUNTIME_INVISIBLE_ANNOTATION = 16;
     private final static int HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATION = 17;
     private final static int HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION = 18;
+    private final static int HAS_PERMITTED_SUBCLASSES = 19;
 
     private static class InnerClassInfo {
         private InnerClassInfo(DotName innerClass, DotName enclosingClass, String simpleName, int flags) {
@@ -528,6 +538,18 @@ public final class Indexer {
         this.recordComponents = recordComponents;
     }
 
+    private void processPermittedSubclasses(DataInputStream data, ClassInfo target) throws IOException {
+        int numPermittedSubclasses = data.readUnsignedShort();
+        if (numPermittedSubclasses > 0) {
+            Set<DotName> permittedSubclasses = new HashSet<>(numPermittedSubclasses);
+            for (int i = 0; i < numPermittedSubclasses; i++) {
+                DotName name = decodeClassEntry(data.readUnsignedShort());
+                permittedSubclasses.add(name);
+            }
+            target.setPermittedSubclasses(permittedSubclasses);
+        }
+    }
+
     private void processAttributes(DataInputStream data, AnnotationTarget target) throws IOException {
         int numAttrs = data.readUnsignedShort();
         byte[] constantPoolAnnoAttrributes = this.constantPoolAnnoAttrributes;
@@ -583,6 +605,8 @@ public final class Indexer {
                 processModuleMainClass(data, (ClassInfo) target);
             } else if (annotationAttribute == HAS_RECORD && target instanceof ClassInfo) {
                 processRecordComponents(data);
+            } else if (annotationAttribute == HAS_PERMITTED_SUBCLASSES && target instanceof ClassInfo) {
+                processPermittedSubclasses(data, (ClassInfo) target);
             } else {
                 skipFully(data, attributeLen);
             }
@@ -2404,6 +2428,8 @@ public final class Indexer {
                     } else if (len == RUNTIME_INVISIBLE_TYPE_ANNOTATIONS_LEN
                             && match(buf, offset, RUNTIME_INVISIBLE_TYPE_ANNOTATIONS)) {
                         annoAttributes[pos] = HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION;
+                    } else if (len == PERMITTED_SUBCLASSES_LEN && match(buf, offset, PERMITTED_SUBCLASSES)) {
+                        annoAttributes[pos] = HAS_PERMITTED_SUBCLASSES;
                     }
                     offset += len;
                     break;

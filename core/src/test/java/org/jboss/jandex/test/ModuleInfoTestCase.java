@@ -63,7 +63,7 @@ public class ModuleInfoTestCase {
     public void testModulePackagesListed() throws IOException {
         ModuleInfo mod = indexModuleInfo();
         List<DotName> expected = Arrays.asList(DotName.createSimple("test"),
-                DotName.createSimple("test.exec"));
+                DotName.createSimple("test.exec"), DotName.createSimple("test.expr"));
         assertEquals(expected.size(), mod.packages().size());
         for (DotName e : expected) {
             assertTrue(mod.packages().contains(e));
@@ -91,11 +91,13 @@ public class ModuleInfoTestCase {
     @Test
     public void testModuleOpens() {
         List<OpenedPackageInfo> opens = mod.opens();
-        assertEquals(2, opens.size());
+        assertEquals(3, opens.size());
         assertEquals("test", opens.get(0).source().toString());
         assertEquals("java.base", opens.get(0).targets().get(0).toString());
         assertEquals("test.exec", opens.get(1).source().toString());
         assertEquals("java.base", opens.get(1).targets().get(0).toString());
+        assertEquals("test.expr", opens.get(2).source().toString());
+        assertEquals("java.base", opens.get(2).targets().get(0).toString());
     }
 
     @Test

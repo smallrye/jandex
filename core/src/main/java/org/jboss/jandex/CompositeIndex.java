@@ -190,10 +190,10 @@ public class CompositeIndex implements IndexView {
      * {@inheritDoc}
      */
     @Override
-    public Collection<ClassInfo> getKnownDirectImplementors(final DotName className) {
+    public Collection<ClassInfo> getKnownDirectImplementors(final DotName interfaceName) {
         final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
         for (IndexView index : indexes) {
-            final Collection<ClassInfo> list = index.getKnownDirectImplementors(className);
+            final Collection<ClassInfo> list = index.getKnownDirectImplementors(interfaceName);
             if (list != null) {
                 allKnown.addAll(list);
             }

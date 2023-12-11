@@ -11,6 +11,7 @@ module org.jboss.jandex.typeannotationtest {
 
     opens test to java.base;
     opens test.exec to java.base;
+    opens test.expr to java.base;
 
     provides test.ServiceProviderExample
         with test.ServiceProviderExample.ServiceProviderExampleImpl;

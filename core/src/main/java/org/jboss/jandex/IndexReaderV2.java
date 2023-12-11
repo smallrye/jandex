@@ -50,7 +50,7 @@ import java.util.Set;
  */
 final class IndexReaderV2 extends IndexReaderImpl {
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 11;
+    static final int MAX_VERSION = 12;
     private static final byte NULL_TARGET_TAG = 0;
     private static final byte FIELD_TAG = 1;
     private static final byte METHOD_TAG = 2;
@@ -629,6 +629,17 @@ final class IndexReaderV2 extends IndexReaderImpl {
             }
         }
 
+        Set<DotName> permittedSubclasses = null;
+        if (version >= 12) {
+            int permittedSubclassesCount = stream.readPackedU32();
+            if (permittedSubclassesCount > 0) {
+                permittedSubclasses = new HashSet<>(permittedSubclassesCount);
+                for (int i = 0; i < permittedSubclassesCount; i++) {
+                    permittedSubclasses.add(nameTable[stream.readPackedU32()]);
+                }
+            }
+        }
+
         int size = stream.readPackedU32();
 
         Map<DotName, List<AnnotationInstance>> annotations = size > 0
@@ -646,6 +657,9 @@ final class IndexReaderV2 extends IndexReaderImpl {
         }
         if (memberClasses != null) {
             clazz.setMemberClasses(memberClasses);
+        }
+        if (permittedSubclasses != null) {
+            clazz.setPermittedSubclasses(permittedSubclasses);
         }
 
         FieldInternal[] fields = readClassFields(stream, clazz);

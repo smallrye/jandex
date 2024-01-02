@@ -30,6 +30,16 @@ public final class ClassType extends Type {
 
     public static final ClassType OBJECT_TYPE = new ClassType(DotName.OBJECT_NAME);
 
+    public static final ClassType BYTE_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Byte"));
+    public static final ClassType CHARACTER_CLASS = new ClassType(
+            DotName.createComponentized(DotName.JAVA_LANG_NAME, "Character"));
+    public static final ClassType DOUBLE_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Double"));
+    public static final ClassType FLOAT_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Float"));
+    public static final ClassType INTEGER_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Integer"));
+    public static final ClassType LONG_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Long"));
+    public static final ClassType SHORT_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Short"));
+    public static final ClassType BOOLEAN_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Boolean"));
+
     /**
      * Create an instance of a class type with given {@code name}.
      * <p>

@@ -43,7 +43,10 @@ public final class PrimitiveType extends Type {
     public static final PrimitiveType SHORT = new PrimitiveType(Primitive.SHORT);
     public static final PrimitiveType BOOLEAN = new PrimitiveType(Primitive.BOOLEAN);
 
-    private static final Map<String, PrimitiveType> reverseMap = new HashMap<String, PrimitiveType>();
+    private static final Map<String, PrimitiveType> reverseMap = new HashMap<>();
+
+    private static final Map<Primitive, ClassType> boxingMap = new HashMap<>();
+    private static final Map<DotName, PrimitiveType> unboxingMap = new HashMap<>();
 
     static {
         reverseMap.put("byte", BYTE);
@@ -54,6 +57,24 @@ public final class PrimitiveType extends Type {
         reverseMap.put("long", LONG);
         reverseMap.put("short", SHORT);
         reverseMap.put("boolean", BOOLEAN);
+
+        boxingMap.put(Primitive.BYTE, ClassType.BYTE_CLASS);
+        boxingMap.put(Primitive.CHAR, ClassType.CHARACTER_CLASS);
+        boxingMap.put(Primitive.DOUBLE, ClassType.DOUBLE_CLASS);
+        boxingMap.put(Primitive.FLOAT, ClassType.FLOAT_CLASS);
+        boxingMap.put(Primitive.INT, ClassType.INTEGER_CLASS);
+        boxingMap.put(Primitive.LONG, ClassType.LONG_CLASS);
+        boxingMap.put(Primitive.SHORT, ClassType.SHORT_CLASS);
+        boxingMap.put(Primitive.BOOLEAN, ClassType.BOOLEAN_CLASS);
+
+        unboxingMap.put(ClassType.BYTE_CLASS.name(), BYTE);
+        unboxingMap.put(ClassType.CHARACTER_CLASS.name(), CHAR);
+        unboxingMap.put(ClassType.DOUBLE_CLASS.name(), DOUBLE);
+        unboxingMap.put(ClassType.FLOAT_CLASS.name(), FLOAT);
+        unboxingMap.put(ClassType.INTEGER_CLASS.name(), INT);
+        unboxingMap.put(ClassType.LONG_CLASS.name(), LONG);
+        unboxingMap.put(ClassType.SHORT_CLASS.name(), SHORT);
+        unboxingMap.put(ClassType.BOOLEAN_CLASS.name(), BOOLEAN);
     }
 
     /**
@@ -101,6 +122,37 @@ public final class PrimitiveType extends Type {
      */
     public Primitive primitive() {
         return primitive;
+    }
+
+    /**
+     * Returns a class type that is the result of a boxing conversion of the given {@code primitiveType}.
+     * <p>
+     * Returns {@code null} if {@code primitiveType} is {@code null}.
+     *
+     * @param primitiveType a primitive type, may be {@code null}
+     * @return the corresponding class type, or {@code null} if {@code primitiveType} is {@code null}
+     */
+    public static ClassType box(PrimitiveType primitiveType) {
+        if (primitiveType == null) {
+            return null;
+        }
+        return boxingMap.get(primitiveType.primitive);
+    }
+
+    /**
+     * Returns a primitive type that is the result of an unboxing conversion of the given {@code classType}.
+     * <p>
+     * Returns {@code null} if no unboxing conversion exists for given class type
+     * or if {@code classType} is {@code null}.
+     *
+     * @param classType a class type, may be {@code null}
+     * @return the corresponding primitive type, or {@code null} if there's none
+     */
+    public static PrimitiveType unbox(ClassType classType) {
+        if (classType == null) {
+            return null;
+        }
+        return unboxingMap.get(classType.name());
     }
 
     @Override

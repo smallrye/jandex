@@ -199,6 +199,56 @@ public abstract class Type implements Descriptor {
     }
 
     /**
+     * Creates a type that corresponds to the given {@code clazz}. The resulting type may be:
+     * <ul>
+     * <li>{@link VoidType}</li>
+     * <li>{@link PrimitiveType}</li>
+     * <li>{@link ClassType}</li>
+     * <li>{@link ArrayType} whose the element type is {@link PrimitiveType} or {@link ClassType}</li>
+     * </ul>
+     *
+     * @param clazz a {@link Class}
+     * @return a {@link Type} corresponding to the given {@code clazz}
+     */
+    public static Type create(Class<?> clazz) {
+        if (clazz.isArray()) {
+            int dimensions = 1;
+            Class<?> componentType = clazz.getComponentType();
+            while (componentType.isArray()) {
+                dimensions++;
+                componentType = componentType.getComponentType();
+            }
+            return ArrayType.create(create(componentType), dimensions);
+        }
+
+        if (clazz.isPrimitive()) {
+            if (clazz == Void.TYPE) {
+                return VoidType.VOID;
+            } else if (clazz == Boolean.TYPE) {
+                return PrimitiveType.BOOLEAN;
+            } else if (clazz == Byte.TYPE) {
+                return PrimitiveType.BYTE;
+            } else if (clazz == Short.TYPE) {
+                return PrimitiveType.SHORT;
+            } else if (clazz == Integer.TYPE) {
+                return PrimitiveType.INT;
+            } else if (clazz == Long.TYPE) {
+                return PrimitiveType.LONG;
+            } else if (clazz == Float.TYPE) {
+                return PrimitiveType.FLOAT;
+            } else if (clazz == Double.TYPE) {
+                return PrimitiveType.DOUBLE;
+            } else if (clazz == Character.TYPE) {
+                return PrimitiveType.CHAR;
+            } else {
+                throw new IllegalArgumentException("Unknown primitive type " + clazz);
+            }
+        }
+
+        return ClassType.create(DotName.createSimple(clazz.getName()));
+    }
+
+    /**
      * Creates an instance of specified type with given type {@code annotations}.
      * To create the type instance, this method delegates to {@link #create(DotName, Kind)}.
      *

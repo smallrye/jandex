@@ -19,7 +19,7 @@
 package org.jboss.jandex;
 
 /**
- * Specifies "void" in a method signature.
+ * Represents the {@code void} pseudo-type, which may appear in a method signature.
  *
  * @since 2.0
  * @author Jason T. Greene

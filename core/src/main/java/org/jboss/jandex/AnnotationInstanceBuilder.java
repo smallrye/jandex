@@ -591,8 +591,7 @@ public final class AnnotationInstanceBuilder {
             throw new IllegalArgumentException("Annotation member '" + name + "' already added");
         }
 
-        DotName className = DotName.createSimple(value.getName());
-        Type clazz = Type.create(className, Type.Kind.CLASS);
+        Type clazz = Type.create(value);
         this.values.add(AnnotationValue.createClassValue(name, clazz));
         return this;
     }
@@ -614,8 +613,7 @@ public final class AnnotationInstanceBuilder {
 
         AnnotationValue[] array = new AnnotationValue[values.length];
         for (int i = 0; i < values.length; i++) {
-            DotName className = DotName.createSimple(values[i].getName());
-            Type clazz = Type.create(className, Type.Kind.CLASS);
+            Type clazz = Type.create(values[i]);
             array[i] = AnnotationValue.createClassValue(name, clazz);
         }
         this.values.add(AnnotationValue.createArrayValue(name, array));
@@ -673,9 +671,9 @@ public final class AnnotationInstanceBuilder {
         if (kind == Type.Kind.VOID || kind == Type.Kind.PRIMITIVE || kind == Type.Kind.CLASS) {
             return;
         }
-        if (kind == Type.Kind.ARRAY && type.asArrayType().dimensions() == 1) {
-            Type.Kind constituent = type.asArrayType().constituent().kind();
-            if (constituent == Type.Kind.PRIMITIVE || constituent == Type.Kind.CLASS) {
+        if (kind == Type.Kind.ARRAY) {
+            Type.Kind element = type.asArrayType().elementType().kind();
+            if (element == Type.Kind.PRIMITIVE || element == Type.Kind.CLASS) {
                 return;
             }
         }

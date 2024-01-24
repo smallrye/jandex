@@ -9,8 +9,12 @@ import java.util.Collections;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ArrayType;
+import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.PrimitiveType;
 import org.jboss.jandex.Type;
+import org.jboss.jandex.VoidType;
 import org.junit.jupiter.api.Test;
 
 public class AnnotationInstanceBuilderTest {
@@ -129,9 +133,11 @@ public class AnnotationInstanceBuilderTest {
         assertEquals(SimpleEnum.class.getName(), ann.value("enArray").asEnumTypeArray()[0].toString());
         assertEquals(SimpleEnum.BAZ.name(), ann.value("enArray").asEnumArray()[1]);
         assertEquals(SimpleEnum.class.getName(), ann.value("enArray").asEnumTypeArray()[1].toString());
-        assertEquals(2, ann.value("clsArray").asClassArray().length);
+        assertEquals(4, ann.value("clsArray").asClassArray().length);
         assertEquals(String.class.getName(), ann.value("clsArray").asClassArray()[0].name().toString());
-        assertEquals(Number.class.getName(), ann.value("clsArray").asClassArray()[1].name().toString());
+        assertEquals(void.class.getName(), ann.value("clsArray").asClassArray()[1].name().toString());
+        assertEquals(Number[].class.getName(), ann.value("clsArray").asClassArray()[2].name().toString());
+        assertEquals(byte[][].class.getName(), ann.value("clsArray").asClassArray()[3].name().toString());
         assertEquals(2, ann.value("nestedArray").asNestedArray().length);
         assertEquals("two", ann.value("nestedArray").asNestedArray()[0].value().asString());
         assertEquals("three", ann.value("nestedArray").asNestedArray()[1].value().asString());
@@ -193,10 +199,10 @@ public class AnnotationInstanceBuilderTest {
                         AnnotationValue.createEnumValue("", DotName.createSimple(SimpleEnum.class.getName()), "BAZ"),
                 }),
                 AnnotationValue.createArrayValue("clsArray", new AnnotationValue[] {
-                        AnnotationValue.createClassValue("",
-                                Type.create(DotName.createSimple("java.lang.String"), Type.Kind.CLASS)),
-                        AnnotationValue.createClassValue("",
-                                Type.create(DotName.createSimple("java.lang.Number"), Type.Kind.CLASS)),
+                        AnnotationValue.createClassValue("", ClassType.create(String.class)),
+                        AnnotationValue.createClassValue("", VoidType.VOID),
+                        AnnotationValue.createClassValue("", ArrayType.create(ClassType.create(Number.class), 1)),
+                        AnnotationValue.createClassValue("", ArrayType.create(PrimitiveType.BYTE, 2)),
                 }),
                 AnnotationValue.createArrayValue("nestedArray", new AnnotationValue[] {
                         AnnotationValue.createNestedAnnotationValue("", simpleAnnotation_manual("two")),
@@ -233,7 +239,7 @@ public class AnnotationInstanceBuilderTest {
                 .add("chArray", new char[] { 'd', 'e' })
                 .add("strArray", new String[] { "fg", "hi" })
                 .add("enArray", new SimpleEnum[] { SimpleEnum.BAR, SimpleEnum.BAZ })
-                .add("clsArray", new Class[] { String.class, Number.class })
+                .add("clsArray", new Class[] { String.class, void.class, Number[].class, byte[][].class })
                 .add("nestedArray", new AnnotationInstance[] { simpleAnnotation_builder("two"),
                         simpleAnnotation_builder("three") })
                 .build();

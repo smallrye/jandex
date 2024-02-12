@@ -2572,49 +2572,42 @@ public final class Indexer {
     }
 
     private void propagateTypeParameterBounds() {
+        // we need to process indexed classes such that class A is processed before class B
+        // when B is enclosed in A (potentially indirectly)
+        //
+        // we construct a two-level total order which provides this guarantee:
+        // 1. for each class, compute its nesting level (top-level classes have nesting level 0,
+        //    classes nested in top-level classes have nesting level 1, etc.) and sort the classes
+        //    in ascending nesting level order
+        // 2. for equal nesting levels, sort by class name
+        // (see also `TotalOrderChecker`)
+        Map<DotName, Integer> nestingLevels = new HashMap<>();
+        for (ClassInfo clazz : classes.values()) {
+            DotName name = clazz.name();
+            int nestingLevel = 0;
+            while (clazz != null) {
+                if (clazz.enclosingClass() != null) {
+                    clazz = classes.get(clazz.enclosingClass());
+                    nestingLevel++;
+                } else if (clazz.enclosingMethod() != null) {
+                    clazz = classes.get(clazz.enclosingMethod().enclosingClass());
+                    nestingLevel++;
+                } else {
+                    clazz = null;
+                }
+            }
+            nestingLevels.put(name, nestingLevel);
+        }
+
         List<ClassInfo> classes = new ArrayList<>(this.classes.values());
         classes.sort(new Comparator<ClassInfo>() {
-            private boolean isEnclosedIn(ClassInfo c1, ClassInfo c2) {
-                if (c1.enclosingClass() != null) {
-                    if (c2.name().equals(c1.enclosingClass())) {
-                        return true;
-                    }
-
-                    ClassInfo c1EnclosingClass = Indexer.this.classes.get(c1.enclosingClass());
-                    if (c1EnclosingClass != null) {
-                        return isEnclosedIn(c1EnclosingClass, c2);
-                    }
-                }
-
-                if (c1.enclosingMethod() != null) {
-                    if (c2.name().equals(c1.enclosingMethod().enclosingClass())) {
-                        return true;
-                    }
-
-                    ClassInfo enclosingMethodClass = Indexer.this.classes.get(c1.enclosingMethod().enclosingClass());
-                    if (enclosingMethodClass != null) {
-                        return isEnclosedIn(enclosingMethodClass, c2);
-                    }
-                }
-
-                return false;
-            }
-
             @Override
             public int compare(ClassInfo c1, ClassInfo c2) {
-                if (c1.name().equals(c2.name())) {
-                    return 0;
-                } else if (isEnclosedIn(c1, c2)) {
-                    // c1 is enclosed in c2, so c2 must be processed sooner
-                    return 1;
-                } else if (isEnclosedIn(c2, c1)) {
-                    // c2 is enclosed in c1, so c1 must be processed sooner
-                    return -1;
-                } else {
-                    // we really only need partial order here,
-                    // but `Comparator` must establish total order
-                    return c1.name().compareTo(c2.name());
+                int diff = Integer.compare(nestingLevels.get(c1.name()), nestingLevels.get(c2.name()));
+                if (diff != 0) {
+                    return diff;
                 }
+                return c1.name().compareTo(c2.name());
             }
         });
 

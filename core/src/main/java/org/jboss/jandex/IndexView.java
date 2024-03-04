@@ -467,8 +467,18 @@ public interface IndexView {
     }
 
     /**
-     * Obtains a list of classes that use the specified class. In other words, a list of classes that include
-     * a reference to the specified class in their constant pool.
+     * Returns a list of classes in this index that use the specified class. For one class
+     * to <em>use</em> another class, the other class has to:
+     * <ul>
+     * <li>occur in the signature of the class (that is, in the superclass type,
+     * in the superinterface types, in the type parameters, or in the list of
+     * permitted subclasses), or</li>
+     * <li>occur in the signature of any of the class's methods (that is, in the return type,
+     * in the parameter types, in the exception types, or in the type parameters), or</li>
+     * <li>occur in the type of any of the class's fields or record components, or</li>
+     * <li>occur in the list of class references in the constant pool, as described
+     * by the JLS and JVMS.</li>
+     * </ul>
      *
      * @param className the name of the class to look for
      * @return a non-null list of classes that use the specified class
@@ -476,8 +486,18 @@ public interface IndexView {
     Collection<ClassInfo> getKnownUsers(DotName className);
 
     /**
-     * Obtains a list of classes that use the specified class. In other words, a list of classes that include
-     * a reference to the specified class in their constant pool.
+     * Returns a list of classes in this index that use the specified class. For one class
+     * to <em>use</em> another class, the other class has to:
+     * <ul>
+     * <li>occur in the signature of the class (that is, in the superclass type,
+     * in the superinterface types, in the type parameters, or in the list of
+     * permitted subclasses), or</li>
+     * <li>occur in the signature of any of the class's methods (that is, in the return type,
+     * in the parameter types, in the exception types, or in the type parameters), or</li>
+     * <li>occur in the type of any of the class's fields or record components, or</li>
+     * <li>occur in the list of class references in the constant pool, as described
+     * by the JLS and JVMS.</li>
+     * </ul>
      *
      * @param className the name of the class to look for
      * @return a non-null list of classes that use the specified class
@@ -487,8 +507,18 @@ public interface IndexView {
     }
 
     /**
-     * Obtains a list of classes that use the specified class. In other words, a list of classes that include
-     * a reference to the specified class in their constant pool.
+     * Returns a list of classes in this index that use the specified class. For one class
+     * to <em>use</em> another class, the other class has to:
+     * <ul>
+     * <li>occur in the signature of the class (that is, in the superclass type,
+     * in the superinterface types, in the type parameters, or in the list of
+     * permitted subclasses), or</li>
+     * <li>occur in the signature of any of the class's methods (that is, in the return type,
+     * in the parameter types, in the exception types, or in the type parameters), or</li>
+     * <li>occur in the type of any of the class's fields or record components, or</li>
+     * <li>occur in the list of class references in the constant pool of the class,
+     * as described by the JLS and JVMS.</li>
+     * </ul>
      *
      * @param clazz the class to look for
      * @return a non-null list of classes that use the specified class

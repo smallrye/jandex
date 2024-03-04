@@ -35,6 +35,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -417,7 +418,7 @@ public final class Indexer {
     private Map<DotName, List<ClassInfo>> implementors;
     private Map<DotName, ClassInfo> classes;
     private Map<DotName, ModuleInfo> modules;
-    private Map<DotName, List<ClassInfo>> users;
+    private Map<DotName, Set<ClassInfo>> users; // must be a linked set for reproducibility
     private NameTable names;
     private GenericSignatureParser signatureParser;
     private final TmpObjects tmpObjects = new TmpObjects();
@@ -442,7 +443,7 @@ public final class Indexer {
             modules = new HashMap<DotName, ModuleInfo>();
 
         if (users == null)
-            users = new HashMap<DotName, List<ClassInfo>>();
+            users = new HashMap<DotName, Set<ClassInfo>>();
 
         if (names == null)
             names = new NameTable();
@@ -1106,6 +1107,7 @@ public final class Indexer {
     }
 
     private void resolveUsers() throws IOException {
+        // class references in constant pool
         int poolSize = constantPoolSize;
         byte[] pool = constantPool;
         int[] offsets = constantPoolOffsets;
@@ -1115,14 +1117,80 @@ public final class Indexer {
             if (pool[offset] == CONSTANT_CLASS) {
                 int nameIndex = (pool[++offset] & 0xFF) << 8 | (pool[++offset] & 0xFF);
                 DotName usedClass = names.convertToName(decodeUtf8Entry(nameIndex), '/');
-                List<ClassInfo> usersOfClass = users.get(usedClass);
-                if (usersOfClass == null) {
-                    usersOfClass = new ArrayList<ClassInfo>();
-                    users.put(usedClass, usersOfClass);
-                }
-                usersOfClass.add(this.currentClass);
+                recordUsedClass(usedClass);
             }
         }
+
+        // class declaration
+        for (TypeVariable typeParameter : currentClass.typeParameters()) {
+            recordUsedType(typeParameter);
+        }
+        recordUsedType(currentClass.superClassType());
+        for (Type interfaceType : currentClass.interfaceTypes()) {
+            recordUsedType(interfaceType);
+        }
+        for (DotName permittedSubclass : currentClass.permittedSubclasses()) {
+            recordUsedClass(permittedSubclass);
+        }
+        // field declarations
+        for (FieldInfo field : fields) {
+            recordUsedType(field.type());
+        }
+        // method declarations (ignoring receiver types, they are always the current class)
+        for (MethodInfo method : methods) {
+            for (TypeVariable typeParameter : method.typeParameters()) {
+                recordUsedType(typeParameter);
+            }
+            recordUsedType(method.returnType());
+            for (Type parameterType : method.parameterTypes()) {
+                recordUsedType(parameterType);
+            }
+            for (Type exceptionType : method.exceptions()) {
+                recordUsedType(exceptionType);
+            }
+        }
+        // record component declarations
+        for (RecordComponentInfo recordComponent : recordComponents) {
+            recordUsedType(recordComponent.type());
+        }
+    }
+
+    private void recordUsedType(Type type) {
+        if (type == null) {
+            return;
+        }
+
+        switch (type.kind()) {
+            case CLASS:
+                recordUsedClass(type.asClassType().name());
+                break;
+            case PARAMETERIZED_TYPE:
+                recordUsedClass(type.asParameterizedType().name());
+                for (Type typeArgument : type.asParameterizedType().arguments()) {
+                    recordUsedType(typeArgument);
+                }
+                break;
+            case ARRAY:
+                recordUsedType(type.asArrayType().elementType());
+                break;
+            case WILDCARD_TYPE:
+                recordUsedType(type.asWildcardType().bound());
+                break;
+            case TYPE_VARIABLE:
+                for (Type bound : type.asTypeVariable().boundArray()) {
+                    recordUsedType(bound);
+                }
+                break;
+        }
+    }
+
+    private void recordUsedClass(DotName usedClass) {
+        Set<ClassInfo> usersOfClass = users.get(usedClass);
+        if (usersOfClass == null) {
+            usersOfClass = new LinkedHashSet<>();
+            users.put(usedClass, usersOfClass);
+        }
+        usersOfClass.add(this.currentClass);
     }
 
     private void updateTypeTargets() {
@@ -2583,7 +2651,11 @@ public final class Indexer {
         propagateTypeVariables();
 
         try {
-            return Index.create(masterAnnotations, subclasses, subinterfaces, implementors, classes, modules, users);
+            Map<DotName, List<ClassInfo>> userLists = new HashMap<>();
+            for (Map.Entry<DotName, Set<ClassInfo>> entry : users.entrySet()) {
+                userLists.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+            }
+            return Index.create(masterAnnotations, subclasses, subinterfaces, implementors, classes, modules, userLists);
         } finally {
             masterAnnotations = null;
             subclasses = null;

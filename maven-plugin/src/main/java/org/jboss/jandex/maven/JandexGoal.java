@@ -125,9 +125,19 @@ public class JandexGoal extends AbstractMojo {
     @Parameter(property = "jandex.skip", defaultValue = "false")
     private boolean skip;
 
+    /**
+     * Skip execution if set and if the module's packaging is POM.
+     */
+    @Parameter(defaultValue = "true")
+    private boolean skipForPomPackaging;
+
     public void execute() throws MojoExecutionException {
         if (skip) {
             getLog().info("Jandex execution skipped");
+            return;
+        }
+        if ("pom".equals(mavenProject.getPackaging()) && skipForPomPackaging) {
+            getLog().info("Jandex execution skipped for POM packaging");
             return;
         }
 

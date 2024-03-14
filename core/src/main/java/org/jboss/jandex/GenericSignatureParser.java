@@ -124,6 +124,7 @@ class GenericSignatureParser {
     private Map<String, TypeVariable> typeParameters;
     private Map<String, TypeVariable> elementTypeParameters = new HashMap<String, TypeVariable>();
     private Map<String, TypeVariable> classTypeParameters = new HashMap<String, TypeVariable>();
+    private DotName currentClassName;
 
     // used to track enclosing type variables when determining if a type is recursive
     // and when patching type variable references; present here to avoid allocating
@@ -248,7 +249,8 @@ class GenericSignatureParser {
 
     }
 
-    void beforeNewClass() {
+    void beforeNewClass(DotName className) {
+        this.currentClassName = className;
         this.classTypeParameters.clear();
         this.elementTypeParameters.clear();
     }
@@ -257,8 +259,8 @@ class GenericSignatureParser {
         this.elementTypeParameters.clear();
     }
 
-    ClassSignature parseClassSignature(String signature) {
-        beforeNewClass();
+    ClassSignature parseClassSignature(String signature, DotName className) {
+        beforeNewClass(className);
         this.signature = signature;
         this.typeParameters = this.classTypeParameters;
         this.pos = 0;
@@ -567,7 +569,7 @@ class GenericSignatureParser {
         if (type.kind() == Type.Kind.UNRESOLVED_TYPE_VARIABLE) {
             String identifier = type.asUnresolvedTypeVariable().identifier();
             if (isRecursive && typeParameters.containsKey(identifier)) {
-                return new TypeVariableReference(identifier);
+                return new TypeVariableReference(identifier, currentClassName);
             } else if (elementTypeParameters.containsKey(identifier)) {
                 return elementTypeParameters.get(identifier);
             } else if (classTypeParameters.containsKey(identifier)) {

@@ -903,7 +903,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         Map<DotName, ModuleInfo> modules = (version >= 10) ? readModules(stream, masterAnnotations)
                 : Collections.<DotName, ModuleInfo> emptyMap();
 
-        return new Index(masterAnnotations, subclasses, subinterfaces, implementors, classes, modules, users);
+        return Index.create(masterAnnotations, subclasses, subinterfaces, implementors, classes, modules, users);
     }
 
     private Map<DotName, ModuleInfo> readModules(PackedDataInputStream stream,

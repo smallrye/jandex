@@ -2403,7 +2403,7 @@ public final class Indexer {
         propagateTypeVariables();
 
         try {
-            return new Index(masterAnnotations, subclasses, subinterfaces, implementors, classes, modules, users);
+            return Index.create(masterAnnotations, subclasses, subinterfaces, implementors, classes, modules, users);
         } finally {
             masterAnnotations = null;
             subclasses = null;

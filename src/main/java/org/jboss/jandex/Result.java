@@ -19,7 +19,6 @@
 package org.jboss.jandex;
 
 import java.io.File;
-import java.util.List;
 
 /**
  * The result from a jar indexing operation.
@@ -44,8 +43,8 @@ public final class Result {
         instances = countInstances(index);
         classes = index.classes.size();
         int usages = 0;
-        for (List<ClassInfo> usagesForOneClass : index.users.values()) {
-            usages += usagesForOneClass.size();
+        for (ClassInfo[] usagesForOneClass : index.users.values()) {
+            usages += usagesForOneClass.length;
         }
         this.usages = usages;
         this.bytes = bytes;
@@ -55,8 +54,8 @@ public final class Result {
 
     private int countInstances(Index index) {
         int c = 0;
-        for (List<AnnotationInstance> list : index.annotations.values())
-            c += list.size();
+        for (AnnotationInstance[] list : index.annotations.values())
+            c += list.length;
 
         return c;
     }

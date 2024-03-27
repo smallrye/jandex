@@ -35,7 +35,7 @@ final class MethodInternal {
     static final NameAndParameterComponentComparator NAME_AND_PARAMETER_COMPONENT_COMPARATOR = new NameAndParameterComponentComparator();
     static final byte[][] EMPTY_PARAMETER_NAMES = new byte[0][];
 
-    static class NameAndParameterComponentComparator implements Comparator<MethodInternal> {
+    private static final class NameAndParameterComponentComparator implements Comparator<MethodInternal> {
         private int compare(byte[] left, byte[] right) {
             for (int i = 0, j = 0; i < left.length && j < right.length; i++, j++) {
                 int a = (left[i] & 0xff);
@@ -74,16 +74,21 @@ final class MethodInternal {
         }
     }
 
+    // contains fields that are only seldom used, to make the `MethodInternal` class smaller
+    private static final class ExtraInfo {
+        Type receiverType;
+        Type[] typeParameters;
+        AnnotationValue defaultValue;
+        AnnotationInstance[] annotations;
+    }
+
     private byte[] name;
     private byte[][] parameterNames;
     private Type[] parameters;
     private Type returnType;
     private Type[] exceptions;
-    private Type receiverType;
-    private Type[] typeParameters;
-    private AnnotationInstance[] annotations;
-    private AnnotationValue defaultValue;
     private short flags;
+    private ExtraInfo extra;
 
     MethodInternal(byte[] name, byte[][] parameterNames, Type[] parameters, Type returnType, short flags) {
         this(name, parameterNames, parameters, returnType, flags, Type.EMPTY_ARRAY, Type.EMPTY_ARRAY);
@@ -101,11 +106,31 @@ final class MethodInternal {
         this.parameters = parameters.length == 0 ? Type.EMPTY_ARRAY : parameters;
         this.returnType = returnType;
         this.flags = flags;
-        this.annotations = annotations;
         this.exceptions = exceptions;
-        this.typeParameters = typeParameters;
-        this.receiverType = receiverType;
-        this.defaultValue = defaultValue;
+        if (annotations != null && annotations.length > 0) {
+            if (extra == null) {
+                extra = new ExtraInfo();
+            }
+            extra.annotations = annotations;
+        }
+        if (typeParameters != null && typeParameters.length > 0) {
+            if (extra == null) {
+                extra = new ExtraInfo();
+            }
+            extra.typeParameters = typeParameters;
+        }
+        if (receiverType != null) {
+            if (extra == null) {
+                extra = new ExtraInfo();
+            }
+            extra.receiverType = receiverType;
+        }
+        if (defaultValue != null) {
+            if (extra == null) {
+                extra = new ExtraInfo();
+            }
+            extra.defaultValue = defaultValue;
+        }
     }
 
     @Override
@@ -119,10 +144,14 @@ final class MethodInternal {
 
         MethodInternal methodInternal = (MethodInternal) o;
 
+        if (extra != null && methodInternal.extra == null || extra == null && methodInternal.extra != null) {
+            return false;
+        }
+
         if (flags != methodInternal.flags) {
             return false;
         }
-        if (!Arrays.equals(annotations, methodInternal.annotations)) {
+        if (extra != null && !Arrays.equals(extra.annotations, methodInternal.extra.annotations)) {
             return false;
         }
         if (!Arrays.equals(exceptions, methodInternal.exceptions)) {
@@ -137,16 +166,21 @@ final class MethodInternal {
         if (!Arrays.equals(parameters, methodInternal.parameters)) {
             return false;
         }
-        if (receiverType != null ? !receiverType.equals(methodInternal.receiverType) : methodInternal.receiverType != null) {
+        if (extra != null && (extra.receiverType != null ? !extra.receiverType.equals(methodInternal.extra.receiverType)
+                : methodInternal.extra.receiverType != null)) {
             return false;
         }
         if (!returnType.equals(methodInternal.returnType)) {
             return false;
         }
-        if (defaultValue != null ? !defaultValue.equals(methodInternal.defaultValue) : methodInternal.defaultValue != null) {
+        if (extra != null && (extra.defaultValue != null ? !extra.defaultValue.equals(methodInternal.extra.defaultValue)
+                : methodInternal.extra.defaultValue != null)) {
             return false;
         }
-        return Arrays.equals(typeParameters, methodInternal.typeParameters);
+        if (extra != null && !Arrays.equals(extra.typeParameters, methodInternal.extra.typeParameters)) {
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -156,11 +190,11 @@ final class MethodInternal {
         result = 31 * result + Arrays.hashCode(parameters);
         result = 31 * result + returnType.hashCode();
         result = 31 * result + Arrays.hashCode(exceptions);
-        result = 31 * result + (receiverType != null ? receiverType.hashCode() : 0);
-        result = 31 * result + Arrays.hashCode(typeParameters);
-        result = 31 * result + Arrays.hashCode(annotations);
+        result = 31 * result + (extra != null && extra.receiverType != null ? extra.receiverType.hashCode() : 0);
+        result = 31 * result + (extra != null ? Arrays.hashCode(extra.typeParameters) : 0);
+        result = 31 * result + (extra != null ? Arrays.hashCode(extra.annotations) : 0);
+        result = 31 * result + (extra != null && extra.defaultValue != null ? extra.defaultValue.hashCode() : 0);
         result = 31 * result + (int) flags;
-        result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
         return result;
     }
 
@@ -203,11 +237,11 @@ final class MethodInternal {
     }
 
     final Type receiverType(ClassInfo clazz) {
-        return receiverType != null ? receiverType : new ClassType(clazz.name());
+        return extra != null && extra.receiverType != null ? extra.receiverType : new ClassType(clazz.name());
     }
 
     final Type receiverTypeField() {
-        return receiverType;
+        return extra != null ? extra.receiverType : null;
     }
 
     final List<Type> exceptions() {
@@ -220,21 +254,29 @@ final class MethodInternal {
 
     final List<TypeVariable> typeParameters() {
         // type parameters are always `TypeVariable`
-        return new ImmutableArrayList(typeParameters);
+        return extra != null && extra.typeParameters != null
+                ? new ImmutableArrayList(extra.typeParameters)
+                : Collections.emptyList();
     }
 
     final List<AnnotationInstance> annotations() {
-        return new ImmutableArrayList<AnnotationInstance>(annotations);
+        return extra != null && extra.annotations != null
+                ? new ImmutableArrayList<AnnotationInstance>(extra.annotations)
+                : Collections.<AnnotationInstance>emptyList();
     }
 
     final AnnotationInstance[] annotationArray() {
-        return annotations;
+        return extra != null && extra.annotations != null ? extra.annotations : AnnotationInstance.EMPTY_ARRAY;
     }
 
     final AnnotationInstance annotation(DotName name) {
+        if (extra == null || extra.annotations == null) {
+            return null;
+        }
+
         AnnotationInstance key = new AnnotationInstance(name, null, null);
-        int i = Arrays.binarySearch(annotations, key, AnnotationInstance.NAME_COMPARATOR);
-        return i >= 0 ? annotations[i] : null;
+        int i = Arrays.binarySearch(extra.annotations, key, AnnotationInstance.NAME_COMPARATOR);
+        return i >= 0 ? extra.annotations[i] : null;
     }
 
     final boolean hasAnnotation(DotName name) {
@@ -242,11 +284,11 @@ final class MethodInternal {
     }
 
     final Type[] typeParameterArray() {
-        return typeParameters;
+        return extra != null && extra.typeParameters != null ? extra.typeParameters : Type.EMPTY_ARRAY;
     }
 
     final AnnotationValue defaultValue() {
-        return defaultValue;
+        return extra != null ? extra.defaultValue : null;
     }
 
     final short flags() {
@@ -285,7 +327,10 @@ final class MethodInternal {
 
     void setTypeParameters(Type[] typeParameters) {
         if (typeParameters.length > 0) {
-            this.typeParameters = typeParameters;
+            if (extra == null) {
+                extra = new ExtraInfo();
+            }
+            extra.typeParameters = typeParameters;
         }
     }
 
@@ -306,17 +351,26 @@ final class MethodInternal {
     }
 
     void setReceiverType(Type receiverType) {
-        this.receiverType = receiverType;
+        if (extra == null) {
+            extra = new ExtraInfo();
+        }
+        extra.receiverType = receiverType;
     }
 
     void setAnnotations(List<AnnotationInstance> annotations) {
-        if (annotations.size() > 0) {
-            this.annotations = annotations.toArray(new AnnotationInstance[annotations.size()]);
-            Arrays.sort(this.annotations, AnnotationInstance.NAME_COMPARATOR);
+        if (!annotations.isEmpty()) {
+            if (extra == null) {
+                extra = new ExtraInfo();
+            }
+            extra.annotations = annotations.toArray(new AnnotationInstance[0]);
+            Arrays.sort(extra.annotations, AnnotationInstance.NAME_COMPARATOR);
         }
     }
 
     void setDefaultValue(AnnotationValue defaultValue) {
-        this.defaultValue = defaultValue;
+        if (extra == null) {
+            extra = new ExtraInfo();
+        }
+        extra.defaultValue = defaultValue;
     }
 }

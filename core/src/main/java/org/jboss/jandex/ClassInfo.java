@@ -745,14 +745,32 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      * inherited methods. These must be discovered by traversing the class hierarchy.
      *
      * @param name the name of the method to find
-     * @param parameters the type parameters of the method
-     * @return the located method or null if not found
+     * @param parameters the parameter types of the method
+     * @return the located method or {@code null} if not found
      */
     public final MethodInfo method(String name, Type... parameters) {
         MethodInternal key = new MethodInternal(Utils.toUTF8(name), MethodInternal.EMPTY_PARAMETER_NAMES, parameters, null,
                 (short) 0);
         int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
         return i >= 0 ? new MethodInfo(this, methods[i]) : null;
+    }
+
+    /**
+     * Retrieves a method based on its signature, which includes a method name and a parameter type list.
+     * The parameter type list is compared based on the underlying raw types. As an example,
+     * a generic type parameter {@code T} is considered equal to {@code java.lang.Object}, since the raw form
+     * of a type variable is its upper bound.
+     * <p>
+     * Eligible methods include constructors and static initializer blocks which have the special
+     * names of {@code <init>} and {@code <clinit>}, respectively. This does not, however, include
+     * inherited methods. These must be discovered by traversing the class hierarchy.
+     *
+     * @param name the name of the method to find
+     * @param parameters the parameter types of the method
+     * @return the located method or {@code null} if not found
+     */
+    public final MethodInfo method(String name, List<Type> parameters) {
+        return method(name, parameters.toArray(Type.EMPTY_ARRAY));
     }
 
     /**

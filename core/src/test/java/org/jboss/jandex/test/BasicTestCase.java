@@ -51,6 +51,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +61,7 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget.Kind;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexReader;
@@ -634,6 +636,10 @@ public class BasicTestCase {
             assertEquals("x", method.parameterName(0));
             assertEquals("y", method.parameterName(1));
             assertEquals("foo", method.parameterName(2));
+
+            MethodInfo method2 = clazz.method("doSomething", Arrays.asList(PrimitiveType.INT, PrimitiveType.LONG,
+                    ClassType.create("java.lang.String")));
+            assertEquals(method, method2);
 
             ClassInfo nested = index.getClassByName(DotName.createSimple(DummyClass.Nested.class.getName()));
             assertNotNull(nested);

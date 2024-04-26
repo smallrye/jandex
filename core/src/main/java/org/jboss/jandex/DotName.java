@@ -49,6 +49,7 @@ public final class DotName implements Comparable<DotName> {
     public static final DotName ENUM_NAME;
     public static final DotName RECORD_NAME;
     public static final DotName STRING_NAME;
+    public static final DotName INHERITED_NAME;
     public static final DotName REPEATABLE_NAME;
     public static final DotName RETENTION_NAME;
 
@@ -66,6 +67,7 @@ public final class DotName implements Comparable<DotName> {
         ENUM_NAME = new DotName(JAVA_LANG_NAME, "Enum", true, false);
         RECORD_NAME = new DotName(JAVA_LANG_NAME, "Record", true, false);
         STRING_NAME = new DotName(JAVA_LANG_NAME, "String", true, false);
+        INHERITED_NAME = new DotName(JAVA_LANG_ANNOTATION_NAME, "Inherited", true, false);
         REPEATABLE_NAME = new DotName(JAVA_LANG_ANNOTATION_NAME, "Repeatable", true, false);
         RETENTION_NAME = new DotName(DotName.JAVA_LANG_ANNOTATION_NAME, "Retention", true, false);
     }

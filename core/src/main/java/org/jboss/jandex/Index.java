@@ -308,6 +308,8 @@ public final class Index implements IndexView {
         return index.getKnownClasses().iterator().next();
     }
 
+    // ---
+
     /**
      * {@inheritDoc}
      */

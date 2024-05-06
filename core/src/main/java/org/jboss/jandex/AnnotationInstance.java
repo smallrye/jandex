@@ -44,7 +44,6 @@ import java.util.List;
 public final class AnnotationInstance {
     static final NameComparator NAME_COMPARATOR = new NameComparator();
     static final AnnotationInstance[] EMPTY_ARRAY = new AnnotationInstance[0];
-    static final DotName RETENTION = new DotName(DotName.JAVA_LANG_ANNOTATION_NAME, "Retention", true, false);
 
     private final DotName name;
     private final AnnotationTarget target;
@@ -97,8 +96,8 @@ public final class AnnotationInstance {
             throw new IllegalArgumentException("Annotation type can't be null");
         }
         DotName name = annotationType.name();
-        boolean visible = annotationType.hasDeclaredAnnotation(RETENTION)
-                && annotationType.declaredAnnotation(RETENTION).value().asString().equals("RUNTIME");
+        boolean visible = annotationType.hasDeclaredAnnotation(DotName.RETENTION_NAME)
+                && annotationType.declaredAnnotation(DotName.RETENTION_NAME).value().asString().equals("RUNTIME");
         return new AnnotationInstanceBuilder(name, visible);
     }
 

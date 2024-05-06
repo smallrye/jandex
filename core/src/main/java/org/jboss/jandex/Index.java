@@ -67,8 +67,6 @@ public final class Index implements IndexView {
     private static final List<AnnotationInstance> EMPTY_ANNOTATION_LIST = Collections.emptyList();
     private static final List<ClassInfo> EMPTY_CLASSINFO_LIST = Collections.emptyList();
 
-    static final DotName REPEATABLE = DotName.createSimple("java.lang.annotation.Repeatable");
-
     final Map<DotName, AnnotationInstance[]> annotations;
     final Map<DotName, ClassInfo[]> subclasses;
     final Map<DotName, ClassInfo[]> subinterfaces;
@@ -331,7 +329,7 @@ public final class Index implements IndexView {
         if (!annotationClass.isAnnotation()) {
             throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
         }
-        AnnotationInstance repeatable = annotationClass.declaredAnnotation(REPEATABLE);
+        AnnotationInstance repeatable = annotationClass.declaredAnnotation(DotName.REPEATABLE_NAME);
         if (repeatable == null) {
             // Not a repeatable annotation
             return getAnnotations(annotationName);

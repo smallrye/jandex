@@ -2029,7 +2029,7 @@ public final class Indexer {
     public Index complete() {
         initIndexMaps();
         try {
-            return new Index(masterAnnotations, subclasses, implementors, classes, modules, users);
+            return Index.create(masterAnnotations, subclasses, implementors, classes, modules, users);
         } finally {
             masterAnnotations = null;
             subclasses = null;

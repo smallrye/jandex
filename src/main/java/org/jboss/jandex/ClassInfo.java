@@ -59,17 +59,15 @@ public final class ClassInfo implements AnnotationTarget {
 
     // Not final to allow lazy initialization, immutable once published
     private short flags;
+    private boolean hasNoArgsConstructor;
     private Type[] interfaceTypes;
     private Type superClassType;
-    private Type[] typeParameters;
     private MethodInternal[] methods;
     private FieldInternal[] fields;
-    private RecordComponentInternal[] recordComponents;
     private byte[] methodPositions = EMPTY_POSITIONS;
     private byte[] fieldPositions = EMPTY_POSITIONS;
-    private byte[] recordComponentPositions = EMPTY_POSITIONS;
-    private boolean hasNoArgsConstructor;
     private NestingInfo nestingInfo;
+    private ExtraInfo extra;
 
     /** Describes the form of nesting used by a class */
     public enum NestingType {
@@ -86,16 +84,18 @@ public final class ClassInfo implements AnnotationTarget {
         ANONYMOUS
     }
 
+    // contains fields that are only seldom used, to make the `ClassInfo` class smaller
+    private static final class ExtraInfo {
+        private Type[] typeParameters;
+        private RecordComponentInternal[] recordComponents;
+        private byte[] recordComponentPositions = EMPTY_POSITIONS;
+        private ModuleInfo module;
+    }
+
     private static final class NestingInfo {
         private DotName enclosingClass;
         private String simpleName;
         private EnclosingMethodInfo enclosingMethod;
-
-        // non-null if the class is in fact a module descriptor
-        // this field would naturally belong to ClassInfo, but is present here
-        // to make the ClassInfo object smaller in the most common case:
-        // non-nested class that is not a module descriptor
-        private ModuleInfo module;
     }
 
     /**
@@ -133,7 +133,7 @@ public final class ClassInfo implements AnnotationTarget {
          * @return the list of parameters.
          */
         public List<Type> parameters() {
-            return Collections.unmodifiableList(Arrays.asList(parameters));
+            return new ImmutableArrayList<Type>(parameters);
         }
 
         Type[] parametersArray() {
@@ -180,7 +180,6 @@ public final class ClassInfo implements AnnotationTarget {
         this.flags = flags;
         this.interfaceTypes = interfaceTypes.length == 0 ? Type.EMPTY_ARRAY : interfaceTypes;
         this.hasNoArgsConstructor = hasNoArgsConstructor;
-        this.typeParameters = Type.EMPTY_ARRAY;
         this.methods = MethodInternal.EMPTY_ARRAY;
         this.fields = FieldInternal.EMPTY_ARRAY;
     }
@@ -537,12 +536,16 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the record component
      */
     public final RecordComponentInfo recordComponent(String name) {
+        if (extra == null || extra.recordComponents == null) {
+            return null;
+        }
+
         RecordComponentInternal key = new RecordComponentInternal(Utils.toUTF8(name), VoidType.VOID);
-        int i = Arrays.binarySearch(recordComponents, key, RecordComponentInternal.NAME_COMPARATOR);
+        int i = Arrays.binarySearch(extra.recordComponents, key, RecordComponentInternal.NAME_COMPARATOR);
         if (i < 0) {
             return null;
         }
-        return new RecordComponentInfo(this, recordComponents[i]);
+        return new RecordComponentInfo(this, extra.recordComponents[i]);
     }
 
     /**
@@ -552,19 +555,27 @@ public final class ClassInfo implements AnnotationTarget {
      * @return a list of record components
      */
     public final List<RecordComponentInfo> recordComponents() {
-        return new RecordComponentInfoGenerator(this, recordComponents, EMPTY_POSITIONS);
+        if (extra == null || extra.recordComponents == null) {
+            return Collections.emptyList();
+        }
+
+        return new RecordComponentInfoGenerator(this, extra.recordComponents, EMPTY_POSITIONS);
     }
 
     public final List<RecordComponentInfo> unsortedRecordComponents() {
-        return new RecordComponentInfoGenerator(this, recordComponents, recordComponentPositions);
+        if (extra == null || extra.recordComponents == null) {
+            return Collections.emptyList();
+        }
+
+        return new RecordComponentInfoGenerator(this, extra.recordComponents, extra.recordComponentPositions);
     }
 
     final RecordComponentInternal[] recordComponentArray() {
-        return recordComponents;
+        return extra != null && extra.recordComponents != null ? extra.recordComponents : RecordComponentInternal.EMPTY_ARRAY;
     }
 
     final byte[] recordComponentPositionArray() {
-        return recordComponentPositions;
+        return extra != null && extra.recordComponentPositions != null ? extra.recordComponentPositions : EMPTY_POSITIONS;
     }
 
 
@@ -597,7 +608,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the list of types declared in the implements clause of this class
      */
     public final List<Type> interfaceTypes() {
-        return Collections.unmodifiableList(Arrays.asList(interfaceTypes));
+        return new ImmutableArrayList<Type>(interfaceTypes);
     }
 
     final Type[] interfaceTypeArray() {
@@ -624,13 +635,20 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the generic type parameters of this class
      */
     public final List<TypeVariable> typeParameters() {
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        List<TypeVariable> list = (List) Arrays.asList(typeParameters);
-        return Collections.unmodifiableList(list);
+        if (extra == null || extra.typeParameters == null) {
+            return Collections.emptyList();
+        }
+
+        // type parameters are always `TypeVariable`
+        return new ImmutableArrayList(extra.typeParameters);
     }
 
     final Type[] typeParameterArray() {
-        return typeParameters;
+        if (extra == null || extra.typeParameters == null) {
+            return Type.EMPTY_ARRAY;
+        }
+
+        return extra.typeParameters;
     }
 
     /**
@@ -656,7 +674,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the nesting type of this class
      */
     public NestingType nestingType() {
-        if (nestingInfo == null || nestingInfo.module != null) {
+        if (nestingInfo == null) {
             return NestingType.TOP_LEVEL;
         } else if (nestingInfo.enclosingClass != null) {
             return NestingType.INNER;
@@ -709,7 +727,7 @@ public final class ClassInfo implements AnnotationTarget {
      * @return the module descriptor for module classes, otherwise null
      */
     public ModuleInfo module() {
-        return nestingInfo != null ? nestingInfo.module : null;
+        return extra != null ? extra.module : null;
     }
 
     @Override
@@ -803,31 +821,50 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     void setRecordComponentArray(RecordComponentInternal[] recordComponents) {
-        this.recordComponents = recordComponents;
+        if (recordComponents.length == 0) {
+            return;
+        }
+
+        if (extra == null) {
+            extra = new ExtraInfo();
+        }
+
+        extra.recordComponents = recordComponents;
     }
 
     void setRecordComponentPositionArray(byte[] recordComponentPositions) {
-        this.recordComponentPositions = recordComponentPositions;
+        if (recordComponentPositions.length == 0) {
+            return;
+        }
+
+        if (extra == null) {
+            extra = new ExtraInfo();
+        }
+
+        extra.recordComponentPositions = recordComponentPositions;
     }
 
     void setRecordComponents(List<RecordComponentInfo> recordComponents, NameTable names) {
         final int size = recordComponents.size();
 
         if (size == 0) {
-            this.recordComponents = RecordComponentInternal.EMPTY_ARRAY;
             return;
         }
 
-        this.recordComponents = new RecordComponentInternal[size];
+        if (extra == null) {
+            extra = new ExtraInfo();
+        }
+
+        extra.recordComponents = new RecordComponentInternal[size];
 
         for (int i = 0; i < size; i++) {
             RecordComponentInfo recordComponentInfo = recordComponents.get(i);
             RecordComponentInternal internal = names.intern(recordComponentInfo.recordComponentInternal());
             recordComponentInfo.setRecordComponentInternal(internal);
-            this.recordComponents[i] = internal;
+            extra.recordComponents[i] = internal;
         }
 
-        this.recordComponentPositions = sortAndGetPositions(this.recordComponents, RecordComponentInternal.NAME_COMPARATOR, names);
+        extra.recordComponentPositions = sortAndGetPositions(extra.recordComponents, RecordComponentInternal.NAME_COMPARATOR, names);
     }
 
     /**
@@ -880,7 +917,15 @@ public final class ClassInfo implements AnnotationTarget {
     }
 
     void setTypeParameters(Type[] typeParameters) {
-        this.typeParameters = typeParameters.length == 0 ? Type.EMPTY_ARRAY : typeParameters;
+        if (typeParameters.length == 0) {
+            return;
+        }
+
+        if (extra == null) {
+            extra = new ExtraInfo();
+        }
+
+        extra.typeParameters = typeParameters;
     }
 
     void setInnerClassInfo(DotName enclosingClass, String simpleName, boolean knownInnerClass) {
@@ -917,11 +962,11 @@ public final class ClassInfo implements AnnotationTarget {
             return;
         }
 
-        if (nestingInfo == null) {
-            nestingInfo = new NestingInfo();
+        if (extra == null) {
+            extra = new ExtraInfo();
         }
 
-        nestingInfo.module = module;
+        extra.module = module;
     }
 
     void setFlags(short flags) {

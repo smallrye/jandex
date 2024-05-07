@@ -81,7 +81,7 @@ public class ParameterizedType extends Type {
      * @return the list of type arguments, or empty if none
      */
     public List<Type> arguments() {
-        return Collections.unmodifiableList(Arrays.asList(arguments));
+        return new ImmutableArrayList<Type>(arguments);
     }
 
     Type[] argumentsArray() {

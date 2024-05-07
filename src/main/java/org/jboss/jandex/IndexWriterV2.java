@@ -228,16 +228,15 @@ final class IndexWriterV2 extends IndexWriterImpl{
         return stream.size();
     }
 
-    private void writeUsersTable(PackedDataOutputStream stream, Map<DotName, List<ClassInfo>> users) throws IOException {
-        for (Entry<DotName, List<ClassInfo>> entry : users.entrySet()) {
+    private void writeUsersTable(PackedDataOutputStream stream, Map<DotName, ClassInfo[]> users) throws IOException {
+        for (Entry<DotName, ClassInfo[]> entry : users.entrySet()) {
             writeUsersSet(stream, entry.getKey(), entry.getValue());
         }
     }
 
-
-    private void writeUsersSet(PackedDataOutputStream stream, DotName user, List<ClassInfo> uses) throws IOException {
+    private void writeUsersSet(PackedDataOutputStream stream, DotName user, ClassInfo[] uses) throws IOException {
         stream.writePackedU32(positionOf(user));
-        stream.writePackedU32(uses.size());
+        stream.writePackedU32(uses.length);
         for (ClassInfo use : uses) {
             stream.writePackedU32(positionOf(use.name()));
         }
@@ -848,7 +847,7 @@ final class IndexWriterV2 extends IndexWriterImpl{
             }
 
             if (index.users != null) {
-                for (Entry<DotName, List<ClassInfo>> entry : index.users.entrySet()) {
+                for (Entry<DotName, ClassInfo[]> entry : index.users.entrySet()) {
                     addClassName(entry.getKey());
                     for (ClassInfo classInfo : entry.getValue()) {
                         addClassName(classInfo.name());

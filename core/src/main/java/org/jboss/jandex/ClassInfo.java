@@ -96,6 +96,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         private RecordComponentInternal[] recordComponents;
         private byte[] recordComponentPositions = EMPTY_POSITIONS;
         private Set<DotName> memberClasses;
+        private Set<DotName> permittedSubclasses;
         private ModuleInfo module;
     }
 
@@ -264,6 +265,24 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      */
     public final boolean isInterface() {
         return Modifier.isInterface(flags);
+    }
+
+    /**
+     * @return {@code true} if this class object represents a {@code final} class;
+     *         an interface is never {@code final}
+     * @since 3.2.0
+     */
+    public final boolean isFinal() {
+        return Modifier.isFinal(flags);
+    }
+
+    /**
+     * @return {@code true} if this class object represents an {@code abstract} class;
+     *         an interface is always {@code abstract}
+     * @since 3.2.0
+     */
+    public final boolean isAbstract() {
+        return Modifier.isAbstract(flags);
     }
 
     /**
@@ -1134,6 +1153,28 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
     }
 
     /**
+     * Returns the set of permitted subclasses of this {@code sealed} class (or interface).
+     * Returns an empty set if this class is not {@code sealed}.
+     *
+     * @return immutable set of names of this class's permitted subclasses, never {@code null}
+     * @since 3.2.0
+     */
+    public Set<DotName> permittedSubclasses() {
+        if (extra == null || extra.permittedSubclasses == null) {
+            return Collections.emptySet();
+        }
+        return Collections.unmodifiableSet(extra.permittedSubclasses);
+    }
+
+    /**
+     * @return {@code true} if this class object represents a {@code sealed} class (or interface)
+     * @since 3.2.0
+     */
+    public boolean isSealed() {
+        return extra != null && extra.permittedSubclasses != null && !extra.permittedSubclasses.isEmpty();
+    }
+
+    /**
      * Returns whether this class must have a generic signature. That is, whether the Java compiler
      * when compiling this class had to emit the {@code Signature} bytecode attribute.
      *
@@ -1434,5 +1475,17 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
 
     void setFlags(short flags) {
         this.flags = flags;
+    }
+
+    void setPermittedSubclasses(Set<DotName> permittedSubclasses) {
+        if (permittedSubclasses == null || permittedSubclasses.isEmpty()) {
+            return;
+        }
+
+        if (extra == null) {
+            extra = new ExtraInfo();
+        }
+
+        extra.permittedSubclasses = permittedSubclasses;
     }
 }

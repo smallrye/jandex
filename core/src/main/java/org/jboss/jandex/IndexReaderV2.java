@@ -633,6 +633,17 @@ final class IndexReaderV2 extends IndexReaderImpl {
             }
         }
 
+        Set<DotName> permittedSubclasses = null;
+        if (version >= 12) {
+            int permittedSubclassesCount = stream.readPackedU32();
+            if (permittedSubclassesCount > 0) {
+                permittedSubclasses = new HashSet<>(permittedSubclassesCount);
+                for (int i = 0; i < permittedSubclassesCount; i++) {
+                    permittedSubclasses.add(nameTable[stream.readPackedU32()]);
+                }
+            }
+        }
+
         int size = stream.readPackedU32();
 
         Map<DotName, List<AnnotationInstance>> annotations = size > 0
@@ -650,6 +661,9 @@ final class IndexReaderV2 extends IndexReaderImpl {
         }
         if (memberClasses != null) {
             clazz.setMemberClasses(memberClasses);
+        }
+        if (permittedSubclasses != null) {
+            clazz.setPermittedSubclasses(permittedSubclasses);
         }
 
         FieldInternal[] fields = readClassFields(stream, clazz);

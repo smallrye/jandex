@@ -606,6 +606,13 @@ final class IndexWriterV2 extends IndexWriterImpl {
             }
         }
 
+        if (version >= 12) {
+            stream.writePackedU32(clazz.permittedSubclasses().size());
+            for (DotName permittedSubclass : clazz.permittedSubclasses()) {
+                stream.writePackedU32(positionOf(permittedSubclass));
+            }
+        }
+
         // Annotation length is early to allow eager allocation in reader.
         stream.writePackedU32(clazz.annotationsMap().size());
 
@@ -940,6 +947,9 @@ final class IndexWriterV2 extends IndexWriterImpl {
 
         for (DotName memberClass : clazz.memberClasses()) {
             addClassName(memberClass);
+        }
+        for (DotName permittedSubclass : clazz.permittedSubclasses()) {
+            addClassName(permittedSubclass);
         }
 
         addMethodList(clazz.methodArray());

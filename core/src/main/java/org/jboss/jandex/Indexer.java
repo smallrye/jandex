@@ -1814,7 +1814,7 @@ public final class Indexer {
         int end = signatures.size();
 
         // Class signature should be processed first to establish class type parameters
-        signatureParser.beforeNewClass();
+        signatureParser.beforeNewClass(currentClass.name());
         if (classSignatureIndex >= 0) {
             String elementSignature = (String) signatures.get(classSignatureIndex);
             Object element = signatures.get(classSignatureIndex + 1);
@@ -1844,7 +1844,7 @@ public final class Indexer {
     private void parseClassSignature(String signature, ClassInfo clazz) {
         GenericSignatureParser.ClassSignature classSignature;
         try {
-            classSignature = signatureParser.parseClassSignature(signature);
+            classSignature = signatureParser.parseClassSignature(signature, clazz.name());
         } catch (Exception e) {
             // invalid generic signature
             // let's just pretend that no signature exists
@@ -2720,7 +2720,8 @@ public final class Indexer {
     private Type deepCopyTypeIfNeeded(Type type) {
         if (type.kind() == Type.Kind.TYPE_VARIABLE_REFERENCE) {
             // type variable references must be patched by the caller, so no need to set target here
-            return new TypeVariableReference(type.asTypeVariableReference().identifier(), null, type.annotationArray());
+            return new TypeVariableReference(type.asTypeVariableReference().identifier(), null, type.annotationArray(),
+                    type.asTypeVariableReference().internalClassName());
         } else if (type.kind() == Type.Kind.TYPE_VARIABLE) {
             TypeVariable typeVariable = type.asTypeVariable();
             Type[] bounds = typeVariable.boundArray();

@@ -50,7 +50,7 @@ import java.util.Set;
  */
 final class IndexReaderV2 extends IndexReaderImpl {
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 11;
+    static final int MAX_VERSION = 12;
     private static final byte NULL_TARGET_TAG = 0;
     private static final byte FIELD_TAG = 1;
     private static final byte METHOD_TAG = 2;
@@ -432,8 +432,12 @@ final class IndexReaderV2 extends IndexReaderImpl {
             case TYPE_VARIABLE_REFERENCE: {
                 String identifier = stringTable[stream.readPackedU32()];
                 int position = stream.readPackedU32();
+                DotName className = null;
+                if (version >= 12) {
+                    className = nameTable[stream.readPackedU32()];
+                }
                 AnnotationInstance[] annotations = readAnnotations(stream, null);
-                TypeVariableReference reference = new TypeVariableReference(identifier, null, annotations);
+                TypeVariableReference reference = new TypeVariableReference(identifier, null, annotations, className);
                 references.put(reference, position);
                 return reference;
             }

@@ -16,7 +16,7 @@
 
         <version.exec-maven-plugin>3.0.0</version.exec-maven-plugin>
         <version.gson>2.8.9</version.gson>
-        <version.jandex>3.0.8-SNAPSHOT</version.jandex>
+        <version.jandex>${project.version}</version.jandex>
         <version.jmh>1.35</version.jmh>
         <version.jmh-maven-plugin>0.2.2</version.jmh-maven-plugin>
         <version.xchart>3.8.1</version.xchart>

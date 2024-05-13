@@ -32,7 +32,7 @@ final class MethodInternal implements Interned {
     static final NameAndParameterComponentComparator NAME_AND_PARAMETER_COMPONENT_COMPARATOR = new NameAndParameterComponentComparator();
     static final byte[][] EMPTY_PARAMETER_NAMES = new byte[0][];
 
-    static class NameAndParameterComponentComparator implements Comparator<MethodInternal> {
+    private static final class NameAndParameterComponentComparator implements Comparator<MethodInternal> {
         private int compare(byte[] left, byte[] right) {
             for (int i = 0, j = 0; i < left.length && j < right.length; i++, j++) {
                 int a = (left[i] & 0xff);
@@ -72,16 +72,21 @@ final class MethodInternal implements Interned {
         }
     }
 
+    // contains fields that are only seldom used, to make the `MethodInternal` class smaller
+    private static final class ExtraInfo {
+        Type receiverType;
+        Type[] typeParameters;
+        AnnotationValue defaultValue;
+        AnnotationInstance[] annotations;
+    }
+
     private byte[] name;
     private byte[][] parameterNames;
     private Type[] parameterTypes;
     private Type returnType;
     private Type[] exceptions;
-    private Type receiverType;
-    private Type[] typeParameters;
-    private AnnotationInstance[] annotations;
-    private AnnotationValue defaultValue;
     private short flags;
+    private ExtraInfo extra;
 
     private final Type[] descriptorParameterTypes;
 
@@ -103,11 +108,31 @@ final class MethodInternal implements Interned {
         this.parameterTypes = parameterTypes.length == 0 ? Type.EMPTY_ARRAY : parameterTypes;
         this.returnType = returnType;
         this.flags = flags;
-        this.annotations = annotations;
         this.exceptions = exceptions;
-        this.typeParameters = typeParameters;
-        this.receiverType = receiverType;
-        this.defaultValue = defaultValue;
+        if (annotations != null && annotations.length > 0) {
+            if (extra == null) {
+                extra = new ExtraInfo();
+            }
+            extra.annotations = annotations;
+        }
+        if (typeParameters != null && typeParameters.length > 0) {
+            if (extra == null) {
+                extra = new ExtraInfo();
+            }
+            extra.typeParameters = typeParameters;
+        }
+        if (receiverType != null) {
+            if (extra == null) {
+                extra = new ExtraInfo();
+            }
+            extra.receiverType = receiverType;
+        }
+        if (defaultValue != null) {
+            if (extra == null) {
+                extra = new ExtraInfo();
+            }
+            extra.defaultValue = defaultValue;
+        }
 
         this.descriptorParameterTypes = this.parameterTypes;
     }
@@ -123,10 +148,14 @@ final class MethodInternal implements Interned {
 
         MethodInternal methodInternal = (MethodInternal) o;
 
+        if (extra != null && methodInternal.extra == null || extra == null && methodInternal.extra != null) {
+            return false;
+        }
+
         if (flags != methodInternal.flags) {
             return false;
         }
-        if (!Arrays.equals(annotations, methodInternal.annotations)) {
+        if (extra != null && !Arrays.equals(extra.annotations, methodInternal.extra.annotations)) {
             return false;
         }
         if (!Arrays.equals(exceptions, methodInternal.exceptions)) {
@@ -144,16 +173,21 @@ final class MethodInternal implements Interned {
         if (!Arrays.equals(descriptorParameterTypes, methodInternal.descriptorParameterTypes)) {
             return false;
         }
-        if (receiverType != null ? !receiverType.equals(methodInternal.receiverType) : methodInternal.receiverType != null) {
+        if (extra != null && (extra.receiverType != null ? !extra.receiverType.equals(methodInternal.extra.receiverType)
+                : methodInternal.extra.receiverType != null)) {
             return false;
         }
         if (!returnType.equals(methodInternal.returnType)) {
             return false;
         }
-        if (defaultValue != null ? !defaultValue.equals(methodInternal.defaultValue) : methodInternal.defaultValue != null) {
+        if (extra != null && (extra.defaultValue != null ? !extra.defaultValue.equals(methodInternal.extra.defaultValue)
+                : methodInternal.extra.defaultValue != null)) {
             return false;
         }
-        return Arrays.equals(typeParameters, methodInternal.typeParameters);
+        if (extra != null && !Arrays.equals(extra.typeParameters, methodInternal.extra.typeParameters)) {
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -164,11 +198,11 @@ final class MethodInternal implements Interned {
         result = 31 * result + Arrays.hashCode(descriptorParameterTypes);
         result = 31 * result + returnType.hashCode();
         result = 31 * result + Arrays.hashCode(exceptions);
-        result = 31 * result + (receiverType != null ? receiverType.hashCode() : 0);
-        result = 31 * result + Arrays.hashCode(typeParameters);
-        result = 31 * result + Arrays.hashCode(annotations);
+        result = 31 * result + (extra != null && extra.receiverType != null ? extra.receiverType.hashCode() : 0);
+        result = 31 * result + (extra != null ? Arrays.hashCode(extra.typeParameters) : 0);
+        result = 31 * result + (extra != null ? Arrays.hashCode(extra.annotations) : 0);
+        result = 31 * result + (extra != null && extra.defaultValue != null ? extra.defaultValue.hashCode() : 0);
         result = 31 * result + (int) flags;
-        result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
         return result;
     }
 
@@ -183,10 +217,14 @@ final class MethodInternal implements Interned {
 
         MethodInternal methodInternal = (MethodInternal) o;
 
+        if (extra != null && methodInternal.extra == null || extra == null && methodInternal.extra != null) {
+            return false;
+        }
+
         if (flags != methodInternal.flags) {
             return false;
         }
-        if (!Arrays.equals(annotations, methodInternal.annotations)) {
+        if (extra != null && !Arrays.equals(extra.annotations, methodInternal.extra.annotations)) {
             return false;
         }
         if (!Interned.arrayEquals(exceptions, methodInternal.exceptions)) {
@@ -204,17 +242,21 @@ final class MethodInternal implements Interned {
         if (!Interned.arrayEquals(descriptorParameterTypes, methodInternal.descriptorParameterTypes)) {
             return false;
         }
-        if (receiverType != null ? !receiverType.internEquals(methodInternal.receiverType)
-                : methodInternal.receiverType != null) {
+        if (extra != null && (extra.receiverType != null ? !extra.receiverType.internEquals(methodInternal.extra.receiverType)
+                : methodInternal.extra.receiverType != null)) {
             return false;
         }
         if (!returnType.internEquals(methodInternal.returnType)) {
             return false;
         }
-        if (defaultValue != null ? !defaultValue.equals(methodInternal.defaultValue) : methodInternal.defaultValue != null) {
+        if (extra != null && (extra.defaultValue != null ? !extra.defaultValue.equals(methodInternal.extra.defaultValue)
+                : methodInternal.extra.defaultValue != null)) {
             return false;
         }
-        return Interned.arrayEquals(typeParameters, methodInternal.typeParameters);
+        if (extra != null && !Interned.arrayEquals(extra.typeParameters, methodInternal.extra.typeParameters)) {
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -225,11 +267,11 @@ final class MethodInternal implements Interned {
         result = 31 * result + Interned.arrayHashCode(descriptorParameterTypes);
         result = 31 * result + returnType.internHashCode();
         result = 31 * result + Interned.arrayHashCode(exceptions);
-        result = 31 * result + (receiverType != null ? receiverType.internHashCode() : 0);
-        result = 31 * result + Interned.arrayHashCode(typeParameters);
-        result = 31 * result + Arrays.hashCode(annotations);
+        result = 31 * result + (extra != null && extra.receiverType != null ? extra.receiverType.internHashCode() : 0);
+        result = 31 * result + (extra != null ? Interned.arrayHashCode(extra.typeParameters) : 0);
+        result = 31 * result + (extra != null ? Arrays.hashCode(extra.annotations) : 0);
+        result = 31 * result + (extra != null && extra.defaultValue != null ? extra.defaultValue.hashCode() : 0);
         result = 31 * result + (int) flags;
-        result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
         return result;
     }
 
@@ -268,11 +310,11 @@ final class MethodInternal implements Interned {
     }
 
     final List<Type> parameterTypes() {
-        return Collections.unmodifiableList(Arrays.asList(parameterTypes));
+        return new ImmutableArrayList<>(parameterTypes);
     }
 
     final List<Type> descriptorParameterTypes() {
-        return Collections.unmodifiableList(Arrays.asList(descriptorParameterTypes));
+        return new ImmutableArrayList<>(descriptorParameterTypes);
     }
 
     final Type[] descriptorParameterTypesArray() {
@@ -284,8 +326,8 @@ final class MethodInternal implements Interned {
     }
 
     final Type receiverType(ClassInfo clazz) {
-        if (receiverType != null) {
-            return receiverType;
+        if (extra != null && extra.receiverType != null) {
+            return extra.receiverType;
         }
 
         // don't assign the `receiverType` field here! receiver type declaration is only useful
@@ -302,11 +344,11 @@ final class MethodInternal implements Interned {
     }
 
     final Type receiverTypeField() {
-        return receiverType;
+        return extra != null ? extra.receiverType : null;
     }
 
     final List<Type> exceptions() {
-        return Collections.unmodifiableList(Arrays.asList(exceptions));
+        return new ImmutableArrayList<>(exceptions);
     }
 
     final Type[] exceptionArray() {
@@ -314,21 +356,22 @@ final class MethodInternal implements Interned {
     }
 
     final List<TypeVariable> typeParameters() {
-        @SuppressWarnings("unchecked") // type parameters will always be TypeVariable[]
-        List<TypeVariable> list = (List) Arrays.asList(typeParameters);
-        return Collections.unmodifiableList(list);
+        // type parameters are always `TypeVariable`
+        return extra != null && extra.typeParameters != null ? new ImmutableArrayList(extra.typeParameters)
+                : Collections.emptyList();
     }
 
     final List<AnnotationInstance> annotations() {
-        return Collections.unmodifiableList(Arrays.asList(annotations));
+        return extra != null && extra.annotations != null ? new ImmutableArrayList<>(extra.annotations)
+                : Collections.emptyList();
     }
 
     final AnnotationInstance[] annotationArray() {
-        return annotations;
+        return extra != null && extra.annotations != null ? extra.annotations : AnnotationInstance.EMPTY_ARRAY;
     }
 
     final AnnotationInstance annotation(DotName name) {
-        return AnnotationInstance.binarySearch(annotations, name);
+        return extra != null && extra.annotations != null ? AnnotationInstance.binarySearch(extra.annotations, name) : null;
     }
 
     final boolean hasAnnotation(DotName name) {
@@ -336,11 +379,11 @@ final class MethodInternal implements Interned {
     }
 
     final Type[] typeParameterArray() {
-        return typeParameters;
+        return extra != null && extra.typeParameters != null ? extra.typeParameters : Type.EMPTY_ARRAY;
     }
 
     final AnnotationValue defaultValue() {
-        return defaultValue;
+        return extra != null ? extra.defaultValue : null;
     }
 
     final short flags() {
@@ -352,8 +395,8 @@ final class MethodInternal implements Interned {
         StringBuilder builder = new StringBuilder();
         String name = name();
         builder.append(returnType.toString(true)).append(' ').append(name).append('(');
-        if (receiverType != null) {
-            builder.append(receiverType.toString(true)).append(" this");
+        if (extra != null && extra.receiverType != null) {
+            builder.append(extra.receiverType.toString(true)).append(" this");
             if (parameterTypes.length > 0) {
                 builder.append(", ");
             }
@@ -385,7 +428,10 @@ final class MethodInternal implements Interned {
 
     void setTypeParameters(Type[] typeParameters) {
         if (typeParameters.length > 0) {
-            this.typeParameters = typeParameters;
+            if (extra == null) {
+                extra = new ExtraInfo();
+            }
+            extra.typeParameters = typeParameters;
         }
     }
 
@@ -406,17 +452,26 @@ final class MethodInternal implements Interned {
     }
 
     void setReceiverType(Type receiverType) {
-        this.receiverType = receiverType;
+        if (extra == null) {
+            extra = new ExtraInfo();
+        }
+        extra.receiverType = receiverType;
     }
 
     void setAnnotations(List<AnnotationInstance> annotations) {
-        if (annotations.size() > 0) {
-            this.annotations = annotations.toArray(new AnnotationInstance[annotations.size()]);
-            Arrays.sort(this.annotations, AnnotationInstance.NAME_COMPARATOR);
+        if (!annotations.isEmpty()) {
+            if (extra == null) {
+                extra = new ExtraInfo();
+            }
+            extra.annotations = annotations.toArray(new AnnotationInstance[0]);
+            Arrays.sort(extra.annotations, AnnotationInstance.NAME_COMPARATOR);
         }
     }
 
     void setDefaultValue(AnnotationValue defaultValue) {
-        this.defaultValue = defaultValue;
+        if (extra == null) {
+            extra = new ExtraInfo();
+        }
+        extra.defaultValue = defaultValue;
     }
 }

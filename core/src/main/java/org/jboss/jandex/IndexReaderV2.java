@@ -778,7 +778,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             return Collections.emptyList();
         }
 
-        return Collections.unmodifiableList(Arrays.asList(annotationInstances));
+        return new ImmutableArrayList<>(annotationInstances);
     }
 
     private void addClassToMap(HashMap<DotName, List<ClassInfo>> map, DotName name, ClassInfo currentClass) {
@@ -903,7 +903,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
         Map<DotName, ModuleInfo> modules = (version >= 10) ? readModules(stream, masterAnnotations)
                 : Collections.<DotName, ModuleInfo> emptyMap();
 
-        return new Index(masterAnnotations, subclasses, subinterfaces, implementors, classes, modules, users);
+        return Index.create(masterAnnotations, subclasses, subinterfaces, implementors, classes, modules, users);
     }
 
     private Map<DotName, ModuleInfo> readModules(PackedDataInputStream stream,

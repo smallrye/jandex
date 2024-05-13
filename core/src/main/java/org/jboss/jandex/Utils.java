@@ -18,10 +18,11 @@
 
 package org.jboss.jandex;
 
+import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,16 +42,17 @@ class Utils {
         return new String(bytes, StandardCharsets.UTF_8);
     }
 
-    static <T> List<T> emptyOrWrap(List<T> list) {
-        return list.size() == 0 ? Collections.<T> emptyList() : Collections.unmodifiableList(list);
-    }
+    static <K, V> Map<K, V[]> unfold(Map<K, List<V>> map, Class<V> listElementType) {
+        if (map.isEmpty()) {
+            return Collections.emptyMap();
+        }
 
-    static <T> Collection<T> emptyOrWrap(Collection<T> list) {
-        return list.size() == 0 ? Collections.<T> emptyList() : Collections.unmodifiableCollection(list);
-    }
-
-    static <K, V> Map<K, V> emptyOrWrap(Map<K, V> map) {
-        return map.size() == 0 ? Collections.<K, V> emptyMap() : Collections.unmodifiableMap(map);
+        Map<K, V[]> result = new HashMap<>();
+        map.forEach((key, value) -> {
+            V[] array = (V[]) Array.newInstance(listElementType, value.size());
+            result.put(key, value.toArray(array));
+        });
+        return result;
     }
 
     static <T> List<T> listOfCapacity(int capacity) {

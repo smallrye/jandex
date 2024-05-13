@@ -885,12 +885,14 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
 
     /**
      * Returns a list of all record components declared by this class.
-     * This list may be empty, but never null.
+     * This list may be empty, but never {@code null}.
+     * <p>
+     * If this class is not a record, returns an empty list.
      *
-     * @return a list of record components
+     * @return immutable list of record components
      */
     public final List<RecordComponentInfo> recordComponents() {
-        if (extra == null || extra.recordComponents == null) {
+        if (!isRecord() || extra == null || extra.recordComponents == null) {
             return Collections.emptyList();
         }
 
@@ -907,7 +909,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      * assumes that the bytecode order corresponds to declaration order, which is not guaranteed,
      * but practically always holds.
      *
-     * @return a list of record components
+     * @return immutable list of record components
      * @since 2.4
      */
     public final List<RecordComponentInfo> unsortedRecordComponents() {

@@ -471,7 +471,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         if (!annotationClass.isAnnotation()) {
             throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
         }
-        AnnotationInstance repeatable = annotationClass.declaredAnnotation(Index.REPEATABLE);
+        AnnotationInstance repeatable = annotationClass.declaredAnnotation(DotName.REPEATABLE_NAME);
         if (repeatable != null) {
             Type containingType = repeatable.value().asClass();
             for (AnnotationInstance container : annotations(containingType.name())) {
@@ -598,7 +598,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         if (!annotationClass.isAnnotation()) {
             throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
         }
-        AnnotationInstance repeatable = annotationClass.declaredAnnotation(Index.REPEATABLE);
+        AnnotationInstance repeatable = annotationClass.declaredAnnotation(DotName.REPEATABLE_NAME);
         if (repeatable != null) {
             Type containingType = repeatable.value().asClass();
             AnnotationInstance container = declaredAnnotation(containingType.name());

@@ -231,10 +231,8 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
 
     Set<AnnotationInstance> getAnnotationsFor(Declaration declaration) {
         EquivalenceKey key = EquivalenceKey.of(declaration);
-        Set<AnnotationInstance> annotations = overlay.get(key);
-
-        if (annotations == null) {
-            Collection<AnnotationInstance> original = new HashSet<>(getOriginalAnnotations(declaration));
+        Set<AnnotationInstance> annotations = overlay.computeIfAbsent(key, ignored -> {
+            Set<AnnotationInstance> original = getOriginalAnnotations(declaration);
             TransformationContextImpl transformationContext = new TransformationContextImpl(declaration, original);
             for (AnnotationTransformation transformation : transformations) {
                 if (transformation.supports(declaration.kind())) {
@@ -242,9 +240,8 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
                 }
             }
             Set<AnnotationInstance> result = transformationContext.annotations;
-            annotations = original.equals(result) ? SENTINEL : Collections.unmodifiableSet(result);
-            overlay.put(key, annotations);
-        }
+            return original.equals(result) ? SENTINEL : Collections.unmodifiableSet(result);
+        });
 
         if (annotations == SENTINEL) {
             annotations = getOriginalAnnotations(declaration);

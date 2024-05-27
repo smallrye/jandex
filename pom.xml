@@ -28,7 +28,7 @@
         <version.exec-maven-plugin>3.0.0</version.exec-maven-plugin>
         <version.groovy>4.0.16</version.groovy>
         <version.junit>5.10.1</version.junit>
-        <version.maven>3.8.1</version.maven>
+        <version.maven>3.9.7</version.maven>
         <version.maven-bundle-plugin>5.1.8</version.maven-bundle-plugin>
         <version.maven-compiler-plugin>3.13.0</version.maven-compiler-plugin>
         <version.maven-dependency-plugin>3.6.1</version.maven-dependency-plugin>

@@ -114,19 +114,19 @@ public class StackedIndexTest {
         // on the _types_ of `AnnotatedClassN.field` and `method`, contrary to the `@Target` declarations
 
         annotations = index.getAnnotations(MyRepeatableAnnotation.DOT_NAME);
-        assertEquals(CompiledWith.ecj() ? 11 : 5, annotations.size());
+        assertEquals(5, annotations.size());
         for (AnnotationInstance annotation : annotations) {
             assertFalse(annotation.value().asString().startsWith("XXX"));
         }
 
         annotations = index.getAnnotations(MyRepeatableAnnotation.List.DOT_NAME);
-        assertEquals(CompiledWith.ecj() ? 5 : 3, annotations.size());
+        assertEquals(3, annotations.size());
         for (AnnotationInstance annotation : annotations) {
             assertFalse(annotation.value().asString().startsWith("XXX"));
         }
 
         annotations = index.getAnnotationsWithRepeatable(MyRepeatableAnnotation.DOT_NAME, index);
-        assertEquals(CompiledWith.ecj() ? 21 : 11, annotations.size());
+        assertEquals(11, annotations.size());
         for (AnnotationInstance annotation : annotations) {
             assertFalse(annotation.value().asString().startsWith("XXX"));
         }

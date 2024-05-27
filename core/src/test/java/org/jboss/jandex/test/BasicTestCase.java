@@ -673,19 +673,9 @@ public class BasicTestCase {
             assertEquals(0, nestedParamAnnotated.position());
             assertTrue(nestedParamAnnotated.hasAnnotation(DotName.createSimple(ParameterAnnotation.class.getName())));
             assertNotNull(nestedParamAnnotated.annotation(DotName.createSimple(ParameterAnnotation.class.getName())));
-            if (!CompiledWith.ecj()) {
-                // javac DOESN'T put the annotation on the _type_ of the parameter
-                assertEquals(1, nestedParamAnnotated.annotations().size());
-                assertTrue(nestedParamAnnotated.type().annotations().isEmpty());
-                assertNull(nestedParamAnnotated.type().annotation(DotName.createSimple(ParameterAnnotation.class.getName())));
-            } else {
-                // ecj DOES put the annotation on the _type_ of the parameter, contrary to the `@Target` declaration
-                assertEquals(2, nestedParamAnnotated.annotations().size());
-                assertTrue(
-                        nestedParamAnnotated.type().hasAnnotation(DotName.createSimple(ParameterAnnotation.class.getName())));
-                assertNotNull(
-                        nestedParamAnnotated.type().annotation(DotName.createSimple(ParameterAnnotation.class.getName())));
-            }
+            assertEquals(1, nestedParamAnnotated.annotations().size());
+            assertTrue(nestedParamAnnotated.type().annotations().isEmpty());
+            assertNull(nestedParamAnnotated.type().annotation(DotName.createSimple(ParameterAnnotation.class.getName())));
 
             ClassInfo enumClass = index.getClassByName(DotName.createSimple(Enum.class.getName()));
             assertNotNull(enumClass);

@@ -128,7 +128,8 @@ public class TypeAnnotationOnLocalClassTypeTest {
         assertNotNull(classInfo);
         assertEquals(clazz.getName(), classInfo.name().toString());
 
-        {
+        if (!CompiledWith.ecj()) {
+            // ecj does NOT put the type annotation on the extended type
             assertEquals(
                     "org.jboss.jandex.test.@TypeAnn(\"local:extends\") TypeAnnotationOnLocalClassTypeTest$InnerClass$1LocalClass",
                     classInfo.superClassType().toString());

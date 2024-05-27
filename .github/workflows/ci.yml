@@ -27,7 +27,9 @@ jobs:
         - 11
         - 17
         - 21
-        - 22-ea
+        - 22
+        # not yet supported by Groovy
+        #- 23-ea
         compiler:
         - javac
         - ecj
@@ -39,6 +41,8 @@ jobs:
         - windows-latest
         exclude:
         - java: 8
+          compiler: ecj
+        - java: 11
           compiler: ecj
     runs-on: ${{ matrix.os }}
     name: "JDK ${{ matrix.java }}, ${{ matrix.compiler}}, params: ${{ matrix.parameters }}, ${{ matrix.os }}"
@@ -55,7 +59,7 @@ jobs:
     - name: Set up Maven
       uses: stCarolas/setup-maven@v5
       with:
-        maven-version: 3.8.7
+        maven-version: 3.9.7
 
     - name: Build with Maven
       shell: bash

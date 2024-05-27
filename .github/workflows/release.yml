@@ -32,6 +32,11 @@ jobs:
       with:
         distribution: temurin
         java-version: 17
+        server-id: 'oss.sonatype'
+        server-username: 'MAVEN_DEPLOY_USERNAME'
+        server-password: 'MAVEN_DEPLOY_TOKEN'
+        gpg-private-key: ${{secrets.MAVEN_GPG_PRIVATE_KEY}}
+        gpg-passphrase: 'MAVEN_GPG_PASSPHRASE'
 
     - name: Set up Maven
       uses: stCarolas/setup-maven@v4.5
@@ -39,22 +44,23 @@ jobs:
         maven-version: 3.8.7
 
     - name: Maven release ${{steps.metadata.outputs.current-version}}
+      env:
+        MAVEN_DEPLOY_USERNAME: ${{secrets.MAVEN_DEPLOY_USERNAME}}
+        MAVEN_DEPLOY_TOKEN: ${{secrets.MAVEN_DEPLOY_TOKEN}}
+        MAVEN_GPG_PASSPHRASE: ${{secrets.MAVEN_GPG_PASSPHRASE}}
       run: |
         export MAVEN_OPTS="--add-opens=java.base/java.util=ALL-UNNAMED"
         java -version
-        gpg --quiet --batch --yes --decrypt --passphrase="${{secrets.SECRET_PASSPHRASE}}" --output smallrye-sign.asc .github/release/smallrye-sign.asc.gpg
-        gpg --quiet --batch --yes --decrypt --passphrase="${{secrets.SECRET_PASSPHRASE}}" --output maven-settings.xml .github/release/maven-settings.xml.gpg
-        gpg --fast-import --no-tty --batch --yes smallrye-sign.asc
         git config --global user.name "SmallRye CI"
         git config --global user.email "smallrye@googlegroups.com"
         git checkout -b release
         sed -i -e 's|<version.jandex>.*</version.jandex>|<version.jandex>${{steps.metadata.outputs.current-version}}</version.jandex>|' benchmarks/pom.xml
         sed -i -e 's|^version: main|version: ${{steps.metadata.outputs.current-version}}|' doc/antora.yml
         git commit -a -m 'Amendments before release'
-        mvn -B release:prepare -Prelease -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}} -s maven-settings.xml
+        mvn -B release:prepare -Prelease -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}}
         git checkout ${{github.base_ref}}
         git rebase release
-        mvn -B release:perform -Prelease -s maven-settings.xml
+        mvn -B release:perform -Prelease
         sed -i -e 's|<version.jandex>.*</version.jandex>|<version.jandex>${project.version}</version.jandex>|' benchmarks/pom.xml
         sed -i -e 's|^version: ${{steps.metadata.outputs.current-version}}|version: main|' doc/antora.yml
         git commit -a -m 'Amendments after release'

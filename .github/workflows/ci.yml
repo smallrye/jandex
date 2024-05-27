@@ -42,6 +42,8 @@ jobs:
         exclude:
         - java: 8
           compiler: ecj
+        - java: 11
+          compiler: ecj
     runs-on: ${{ matrix.os }}
     name: "JDK ${{ matrix.java }}, ${{ matrix.compiler}}, params: ${{ matrix.parameters }}, ${{ matrix.os }}"
     steps:
@@ -57,7 +59,7 @@ jobs:
     - name: Set up Maven
       uses: stCarolas/setup-maven@v5
       with:
-        maven-version: 3.8.7
+        maven-version: 3.9.7
 
     - name: Build with Maven
       shell: bash

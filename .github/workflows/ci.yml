@@ -51,7 +51,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up JDK ${{ matrix.java }}
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         distribution: temurin
         java-version: ${{ matrix.java }}
@@ -82,7 +82,7 @@ jobs:
         fetch-depth: 50
 
     - name: Set up JDK ${{ matrix.java }}
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         distribution: temurin
         java-version: ${{ matrix.java }}

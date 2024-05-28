@@ -113,9 +113,9 @@
                                 <configuration>
                                     <jdkCachePath>${project.basedir}/jdk-cache</jdkCachePath>
                                     <jdkPathProperty>custom-jdk-path</jdkPathProperty>
-                                    <provider>ADOPT</provider>
+                                    <provider>MICROSOFT</provider>
                                     <providerConfig>
-                                        <release>${java.version}</release>
+                                        <version>17.0.11</version>
                                         <arch>x64</arch> <!-- TODO select automatically, but how? -->
                                     </providerConfig>
                                 </configuration>

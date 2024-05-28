@@ -105,7 +105,7 @@ jobs:
         echo 'allprojects { plugins.withType<JavaPlugin> { dependencies { "jandexClasspath"("io.smallrye:jandex:1.0.0-dev-SNAPSHOT") } } }' >> ../calcite/build.gradle.kts
 
     - name: Verify Calcite bytecode
-      uses: burrunan/gradle-cache-action@feb985ecf49f57f54f31920821a50d0394faf122
+      uses: burrunan/gradle-cache-action@v1.19
       with:
         job-id: calcite-jdk${{ matrix.java-version }}
         build-root-directory: ../calcite

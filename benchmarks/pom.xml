@@ -14,7 +14,7 @@
     <properties>
         <groupId.jandex>${project.groupId}</groupId.jandex>
 
-        <version.exec-maven-plugin>3.0.0</version.exec-maven-plugin>
+        <version.exec-maven-plugin>3.3.0</version.exec-maven-plugin>
         <version.gson>2.11.0</version.gson>
         <version.jandex>${project.version}</version.jandex>
         <version.jmh>1.37</version.jmh>

@@ -35,7 +35,7 @@
         <version.maven-invoker-plugin>3.7.0</version.maven-invoker-plugin>
         <version.maven-plugin-tools>3.13.0</version.maven-plugin-tools>
         <version.maven-shade-plugin>3.5.1</version.maven-shade-plugin>
-        <version.nexus-staging-maven-plugin>1.6.14</version.nexus-staging-maven-plugin>
+        <version.nexus-staging-maven-plugin>1.7.0</version.nexus-staging-maven-plugin>
         <version.mvn-jlink-wrapper>1.2.2</version.mvn-jlink-wrapper>
         <version.plexus-compiler-eclipse>2.15.0</version.plexus-compiler-eclipse>
         <version.plexus-utils>4.0.1</version.plexus-utils>

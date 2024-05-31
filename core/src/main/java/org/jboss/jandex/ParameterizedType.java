@@ -327,6 +327,32 @@ public class ParameterizedType extends Type {
     }
 
     @Override
+    public int internCompareTo(Type o) {
+        if (this == o) {
+            return 0;
+        }
+
+        int v = super.internCompareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        ParameterizedType other = (ParameterizedType) o;
+        v = Type.internCompare(owner, other.owner);
+        if (v != 0) {
+            return v;
+        }
+
+        v = Type.ARRAY_COMPARATOR.compare(arguments, other.arguments);
+        if (v != 0) {
+            return v;
+        }
+
+        assert this.internEquals(o) : "ParameterizedType::internCompare method not consistent with internEquals";
+        return 0;
+    }
+
+    @Override
     boolean internEquals(Object o) {
         if (this == o) {
             return true;

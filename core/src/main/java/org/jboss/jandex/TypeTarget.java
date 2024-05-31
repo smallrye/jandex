@@ -75,6 +75,32 @@ public abstract class TypeTarget implements AnnotationTarget {
         this(enclosingTarget, null);
     }
 
+    @Override
+    public int compareTo(AnnotationTarget o) {
+
+        if (this == o) {
+            return 0;
+        }
+
+        int v = AnnotationTarget.super.compareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        TypeTarget other = (TypeTarget) o;
+        v = Type.internCompare(target, other.target);
+        if (v != 0) {
+            return v;
+        }
+
+        v = AnnotationTarget.compare(enclosingTarget, other.enclosingTarget);
+        if (v != 0) {
+            return v;
+        }
+
+        return 0;
+    }
+
     void setTarget(Type target) {
         this.target = target;
     }

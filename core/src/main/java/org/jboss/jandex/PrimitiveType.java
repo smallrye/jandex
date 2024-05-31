@@ -259,6 +259,27 @@ public final class PrimitiveType extends Type {
     }
 
     @Override
+    public int internCompareTo(Type o) {
+        if (this == o) {
+            return 0;
+        }
+
+        int v = super.internCompareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        PrimitiveType other = (PrimitiveType) o;
+        v = primitive.compareTo(other.primitive);
+        if (v != 0) {
+            return v;
+        }
+
+        assert this.internEquals(o) : "PrimitiveType::internCompare method not consistent with internEquals";
+        return 0;
+    }
+
+    @Override
     boolean internEquals(Object o) {
         if (this == o) {
             return true;

@@ -192,6 +192,34 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         this.fields = FieldInternal.EMPTY_ARRAY;
     }
 
+    @Override
+    public int compareTo(AnnotationTarget o) {
+
+        if (this == o) {
+            return 0;
+        }
+
+        int v = Declaration.super.compareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        ClassInfo other = (ClassInfo) o;
+
+        v = DotName.compare(name, other.name);
+        if (v != 0) {
+            return v;
+        }
+
+        v = Type.internCompare(superClassType, other.superClassType);
+        if (v != 0) {
+            return v;
+        }
+
+        assert this.equals(o) : "BooleanValue.compareTo method not consistent with equals";
+        return 0;
+    }
+
     /**
      * Constructs a "mock" ClassInfo using the passed values. All passed values MUST NOT BE MODIFIED AFTER THIS CALL.
      * Otherwise the resulting object would not conform to the contract outlined above.

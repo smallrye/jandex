@@ -158,6 +158,32 @@ public final class TypeVariableReference extends Type {
         return hash;
     }
 
+    @Override
+    public int internCompareTo(Type o) {
+        if (this == o) {
+            return 0;
+        }
+
+        int v = super.internCompareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        TypeVariableReference other = (TypeVariableReference) o;
+
+        v = name.compareTo(other.name);
+        if (v != 0) {
+            return v;
+        }
+
+        v = internalClassName.compareTo(other.internalClassName);
+        if (v != 0) {
+            return v;
+        }
+
+        return 0;
+    }
+
     // unlike all other subclasses of `Type`, this class is mutable, so identity is the only option
     @Override
     boolean internEquals(Object o) {

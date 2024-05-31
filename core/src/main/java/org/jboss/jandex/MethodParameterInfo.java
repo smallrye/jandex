@@ -384,6 +384,34 @@ public final class MethodParameterInfo implements Declaration {
     }
 
     @Override
+    public int compareTo(AnnotationTarget o) {
+
+        if (this == o) {
+            return 0;
+        }
+
+        int v = Declaration.super.compareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        MethodParameterInfo other = (MethodParameterInfo) o;
+
+        v = method.compareTo(other.method);
+        if (v != 0) {
+            return v;
+        }
+
+        v = Short.compare(position, other.position);
+        if (v != 0) {
+            return v;
+        }
+
+        assert this.equals(o) : "MethodParameterInfo.compareTo method not consistent with equals";
+        return 0;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

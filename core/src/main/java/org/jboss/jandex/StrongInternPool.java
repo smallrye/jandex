@@ -20,10 +20,7 @@ package org.jboss.jandex;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 /**
  * A strong intern pool. The pool acts as a set where the first stored entry can be retrieved.
@@ -465,7 +462,7 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
     }
 
     public Iterator<E> iterator() {
-        return new IdentityHashSetIterator();
+        return index().iterator();
     }
 
     public Index index() {
@@ -493,15 +490,24 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
     }
 
     public class Index {
-        private int[] offsets;
+        private TreeMap<E, Integer> offsets;
         private int modCount;
 
         Index() {
-            offsets = new int[table.length];
-            for (int i = 0, c = 1; i < offsets.length; i++) {
-                if (table[i] != null)
-                    offsets[i] = c++;
+            offsets = new TreeMap<E, Integer>(comparator());
+            for (Object e : table) {
+                if (e != null) {
+                    E value = (E) e;
+                    assert !offsets.containsKey(value) : "invalid comparator, it thinks " + e + " is a duplicate entry";
+                    offsets.put(value, 0);
+                }
             }
+
+            int offset = 1;
+            for (Map.Entry<E, Integer> entry : offsets.entrySet()) {
+                entry.setValue(offset++);
+            }
+
             modCount = StrongInternPool.this.modCount;
         }
 
@@ -513,108 +519,33 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
          * @return 1-based position of {@code e} in the table, or -1 if it is not present
          */
         public int positionOf(E e) {
-            int offset = offset(e);
-            return offset < 0 ? -1 : offsets[offset];
+            Integer offset = offsets.get(e);
+            if (offset == null) {
+                return -1;
+            }
+            return offset;
+        }
+
+        public Iterator<E> iterator() {
+            Iterator<E> iter = offsets.keySet().iterator();
+            // Let the caller know that the iterator is not safe for removal
+            return new Iterator<E>() {
+                public boolean hasNext() {
+                    return iter.hasNext();
+                }
+
+                public E next() {
+                    return iter.next();
+                }
+
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
         }
     }
 
-    private class IdentityHashSetIterator implements Iterator<E> {
-        private int next = 0;
-        private int expectedCount = modCount;
-        private int current = -1;
-        private boolean hasNext;
-        Object[] table = StrongInternPool.this.table;
-
-        public boolean hasNext() {
-            if (hasNext)
-                return true;
-
-            Object[] table = this.table;
-            for (int i = next; i < table.length; i++) {
-                if (table[i] != null) {
-                    next = i;
-                    return hasNext = true;
-                }
-            }
-
-            next = table.length;
-            return false;
-        }
-
-        @SuppressWarnings("unchecked")
-        public E next() {
-            if (modCount != expectedCount)
-                throw new ConcurrentModificationException();
-
-            if (!hasNext && !hasNext())
-                throw new NoSuchElementException();
-
-            current = next++;
-            hasNext = false;
-
-            return (E) unmaskNull(table[current]);
-        }
-
-        public void remove() {
-            if (modCount != expectedCount)
-                throw new ConcurrentModificationException();
-
-            int current = this.current;
-            int delete = current;
-
-            if (current == -1)
-                throw new IllegalStateException();
-
-            // Invalidate current (prevents multiple remove)
-            this.current = -1;
-
-            // Start were we relocate
-            next = delete;
-
-            Object[] table = this.table;
-            if (table != StrongInternPool.this.table) {
-                StrongInternPool.this.remove(table[delete]);
-                table[delete] = null;
-                expectedCount = modCount;
-                return;
-            }
-
-            int length = table.length;
-            int i = delete;
-
-            table[delete] = null;
-            size--;
-
-            for (;;) {
-                i = nextIndex(i, length);
-                Object e = table[i];
-                if (e == null)
-                    break;
-
-                int prefer = index(hash(e), length);
-                if ((i < prefer && (prefer <= delete || delete <= i)) || (prefer <= delete && delete <= i)) {
-                    // Snapshot the unseen portion of the table if we have
-                    // to relocate an entry that was already seen by this
-                    // iterator
-                    if (i < current && current <= delete && table == StrongInternPool.this.table) {
-                        int remaining = length - current;
-                        Object[] newTable = new Object[remaining];
-                        System.arraycopy(table, current, newTable, 0, remaining);
-
-                        // Replace iterator's table.
-                        // Leave table local var pointing to the real table
-                        this.table = newTable;
-                        next = 0;
-                    }
-
-                    // Do the swap on the real table
-                    table[delete] = e;
-                    table[i] = null;
-                    delete = i;
-                }
-            }
-        }
-    }
+    protected abstract Comparator<? super E> comparator();
 
     // ---
     // type-specific subclasses
@@ -661,6 +592,12 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         int hashCode(byte[] o) {
             return Arrays.hashCode(o);
         }
+
+        @Override
+        protected Comparator<? super byte[]> comparator() {
+            // create a comparator that compares byte arrays by content
+            return Compare::bytes;
+        }
     }
 
     private static final class StringInternPool extends StrongInternPool<String> {
@@ -677,6 +614,12 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         int hashCode(String o) {
             return o.hashCode();
         }
+
+        @Override
+        protected Comparator<? super String> comparator() {
+            return Comparator.naturalOrder();
+        }
+
     }
 
     private static final class TypeInternPool extends StrongInternPool<Type> {
@@ -692,6 +635,11 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         @Override
         int hashCode(Type o) {
             return o.internHashCode();
+        }
+
+        @Override
+        protected Comparator<? super Type> comparator() {
+            return Type::internCompare;
         }
     }
 
@@ -709,6 +657,12 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         int hashCode(Type[] o) {
             return TypeInterning.arrayHashCode(o);
         }
+
+        @Override
+        protected Comparator<? super Type[]> comparator() {
+            return Type.ARRAY_COMPARATOR;
+        }
+
     }
 
     private static final class MethodInternPool extends StrongInternPool<MethodInternal> {
@@ -724,6 +678,11 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         @Override
         int hashCode(MethodInternal o) {
             return o.internHashCode();
+        }
+
+        @Override
+        protected Comparator<? super MethodInternal> comparator() {
+            return MethodInternal::internCompare;
         }
     }
 
@@ -741,6 +700,11 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         int hashCode(FieldInternal o) {
             return o.internHashCode();
         }
+
+        @Override
+        protected Comparator<? super FieldInternal> comparator() {
+            return FieldInternal::internCompare;
+        }
     }
 
     private static final class RecordComponentInternPool extends StrongInternPool<RecordComponentInternal> {
@@ -756,6 +720,11 @@ abstract class StrongInternPool<E> implements Cloneable, Serializable {
         @Override
         int hashCode(RecordComponentInternal o) {
             return o.internHashCode();
+        }
+
+        @Override
+        protected Comparator<? super RecordComponentInternal> comparator() {
+            return RecordComponentInternal::internCompare;
         }
     }
 }

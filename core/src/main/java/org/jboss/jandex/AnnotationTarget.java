@@ -33,7 +33,7 @@ import java.util.Collection;
  * @author Jason T. Greene
  *
  */
-public interface AnnotationTarget {
+public interface AnnotationTarget extends Comparable<AnnotationTarget> {
 
     /**
      * Specifies the kind of object a target represents.
@@ -504,4 +504,38 @@ public interface AnnotationTarget {
      * @see #annotations()
      */
     Collection<AnnotationInstance> declaredAnnotations();
+
+    public default int compareTo(AnnotationTarget o) {
+
+        int v = Compare.nullable(this, o);
+        if (v != 0) {
+            return v;
+        }
+
+        v = getClass().getName().compareTo(o.getClass().getName());
+        if (v != 0) {
+            return v;
+        }
+
+        // class should match is the class names are the same.
+        assert getClass() == o.getClass();
+
+        v = kind().compareTo(kind());
+        if (v != 0) {
+            return v;
+        }
+
+        return 0;
+    }
+
+    public static int compare(AnnotationTarget o1, AnnotationTarget o2) {
+        if (o1 == o2) {
+            return 0;
+        }
+        int v = Compare.nullable(o1, o2);
+        if (v != 0) {
+            return v;
+        }
+        return o1.compareTo(o2);
+    }
 }

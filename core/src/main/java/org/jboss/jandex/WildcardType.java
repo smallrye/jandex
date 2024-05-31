@@ -227,6 +227,33 @@ public class WildcardType extends Type {
     }
 
     @Override
+    public int internCompareTo(Type o) {
+        if (this == o) {
+            return 0;
+        }
+
+        int v = super.internCompareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        WildcardType other = (WildcardType) o;
+
+        v = Boolean.compare(isExtends, other.isExtends);
+        if (v != 0) {
+            return v;
+        }
+
+        v = bound.internCompareTo(other.bound);
+        if (v != 0) {
+            return v;
+        }
+
+        assert this.internEquals(o) : "WildcardType::internCompare method not consistent with internEquals";
+        return 0;
+    }
+
+    @Override
     boolean internEquals(Object o) {
         if (this == o) {
             return true;

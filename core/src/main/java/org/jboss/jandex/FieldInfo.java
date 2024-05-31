@@ -481,6 +481,34 @@ public final class FieldInfo implements Declaration, Descriptor, GenericSignatur
     }
 
     @Override
+    public int compareTo(AnnotationTarget o) {
+
+        if (this == o) {
+            return 0;
+        }
+
+        int v = Declaration.super.compareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        FieldInfo other = (FieldInfo) o;
+
+        v = clazz.compareTo(other.clazz);
+        if (v != 0) {
+            return v;
+        }
+
+        v = FieldInternal.compare(internal, other.internal);
+        if (v != 0) {
+            return v;
+        }
+
+        assert this.equals(o) : "FieldInfo.compareTo method not consistent with equals";
+        return 0;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

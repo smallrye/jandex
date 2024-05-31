@@ -18,6 +18,8 @@
 
 package org.jboss.jandex;
 
+import static org.jboss.jandex.Compare.nullable;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -60,6 +62,30 @@ final class RecordComponentInternal {
         this.annotations = annotations;
     }
 
+    public static int compare(RecordComponentInternal o1, RecordComponentInternal o2) {
+        if (o1 == o2) {
+            return 0;
+        }
+        int v = nullable(o1, o2);
+        if (v != 0) {
+            return v;
+        }
+        v = AnnotationInstance.ARRAY_COMPARATOR.compare(o1.annotations, o2.annotations);
+        if (v != 0) {
+            return v;
+        }
+        v = Compare.bytes(o1.name, o2.name);
+        if (v != 0) {
+            return v;
+        }
+        v = Type.internCompare(o1.type, o2.type);
+        if (v != 0) {
+            return v;
+        }
+        assert o1.equals(o2) : "RecordComponentInternal::compare method not consistent with equals";
+        return 0;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -92,6 +118,34 @@ final class RecordComponentInternal {
         return result;
     }
 
+    public static int internCompare(RecordComponentInternal o1, RecordComponentInternal o2) {
+        if (o1 == o2) {
+            return 0;
+        }
+        int v = nullable(o1, o2);
+        if (v != 0) {
+            return v;
+        }
+
+        v = AnnotationInstance.ARRAY_COMPARATOR.compare(o1.annotations, o2.annotations);
+        if (v != 0) {
+            return v;
+        }
+
+        v = Compare.bytes(o1.name, o2.name);
+        if (v != 0) {
+            return v;
+        }
+
+        v = Type.internCompare(o1.type, o2.type);
+        if (v != 0) {
+            return v;
+        }
+
+        assert o1.equals(o2) : "RecordComponentInternal::internCompare method not consistent with internEquals";
+        return 0;
+    }
+
     boolean internEquals(Object o) {
         if (this == o) {
             return true;
@@ -101,7 +155,6 @@ final class RecordComponentInternal {
         }
 
         RecordComponentInternal that = (RecordComponentInternal) o;
-
         if (!Arrays.equals(annotations, that.annotations)) {
             return false;
         }

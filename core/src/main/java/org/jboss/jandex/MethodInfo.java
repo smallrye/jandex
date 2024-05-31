@@ -682,6 +682,34 @@ public final class MethodInfo implements Declaration, Descriptor, GenericSignatu
     }
 
     @Override
+    public int compareTo(AnnotationTarget o) {
+
+        if (this == o) {
+            return 0;
+        }
+
+        int v = Declaration.super.compareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        MethodInfo other = (MethodInfo) o;
+
+        v = clazz.compareTo(other.clazz);
+        if (v != 0) {
+            return v;
+        }
+
+        v = MethodInternal.internCompare(methodInternal, other.methodInternal);
+        if (v != 0) {
+            return v;
+        }
+
+        assert this.equals(o) : "MethodInfo.compareTo method not consistent with equals";
+        return 0;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o)
             return true;

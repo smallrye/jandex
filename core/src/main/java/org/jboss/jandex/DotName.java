@@ -454,6 +454,17 @@ public final class DotName implements Comparable<DotName> {
         return componentizedCompare(flatten(this), flatten(other));
     }
 
+    public static int compare(DotName o1, DotName o2) {
+        if (o1 == o2) {
+            return 0;
+        }
+        int v = Compare.nullable(o1, o2);
+        if (v != 0) {
+            return v;
+        }
+        return o1.compareTo(o2);
+    }
+
     // note that `a` and `b` have one extra `null` element at the end, see the `flatten` method
     private static int componentizedCompare(DotName[] a, DotName[] b) {
         int aPos = 0; // current position in `a`

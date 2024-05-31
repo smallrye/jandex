@@ -20,6 +20,7 @@ package org.jboss.jandex;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -72,7 +73,7 @@ import java.util.List;
  * @author Jason T. Greene
  *
  */
-public abstract class AnnotationValue {
+public abstract class AnnotationValue implements Comparable<AnnotationValue> {
     static final AnnotationValue[] EMPTY_ARRAY = new AnnotationValue[0];
 
     /**
@@ -568,6 +569,45 @@ public abstract class AnnotationValue {
         return name.equals(that.name);
     }
 
+    @Override
+    public int compareTo(AnnotationValue o) {
+
+        int v = Compare.nullable(this, o);
+        if (v != 0) {
+            return v;
+        }
+
+        v = getClass().getName().compareTo(o.getClass().getName());
+        if (v != 0) {
+            return v;
+        }
+
+        // class should match is the class names are the same.
+        assert getClass() == o.getClass();
+
+        v = name.compareTo(o.name);
+        if (v != 0) {
+            return v;
+        }
+
+        return 0;
+    }
+
+    static Comparator<AnnotationValue[]> ARRAY_COMPARATOR = Compare.array(AnnotationValue::compare);
+
+    public static int compare(AnnotationValue o1, AnnotationValue o2) {
+        if (o1 == o2) {
+            return 0;
+        }
+        if (o1 == null) {
+            return -1;
+        }
+        if (o2 == null) {
+            return 1;
+        }
+        return o1.compareTo(o2);
+    }
+
     /**
      * Computes a hash code for this annotation value.
      *
@@ -602,6 +642,29 @@ public abstract class AnnotationValue {
                 builder.append(super.name).append(" = ");
 
             return builder.append('"').append(value).append('"').toString();
+        }
+
+        @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            StringValue other = (StringValue) o;
+
+            v = value.compareTo(other.value);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "StringValue.compareTo method not consistent with equals";
+            return 0;
         }
 
         @Override
@@ -667,6 +730,29 @@ public abstract class AnnotationValue {
         }
 
         @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            ByteValue other = (ByteValue) o;
+
+            v = Byte.compare(value, other.value);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "ByteValue.compareTo method not consistent with equals";
+            return 0;
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) {
                 return true;
@@ -706,6 +792,29 @@ public abstract class AnnotationValue {
 
         public char asChar() {
             return value;
+        }
+
+        @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            CharacterValue other = (CharacterValue) o;
+
+            v = Character.compare(value, other.value);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "CharacterValue.compareTo method not consistent with equals";
+            return 0;
         }
 
         @Override
@@ -768,6 +877,29 @@ public abstract class AnnotationValue {
 
         public double asDouble() {
             return value;
+        }
+
+        @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            DoubleValue other = (DoubleValue) o;
+
+            v = Double.compare(value, other.value);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "DoubleValue.compareTo method not consistent with equals";
+            return 0;
         }
 
         @Override
@@ -836,6 +968,29 @@ public abstract class AnnotationValue {
         }
 
         @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            FloatValue other = (FloatValue) o;
+
+            v = Float.compare(value, other.value);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "FloatValue.compareTo method not consistent with equals";
+            return 0;
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) {
                 return true;
@@ -896,6 +1051,29 @@ public abstract class AnnotationValue {
 
         public double asDouble() {
             return value;
+        }
+
+        @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            ShortValue other = (ShortValue) o;
+
+            v = Short.compare(value, other.value);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "ShortValue.compareTo method not consistent with equals";
+            return 0;
         }
 
         @Override
@@ -962,6 +1140,29 @@ public abstract class AnnotationValue {
         }
 
         @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            IntegerValue other = (IntegerValue) o;
+
+            v = Integer.compare(value, other.value);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "IntegerValue.compareTo method not consistent with equals";
+            return 0;
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) {
                 return true;
@@ -1025,6 +1226,29 @@ public abstract class AnnotationValue {
         }
 
         @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            LongValue other = (LongValue) o;
+
+            v = Long.compare(value, other.value);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "LongValue.compareTo method not consistent with equals";
+            return 0;
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) {
                 return true;
@@ -1075,6 +1299,29 @@ public abstract class AnnotationValue {
         }
 
         @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            BooleanValue other = (BooleanValue) o;
+
+            v = Boolean.compare(value, other.value);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "BooleanValue.compareTo method not consistent with equals";
+            return 0;
+        }
+
+        @Override
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
@@ -1116,6 +1363,29 @@ public abstract class AnnotationValue {
 
         public DotName asEnumType() {
             return typeName;
+        }
+
+        @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            EnumValue other = (EnumValue) o;
+
+            v = value.compareTo(other.value);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "EnumValue.compareTo method not consistent with equals";
+            return 0;
         }
 
         @Override
@@ -1164,6 +1434,29 @@ public abstract class AnnotationValue {
         }
 
         @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            ClassValue other = (ClassValue) o;
+
+            v = Type.internCompare(type, other.type);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "ClassValue.compareTo method not consistent with equals";
+            return 0;
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) {
                 return true;
@@ -1204,6 +1497,29 @@ public abstract class AnnotationValue {
 
         public AnnotationInstance asNested() {
             return value;
+        }
+
+        @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            NestedAnnotation other = (NestedAnnotation) o;
+
+            v = AnnotationInstance.compare(value, other.value);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "NestedAnnotation.compareTo method not consistent with equals";
+            return 0;
         }
 
         @Override
@@ -1412,6 +1728,29 @@ public abstract class AnnotationValue {
             }
 
             return array;
+        }
+
+        @Override
+        public int compareTo(AnnotationValue o) {
+
+            if (this == o) {
+                return 0;
+            }
+
+            int v = super.compareTo(o);
+            if (v != 0) {
+                return v;
+            }
+
+            ArrayValue other = (ArrayValue) o;
+
+            v = Compare.array(AnnotationValue::compare).compare(value, other.value);
+            if (v != 0) {
+                return v;
+            }
+
+            assert this.equals(o) : "ArrayValue.compareTo method not consistent with equals";
+            return 0;
         }
 
         @Override

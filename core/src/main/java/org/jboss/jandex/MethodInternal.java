@@ -17,6 +17,8 @@
  */
 package org.jboss.jandex;
 
+import static org.jboss.jandex.Compare.*;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -81,6 +83,36 @@ final class MethodInternal {
         Type[] typeParameters;
         AnnotationValue defaultValue;
         AnnotationInstance[] annotations;
+
+        public static int internCompare(ExtraInfo o1, ExtraInfo o2) {
+            if (o1 == o2) {
+                return 0;
+            }
+
+            int v = nullable(o1, o2);
+            if (v != 0) {
+                return v;
+            }
+
+            v = Type.internCompare(o1.receiverType, o2.receiverType);
+            if (v != 0) {
+                return v;
+            }
+            v = Type.ARRAY_COMPARATOR.compare(o1.typeParameters, o2.typeParameters);
+            if (v != 0) {
+                return v;
+            }
+            v = AnnotationValue.compare(o1.defaultValue, o2.defaultValue);
+            if (v != 0) {
+                return v;
+            }
+            v = AnnotationInstance.ARRAY_COMPARATOR.compare(o1.annotations, o2.annotations);
+            if (v != 0) {
+                return v;
+            }
+
+            return 0;
+        }
     }
 
     private byte[] name;
@@ -207,6 +239,59 @@ final class MethodInternal {
         result = 31 * result + (extra != null && extra.defaultValue != null ? extra.defaultValue.hashCode() : 0);
         result = 31 * result + (int) flags;
         return result;
+    }
+
+    public static int internCompare(MethodInternal o1, MethodInternal o2) {
+        if (o1 == o2) {
+            return 0;
+        }
+
+        int v = nullable(o1, o2);
+        if (v != 0) {
+            return v;
+        }
+
+        v = ExtraInfo.internCompare(o1.extra, o2.extra);
+        if (v != 0) {
+            return v;
+        }
+        v = Short.compare(o1.flags, o2.flags);
+        if (v != 0) {
+            return v;
+        }
+
+        v = Type.ARRAY_COMPARATOR.compare(o1.exceptions, o2.exceptions);
+        if (v != 0) {
+            return v;
+        }
+
+        v = Compare.bytes(o1.name, o2.name);
+        if (v != 0) {
+            return v;
+        }
+
+        v = Compare.bytes_bytes(o1.parameterNames, o2.parameterNames);
+        if (v != 0) {
+            return v;
+        }
+
+        v = Type.ARRAY_COMPARATOR.compare(o1.parameterTypes, o2.parameterTypes);
+        if (v != 0) {
+            return v;
+        }
+
+        v = Type.ARRAY_COMPARATOR.compare(o1.descriptorParameterTypes, o2.descriptorParameterTypes);
+        if (v != 0) {
+            return v;
+        }
+
+        v = Type.internCompare(o1.returnType, o2.returnType);
+        if (v != 0) {
+            return v;
+        }
+
+        assert o1.equals(o2) : "MethodInternal::internCompare method is not consistent with equals";
+        return 0;
     }
 
     boolean internEquals(Object o) {

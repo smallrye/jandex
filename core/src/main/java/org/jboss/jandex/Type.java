@@ -18,11 +18,9 @@
 
 package org.jboss.jandex;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import static org.jboss.jandex.Compare.nullable;
+
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -50,10 +48,14 @@ public abstract class Type implements Descriptor {
      * @author Jason T. Greene
      */
     public enum Kind {
-        /** A Java class, interface, or annotation */
+        /**
+         * A Java class, interface, or annotation
+         */
         CLASS,
 
-        /** A Java array */
+        /**
+         * A Java array
+         */
         ARRAY,
 
         /**
@@ -61,10 +63,14 @@ public abstract class Type implements Descriptor {
          */
         PRIMITIVE,
 
-        /** Used to designate a Java method that returns nothing */
+        /**
+         * Used to designate a Java method that returns nothing
+         */
         VOID,
 
-        /** A resolved generic type parameter or type argument */
+        /**
+         * A resolved generic type parameter or type argument
+         */
         TYPE_VARIABLE,
 
         /**
@@ -74,13 +80,19 @@ public abstract class Type implements Descriptor {
          */
         UNRESOLVED_TYPE_VARIABLE,
 
-        /** A generic wildcard type */
+        /**
+         * A generic wildcard type
+         */
         WILDCARD_TYPE,
 
-        /** A generic parameterized type */
+        /**
+         * A generic parameterized type
+         */
         PARAMETERIZED_TYPE,
 
-        /** A reference to a resolved type variable occuring in the bound of a recursive type parameter */
+        /**
+         * A reference to a resolved type variable occuring in the bound of a recursive type parameter
+         */
         TYPE_VARIABLE_REFERENCE,
 
         ;
@@ -143,7 +155,6 @@ public abstract class Type implements Descriptor {
      * @param kind the kind of type to create; must not be {@code null}
      * @return the type
      * @throws java.lang.IllegalArgumentException if the {@code kind} is not supported
-     *
      */
     public static Type create(DotName name, Kind kind) {
         if (name == null) {
@@ -449,8 +460,8 @@ public abstract class Type implements Descriptor {
      * @return immutable list of annotation instances, never {@code null}
      * @throws IllegalArgumentException if the index is {@code null}, if the index does not contain the annotation type
      *         or if {@code name} does not identify an annotation type
-     * @since 3.0
      * @see #annotations()
+     * @since 3.0
      */
     public final List<AnnotationInstance> annotationsWithRepeatable(DotName name, IndexView index) {
         if (index == null) {
@@ -609,6 +620,50 @@ public abstract class Type implements Descriptor {
         int result = name.hashCode();
         result = 31 * result + Arrays.hashCode(annotations);
         return result;
+    }
+
+    public static Comparator<Type[]> ARRAY_COMPARATOR = Compare.array(Type::internCompare);
+
+    public static int internCompare(Type o1, Type o2) {
+        if (o1 == o2) {
+            return 0;
+        }
+        int v = nullable(o1, o2);
+        if (v != 0) {
+            return v;
+        }
+        return o1.internCompareTo(o2);
+    }
+
+    public int internCompareTo(Type o) {
+        if (this == o) {
+            return 0;
+        }
+
+        int v = Compare.nullable(this, o);
+        if (v != 0) {
+            return v;
+        }
+
+        v = getClass().getName().compareTo(o.getClass().getName());
+        if (v != 0) {
+            return v;
+        }
+
+        // class should match is the class names are the same.
+        assert getClass() == o.getClass();
+
+        v = name.compareTo(o.name);
+        if (v != 0) {
+            return v;
+        }
+
+        v = AnnotationInstance.ARRAY_COMPARATOR.compare(annotations, o.annotations);
+        if (v != 0) {
+            return v;
+        }
+
+        return 0;
     }
 
     boolean internEquals(Object o) {

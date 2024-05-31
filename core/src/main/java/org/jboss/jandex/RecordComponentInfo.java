@@ -422,6 +422,34 @@ public final class RecordComponentInfo implements Declaration, Descriptor, Gener
     }
 
     @Override
+    public int compareTo(AnnotationTarget o) {
+
+        if (this == o) {
+            return 0;
+        }
+
+        int v = Declaration.super.compareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        RecordComponentInfo other = (RecordComponentInfo) o;
+
+        v = clazz.compareTo(other.clazz);
+        if (v != 0) {
+            return v;
+        }
+
+        v = RecordComponentInternal.compare(internal, other.internal);
+        if (v != 0) {
+            return v;
+        }
+
+        assert this.equals(o) : "RecordComponentInfo.compareTo method not consistent with equals";
+        return 0;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

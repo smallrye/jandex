@@ -21,11 +21,7 @@ package org.jboss.jandex;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * An annotation instance represents a specific usage of an annotation on a
@@ -41,7 +37,7 @@ import java.util.List;
  * @author Jason T. Greene
  *
  */
-public final class AnnotationInstance {
+public final class AnnotationInstance implements Comparable<AnnotationInstance> {
     static final NameComparator NAME_COMPARATOR = new NameComparator();
     static final AnnotationInstance[] EMPTY_ARRAY = new AnnotationInstance[0];
 
@@ -448,6 +444,63 @@ public final class AnnotationInstance {
         AnnotationInstance instance = (AnnotationInstance) o;
 
         return target == instance.target && name.equals(instance.name) && Arrays.equals(values, instance.values);
+    }
+
+    @Override
+    public int compareTo(AnnotationInstance other) {
+        return compare(this, other);
+    }
+
+    static Comparator<AnnotationInstance[]> ARRAY_COMPARATOR = Compare.array(AnnotationInstance::compare);
+
+    private static ThreadLocal<HashSet<AnnotationInstance>> COMPARING = ThreadLocal.withInitial(HashSet::new);
+
+    public static int compare(AnnotationInstance o1, AnnotationInstance o2) {
+        if (o1 == o2) {
+            return 0;
+        }
+        if (o1 == null) {
+            return -1;
+        }
+        if (o2 == null) {
+            return 1;
+        }
+
+        // protect against recursive calls
+        HashSet<AnnotationInstance> comparing = COMPARING.get();
+        if (comparing.contains(o1) || comparing.contains(o2)) {
+            return 0;
+        }
+        comparing.add(o1);
+        comparing.add(o2);
+        try {
+
+            int v = o1.name.compareTo(o2.name);
+            if (v != 0) {
+                return v;
+            }
+
+            v = AnnotationValue.ARRAY_COMPARATOR.compare(o1.values, o2.values);
+            if (v != 0) {
+                return v;
+            }
+
+            v = Boolean.compare(o1.runtimeVisible, o2.runtimeVisible);
+            if (v != 0) {
+                return v;
+            }
+
+            v = AnnotationTarget.compare(o1.target, o2.target);
+            if (v != 0) {
+                return v;
+            }
+
+            assert o1.equals(o2) : "AnnotationInstance::compare method is not consistent with equals";
+            return 0;
+        } finally {
+            comparing.remove(o1);
+            comparing.remove(o2);
+        }
     }
 
     /**

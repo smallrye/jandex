@@ -98,6 +98,28 @@ public final class UnresolvedTypeVariable extends Type {
     }
 
     @Override
+    public int internCompareTo(Type o) {
+        if (this == o) {
+            return 0;
+        }
+
+        int v = super.internCompareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        UnresolvedTypeVariable other = (UnresolvedTypeVariable) o;
+
+        v = name.compareTo(other.name);
+        if (v != 0) {
+            return v;
+        }
+
+        assert this.internEquals(o) : "TypeVariable::internCompare method not consistent with internEquals";
+        return 0;
+    }
+
+    @Override
     boolean internEquals(Object o) {
         if (this == o) {
             return true;

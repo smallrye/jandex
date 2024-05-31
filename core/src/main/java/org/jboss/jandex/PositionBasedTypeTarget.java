@@ -52,4 +52,25 @@ public abstract class PositionBasedTypeTarget extends TypeTarget {
         return position & 0xFFFF;
     }
 
+    @Override
+    public int compareTo(AnnotationTarget o) {
+
+        if (this == o) {
+            return 0;
+        }
+
+        int v = super.compareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        PositionBasedTypeTarget other = (PositionBasedTypeTarget) o;
+        v = Short.compare(position, other.position);
+        if (v != 0) {
+            return v;
+        }
+
+        assert this.equals(o) : "PositionBasedTypeTarget.compareTo method not consistent with equals";
+        return 0;
+    }
 }

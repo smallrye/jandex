@@ -68,4 +68,26 @@ public class EmptyTypeTarget extends TypeTarget {
     public EmptyTypeTarget asEmpty() {
         return this;
     }
+
+    @Override
+    public int compareTo(AnnotationTarget o) {
+
+        if (this == o) {
+            return 0;
+        }
+
+        int v = super.compareTo(o);
+        if (v != 0) {
+            return v;
+        }
+
+        EmptyTypeTarget other = (EmptyTypeTarget) o;
+        v = Boolean.compare(receiver, other.receiver);
+        if (v != 0) {
+            return v;
+        }
+
+        assert this.equals(o) : "EmptyTypeTarget.compareTo method not consistent with equals";
+        return 0;
+    }
 }

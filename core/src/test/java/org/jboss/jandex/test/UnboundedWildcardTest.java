@@ -24,7 +24,7 @@ public class UnboundedWildcardTest {
     public void test() throws IOException {
         Index index = Index.of(UnboundedWildcardTest.class);
         test(index);
-        test(IndexingUtil.roundtrip(index));
+        test(IndexingUtil.roundtrip(index, "054f6a2b83b4cfd74c9106a4ac21c78ef8a8f6df2b9f30d2bc53b172f9e03762"));
     }
 
     private void test(Index index) {

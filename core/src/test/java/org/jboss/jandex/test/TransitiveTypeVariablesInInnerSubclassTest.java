@@ -47,7 +47,7 @@ public class TransitiveTypeVariablesInInnerSubclassTest {
     public void test() throws IOException {
         Index index = Index.of(TestClass.class, TestClass.Foo.class, TestClass.Bar.class, TestClass.Baz.class);
         doTest(index);
-        doTest(IndexingUtil.roundtrip(index));
+        doTest(IndexingUtil.roundtrip(index, "4e2e0660bd5d8539bb8f60a549949b0c396df52b20cc2383cbf20d91fc23d26d"));
     }
 
     private void doTest(Index index) {

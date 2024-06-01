@@ -120,7 +120,7 @@ public class TypeAnnotationOnLocalClassTypeTest {
 
         test(index, clazz);
 
-        test(IndexingUtil.roundtrip(index), clazz);
+        test(IndexingUtil.roundtrip(index, "c51b878891a1742ce36ba71a3692a0f5d76d44a263eb7af75412e6e7ded4259e"), clazz);
     }
 
     private void test(Index index, Class<?> clazz) {

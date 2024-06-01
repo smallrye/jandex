@@ -244,7 +244,7 @@ public class TypeToStringWithAnnotationsTest {
     public void test() throws IOException {
         Index index = Index.of(TestClass.class, TestClass.InnerClass.class);
         test(index);
-        test(IndexingUtil.roundtrip(index));
+        test(IndexingUtil.roundtrip(index, "4839ce3f946d4d7983a8cf0baab059b438d9868089fd9f12e7ee6c4a003c665f"));
     }
 
     private void test(Index index) {

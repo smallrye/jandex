@@ -51,7 +51,7 @@ public class Utf8ConstantEncodingTest {
 
         verifyAnnotationValue(index);
 
-        Index index2 = IndexingUtil.roundtrip(index);
+        Index index2 = IndexingUtil.roundtrip(index, "3874a5ba036b183f9216ea910e4d0415d64b21659dfa230b442f333672f1a8a9");
 
         verifyAnnotationValue(index2);
     }

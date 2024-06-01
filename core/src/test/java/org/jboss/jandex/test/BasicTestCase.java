@@ -363,7 +363,7 @@ public class BasicTestCase {
         indexer.indexClass(EnumWithGenericConstructor.class);
         Index index = indexer.complete();
 
-        index = IndexingUtil.roundtrip(index);
+        index = IndexingUtil.roundtrip(index, "f4933203f761868c57ef1c76ae136b84dc5cffaa6925dd4893b98ca71ab99513");
 
         verifyDummy(index, true);
     }
@@ -376,7 +376,7 @@ public class BasicTestCase {
         indexer.index(stream);
         Index index = indexer.complete();
 
-        index = IndexingUtil.roundtrip(index);
+        index = IndexingUtil.roundtrip(index, "075549ab6202a046eff64866f4be883cb1eb4d67ebc3110a593f8dfac8dccc6f");
 
         assertFalse(index.getClassByName(DotName.createSimple(DummyClass.class.getName())).hasNoArgsConstructor());
     }

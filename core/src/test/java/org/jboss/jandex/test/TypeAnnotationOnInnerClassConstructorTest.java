@@ -37,7 +37,7 @@ public class TypeAnnotationOnInnerClassConstructorTest {
         Index index = Index.of(TypeAnnotationOnInnerClassConstructorTest.class, InnerClass.class,
                 InnerClass.InnerInnerClass.class);
         test(index);
-        test(IndexingUtil.roundtrip(index));
+        test(IndexingUtil.roundtrip(index, "a6aab2bbc0b394f44444ada28d2201c61301383fdab877b920e32cc3588b21e3"));
     }
 
     private void test(Index index) {

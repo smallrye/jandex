@@ -29,7 +29,7 @@ public class PermittedSubclassesTest {
         Index index = indexer.complete();
 
         doTest(index);
-        doTest(IndexingUtil.roundtrip(index));
+        doTest(IndexingUtil.roundtrip(index, "eac5afe4b8893ba015db863795144a8dd9a3c4579054d6a691b8adff620b1791"));
     }
 
     private void doTest(Index index) {

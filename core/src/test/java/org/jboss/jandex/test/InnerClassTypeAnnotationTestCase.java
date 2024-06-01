@@ -39,7 +39,7 @@ public class InnerClassTypeAnnotationTestCase {
 
     @Test
     public void testNoGenericsConstructRW() throws IOException {
-        verifyRW("NoGenericsConstruct", 0, 2);
+        verifyRW("NoGenericsConstruct", 0, 2, "f71a50ebe949063ef48983f2db4f2df9cd69cba128eec79ea2321424e7c8b6ac");
     }
 
     @Test
@@ -49,7 +49,7 @@ public class InnerClassTypeAnnotationTestCase {
 
     @Test
     public void testStaticNoGenericsConstructRW() throws IOException {
-        verifyRW("StaticNoGenericsConstruct", 0, 2);
+        verifyRW("StaticNoGenericsConstruct", 0, 2, "af71b4aab47367adc875f15a587c64538a19c446ff5c28e815cde2e6ae980fbe");
     }
 
     @Test
@@ -59,7 +59,7 @@ public class InnerClassTypeAnnotationTestCase {
 
     @Test
     public void testGenericsConstructRW() throws IOException {
-        verifyRW("GenericsConstruct", 0, -1);
+        verifyRW("GenericsConstruct", 0, -1, "2abbea93d5af8e7c829f4bbf075e5a1f4d775fed371f6c5ee76d7cc347459ad8");
     }
 
     private void verifyIndex(String name, int pos1, int pos2) throws IOException {
@@ -71,9 +71,9 @@ public class InnerClassTypeAnnotationTestCase {
         }
     }
 
-    private void verifyRW(String name, int pos1, int pos2) throws IOException {
+    private void verifyRW(String name, int pos1, int pos2, String sha256) throws IOException {
         Index index = buildIndex(name);
-        index = IndexingUtil.roundtrip(index);
+        index = IndexingUtil.roundtrip(index, sha256);
 
         verifyTypeAnnotations(index, name, pos1);
         if (pos2 != -1) {

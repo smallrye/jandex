@@ -69,7 +69,7 @@ public class NestedClassesTest {
                 A.H.class, A.H.I.class, A.J.class, A.J.K.class, A.L.class, A.L.M.class);
         test(index);
 
-        test(IndexingUtil.roundtrip(index));
+        test(IndexingUtil.roundtrip(index, "64eb32ba993167d9543e294aba66460fbf4fd51ef98e6c244239faac79bbfe6b"));
     }
 
     private void test(Index index) {

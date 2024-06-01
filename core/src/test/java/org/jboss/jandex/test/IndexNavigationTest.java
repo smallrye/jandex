@@ -74,7 +74,7 @@ public class IndexNavigationTest {
         testIndex(CompositeIndex.create(index));
         testIndex(StackedIndex.create(index));
 
-        index = IndexingUtil.roundtrip(index);
+        index = IndexingUtil.roundtrip(index, "9d5d8b35cd1fafb536c6dc510a45894eb356b78eded5d49fd371336807b7f3aa");
         testIndex(index);
         testIndex(CompositeIndex.create(index));
         testIndex(StackedIndex.create(index));
@@ -89,7 +89,9 @@ public class IndexNavigationTest {
         IndexView index = CompositeIndex.create(index1, index2);
         testIndex(index);
 
-        index = CompositeIndex.create(IndexingUtil.roundtrip(index1), IndexingUtil.roundtrip(index2));
+        index = CompositeIndex.create(
+                IndexingUtil.roundtrip(index1, "e4e868b78cd4add059d85db0305e06e864ea86c5cf2adfbdea782185f717af16"),
+                IndexingUtil.roundtrip(index2, "f916619af4b9150c35af9355baf0fe2dcb5491de547d53634b8a770e88918cd3"));
         testIndex(index);
     }
 
@@ -103,7 +105,9 @@ public class IndexNavigationTest {
         IndexView index = CompositeIndex.create(index1, index2);
         doTestOverlappingCompositeIndex(index);
 
-        index = CompositeIndex.create(IndexingUtil.roundtrip(index1), IndexingUtil.roundtrip(index2));
+        index = CompositeIndex.create(
+                IndexingUtil.roundtrip(index1, "e4e868b78cd4add059d85db0305e06e864ea86c5cf2adfbdea782185f717af16"),
+                IndexingUtil.roundtrip(index2, "0f96106152587478011eca8780bb0a7b2d29945e660eeada8e0ee8c20cf19384"));
         doTestOverlappingCompositeIndex(index);
     }
 
@@ -170,7 +174,9 @@ public class IndexNavigationTest {
         IndexView index = StackedIndex.create(index1, index2);
         testIndex(index);
 
-        index = StackedIndex.create(IndexingUtil.roundtrip(index1), IndexingUtil.roundtrip(index2));
+        index = StackedIndex.create(
+                IndexingUtil.roundtrip(index1, "e4e868b78cd4add059d85db0305e06e864ea86c5cf2adfbdea782185f717af16"),
+                IndexingUtil.roundtrip(index2, "f916619af4b9150c35af9355baf0fe2dcb5491de547d53634b8a770e88918cd3"));
         testIndex(index);
     }
 
@@ -184,7 +190,9 @@ public class IndexNavigationTest {
         IndexView index = StackedIndex.create(index1, index2);
         testIndex(index);
 
-        index = StackedIndex.create(IndexingUtil.roundtrip(index1), IndexingUtil.roundtrip(index2));
+        index = StackedIndex.create(
+                IndexingUtil.roundtrip(index1, "e4e868b78cd4add059d85db0305e06e864ea86c5cf2adfbdea782185f717af16"),
+                IndexingUtil.roundtrip(index2, "0f96106152587478011eca8780bb0a7b2d29945e660eeada8e0ee8c20cf19384"));
         testIndex(index);
     }
 

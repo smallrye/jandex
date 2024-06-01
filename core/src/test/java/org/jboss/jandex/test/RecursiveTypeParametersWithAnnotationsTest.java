@@ -38,7 +38,7 @@ public class RecursiveTypeParametersWithAnnotationsTest {
     public void myComparable() throws IOException {
         Index index = Index.of(MyComparable.class);
         myComparable(index);
-        myComparable(IndexingUtil.roundtrip(index));
+        myComparable(IndexingUtil.roundtrip(index, "a802e22dcc54147f5e3a73c21883cd3f4b6fc9230aa3e53bf893d706b5a07274"));
     }
 
     private void myComparable(Index index) {
@@ -72,7 +72,7 @@ public class RecursiveTypeParametersWithAnnotationsTest {
     public void myBuilder() throws IOException {
         Index index = Index.of(MyBuilder.class);
         myBuilder(index);
-        myBuilder(IndexingUtil.roundtrip(index));
+        myBuilder(IndexingUtil.roundtrip(index, "aa59b707e029e0e979f0dd2c2e683070da1f246e2d40639fc01b21a4f65bfbb5"));
     }
 
     private void myBuilder(Index index) {
@@ -133,7 +133,8 @@ public class RecursiveTypeParametersWithAnnotationsTest {
     public void deepTypeParameterReference() throws IOException {
         Index index = Index.of(DeepTypeParameterReference.class);
         deepTypeParameterReference(index);
-        deepTypeParameterReference(IndexingUtil.roundtrip(index));
+        deepTypeParameterReference(
+                IndexingUtil.roundtrip(index, "3ed2bdeb0c4dbdae2214b414109afa5f049d9b564d06785d94d11a3cf539988f"));
     }
 
     private void deepTypeParameterReference(Index index) {
@@ -229,7 +230,8 @@ public class RecursiveTypeParametersWithAnnotationsTest {
     public void recursiveBoundInNonRecursiveTypeParameter() throws IOException {
         Index index = Index.of(RecursiveBoundInNonRecursiveTypeParameter.class);
         recursiveBoundInNonRecursiveTypeParameter(index);
-        recursiveBoundInNonRecursiveTypeParameter(IndexingUtil.roundtrip(index));
+        recursiveBoundInNonRecursiveTypeParameter(
+                IndexingUtil.roundtrip(index, "769a43fbda4f6fff2d4225dba7a70369273514ff9bddf08ac46238ad34acf44b"));
     }
 
     private void recursiveBoundInNonRecursiveTypeParameter(Index index) {

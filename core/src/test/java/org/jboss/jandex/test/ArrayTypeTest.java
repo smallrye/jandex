@@ -26,7 +26,7 @@ public class ArrayTypeTest {
     public void test() throws IOException {
         Index index = Index.of(ArrayTypeTest.class);
         doTest(index);
-        doTest(IndexingUtil.roundtrip(index));
+        doTest(IndexingUtil.roundtrip(index, "a0327f9675bc7dbc13eb6c231d7d5230a87f50c145e9e5be747ab5f4ed693392"));
     }
 
     private void doTest(Index index) {

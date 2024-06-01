@@ -82,7 +82,7 @@ public class ParameterizedTypeOwnerTest {
                 E.I.class, E.J.class, E.K.class, E.L.class, E.M.class, EImpl.class, ParameterizedTypeOwnerTest.class);
 
         test(index);
-        test(IndexingUtil.roundtrip(index));
+        test(IndexingUtil.roundtrip(index, "c004a7fa7df19cb9c6efbdf9b14c2497e4a1ff37af6e9107ce68774bfa2baacb"));
     }
 
     private void test(Index index) {

@@ -162,7 +162,7 @@ public class RecordTestCase {
         indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordExample$AccessorAnnotation.class"));
 
         Index index = indexer.complete();
-        return IndexingUtil.roundtrip(index);
+        return IndexingUtil.roundtrip(index, "cb0c26ad014ec0ce7c0461f7cf3d672c172df8fc91afed7e9b8cbdb9adc25e5c");
     }
 
 }

@@ -26,7 +26,7 @@ public class LambdaSignatureTest {
     public void test() throws IOException {
         Index index = Index.of(MyList.class);
         doTest(index);
-        doTest(IndexingUtil.roundtrip(index));
+        doTest(IndexingUtil.roundtrip(index, "47d44143aea39ed5921ffda8372800ad3c20b2505c8a9e0b2ef9ac7fde35ad3b"));
     }
 
     private void doTest(Index index) {

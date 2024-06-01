@@ -31,7 +31,8 @@ public class AnnotationInstanceTest {
     public void equalityEquivalence() throws IOException {
         Index index = Index.of(Foo.class, Foo2.class, Bar.class);
         testEqualityEquivalence(index);
-        testEqualityEquivalence(IndexingUtil.roundtrip(index));
+        testEqualityEquivalence(
+                IndexingUtil.roundtrip(index, "e32820a690a531dae840621cd977e3b1c9f2edb116b8eefd93963612ab42e4e4"));
     }
 
     private void testEqualityEquivalence(Index index) {

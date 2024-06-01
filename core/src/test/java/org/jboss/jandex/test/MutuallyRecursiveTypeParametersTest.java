@@ -77,7 +77,7 @@ public class MutuallyRecursiveTypeParametersTest {
     public void indirectRecursion() throws IOException {
         Index index = Index.of(IndirectRecursion.class);
         indirectRecursion(index);
-        indirectRecursion(IndexingUtil.roundtrip(index));
+        indirectRecursion(IndexingUtil.roundtrip(index, "ff82515e777710cd9e23f9f1aaa23d20b0e6987b545569a7dfb460163dbdef57"));
     }
 
     private void indirectRecursion(Index index) {
@@ -131,7 +131,7 @@ public class MutuallyRecursiveTypeParametersTest {
     public void typeFamily() throws IOException {
         Index index = Index.of(Graph.class, Edge.class, Vertex.class);
         typeFamily(index);
-        typeFamily(IndexingUtil.roundtrip(index));
+        typeFamily(IndexingUtil.roundtrip(index, "2ac079646e3a8cd5a96f77673a96b04e989d3b2074600bd498b5c36f0ff9cbe0"));
     }
 
     private void typeFamily(Index index) {

@@ -466,7 +466,7 @@ public class ImplicitDeclarationsTest {
             indexer.index(cl.getResourceAsStream("test/ImplicitDeclarationsExampleSupplement$SimpleRecord.class"));
 
             Index index = indexer.complete();
-            return IndexingUtil.roundtrip(index);
+            return IndexingUtil.roundtrip(index, "34d80478ef19930040c54ed9d278d446a514aad82705db9971e036c4c14f5621");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

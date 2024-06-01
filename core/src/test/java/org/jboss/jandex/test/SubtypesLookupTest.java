@@ -52,7 +52,7 @@ public class SubtypesLookupTest {
         Index index = Index.of(Foo.class, Bar.class, Baz.class, A.class, B.class, C.class, D.class, E.class, F.class, Z.class);
         test(index);
 
-        test(IndexingUtil.roundtrip(index));
+        test(IndexingUtil.roundtrip(index, "54dd7149fb1ced0575328fa525d0bda155969754b17a7edaa334914f42baf39e"));
     }
 
     private void test(Index index) {

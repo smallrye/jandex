@@ -693,7 +693,7 @@ public class TypeEqualityWithAnnotationsTest {
     public void test() throws IOException {
         Index index = Index.of(A.class, B.class);
         test(index);
-        test(IndexingUtil.roundtrip(index));
+        test(IndexingUtil.roundtrip(index, "c56cd2fa31ebf7e21cd4f359866261533ef9d46f18c4ac5223e64811b0a43035"));
     }
 
     private void test(Index index) {

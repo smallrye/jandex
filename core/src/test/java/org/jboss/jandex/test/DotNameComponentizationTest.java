@@ -25,7 +25,7 @@ public class DotNameComponentizationTest {
 
         doTest(index);
 
-        doTest(IndexingUtil.roundtrip(index));
+        doTest(IndexingUtil.roundtrip(index, "d7d7451ee2fce287f5708a0ddc04654340ef7d964dc13d9cfa65291f71cf5c28"));
     }
 
     private void doTest(Index index) {

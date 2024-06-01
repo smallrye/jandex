@@ -78,7 +78,7 @@ public class EnumConstantsTest {
     public void test() throws IOException {
         Index index = Index.of(SimpleEnum.class, ComplexEnum.class, EnumSingleton.class, EmptyEnum.class, NotAnEnum.class);
         doTest(index);
-        doTest(IndexingUtil.roundtrip(index));
+        doTest(IndexingUtil.roundtrip(index, "e45215d60585ac09a4ab2829bedd095b9efffc514e2e0e62ec4f2ab184091f99"));
     }
 
     private void doTest(Index index) {

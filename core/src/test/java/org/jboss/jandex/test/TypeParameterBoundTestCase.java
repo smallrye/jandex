@@ -100,7 +100,7 @@ public class TypeParameterBoundTestCase {
         assertNotNull(info);
         verifySerializableListConsumerDA(info);
 
-        index = IndexingUtil.roundtrip(index);
+        index = IndexingUtil.roundtrip(index, "c484af54959afdf1e4b674a1ba1092abd832b4d9fdee18eecf6c88e3b262183e");
         info = index.getClassByName(DotName.createSimple("test." + klass));
 
         assertNotNull(info);

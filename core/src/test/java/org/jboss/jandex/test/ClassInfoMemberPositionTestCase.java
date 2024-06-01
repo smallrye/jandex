@@ -55,7 +55,8 @@ public class ClassInfoMemberPositionTestCase {
 
     @Test
     public void testMembersUnsortedAfterRoundtrip() throws IOException {
-        assertOriginalPositions(IndexingUtil.roundtrip(index));
+        assertOriginalPositions(
+                IndexingUtil.roundtrip(index, "2449a8ec785d63a8cbc905a180b3b067deb93e74c316f0d160fb6b919198845a"));
     }
 
     @Test

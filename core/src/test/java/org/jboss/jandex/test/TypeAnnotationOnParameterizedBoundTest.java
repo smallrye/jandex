@@ -55,7 +55,7 @@ public class TypeAnnotationOnParameterizedBoundTest {
         Index index = Index.of(ClassWithRecursiveTypeParameter.class, ClassWithParameterizedTypeParameterBound.class,
                 ClassWithInnerParameterizedTypeParameterBound.class, A.class, B.class, C.class, D.class, E.class);
         test(index);
-        test(IndexingUtil.roundtrip(index));
+        test(IndexingUtil.roundtrip(index, "9bea3475d34f0b62c3df0218b83f13e2f2dbeaae2b29bf091000c3427c360088"));
     }
 
     private void test(Index index) {

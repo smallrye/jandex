@@ -84,7 +84,7 @@ public class TypeEqualityTest {
     public void test() throws IOException {
         Index index = Index.of(A.class, B.class);
         test(index);
-        test(IndexingUtil.roundtrip(index));
+        test(IndexingUtil.roundtrip(index, "03d223f08c43afb8f0d05c63b2ce370c23d2c65adaec2479d887b48a5add62c7"));
     }
 
     private void test(Index index) {

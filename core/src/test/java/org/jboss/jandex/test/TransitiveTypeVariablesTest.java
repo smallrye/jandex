@@ -247,7 +247,7 @@ public class TransitiveTypeVariablesTest {
     public void test() throws IOException {
         Index index = Index.of(TestClass.class, TestClass.InnerClass.class);
         test(index);
-        test(IndexingUtil.roundtrip(index));
+        test(IndexingUtil.roundtrip(index, "940b75404bb6eaeab1e0befa017531391a7ba85ab41601e5f77a9fbedff4f401"));
     }
 
     private void test(Index index) {

@@ -71,7 +71,7 @@ public class RecursiveTypeParametersTest {
     public void myComparable() throws IOException {
         Index index = Index.of(MyComparable.class);
         myComparable(index);
-        myComparable(IndexingUtil.roundtrip(index));
+        myComparable(IndexingUtil.roundtrip(index, "49a4032e051a19224303db47a7537f1f1727b4fd2361dfc8ecc5d7dc834be37f"));
     }
 
     private void myComparable(Index index) {
@@ -97,7 +97,8 @@ public class RecursiveTypeParametersTest {
     public void deepTypeParameterReference() throws IOException {
         Index index = Index.of(DeepTypeParameterReference.class);
         deepTypeParameterReference(index);
-        deepTypeParameterReference(IndexingUtil.roundtrip(index));
+        deepTypeParameterReference(
+                IndexingUtil.roundtrip(index, "5d0906a1c23ab4729e7930f36f175bfc7e8305a5536ea1e35750c1e70ccddc7c"));
     }
 
     private void deepTypeParameterReference(Index index) {
@@ -174,7 +175,7 @@ public class RecursiveTypeParametersTest {
     public void myEnum() throws IOException {
         Index index = Index.of(MyEnum.class);
         myEnum(index);
-        myEnum(IndexingUtil.roundtrip(index));
+        myEnum(IndexingUtil.roundtrip(index, "aa48cab7bce914fe6c96f58c36aba5d0e745c3f53428b4068b8e3752ed357054"));
     }
 
     private void myEnum(Index index) {
@@ -201,7 +202,7 @@ public class RecursiveTypeParametersTest {
     public void myBuilder() throws IOException {
         Index index = Index.of(MyBuilder.class);
         myBuilder(index);
-        myBuilder(IndexingUtil.roundtrip(index));
+        myBuilder(IndexingUtil.roundtrip(index, "7efc39c226fd8ec282f5c2bc177e9dc6bdb0fa05e82cbfa0d4254be515120a1f"));
     }
 
     private void myBuilder(Index index) {
@@ -272,7 +273,7 @@ public class RecursiveTypeParametersTest {
     public void score() throws IOException {
         Index index = Index.of(Score.class, ScoreManager.class, ScoreManagerFactory.class);
         score(index);
-        score(IndexingUtil.roundtrip(index));
+        score(IndexingUtil.roundtrip(index, "20e153e28d870fd2c1fb094c6f114ef635c7d5bc4eada67e376d551854de972c"));
     }
 
     private void score(Index index) {
@@ -317,7 +318,8 @@ public class RecursiveTypeParametersTest {
     public void recursiveBoundInNonRecursiveTypeParameter() throws IOException {
         Index index = Index.of(RecursiveBoundInNonRecursiveTypeParameter.class);
         recursiveBoundInNonRecursiveTypeParameter(index);
-        recursiveBoundInNonRecursiveTypeParameter(IndexingUtil.roundtrip(index));
+        recursiveBoundInNonRecursiveTypeParameter(
+                IndexingUtil.roundtrip(index, "d48eea6f8cabff93a86e87a5dd1957471465ba338e7d9e24ddac063321f6695b"));
     }
 
     private void recursiveBoundInNonRecursiveTypeParameter(Index index) {

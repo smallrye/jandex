@@ -60,7 +60,7 @@ public class KnownUsersTest {
     public void test() throws IOException {
         Index index = Index.of(SuperClass.class, ImplementedInterface1.class, ImplementedInterface2.class, TestClass.class);
         doTest(index);
-        doTest(IndexingUtil.roundtrip(index));
+        doTest(IndexingUtil.roundtrip(index, "41be9043661eda13b259469b11502a6a0bf84e53a4469dbf56ec8ba876fe86c1"));
     }
 
     private void doTest(Index index) {

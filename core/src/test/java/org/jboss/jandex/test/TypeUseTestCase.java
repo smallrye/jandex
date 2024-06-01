@@ -92,7 +92,8 @@ public class TypeUseTestCase {
         // This has always worked fine
         verifyTypeUseAnnotations(originalIndex, annotationClass, expectedUsage, expectedEnclosingTargetKind);
 
-        Index indexAfterWriteRead = IndexingUtil.roundtrip(originalIndex);
+        Index indexAfterWriteRead = IndexingUtil.roundtrip(originalIndex,
+                "349c9bc6abe8feb2bc8f484d1f4790736164da3a7755afa91f08bb8f32368e80");
 
         // This used to fail with a ClassCastException because after the index was written, then read again,
         // the enclosing target in MethodParameterTypeTarget became a type,

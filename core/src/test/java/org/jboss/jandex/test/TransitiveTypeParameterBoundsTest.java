@@ -225,7 +225,8 @@ public class TransitiveTypeParameterBoundsTest {
 
         doTest(localClass, staticLocalClass, index);
 
-        doTest(localClass, staticLocalClass, IndexingUtil.roundtrip(index));
+        doTest(localClass, staticLocalClass,
+                IndexingUtil.roundtrip(index, "1f9b30896412c22f57881e7f129b05b6b6f9accb28c7a55ade68ea1fc6e9da10"));
     }
 
     private void doTest(Class<?> localClassObject, Class<?> staticLocalClassObject, Index index) {

@@ -41,7 +41,7 @@ public class TypeToStringTest {
     public void test() throws IOException {
         Index index = Index.of(TestClass.class, TestClass.InnerClass.class);
         test(index);
-        test(IndexingUtil.roundtrip(index));
+        test(IndexingUtil.roundtrip(index, "05d34649c84c8958e5852f1874d6c3d922d91f546e1fc28421ec05f540da703f"));
     }
 
     private void test(Index index) {

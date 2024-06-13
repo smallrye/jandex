@@ -34,7 +34,7 @@ import java.util.List;
  * returns the type of the enclosing class. Such inner type may itself be parameterized.
  * <p>
  * For example, assume the following declarations:
- * 
+ *
  * <pre class="brush:java">
  * class A&lt;T&gt; {
  *     class B {

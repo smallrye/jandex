@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.smallrye</groupId>
         <artifactId>smallrye-build-parent</artifactId>
-        <version>31</version>
+        <version>44</version>
     </parent>
 
     <groupId>io.smallrye</groupId>
@@ -36,7 +36,7 @@
         <version.nexus-staging-maven-plugin>1.6.13</version.nexus-staging-maven-plugin>
         <version.mvn-jlink-wrapper>1.1.1</version.mvn-jlink-wrapper>
         <version.plexus-compiler-eclipse>2.11.1</version.plexus-compiler-eclipse>
-        <version.plexus-utils>3.4.1</version.plexus-utils>
+        <version.plexus-utils>4.0.1</version.plexus-utils>
     </properties>
 
     <issueManagement>
@@ -128,6 +128,37 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>java8-incompatible-plugins</id>
+            <activation>
+                <jdk>1.8</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>net.revelc.code.formatter</groupId>
+                        <artifactId>formatter-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>format-sources</id>
+                                <phase>none</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>net.revelc.code</groupId>
+                        <artifactId>impsort-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sort-imports</id>
+                                <phase>none</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <profile>
             <id>compiler-release-option</id>
             <activation>

@@ -112,10 +112,11 @@ public interface AnnotationOverlay {
     /**
      * Returns the annotation instance with given {@code name} declared on given {@code declaration}.
      * <p>
-     * Like {@link AnnotationTarget#annotation(DotName)}, and unlike {@link AnnotationTarget#annotation(DotName)},
+     * Like {@link AnnotationTarget#declaredAnnotation(DotName)}, and unlike {@link AnnotationTarget#annotation(DotName)},
      * this method doesn't return annotations declared on nested annotation targets. This doesn't hold in case of methods
      * in the {@linkplain Builder#compatibleMode() compatible mode}, where method parameters are considered
-     * part of methods.
+     * part of methods. In such case, if more than one annotation of given {@code name} is present, an unspecified
+     * instance is returned.
      *
      * @param declaration the declaration to inspect, must not be {@code null}
      * @param name name of the annotation type to look for, must not be {@code null}
@@ -126,10 +127,11 @@ public interface AnnotationOverlay {
     /**
      * Returns the annotation instance of given {@code clazz} declared on given {@code declaration}.
      * <p>
-     * Like {@link AnnotationTarget#annotation(Class)}, and unlike {@link AnnotationTarget#annotation(Class)},
+     * Like {@link AnnotationTarget#declaredAnnotation(Class)}, and unlike {@link AnnotationTarget#annotation(Class)},
      * this method doesn't return annotations declared on nested annotation targets. This doesn't hold in case of methods
      * in the {@linkplain Builder#compatibleMode() compatible mode}, where method parameters are considered
-     * part of methods.
+     * part of methods. In such case, if more than one annotation of given {@code clazz} is present, an unspecified
+     * instance is returned.
      *
      * @param declaration the declaration to inspect, must not be {@code null}
      * @param clazz the annotation type to look for, must not be {@code null}

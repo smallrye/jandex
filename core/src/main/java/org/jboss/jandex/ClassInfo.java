@@ -654,7 +654,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
     }
 
     final void setAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {
-        this.annotations = annotations;
+        this.annotations = Utils.minimize(annotations);
     }
 
     /**

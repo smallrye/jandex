@@ -61,8 +61,19 @@ class Utils {
         return result;
     }
 
+    static <K, V> Map<K, V> minimize(Map<K, V> map) {
+        if (map.isEmpty()) {
+            return Collections.emptyMap();
+        } else if (map.size() == 1) {
+            Map.Entry<K, V> entry = map.entrySet().iterator().next();
+            return Collections.singletonMap(entry.getKey(), entry.getValue());
+        } else {
+            return map;
+        }
+    }
+
     static <T> List<T> listOfCapacity(int capacity) {
-        return capacity > 0 ? new ArrayList<T>(capacity) : Collections.<T> emptyList();
+        return capacity > 0 ? new ArrayList<>(capacity) : Collections.emptyList();
     }
 
     static final class ReusableBufferedDataInputStream extends DataInputStream {

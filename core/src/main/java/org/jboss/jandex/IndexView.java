@@ -77,7 +77,7 @@ public interface IndexView {
      * <p>
      * Note that this will only pick up direct subclasses of the class. It will not
      * pick up subclasses of subclasses.
-     * 
+     *
      * @param className the super class of the desired subclasses
      * @return a non-null list of all known subclasses of className
      */

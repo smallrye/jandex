@@ -119,7 +119,7 @@ public final class FieldInfo implements AnnotationTarget {
      * of the annotation instance.
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
-     * 
+     *
      * <pre class="brush:java">
      * {@literal @}MyFieldAnnotation
      * public String foo;
@@ -144,7 +144,7 @@ public final class FieldInfo implements AnnotationTarget {
      * of the respective annotation instance.
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
-     * 
+     *
      * <pre class="brush:java">
      * {@literal @}MyFieldAnnotation
      * public String foo;
@@ -215,7 +215,7 @@ public final class FieldInfo implements AnnotationTarget {
      * of the respective annotation instance.
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
-     * 
+     *
      * <pre class="brush:java">
      * {@literal @}MyFieldAnnotation
      * public String foo;
@@ -356,7 +356,7 @@ public final class FieldInfo implements AnnotationTarget {
     }
 
     /**
-     * 
+     *
      * @return {@code true} if this field is a synthetic field
      */
     public final boolean isSynthetic() {

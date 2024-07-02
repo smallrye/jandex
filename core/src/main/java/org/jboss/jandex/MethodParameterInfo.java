@@ -72,7 +72,7 @@ public final class MethodParameterInfo implements AnnotationTarget {
 
     /**
      * Returns the name of this parameter, or {@code null} if not known.
-     * 
+     *
      * @return the name of this parameter, or {@code null} if not known
      */
     public final String name() {

@@ -344,7 +344,7 @@ public final class ClassInfo implements AnnotationTarget {
      * instance may be used to determine the exact location of the annotation instance.
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
-     * 
+     *
      * <pre class="brush:java">
      * {@literal @}MyClassAnnotation
      * public class Foo&lt;{@literal @}MyTypeAnnotation T&gt; {
@@ -386,7 +386,7 @@ public final class ClassInfo implements AnnotationTarget {
      * instances may be used to determine the exact location of the respective annotation instance.
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
-     * 
+     *
      * <pre class="brush:java">
      * {@literal @}MyClassAnnotation
      * public class Foo&lt;{@literal @}MyTypeAnnotation T&gt; {
@@ -469,7 +469,7 @@ public final class ClassInfo implements AnnotationTarget {
      * instances may be used to determine the exact location of the respective annotation instance.
      * <p>
      * The following is a non-exhaustive list of examples of annotations returned by this method:
-     * 
+     *
      * <pre class="brush:java">
      * {@literal @}MyClassAnnotation
      * public class Foo&lt;{@literal @}MyTypeAnnotation T&gt; {

@@ -40,6 +40,12 @@ public class JandexJarGoal extends AbstractMojo {
     private String indexName;
 
     /**
+     * Persistent index format version to write. Defaults to max supported version.
+     */
+    @Parameter
+    private Integer indexVersion;
+
+    /**
      * Names or glob patterns of files in the JAR that should be indexed.
      */
     @Parameter
@@ -103,7 +109,12 @@ public class JandexJarGoal extends AbstractMojo {
             }
 
             out.putNextEntry(new ZipEntry(indexName));
-            new IndexWriter(out).write(index);
+            IndexWriter writer = new IndexWriter(out);
+            if (indexVersion != null) {
+                writer.write(index, indexVersion);
+            } else {
+                writer.write(index);
+            }
         } catch (IOException e) {
             try {
                 Files.deleteIfExists(tmp);

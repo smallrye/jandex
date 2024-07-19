@@ -14,10 +14,11 @@ jobs:
     if: ${{github.event.pull_request.merged == true}}
     env:
       GITHUB_TOKEN: ${{secrets.RELEASE_TOKEN}}
+
     steps:
     - name: Retrieve project metadata
       id: metadata
-      uses: radcortez/project-metadata-action@master
+      uses: radcortez/project-metadata-action@main
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         metadata-file-path: '.github/project.yml'
@@ -51,6 +52,7 @@ jobs:
       run: |
         export MAVEN_OPTS="--add-opens=java.base/java.util=ALL-UNNAMED"
         java -version
+        mvn --version
         git config --global user.name "SmallRye CI"
         git config --global user.email "smallrye@googlegroups.com"
         git checkout -b release
@@ -67,17 +69,19 @@ jobs:
         git push
         git push --tags
 
-    - uses: radcortez/milestone-release-action@master
-      name: Milestone release
+    - name: Milestone release
+      uses: radcortez/milestone-release-action@main
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         milestone-title: ${{steps.metadata.outputs.current-version}}
+        milestone-next: ${{steps.metadata.outputs.next-version}}
 
   github-pages:
     name: GitHub Pages
     needs:
     - release
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout
       uses: actions/checkout@v4

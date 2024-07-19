@@ -7,12 +7,13 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
     name: Pre-release checks
+    runs-on: ubuntu-latest
+
     steps:
     - name: Retrieve project metadata
       id: metadata
-      uses: radcortez/project-metadata-action@master
+      uses: radcortez/project-metadata-action@main
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         metadata-file-path: '.github/project.yml'
@@ -23,8 +24,8 @@ jobs:
         echo '::error::Cannot release a SNAPSHOT version.'
         exit 1
 
-    - uses: radcortez/milestone-review-action@master
-      name: Milestone review
+    - name: Milestone review
+      uses: radcortez/milestone-review-action@main
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         milestone-title: ${{steps.metadata.outputs.current-version}}

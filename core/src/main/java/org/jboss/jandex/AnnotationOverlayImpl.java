@@ -320,22 +320,43 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
         @Override
         public void add(Class<? extends Annotation> annotationClass) {
             Objects.requireNonNull(annotationClass);
-            annotations.add(AnnotationInstance.builder(annotationClass).build());
+            annotations.add(AnnotationInstance.builder(annotationClass).buildWithTarget(declaration));
         }
 
         @Override
         public void add(AnnotationInstance annotation) {
+            if (annotation.target() == null) {
+                annotation = AnnotationInstance.create(annotation, declaration);
+            }
             annotations.add(Objects.requireNonNull(annotation));
         }
 
         @Override
         public void addAll(AnnotationInstance... annotations) {
-            Collections.addAll(this.annotations, Objects.requireNonNull(annotations));
+            Objects.requireNonNull(annotations);
+            for (int i = 0; i < annotations.length; i++) {
+                if (annotations[i].target() == null) {
+                    annotations[i] = AnnotationInstance.create(annotations[i], declaration);
+                }
+            }
+            Collections.addAll(this.annotations, annotations);
         }
 
         @Override
         public void addAll(Collection<AnnotationInstance> annotations) {
-            this.annotations.addAll(Objects.requireNonNull(annotations));
+            Objects.requireNonNull(annotations);
+            if (annotations.stream().anyMatch(it -> it.target() == null)) {
+                List<AnnotationInstance> fixed = new ArrayList<>();
+                for (AnnotationInstance annotation : annotations) {
+                    if (annotation.target() == null) {
+                        fixed.add(AnnotationInstance.create(annotation, declaration));
+                    } else {
+                        fixed.add(annotation);
+                    }
+                }
+                annotations = fixed;
+            }
+            this.annotations.addAll(annotations);
         }
 
         @Override

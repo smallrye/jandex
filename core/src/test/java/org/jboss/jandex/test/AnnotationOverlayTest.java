@@ -254,6 +254,7 @@ public class AnnotationOverlayTest {
                 if (inheritedAnnotations) {
                     assertTrue(overlay.hasAnnotation(clazz, MyInheritedAnnotation.class));
                     assertNotNull(overlay.annotation(clazz, MyInheritedAnnotation.class));
+                    assertNotNull(overlay.annotation(clazz, MyInheritedAnnotation.class).target());
                     assertEquals("i", overlay.annotation(clazz, MyInheritedAnnotation.class).value().asString());
                     assertEquals(1, overlay.annotationsWithRepeatable(clazz, MyInheritedAnnotation.class).size());
                 } else {
@@ -276,20 +277,24 @@ public class AnnotationOverlayTest {
 
                 for (Declaration declaration : Arrays.asList(clazz, field, method, parameter1, parameter2)) {
                     if (overlay.hasAnnotation(declaration, MyAnnotation.DOT_NAME)) {
+                        assertNotNull(overlay.annotation(declaration, MyAnnotation.DOT_NAME).target());
                         values.append(overlay.annotation(declaration, MyAnnotation.DOT_NAME).value().asString()).append("_");
                     }
                     if (overlay.hasAnnotation(declaration, MyOtherAnnotation.DOT_NAME)) {
+                        assertNotNull(overlay.annotation(declaration, MyOtherAnnotation.DOT_NAME).target());
                         values.append(overlay.annotation(declaration, MyOtherAnnotation.DOT_NAME).value().asString())
                                 .append("_");
                     }
                     if (declaration != method) {
                         if (overlay.hasAnnotation(declaration, MyRepeatableAnnotation.DOT_NAME)) {
+                            assertNotNull(overlay.annotation(declaration, MyRepeatableAnnotation.DOT_NAME).target());
                             values.append(overlay.annotation(declaration, MyRepeatableAnnotation.DOT_NAME).value().asString())
                                     .append("_");
                         }
                         if (overlay.hasAnnotation(declaration, MyRepeatableAnnotation.List.DOT_NAME)) {
                             AnnotationInstance annotation = overlay.annotation(declaration,
                                     MyRepeatableAnnotation.List.DOT_NAME);
+                            assertNotNull(annotation.target());
                             for (AnnotationInstance nestedAnnotation : annotation.value().asNestedArray()) {
                                 values.append(nestedAnnotation.value().asString()).append("_");
                             }
@@ -297,6 +302,7 @@ public class AnnotationOverlayTest {
                     } else { // just to test `annotationsWithRepeatable`, no other reason
                         for (AnnotationInstance annotation : overlay.annotationsWithRepeatable(declaration,
                                 MyRepeatableAnnotation.DOT_NAME)) {
+                            assertNotNull(annotation.target());
                             values.append(annotation.value().asString()).append("_");
                         }
                     }
@@ -308,6 +314,7 @@ public class AnnotationOverlayTest {
                     } else {
                         assertTrue(overlay.hasAnnotation(declaration, MyClassRetainedAnnotation.class));
                         assertNotNull(overlay.annotation(declaration, MyClassRetainedAnnotation.class));
+                        assertNotNull(overlay.annotation(declaration, MyClassRetainedAnnotation.class).target());
                         assertEquals(1, overlay.annotationsWithRepeatable(declaration, MyClassRetainedAnnotation.class).size());
                     }
                 }

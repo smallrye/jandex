@@ -701,8 +701,10 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      * and static initializer blocks which have the special names of {@code <init>}
      * and {@code <clinit>}, respectively. It does not, however, include inherited methods.
      * These must be discovered by traversing the class hierarchy.
-     * <p>
      * This list may be empty, but is never {@code null}.
+     * <p>
+     * Note that the result <em>doesn't</em> have any guaranteed order. If you need
+     * declaration order, use {@link #unsortedMethods()}.
      *
      * @return the list of methods declared in this class
      */
@@ -832,7 +834,10 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
     /**
      * Returns a list of all available fields. Only fields declared in this class are available.
      * Locating inherited fields requires traversing the class hierarchy. This list may be
-     * empty, but never null.
+     * empty, but is never {@code null}.
+     * <p>
+     * Note that the result <em>doesn't</em> have any guaranteed order. If you need
+     * declaration order, use {@link #unsortedFields()}.
      *
      * @return a list of fields
      */
@@ -885,9 +890,12 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
 
     /**
      * Returns a list of all record components declared by this class.
-     * This list may be empty, but never {@code null}.
+     * This list may be empty, but is never {@code null}.
      * <p>
      * If this class is not a record, returns an empty list.
+     * <p>
+     * Note that the result <em>doesn't</em> have any guaranteed order. If you need
+     * declaration order, use {@link #unsortedRecordComponents()}.
      *
      * @return immutable list of record components
      */

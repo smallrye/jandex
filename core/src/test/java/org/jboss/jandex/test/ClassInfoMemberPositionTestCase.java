@@ -40,61 +40,53 @@ public class ClassInfoMemberPositionTestCase {
 
     @BeforeEach
     public void setUp() throws IOException {
-        Indexer indexer = new Indexer();
-        String prefix = "org/jboss/jandex/test/ClassInfoMemberPositionTestCase$";
-        indexer.index(getClass().getClassLoader().getResourceAsStream(prefix + "TestEntity.class"));
-        indexer.index(getClass().getClassLoader().getResourceAsStream(prefix + "MaxSizeTestEntity.class"));
-        indexer.index(getClass().getClassLoader().getResourceAsStream(prefix + "OverMaxSizeTestEntity.class"));
-        this.index = indexer.complete();
+        this.index = Index.of(TestEntity.class, MaxSizeTestEntity.class, OverMaxSizeTestEntity.class);
     }
 
     @Test
-    public void testMembersUnsorted() {
-        assertOriginalPositions(index);
+    public void testMembersInDeclarationOrder() throws IOException {
+        assertDeclarationOrder(index);
+        assertDeclarationOrder(IndexingUtil.roundtrip(index));
     }
 
     @Test
-    public void testMembersUnsortedAfterRoundtrip() throws IOException {
-        assertOriginalPositions(IndexingUtil.roundtrip(index));
-    }
-
-    @Test
-    public void testMaxMembersUnsortedAndSorted() {
+    public void testMaxMembers() {
         ClassInfo clazz = index.getClassByName(DotName.createSimple(MaxSizeTestEntity.class.getName()));
         assertNotNull(clazz);
 
-        List<FieldInfo> unsortedFields = clazz.unsortedFields();
+        List<FieldInfo> fieldsInDeclarationOrder = clazz.fieldsInDeclarationOrder();
         for (int i = 0; i < 256; i++) {
-            assertEquals(String.format(Locale.ROOT, "f%03d", 255 - i), unsortedFields.get(i).name());
+            assertEquals(String.format(Locale.ROOT, "f%03d", 255 - i), fieldsInDeclarationOrder.get(i).name());
         }
 
-        List<FieldInfo> sortedFields = clazz.fields();
+        List<FieldInfo> fields = clazz.fields();
         for (int i = 0; i < 256; i++) {
-            assertEquals(String.format(Locale.ROOT, "f%03d", i), sortedFields.get(i).name());
+            assertEquals(String.format(Locale.ROOT, "f%03d", i), fields.get(i).name());
         }
     }
 
     @Test
-    public void testOverMaxMembersUnsortedAndSorted() {
+    public void testOverMaxMembers() {
         ClassInfo clazz = index.getClassByName(DotName.createSimple(OverMaxSizeTestEntity.class.getName()));
         assertNotNull(clazz);
 
-        List<FieldInfo> unsortedFields = clazz.unsortedFields();
+        // actually _not_ in declaration order, because of too many fields!
+        List<FieldInfo> fieldsInDeclarationOrder = clazz.fieldsInDeclarationOrder();
         for (int i = 0; i < 257; i++) {
-            assertEquals(String.format(Locale.ROOT, "f%03d", i), unsortedFields.get(i).name());
+            assertEquals(String.format(Locale.ROOT, "f%03d", i), fieldsInDeclarationOrder.get(i).name());
         }
 
-        List<FieldInfo> sortedFields = clazz.fields();
+        List<FieldInfo> fields = clazz.fields();
         for (int i = 0; i < 257; i++) {
-            assertEquals(String.format(Locale.ROOT, "f%03d", i), sortedFields.get(i).name());
+            assertEquals(String.format(Locale.ROOT, "f%03d", i), fields.get(i).name());
         }
     }
 
-    private static void assertOriginalPositions(Index index) {
+    private static void assertDeclarationOrder(Index index) {
         ClassInfo clazz = index.getClassByName(DotName.createSimple(TestEntity.class.getName()));
         assertNotNull(clazz);
 
-        List<FieldInfo> fields = clazz.unsortedFields();
+        List<FieldInfo> fields = clazz.fieldsInDeclarationOrder();
         int f = 0;
         assertEquals("z", fields.get(f++).name());
         assertEquals("omega", fields.get(f++).name());
@@ -102,7 +94,7 @@ public class ClassInfoMemberPositionTestCase {
         assertEquals("x", fields.get(f++).name());
         assertEquals("alpha", fields.get(f++).name());
 
-        List<MethodInfo> methods = clazz.unsortedMethods();
+        List<MethodInfo> methods = clazz.methodsInDeclarationOrder();
         int m = 0;
         assertEquals("c", methods.get(m++).name());
         assertEquals("<init>", methods.get(m++).name());

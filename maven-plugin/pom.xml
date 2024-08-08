@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.smallrye</groupId>
         <artifactId>jandex-parent</artifactId>
-        <version>3.2.2-SNAPSHOT</version>
+        <version>3.2.2</version>
     </parent>
 
     <artifactId>jandex-maven-plugin</artifactId>

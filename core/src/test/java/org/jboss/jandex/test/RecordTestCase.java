@@ -212,12 +212,18 @@ public class RecordTestCase {
         indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithCompactCanonicalCtor.class"));
         indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithCustomCanonicalCtor.class"));
         indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithDefaultCanonicalCtor.class"));
-        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithMultipleCtorsAndCompactCanonicalCtor.class"));
-        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithMultipleCtorsAndCustomCanonicalCtor.class"));
-        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithMultipleCtorsAndDefaultCanonicalCtor.class"));
-        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithNoComponentsAndCompactCanonicalCtor.class"));
-        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithNoComponentsAndCustomCanonicalCtor.class"));
-        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithNoComponentsAndDefaultCanonicalCtor.class"));
+        indexer.index(
+                getClass().getClassLoader().getResourceAsStream("test/RecordWithMultipleCtorsAndCompactCanonicalCtor.class"));
+        indexer.index(
+                getClass().getClassLoader().getResourceAsStream("test/RecordWithMultipleCtorsAndCustomCanonicalCtor.class"));
+        indexer.index(
+                getClass().getClassLoader().getResourceAsStream("test/RecordWithMultipleCtorsAndDefaultCanonicalCtor.class"));
+        indexer.index(
+                getClass().getClassLoader().getResourceAsStream("test/RecordWithNoComponentsAndCompactCanonicalCtor.class"));
+        indexer.index(
+                getClass().getClassLoader().getResourceAsStream("test/RecordWithNoComponentsAndCustomCanonicalCtor.class"));
+        indexer.index(
+                getClass().getClassLoader().getResourceAsStream("test/RecordWithNoComponentsAndDefaultCanonicalCtor.class"));
 
         indexer.indexClass(RecordTestCase.class);
 

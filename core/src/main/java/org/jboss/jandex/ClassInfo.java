@@ -746,6 +746,50 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         return constructors;
     }
 
+    /**
+     * Returns the canonical constructor of this record. If this class is not a record, returns {@code null}.
+     * <p>
+     * Note that this method has the same limitations as {@link #unsortedRecordComponents()}. That is,
+     * at most 256 record components may be present, and an assumption is made that bytecode order
+     * of record components corresponds to the declaration order.
+     *
+     * @return the canonical constructor of this record, or {@code null} if this class is not a record
+     */
+    public MethodInfo canonicalConstructor() {
+        if (!isRecord()) {
+            return null;
+        }
+
+        RecordComponentInternal[] recordComponents = recordComponentArray();
+        byte[] recordComponentPositions = recordComponentPositionArray();
+
+        if (recordComponents.length == recordComponentPositions.length) {
+            outer: for (MethodInternal method : methods) {
+                if (!Arrays.equals(Utils.INIT_METHOD_NAME, method.nameBytes())) {
+                    // not a constructor
+                    continue;
+                }
+
+                Type[] parameters = method.parameterTypesArray();
+                if (parameters.length != recordComponents.length) {
+                    // not a constructor with the right number of parameters
+                    continue;
+                }
+
+                for (int i = 0; i < parameters.length; i++) {
+                    if (!parameters[i].equals(recordComponents[recordComponentPositions[i] & 0xFF].type())) {
+                        // not a constructor with matching parameter types
+                        continue outer;
+                    }
+                }
+
+                return new MethodInfo(this, method);
+            }
+        }
+
+        throw new IllegalStateException("Could not determine the canonical constructor");
+    }
+
     final MethodInternal[] methodArray() {
         return methods;
     }

@@ -704,9 +704,9 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      * This list may be empty, but is never {@code null}.
      * <p>
      * Note that the result <em>doesn't</em> have any guaranteed order. If you need
-     * declaration order, use {@link #unsortedMethods()}.
+     * declaration order, use {@link #methodsInDeclarationOrder()}.
      *
-     * @return the list of methods declared in this class
+     * @return immutable list of methods
      */
     public final List<MethodInfo> methods() {
         return new MethodInfoGenerator(this, methods, EMPTY_POSITIONS);
@@ -721,11 +721,19 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      * methods may be present; if there's more, order is undefined. This also assumes that the bytecode
      * order corresponds to declaration order, which is not guaranteed, but practically always holds.
      *
-     * @return a list of methods
-     * @since 2.4
+     * @return immutable list of methods, in declaration order
+     * @since 3.2.2
      */
-    public final List<MethodInfo> unsortedMethods() {
+    public final List<MethodInfo> methodsInDeclarationOrder() {
         return new MethodInfoGenerator(this, methods, methodPositions);
+    }
+
+    /**
+     * @deprecated use {@link #methodsInDeclarationOrder()}
+     */
+    @Deprecated
+    public final List<MethodInfo> unsortedMethods() {
+        return methodsInDeclarationOrder();
     }
 
     /**
@@ -881,9 +889,9 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      * empty, but is never {@code null}.
      * <p>
      * Note that the result <em>doesn't</em> have any guaranteed order. If you need
-     * declaration order, use {@link #unsortedFields()}.
+     * declaration order, use {@link #fieldsInDeclarationOrder()}.
      *
-     * @return a list of fields
+     * @return immutable list of fields
      */
     public final List<FieldInfo> fields() {
         return new FieldInfoGenerator(this, fields, EMPTY_POSITIONS);
@@ -898,11 +906,19 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      * fields may be present; if there's more, order is undefined. This also assumes that the bytecode
      * order corresponds to declaration order, which is not guaranteed, but practically always holds.
      *
-     * @return a list of fields
-     * @since 2.4
+     * @return immutable list of fields, in declaration order
+     * @since 3.2.2
      */
-    public final List<FieldInfo> unsortedFields() {
+    public final List<FieldInfo> fieldsInDeclarationOrder() {
         return new FieldInfoGenerator(this, fields, fieldPositions);
+    }
+
+    /**
+     * @deprecated use {@link #fieldsInDeclarationOrder()}
+     */
+    @Deprecated
+    public final List<FieldInfo> unsortedFields() {
+        return fieldsInDeclarationOrder();
     }
 
     final FieldInternal[] fieldArray() {
@@ -961,15 +977,23 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      * assumes that the bytecode order corresponds to declaration order, which is not guaranteed,
      * but practically always holds.
      *
-     * @return immutable list of record components
-     * @since 2.4
+     * @return immutable list of record components, in declaration order
+     * @since 3.2.2
      */
-    public final List<RecordComponentInfo> unsortedRecordComponents() {
+    public final List<RecordComponentInfo> recordComponentsInDeclarationOrder() {
         if (extra == null || extra.recordComponents == null) {
             return Collections.emptyList();
         }
 
         return new RecordComponentInfoGenerator(this, extra.recordComponents, extra.recordComponentPositions);
+    }
+
+    /**
+     * @deprecated use {@link #recordComponentsInDeclarationOrder()}
+     */
+    @Deprecated
+    public final List<RecordComponentInfo> unsortedRecordComponents() {
+        return recordComponentsInDeclarationOrder();
     }
 
     final RecordComponentInternal[] recordComponentArray() {

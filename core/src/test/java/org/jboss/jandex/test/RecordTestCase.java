@@ -28,9 +28,11 @@ import java.util.List;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
+import org.jboss.jandex.PrimitiveType;
 import org.jboss.jandex.RecordComponentInfo;
 import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -152,6 +154,53 @@ public class RecordTestCase {
         assertEquals("T", rec.typeParameters().get(0).identifier());
     }
 
+    @Test
+    public void canonicalCtor() {
+        ClassInfo rec = index.getClassByName("test.RecordWithNoComponentsAndDefaultCanonicalCtor");
+        assertEquals(1, rec.constructors().size());
+        assertEquals(rec.constructors().get(0), rec.canonicalConstructor());
+
+        rec = index.getClassByName("test.RecordWithNoComponentsAndCompactCanonicalCtor");
+        assertEquals(1, rec.constructors().size());
+        assertEquals(rec.constructors().get(0), rec.canonicalConstructor());
+
+        rec = index.getClassByName("test.RecordWithNoComponentsAndCustomCanonicalCtor");
+        assertEquals(1, rec.constructors().size());
+        assertEquals(rec.constructors().get(0), rec.canonicalConstructor());
+
+        rec = index.getClassByName("test.RecordWithDefaultCanonicalCtor");
+        assertEquals(1, rec.constructors().size());
+        assertEquals(rec.constructors().get(0), rec.canonicalConstructor());
+
+        rec = index.getClassByName("test.RecordWithCompactCanonicalCtor");
+        assertEquals(1, rec.constructors().size());
+        assertEquals(rec.constructors().get(0), rec.canonicalConstructor());
+
+        rec = index.getClassByName("test.RecordWithCustomCanonicalCtor");
+        assertEquals(1, rec.constructors().size());
+        assertEquals(rec.constructors().get(0), rec.canonicalConstructor());
+
+        rec = index.getClassByName("test.RecordWithMultipleCtorsAndDefaultCanonicalCtor");
+        assertEquals(4, rec.constructors().size());
+        assertEquals(2, rec.canonicalConstructor().parametersCount());
+        assertEquals(PrimitiveType.INT, rec.canonicalConstructor().parameterType(0));
+        assertEquals(ClassType.create(String.class), rec.canonicalConstructor().parameterType(1));
+
+        rec = index.getClassByName("test.RecordWithMultipleCtorsAndCompactCanonicalCtor");
+        assertEquals(4, rec.constructors().size());
+        assertEquals(2, rec.canonicalConstructor().parametersCount());
+        assertEquals(PrimitiveType.INT, rec.canonicalConstructor().parameterType(0));
+        assertEquals(ClassType.create(String.class), rec.canonicalConstructor().parameterType(1));
+
+        rec = index.getClassByName("test.RecordWithMultipleCtorsAndCustomCanonicalCtor");
+        assertEquals(4, rec.constructors().size());
+        assertEquals(2, rec.canonicalConstructor().parametersCount());
+        assertEquals(PrimitiveType.INT, rec.canonicalConstructor().parameterType(0));
+        assertEquals(ClassType.create(String.class), rec.canonicalConstructor().parameterType(1));
+
+        assertNull(index.getClassByName(RecordTestCase.class).canonicalConstructor());
+    }
+
     private Index buildIndex() throws IOException {
         Indexer indexer = new Indexer();
         indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordExample.class"));
@@ -160,6 +209,17 @@ public class RecordTestCase {
         indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordExample$ComponentAnnotation.class"));
         indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordExample$FieldAnnotation.class"));
         indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordExample$AccessorAnnotation.class"));
+        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithCompactCanonicalCtor.class"));
+        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithCustomCanonicalCtor.class"));
+        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithDefaultCanonicalCtor.class"));
+        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithMultipleCtorsAndCompactCanonicalCtor.class"));
+        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithMultipleCtorsAndCustomCanonicalCtor.class"));
+        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithMultipleCtorsAndDefaultCanonicalCtor.class"));
+        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithNoComponentsAndCompactCanonicalCtor.class"));
+        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithNoComponentsAndCustomCanonicalCtor.class"));
+        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithNoComponentsAndDefaultCanonicalCtor.class"));
+
+        indexer.indexClass(RecordTestCase.class);
 
         Index index = indexer.complete();
         return IndexingUtil.roundtrip(index);

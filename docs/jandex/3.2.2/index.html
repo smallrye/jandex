@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Jandex :: Jandex documentation</title>
+    <link rel="next" href="core/getting.html">
+    <meta name="generator" content="Antora 3.0.3">
+    <link rel="stylesheet" href="../../_/css/site.css">
+    <script>var uiRootPath = '../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <button class="nav-toggle"></button>
+
+      <a class="navbar-item title" href="index.html">Jandex</a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <span class="navbar-link">3.2.2</span>
+        <div class="navbar-dropdown navbar-menu">
+            <a class="navbar-item  is-current" href="index.html">3.2.2</a>
+            <a class="navbar-item " href="../3.2.1/index.html">3.2.1</a>
+            <a class="navbar-item " href="../3.2.0/index.html">3.2.0</a>
+            <a class="navbar-item " href="../3.1.8/index.html">3.1.8</a>
+            <a class="navbar-item " href="../3.1.7/index.html">3.1.7</a>
+            <a class="navbar-item " href="../3.1.6/index.html">3.1.6</a>
+            <a class="navbar-item " href="../3.1.5/index.html">3.1.5</a>
+            <a class="navbar-item " href="../3.1.3/index.html">3.1.3</a>
+            <a class="navbar-item " href="../3.1.2/index.html">3.1.2</a>
+            <a class="navbar-item " href="../3.1.1/index.html">3.1.1</a>
+            <a class="navbar-item " href="../3.1.0/index.html">3.1.0</a>
+            <a class="navbar-item " href="../3.0.8/index.html">3.0.8</a>
+            <a class="navbar-item " href="../3.0.7/index.html">3.0.7</a>
+            <a class="navbar-item " href="../3.0.6/index.html">3.0.6</a>
+            <a class="navbar-item " href="../3.0.5/index.html">3.0.5</a>
+            <a class="navbar-item " href="../3.0.4/index.html">3.0.4</a>
+            <a class="navbar-item " href="../3.0.3/index.html">3.0.3</a>
+            <a class="navbar-item " href="../3.0.2/index.html">3.0.2</a>
+            <a class="navbar-item " href="../3.0.1/index.html">3.0.1</a>
+            <a class="navbar-item " href="../3.0.0/index.html">3.0.0</a>
+        </div>
+      </div>
+
+
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+
+        <a class="navbar-item" href="https://smallrye.io/">SmallRye.io main website</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="jandex" data-version="3.2.2">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+<ul class="nav-list nav-list-level-0">
+  <li class="nav-item nav-item-level-0">
+<ul class="nav-list nav-list-level-1">
+  <li class="nav-item nav-item-level-1 is-current-page">
+    <a class="nav-link" href="index.html">Introduction</a>
+  </li>
+  <li class="nav-item nav-item-level-1">
+    <span class="nav-text">Jandex</span>
+<ul class="nav-list nav-list-level-2">
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="core/getting.html">Getting Jandex</a>
+  </li>
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="core/browsing.html">Browsing Declarations and Types</a>
+  </li>
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="core/indexing.html">Indexing Classes</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item nav-item-level-1">
+    <span class="nav-text">Jandex Maven Plugin</span>
+<ul class="nav-list nav-list-level-2">
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="maven/basic.html">Basic Usage</a>
+  </li>
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="maven/advanced.html">Advanced Usage</a>
+  </li>
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="maven/shading.html">Usage with Shading</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+  <div class="content">
+<aside class="toc sidebar" data-title="Table of contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+  <a href="https://github.com/smallrye/jandex/blob/3.2.2/doc/modules/ROOT/pages/index.adoc" class="edit-this-page" title="Edit this page">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+<h1 class="page">Jandex</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Jandex is a space efficient Java class file indexer and offline reflection library.</p>
+</div>
+<div class="paragraph">
+<p>It supports:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Indexing a set of classes into a memory efficient representation</p>
+</li>
+<li>
+<p>Browsing and searching for annotations, including Java 8 type annotations</p>
+</li>
+<li>
+<p>Browsing and searching for declarations and types, including generic type information</p>
+</li>
+<li>
+<p>Browsing and searching through the class and interface inheritance hierarchy</p>
+</li>
+<li>
+<p>Persisting an index in a custom storage efficient format and fast loading of that format</p>
+</li>
+<li>
+<p>Compatibility with previous API and storage format versions, as described in the <a href="#compatibility_promise">Compatibility Promise</a></p>
+</li>
+<li>
+<p>Execution via API, command line tool, Ant, and Maven plugin</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Remember that Jandex has extensive API documentation in the <a href="https://javadoc.io/doc/io.smallrye/jandex/latest/index.html">javadoc form</a>.
+This documentation site is currently rather incomplete, so please consult the javadoc frequently.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_requirements"><a class="anchor" href="#_requirements"></a>Requirements</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Jandex 3.0+ requires Java 8 to run.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The runtime Java version does <em>not</em> affect the Jandex bytecode parsing capabilities.
+Jandex running on Java 8 can still parse Java 17 bytecode.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_getting_help"><a class="anchor" href="#_getting_help"></a>Getting Help</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Issues can be reported in <a href="https://github.com/smallrye/jandex/issues">GitHub Issues</a>.</p>
+</div>
+<div class="paragraph">
+<p>For discussions, use the <a href="https://groups.google.com/g/smallrye">SmallRye Google Group</a> or the <a href="https://quarkusio.zulipchat.com/">Quarkus Zulip chat</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="compatibility_promise"><a class="anchor" href="#compatibility_promise"></a>Compatibility Promise</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Jandex uses an <code>X.Y.Z</code> versioning scheme.
+In the following text, we call <code>X</code> a <em>major</em> version, <code>Y</code> a <em>minor</em> version, and <code>Z</code> a <em>micro</em> version.</p>
+</div>
+<div class="sect2">
+<h3 id="_api"><a class="anchor" href="#_api"></a>API</h3>
+<div class="paragraph">
+<p>Jandex may break backward compatibility for <em>callers</em> of the Jandex API in major versions.
+If you only call Jandex API, updating to a newer minor or micro version is safe.</p>
+</div>
+<div class="paragraph">
+<p>Jandex may break backward compatibility for users that <em>extend</em> Jandex classes or <em>implement</em> Jandex interfaces in minor or major versions.
+If you extend Jandex classes or implement Jandex interfaces, updating to a newer micro version is safe.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_persistent_index_format"><a class="anchor" href="#_persistent_index_format"></a>Persistent Index Format</h3>
+<div class="paragraph">
+<p>The persistent index format is versioned.
+Jandex is backward compatible when it comes to reading the persistent index, but not forward compatible.
+In other words, newer Jandex can read older index, but older Jandex can&#8217;t read newer index.</p>
+</div>
+<div class="paragraph">
+<p>Jandex may introduce a new persistent index format version in minor or major versions.
+If you distribute a Jandex index as part of your artifacts, updating to a newer micro version is safe.
+Updating to a newer minor or major version may require consumers of the Jandex index to also update.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="persistent_index_format_versions"><a class="anchor" href="#persistent_index_format_versions"></a>Persistent Index Format Versions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For reference, this table shows which Jandex version produces which persistent format version by default.
+It is also a maximum persistent index format version the given Jandex version can read.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Jandex version</th>
+<th class="tableblock halign-left valign-top">Persistent format version</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jandex 3.2.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">12</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jandex 3.0.x, 3.1.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">11</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jandex 2.4.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jandex 2.1.1+, 2.2.x, 2.3.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">9</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jandex 2.1.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8 (version 7 only in Jandex 2.1.0.Beta1 and Beta2)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jandex 2.0.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<nav class="pagination">
+  <span class="next"><a href="core/getting.html">Getting Jandex</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>
+    Sponsored by <a href="https://www.redhat.com"><img style="vertical-align: middle; height: 2.5em;" src="../../_/img/redhat.svg" alt="Red Hat"></a>
+  </p>
+  <p>
+    Made with <a href="https://github.com/smallrye/smallrye-antora-ui">SmallRye Antora UI</a>, which is licensed under the MPL-2.0 license.
+    Includes portions of <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a>, which is licensed under the MIT license.
+  </p>
+</footer>
+<script src="../../_/js/site.js"></script>
+<script async src="../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

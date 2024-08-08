@@ -757,13 +757,13 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
     /**
      * Returns the canonical constructor of this record. If this class is not a record, returns {@code null}.
      * <p>
-     * Note that this method has the same limitations as {@link #unsortedRecordComponents()}. That is,
-     * at most 256 record components may be present, and an assumption is made that bytecode order
-     * of record components corresponds to the declaration order.
+     * Note that this method has the same limitations as {@link #recordComponentsInDeclarationOrder()}.
+     * That is, at most 256 record components may be present, and an assumption is made that bytecode
+     * order of record components corresponds to the declaration order.
      *
      * @return the canonical constructor of this record, or {@code null} if this class is not a record
      */
-    public MethodInfo canonicalConstructor() {
+    public MethodInfo canonicalRecordConstructor() {
         if (!isRecord()) {
             return null;
         }
@@ -955,7 +955,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      * If this class is not a record, returns an empty list.
      * <p>
      * Note that the result <em>doesn't</em> have any guaranteed order. If you need
-     * declaration order, use {@link #unsortedRecordComponents()}.
+     * declaration order, use {@link #recordComponentsInDeclarationOrder()}.
      *
      * @return immutable list of record components
      */

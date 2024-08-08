@@ -158,47 +158,47 @@ public class RecordTestCase {
     public void canonicalCtor() {
         ClassInfo rec = index.getClassByName("test.RecordWithNoComponentsAndDefaultCanonicalCtor");
         assertEquals(1, rec.constructors().size());
-        assertEquals(rec.constructors().get(0), rec.canonicalConstructor());
+        assertEquals(rec.constructors().get(0), rec.canonicalRecordConstructor());
 
         rec = index.getClassByName("test.RecordWithNoComponentsAndCompactCanonicalCtor");
         assertEquals(1, rec.constructors().size());
-        assertEquals(rec.constructors().get(0), rec.canonicalConstructor());
+        assertEquals(rec.constructors().get(0), rec.canonicalRecordConstructor());
 
         rec = index.getClassByName("test.RecordWithNoComponentsAndCustomCanonicalCtor");
         assertEquals(1, rec.constructors().size());
-        assertEquals(rec.constructors().get(0), rec.canonicalConstructor());
+        assertEquals(rec.constructors().get(0), rec.canonicalRecordConstructor());
 
         rec = index.getClassByName("test.RecordWithDefaultCanonicalCtor");
         assertEquals(1, rec.constructors().size());
-        assertEquals(rec.constructors().get(0), rec.canonicalConstructor());
+        assertEquals(rec.constructors().get(0), rec.canonicalRecordConstructor());
 
         rec = index.getClassByName("test.RecordWithCompactCanonicalCtor");
         assertEquals(1, rec.constructors().size());
-        assertEquals(rec.constructors().get(0), rec.canonicalConstructor());
+        assertEquals(rec.constructors().get(0), rec.canonicalRecordConstructor());
 
         rec = index.getClassByName("test.RecordWithCustomCanonicalCtor");
         assertEquals(1, rec.constructors().size());
-        assertEquals(rec.constructors().get(0), rec.canonicalConstructor());
+        assertEquals(rec.constructors().get(0), rec.canonicalRecordConstructor());
 
         rec = index.getClassByName("test.RecordWithMultipleCtorsAndDefaultCanonicalCtor");
         assertEquals(4, rec.constructors().size());
-        assertEquals(2, rec.canonicalConstructor().parametersCount());
-        assertEquals(PrimitiveType.INT, rec.canonicalConstructor().parameterType(0));
-        assertEquals(ClassType.create(String.class), rec.canonicalConstructor().parameterType(1));
+        assertEquals(2, rec.canonicalRecordConstructor().parametersCount());
+        assertEquals(PrimitiveType.INT, rec.canonicalRecordConstructor().parameterType(0));
+        assertEquals(ClassType.create(String.class), rec.canonicalRecordConstructor().parameterType(1));
 
         rec = index.getClassByName("test.RecordWithMultipleCtorsAndCompactCanonicalCtor");
         assertEquals(4, rec.constructors().size());
-        assertEquals(2, rec.canonicalConstructor().parametersCount());
-        assertEquals(PrimitiveType.INT, rec.canonicalConstructor().parameterType(0));
-        assertEquals(ClassType.create(String.class), rec.canonicalConstructor().parameterType(1));
+        assertEquals(2, rec.canonicalRecordConstructor().parametersCount());
+        assertEquals(PrimitiveType.INT, rec.canonicalRecordConstructor().parameterType(0));
+        assertEquals(ClassType.create(String.class), rec.canonicalRecordConstructor().parameterType(1));
 
         rec = index.getClassByName("test.RecordWithMultipleCtorsAndCustomCanonicalCtor");
         assertEquals(4, rec.constructors().size());
-        assertEquals(2, rec.canonicalConstructor().parametersCount());
-        assertEquals(PrimitiveType.INT, rec.canonicalConstructor().parameterType(0));
-        assertEquals(ClassType.create(String.class), rec.canonicalConstructor().parameterType(1));
+        assertEquals(2, rec.canonicalRecordConstructor().parametersCount());
+        assertEquals(PrimitiveType.INT, rec.canonicalRecordConstructor().parameterType(0));
+        assertEquals(ClassType.create(String.class), rec.canonicalRecordConstructor().parameterType(1));
 
-        assertNull(index.getClassByName(RecordTestCase.class).canonicalConstructor());
+        assertNull(index.getClassByName(RecordTestCase.class).canonicalRecordConstructor());
     }
 
     private Index buildIndex() throws IOException {

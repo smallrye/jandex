@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -126,6 +127,16 @@ public class ModuleInfoTestCase {
     public void testModuleVersion() {
         assertNotNull(mod.version());
         assertEquals("1.0", mod.version());
+    }
+
+    @Test
+    public void testIndexSingleClassModuleInfo() throws IOException {
+        Enumeration<URL> modules = ModuleInfoTestCase.class.getClassLoader().getResources("module-info.class");
+        while (modules.hasMoreElements()) {
+            try (InputStream in = modules.nextElement().openStream()) {
+                assertNotNull(Index.singleClass(in));
+            }
+        }
     }
 
     private ModuleInfo indexModuleInfo() throws IOException {

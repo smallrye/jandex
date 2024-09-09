@@ -279,7 +279,14 @@ public final class Index implements IndexView {
         Indexer indexer = new Indexer();
         indexer.indexClass(clazz);
         Index index = indexer.complete();
-        return index.getKnownClasses().iterator().next();
+
+        if (!index.getKnownClasses().isEmpty()) {
+            return index.getKnownClasses().iterator().next();
+        } else if (!index.getKnownModules().isEmpty()) {
+            return index.getKnownModules().iterator().next().moduleInfoClass();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -305,7 +312,14 @@ public final class Index implements IndexView {
         Indexer indexer = new Indexer();
         indexer.index(classData);
         Index index = indexer.complete();
-        return index.getKnownClasses().iterator().next();
+
+        if (!index.getKnownClasses().isEmpty()) {
+            return index.getKnownClasses().iterator().next();
+        } else if (!index.getKnownModules().isEmpty()) {
+            return index.getKnownModules().iterator().next().moduleInfoClass();
+        } else {
+            return null;
+        }
     }
 
     // ---

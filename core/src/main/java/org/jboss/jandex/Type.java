@@ -264,6 +264,34 @@ public abstract class Type implements Descriptor {
     }
 
     /**
+     * Creates a {@link Type} by parsing the given string according to the following grammar:
+     *
+     * <pre>
+     * Type -> VoidType | PrimitiveType | ReferenceType
+     * VoidType -> 'void'
+     * PrimitiveType -> 'boolean' | 'byte' | 'short' | 'int'
+     *                | 'long' | 'float' | 'double' | 'char'
+     * ReferenceType -> PrimitiveType ('[' ']')+
+     *                | ClassType ('<' TypeArgument (',' TypeArgument)* '>')? ('[' ']')*
+     * ClassType -> FULLY_QUALIFIED_NAME
+     * TypeArgument -> ReferenceType | WildcardType
+     * WildcardType -> '?' | '?' ('extends' | 'super') ReferenceType
+     * </pre>
+     *
+     * Notice that the resulting type never contains type variables, only "proper" types.
+     * Also notice that the grammar above does not support all kinds of nested types;
+     * it should be possible to add that later, if there's an actual need.
+     *
+     * @param type the string to parse; must not be {@code null}
+     * @return the parsed type
+     * @throws IllegalArgumentException if the string does not conform to the grammar given above
+     * @since 3.2.3
+     */
+    public static Type parse(String type) {
+        return new TypeParser(type).parse();
+    }
+
+    /**
      * Returns the name of this type (or its erasure in case of generic types) as a {@link DotName},
      * using the {@link Class#getName()} format. Specifically:
      * <ul>

@@ -762,6 +762,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      * order of record components corresponds to the declaration order.
      *
      * @return the canonical constructor of this record, or {@code null} if this class is not a record
+     * @since 3.2.2
      */
     public MethodInfo canonicalRecordConstructor() {
         if (!isRecord()) {

@@ -38,7 +38,7 @@ public class WildcardType extends Type {
      * Creates a new wildcard type.
      *
      * @param bound the bound (lower or upper)
-     * @param isExtends true if the bound is an upper (extends) bound, false if lower (super)
+     * @param isExtends true if the bound is an upper ({@code extends}) bound, false if lower ({@code super})
      * @return the new instance
      *
      * @since 2.1
@@ -50,7 +50,7 @@ public class WildcardType extends Type {
     }
 
     /**
-     * Create a new wildcard type with an upper bound.
+     * Create a new wildcard type with an upper ({@code extends}) bound.
      *
      * @param upperBound the upper bound
      * @return the new instance
@@ -61,7 +61,7 @@ public class WildcardType extends Type {
     }
 
     /**
-     * Create a new wildcard type with an upper bound.
+     * Create a new wildcard type with an upper ({@code extends}) bound.
      *
      * @param upperBound the upper bound
      * @return the new instance
@@ -72,7 +72,7 @@ public class WildcardType extends Type {
     }
 
     /**
-     * Create a new wildcard type with a lower bound.
+     * Create a new wildcard type with a lower ({@code super}) bound.
      *
      * @param lowerBound the lower bound
      * @return the new instance
@@ -83,7 +83,7 @@ public class WildcardType extends Type {
     }
 
     /**
-     * Create a new wildcard type with a lower bound.
+     * Create a new wildcard type with a lower ({@code super}) bound.
      *
      * @param lowerBound the lower bound
      * @return the new instance
@@ -146,7 +146,7 @@ public class WildcardType extends Type {
      * Returns {@code null} if this wildcard declares an upper bound
      * ({@code ? extends SomeType}).
      *
-     * @return the lower bound, or {@code null} if this wildcard has an uper bound
+     * @return the lower bound, or {@code null} if this wildcard has an upper bound
      */
     public Type superBound() {
         return isExtends ? null : bound;

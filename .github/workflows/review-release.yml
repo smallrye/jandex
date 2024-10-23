@@ -1,7 +1,5 @@
 name: Jandex Review Release
 
-run-name: Review ${{github.event.inputs.tag || github.ref_name}} Release
-
 on:
   pull_request:
     paths:

@@ -20,6 +20,13 @@ jobs:
     if: ${{ github.event.pull_request.merged == true}}
 
     steps:
+    - name: Retrieve project metadata
+      id: metadata
+      uses: radcortez/project-metadata-action@main
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        metadata-file-path: '.github/project.yml'
+
     - name: Checkout
       uses: actions/checkout@v4
 
@@ -50,6 +57,13 @@ jobs:
     if: ${{ github.event.pull_request.merged == true}}
 
     steps:
+    - name: Retrieve project metadata
+      id: metadata
+      uses: radcortez/project-metadata-action@main
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        metadata-file-path: '.github/project.yml'
+
     - name: Checkout
       uses: actions/checkout@v4
 

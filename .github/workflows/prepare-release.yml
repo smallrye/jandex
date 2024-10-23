@@ -20,6 +20,9 @@ jobs:
     if: ${{ github.event.pull_request.merged == true}}
 
     steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
     - name: Before release
       run: |
         java -version
@@ -47,6 +50,9 @@ jobs:
     if: ${{ github.event.pull_request.merged == true}}
 
     steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
     - name: After release
       run: |
         git config --global user.name "SmallRye CI"

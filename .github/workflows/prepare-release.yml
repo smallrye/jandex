@@ -47,10 +47,10 @@ jobs:
     needs: before-release
     if: ${{ github.event.pull_request.merged == true}}
 
-    uses: Ladicek/smallrye-.github/.github/workflows/prepare-release.yml@add-checkout-git-ref-input
+    uses: smallrye/.github/.github/workflows/prepare-release.yml@main
     secrets: inherit
     with:
-      checkout-git-ref: true
+      ref: ${{ github.ref }}
 
   after-release:
     name: After release

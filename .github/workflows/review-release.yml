@@ -1,4 +1,6 @@
-name: Jandex Pre-Release
+name: Jandex Review Release
+
+run-name: Review ${{github.event.inputs.tag || github.ref_name}} Release
 
 on:
   pull_request:
@@ -6,8 +8,8 @@ on:
     - '.github/project.yml'
 
 jobs:
-  release:
-    name: Pre-release checks
+  review-release:
+    name: Review release
     runs-on: ubuntu-latest
 
     steps:

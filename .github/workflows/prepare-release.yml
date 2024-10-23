@@ -1,0 +1,58 @@
+name: Jandex Prepare Release
+
+run-name: Prepare ${{github.event.inputs.tag || github.ref_name}} Release
+
+on:
+  pull_request:
+    types:
+    - closed
+    paths:
+    - '.github/project.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  before-release:
+    name: Before release
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.merged == true}}
+
+    steps:
+    - name: Before release
+      run: |
+        java -version
+        mvn --version
+        git config --global user.name "SmallRye CI"
+        git config --global user.email "smallrye@googlegroups.com"
+        sed -i -e 's|<version.jandex>.*</version.jandex>|<version.jandex>${{steps.metadata.outputs.current-version}}</version.jandex>|' benchmarks/pom.xml
+        sed -i -e 's|^version: main|version: ${{steps.metadata.outputs.current-version}}|' doc/antora.yml
+        git add -A .
+        git commit -a -m 'Amendments before release'
+        git push
+
+  prepare-release:
+    name: Prepare release
+    needs: before-release
+    if: ${{ github.event.pull_request.merged == true}}
+
+    uses: smallrye/.github/.github/workflows/prepare-release.yml@main
+    secrets: inherit
+
+  after-release:
+    name: After release
+    runs-on: ubuntu-latest
+    needs: prepare-release
+    if: ${{ github.event.pull_request.merged == true}}
+
+    steps:
+    - name: After release
+      run: |
+        git config --global user.name "SmallRye CI"
+        git config --global user.email "smallrye@googlegroups.com"
+        sed -i -e 's|<version.jandex>.*</version.jandex>|<version.jandex>${project.version}</version.jandex>|' benchmarks/pom.xml
+        sed -i -e 's|^version: ${{steps.metadata.outputs.current-version}}|version: main|' doc/antora.yml
+        git add -A .
+        git commit -a -m 'Amendments after release'
+        git push

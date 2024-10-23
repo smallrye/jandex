@@ -49,8 +49,8 @@ jobs:
 
     uses: smallrye/.github/.github/workflows/prepare-release.yml@main
     secrets: inherit
-    with:
-      checkout-git-ref: true
+#    with:
+#      checkout-git-ref: true
 
   after-release:
     name: After release

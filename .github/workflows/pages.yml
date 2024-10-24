@@ -2,6 +2,7 @@ name: Jandex GitHub Pages
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   github-pages:

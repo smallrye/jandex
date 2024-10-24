@@ -272,7 +272,7 @@ public abstract class Type implements Descriptor {
      * PrimitiveType -> 'boolean' | 'byte' | 'short' | 'int'
      *                | 'long' | 'float' | 'double' | 'char'
      * ReferenceType -> PrimitiveType ('[' ']')+
-     *                | ClassType ('<' TypeArgument (',' TypeArgument)* '>')? ('[' ']')*
+     *                | ClassType ('&lt;' TypeArgument (',' TypeArgument)* '&gt;')? ('[' ']')*
      * ClassType -> FULLY_QUALIFIED_NAME
      * TypeArgument -> ReferenceType | WildcardType
      * WildcardType -> '?' | '?' ('extends' | 'super') ReferenceType

@@ -886,7 +886,7 @@ public final class Indexer {
 
     private void processTypeAnnotations(DataInputStream data, AnnotationTarget target, boolean visible) throws IOException {
         int numAnnotations = data.readUnsignedShort();
-        List<TypeAnnotationState> annotations = new ArrayList<TypeAnnotationState>(numAnnotations);
+        List<TypeAnnotationState> annotations = new ArrayList<>(numAnnotations);
 
         for (int i = 0; i < numAnnotations; i++) {
             TypeAnnotationState annotation = processTypeAnnotation(data, target, visible);
@@ -895,7 +895,11 @@ public final class Indexer {
             }
         }
 
-        typeAnnotations.put(target, annotations);
+        if (typeAnnotations.containsKey(target)) {
+            typeAnnotations.get(target).addAll(annotations);
+        } else {
+            typeAnnotations.put(target, annotations);
+        }
     }
 
     private TypeAnnotationState processTypeAnnotation(DataInputStream data, AnnotationTarget target, boolean visible)

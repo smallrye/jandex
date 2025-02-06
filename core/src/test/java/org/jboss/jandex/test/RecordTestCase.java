@@ -196,6 +196,10 @@ public class RecordTestCase {
         assertEquals(1, rec.constructors().size());
         assertEquals(rec.constructors().get(0), rec.canonicalRecordConstructor());
 
+        rec = index.getClassByName("test.RecordWithDifferentVisibilityAnnotation");
+        assertEquals(1, rec.constructors().size());
+        assertEquals(rec.constructors().get(0), rec.canonicalRecordConstructor());
+
         rec = index.getClassByName("test.RecordWithMultipleCtorsAndDefaultCanonicalCtor");
         assertEquals(4, rec.constructors().size());
         assertEquals(2, rec.canonicalRecordConstructor().parametersCount());
@@ -235,6 +239,7 @@ public class RecordTestCase {
         indexer.index(getClass().getClassLoader().getResourceAsStream("test/Record2WithCustomCanonicalCtor.class"));
         indexer.index(getClass().getClassLoader().getResourceAsStream("test/Record2WithDefaultCanonicalCtor.class"));
         indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithBuggyAnnotation.class"));
+        indexer.index(getClass().getClassLoader().getResourceAsStream("test/RecordWithDifferentVisibilityAnnotation.class"));
         indexer.index(
                 getClass().getClassLoader().getResourceAsStream("test/RecordWithMultipleCtorsAndCompactCanonicalCtor.class"));
         indexer.index(

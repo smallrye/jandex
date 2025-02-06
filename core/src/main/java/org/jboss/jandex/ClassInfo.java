@@ -772,7 +772,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         RecordComponentInternal[] recordComponents = recordComponentArray();
         byte[] recordComponentPositions = recordComponentPositionArray();
 
-        if (recordComponents.length == recordComponentPositions.length) {
+        if (recordComponents.length == recordComponentPositions.length || recordComponents.length == 1) {
             outer: for (MethodInternal method : methods) {
                 if (!Arrays.equals(Utils.INIT_METHOD_NAME, method.nameBytes())) {
                     // not a constructor
@@ -785,10 +785,24 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
                     continue;
                 }
 
-                for (int i = 0; i < parameters.length; i++) {
-                    if (!parameters[i].equals(recordComponents[recordComponentPositions[i] & 0xFF].type())) {
+                if (parameters.length == 0) {
+                    // immediately OK
+                } else if (parameters.length == 1) {
+                    // we don't store record component positions in case there's just 1, so we need this special case
+                    Type parameter = parameters[0].withoutAnnotations();
+                    Type recordComponent = recordComponents[0].type().withoutAnnotations();
+                    if (!parameter.equals(recordComponent)) {
                         // not a constructor with matching parameter types
                         continue outer;
+                    }
+                } else {
+                    for (int i = 0; i < parameters.length; i++) {
+                        Type parameter = parameters[i].withoutAnnotations();
+                        Type recordComponent = recordComponents[recordComponentPositions[i] & 0xFF].type().withoutAnnotations();
+                        if (!parameter.equals(recordComponent)) {
+                            // not a constructor with matching parameter types
+                            continue outer;
+                        }
                     }
                 }
 

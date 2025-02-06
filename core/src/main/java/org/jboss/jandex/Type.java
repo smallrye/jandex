@@ -536,6 +536,17 @@ public abstract class Type implements Descriptor {
     abstract Type copyType(AnnotationInstance[] newAnnotations);
 
     /**
+     * Returns this type with all type annotations removed. The annotations are removed deeply,
+     * that is also on the constituent type in case of arrays, on type arguments in case
+     * of parameterized types, on the bound in case of wildcard types, etc.
+     *
+     * @return this type without type annotations
+     */
+    Type withoutAnnotations() {
+        return copyType(null);
+    }
+
+    /**
      * Returns a string representation for this type. It is similar, yet not identical
      * to a Java source code representation.
      *

@@ -249,6 +249,15 @@ public class ParameterizedType extends Type {
         return new ParameterizedType(name(), arguments, owner, newAnnotations);
     }
 
+    @Override
+    Type withoutAnnotations() {
+        Type[] newArguments = new Type[arguments.length];
+        for (int i = 0; i < arguments.length; i++) {
+            newArguments[i] = arguments[i].withoutAnnotations();
+        }
+        return new ParameterizedType(name(), newArguments, owner, null);
+    }
+
     ParameterizedType copyType(Type[] arguments) {
         return new ParameterizedType(name(), arguments, owner, annotationArray());
     }

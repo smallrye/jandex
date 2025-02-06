@@ -241,6 +241,11 @@ public final class ArrayType extends Type {
         return new ArrayType(constituent, dimensions, newAnnotations);
     }
 
+    @Override
+    Type withoutAnnotations() {
+        return new ArrayType(constituent.withoutAnnotations(), dimensions, null);
+    }
+
     Type copyType(Type component, int dimensions) {
         return new ArrayType(component, dimensions, annotationArray());
     }

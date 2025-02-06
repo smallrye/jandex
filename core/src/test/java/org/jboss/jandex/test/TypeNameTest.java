@@ -25,6 +25,8 @@ public class TypeNameTest {
 
         String[][] array();
 
+        List<? extends Number>[] genericArray();
+
         // annotations are present to make sure the `ArrayType` has multiple levels of nesting
         @MyAnnotation("1")
         String[] @MyAnnotation("2") [][] @MyAnnotation("3") [] annotatedArray();
@@ -70,6 +72,7 @@ public class TypeNameTest {
         assertEquals("java.lang.String", typeName(clazz, "clazz"));
         assertEquals("java.util.List", typeName(clazz, "parameterized"));
         assertEquals("[[Ljava.lang.String;", typeName(clazz, "array"));
+        assertEquals("[Ljava.util.List;", typeName(clazz, "genericArray"));
         assertEquals("[[[[Ljava.lang.String;", typeName(clazz, "annotatedArray"));
         assertEquals("java.lang.Object", typeName(clazz, "typeParameter"));
         assertEquals("java.lang.Number", typeName(clazz, "typeParameterWithSingleBound"));

@@ -147,6 +147,15 @@ public final class TypeVariable extends Type {
         return new TypeVariable(identifier, bounds, newAnnotations, hasImplicitObjectBound());
     }
 
+    @Override
+    Type withoutAnnotations() {
+        Type[] newBounds = new Type[bounds.length];
+        for (int i = 0; i < bounds.length; i++) {
+            newBounds[i] = bounds[i].withoutAnnotations();
+        }
+        return new TypeVariable(identifier, newBounds, null, hasImplicitObjectBound());
+    }
+
     TypeVariable copyType(int boundIndex, Type bound) {
         if (boundIndex > bounds.length) {
             throw new IllegalArgumentException("Bound index outside of bounds");

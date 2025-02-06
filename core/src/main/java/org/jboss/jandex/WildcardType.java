@@ -179,6 +179,11 @@ public class WildcardType extends Type {
         return new WildcardType(bound, isExtends, newAnnotations);
     }
 
+    @Override
+    Type withoutAnnotations() {
+        return new WildcardType(bound.withoutAnnotations(), isExtends, null);
+    }
+
     Type copyType(Type bound) {
         return new WildcardType(bound, isExtends, annotationArray());
     }

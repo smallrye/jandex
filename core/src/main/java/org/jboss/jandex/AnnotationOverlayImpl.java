@@ -22,15 +22,18 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
     final boolean compatibleMode;
     final boolean runtimeAnnotationsOnly;
     final boolean inheritedAnnotations;
+    final boolean cacheAll;
     final List<AnnotationTransformation> transformations;
     final Map<EquivalenceKey, Set<AnnotationInstance>> overlay = new ConcurrentHashMap<>();
 
     AnnotationOverlayImpl(IndexView index, boolean compatibleMode, boolean runtimeAnnotationsOnly, boolean inheritedAnnotations,
+            boolean cacheAll,
             Collection<AnnotationTransformation> annotationTransformations) {
         this.index = index;
         this.compatibleMode = compatibleMode;
         this.runtimeAnnotationsOnly = runtimeAnnotationsOnly;
         this.inheritedAnnotations = inheritedAnnotations;
+        this.cacheAll = cacheAll;
         if (!compatibleMode) {
             for (AnnotationTransformation transformation : annotationTransformations) {
                 if (transformation.requiresCompatibleMode()) {
@@ -240,7 +243,15 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
                 }
             }
             Set<AnnotationInstance> result = transformationContext.annotations;
-            return original.equals(result) ? SENTINEL : Collections.unmodifiableSet(result);
+
+            if (result.isEmpty()) {
+                return Collections.emptySet();
+            }
+            if (cacheAll || !original.equals(result)) {
+                return Collections.unmodifiableSet(result);
+            }
+
+            return SENTINEL;
         });
 
         if (annotations == SENTINEL) {
@@ -250,9 +261,14 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
     }
 
     final Set<AnnotationInstance> getOriginalAnnotations(Declaration declaration) {
-        Set<AnnotationInstance> result = new HashSet<>();
         if (compatibleMode && declaration.kind() == AnnotationTarget.Kind.METHOD) {
-            for (AnnotationInstance annotation : declaration.asMethod().annotations()) {
+            List<AnnotationInstance> annotations = declaration.asMethod().annotations();
+            if (annotations.isEmpty()) {
+                return Collections.emptySet();
+            }
+
+            Set<AnnotationInstance> result = new HashSet<>();
+            for (AnnotationInstance annotation : annotations) {
                 if (annotation.target() != null
                         && (annotation.target().kind() == AnnotationTarget.Kind.METHOD
                                 || annotation.target().kind() == AnnotationTarget.Kind.METHOD_PARAMETER)
@@ -260,14 +276,22 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
                     result.add(annotation);
                 }
             }
-        } else {
-            for (AnnotationInstance annotation : declaration.declaredAnnotations()) {
-                if (!runtimeAnnotationsOnly || annotation.runtimeVisible()) {
-                    result.add(annotation);
-                }
+            return result;
+        }
+
+        Collection<AnnotationInstance> annotations = declaration.declaredAnnotations();
+        if (annotations.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        Set<AnnotationInstance> result = new HashSet<>();
+        for (AnnotationInstance annotation : annotations) {
+            if (!runtimeAnnotationsOnly || annotation.runtimeVisible()) {
+                result.add(annotation);
             }
         }
         return result;
+
     }
 
     private static final class TransformationContextImpl implements TransformationContext {

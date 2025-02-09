@@ -207,6 +207,7 @@ public interface AnnotationOverlay {
         private boolean compatibleMode;
         private boolean runtimeAnnotationsOnly;
         private boolean inheritedAnnotations;
+        private boolean cacheAll;
 
         Builder(IndexView index, Collection<AnnotationTransformation> annotationTransformations) {
             this.index = index;
@@ -255,12 +256,24 @@ public interface AnnotationOverlay {
         }
 
         /**
+         * When called, the built annotation overlay shall cache a copy of all annotations, at a higher memory cost,
+         * instead of only caching annotations of a declaration where an annotation transformer was applied to.
+         *
+         *
+         * @return this builder
+         */
+        public Builder cacheAll() {
+            cacheAll = true;
+            return this;
+        }
+
+        /**
          * Builds and returns an annotation overlay based on the configuration of this builder.
          *
          * @return the annotation overlay, never {@code null}
          */
         public AnnotationOverlay build() {
-            return new AnnotationOverlayImpl(index, compatibleMode, runtimeAnnotationsOnly, inheritedAnnotations,
+            return new AnnotationOverlayImpl(index, compatibleMode, runtimeAnnotationsOnly, inheritedAnnotations, cacheAll,
                     annotationTransformations);
         }
     }

@@ -1,8 +1,10 @@
 package org.jboss.jandex;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 final class MutableAnnotationOverlayImpl extends AnnotationOverlayImpl implements MutableAnnotationOverlay {
@@ -14,14 +16,14 @@ final class MutableAnnotationOverlayImpl extends AnnotationOverlayImpl implement
     }
 
     @Override
-    Set<AnnotationInstance> getAnnotationsFor(Declaration declaration) {
+    Collection<AnnotationInstance> getAnnotationsFor(Declaration declaration) {
         EquivalenceKey key = EquivalenceKey.of(declaration);
-        Set<AnnotationInstance> annotations = overlay.get(key);
-        if (annotations == null) {
-            annotations = getOriginalAnnotations(declaration);
-            overlay.put(key, annotations);
-        }
-        return annotations;
+        return overlay.computeIfAbsent(key, new Function<EquivalenceKey, Collection<AnnotationInstance>>() {
+            @Override
+            public Collection<AnnotationInstance> apply(EquivalenceKey ignored) {
+                return new HashSet<>(getOriginalAnnotations(declaration));
+            }
+        });
     }
 
     @Override

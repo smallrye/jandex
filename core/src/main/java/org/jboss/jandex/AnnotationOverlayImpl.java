@@ -11,19 +11,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.jboss.jandex.AnnotationTransformation.TransformationContext;
 
 class AnnotationOverlayImpl implements AnnotationOverlay {
-    private static final Set<AnnotationInstance> SENTINEL = Collections.unmodifiableSet(new HashSet<>());
-
     final IndexView index;
     final boolean compatibleMode;
     final boolean runtimeAnnotationsOnly;
     final boolean inheritedAnnotations;
     final List<AnnotationTransformation> transformations;
-    final Map<EquivalenceKey, Set<AnnotationInstance>> overlay = new ConcurrentHashMap<>();
+    final Map<EquivalenceKey, Collection<AnnotationInstance>> overlay = new ConcurrentHashMap<>();
 
     AnnotationOverlayImpl(IndexView index, boolean compatibleMode, boolean runtimeAnnotationsOnly, boolean inheritedAnnotations,
             Collection<AnnotationTransformation> annotationTransformations) {
@@ -216,43 +215,65 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
             while (clazz != null && !DotName.OBJECT_NAME.equals(clazz.name())) {
                 for (AnnotationInstance annotation : getAnnotationsFor(clazz)) {
                     ClassInfo annotationClass = index.getClassByName(annotation.name());
-                    if (annotationClass != null
-                            && annotationClass.hasDeclaredAnnotation(DotName.INHERITED_NAME)
-                            && result.stream().noneMatch(it -> it.name().equals(annotation.name()))) {
-                        result.add(annotation);
+                    if (annotationClass != null && annotationClass.hasDeclaredAnnotation(DotName.INHERITED_NAME)) {
+                        boolean noMatchingAnnotationPresent = true;
+                        for (AnnotationInstance it : result) {
+                            if (it.name().equals(annotation.name())) {
+                                noMatchingAnnotationPresent = false;
+                                break;
+                            }
+                        }
+                        if (noMatchingAnnotationPresent) {
+                            result.add(annotation);
+                        }
                     }
                 }
                 clazz = index.getClassByName(clazz.superName());
             }
+            result = Collections.unmodifiableCollection(result);
         }
 
-        return Collections.unmodifiableCollection(result);
+        return result;
     }
 
-    Set<AnnotationInstance> getAnnotationsFor(Declaration declaration) {
+    Collection<AnnotationInstance> getAnnotationsFor(Declaration declaration) {
         EquivalenceKey key = EquivalenceKey.of(declaration);
-        Set<AnnotationInstance> annotations = overlay.computeIfAbsent(key, ignored -> {
-            Set<AnnotationInstance> original = getOriginalAnnotations(declaration);
-            TransformationContextImpl transformationContext = new TransformationContextImpl(declaration, original);
-            for (AnnotationTransformation transformation : transformations) {
-                if (transformation.supports(declaration.kind())) {
-                    transformation.apply(transformationContext);
+        return overlay.computeIfAbsent(key, new Function<EquivalenceKey, Collection<AnnotationInstance>>() {
+            @Override
+            public Collection<AnnotationInstance> apply(EquivalenceKey ignored) {
+                Collection<AnnotationInstance> original = getOriginalAnnotations(declaration);
+                TransformationContextImpl transformationContext = new TransformationContextImpl(declaration, original);
+                for (AnnotationTransformation transformation : transformations) {
+                    if (transformation.supports(declaration.kind())) {
+                        transformation.apply(transformationContext);
+                    }
                 }
-            }
-            Set<AnnotationInstance> result = transformationContext.annotations;
-            return original.equals(result) ? SENTINEL : Collections.unmodifiableSet(result);
-        });
 
-        if (annotations == SENTINEL) {
-            annotations = getOriginalAnnotations(declaration);
-        }
-        return annotations;
+                if (transformationContext.modified()) {
+                    Collection<AnnotationInstance> result = transformationContext.annotations;
+                    if (result.isEmpty()) {
+                        return Collections.emptyList();
+                    } else if (result.size() == 1) {
+                        return Collections.singleton(result.iterator().next());
+                    } else {
+                        return Collections.unmodifiableCollection(result);
+                    }
+                }
+                return original;
+            }
+        });
     }
 
-    final Set<AnnotationInstance> getOriginalAnnotations(Declaration declaration) {
-        Set<AnnotationInstance> result = new HashSet<>();
+    // always returns an unmodifiable collection
+    final Collection<AnnotationInstance> getOriginalAnnotations(Declaration declaration) {
         if (compatibleMode && declaration.kind() == AnnotationTarget.Kind.METHOD) {
-            for (AnnotationInstance annotation : declaration.asMethod().annotations()) {
+            List<AnnotationInstance> annotations = declaration.asMethod().annotations();
+            if (annotations.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            List<AnnotationInstance> result = new ArrayList<>(annotations.size());
+            for (AnnotationInstance annotation : annotations) {
                 if (annotation.target() != null
                         && (annotation.target().kind() == AnnotationTarget.Kind.METHOD
                                 || annotation.target().kind() == AnnotationTarget.Kind.METHOD_PARAMETER)
@@ -260,23 +281,43 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
                     result.add(annotation);
                 }
             }
-        } else {
-            for (AnnotationInstance annotation : declaration.declaredAnnotations()) {
-                if (!runtimeAnnotationsOnly || annotation.runtimeVisible()) {
-                    result.add(annotation);
-                }
+            return Collections.unmodifiableList(result);
+        }
+
+        Collection<AnnotationInstance> annotations = declaration.declaredAnnotations();
+
+        if (!runtimeAnnotationsOnly) {
+            return annotations;
+        }
+
+        List<AnnotationInstance> result = new ArrayList<>(annotations.size());
+        for (AnnotationInstance annotation : annotations) {
+            if (annotation.runtimeVisible()) {
+                result.add(annotation);
             }
         }
-        return result;
+        return Collections.unmodifiableList(result);
     }
 
     private static final class TransformationContextImpl implements TransformationContext {
         private final Declaration declaration;
-        private final Set<AnnotationInstance> annotations;
+        private final Collection<AnnotationInstance> originalAnnotations;
+        private Set<AnnotationInstance> annotations;
 
         TransformationContextImpl(Declaration declaration, Collection<AnnotationInstance> annotations) {
             this.declaration = declaration;
-            this.annotations = new HashSet<>(annotations);
+            this.originalAnnotations = annotations;
+            this.annotations = null;
+        }
+
+        boolean modified() {
+            return annotations != null;
+        }
+
+        private void initializeIfNecessary() {
+            if (annotations == null) {
+                annotations = new HashSet<>(originalAnnotations);
+            }
         }
 
         @Override
@@ -286,6 +327,7 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
 
         @Override
         public Collection<AnnotationInstance> annotations() {
+            initializeIfNecessary();
             return annotations;
         }
 
@@ -298,7 +340,7 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
         @Override
         public boolean hasAnnotation(DotName annotationName) {
             Objects.requireNonNull(annotationName);
-            for (AnnotationInstance annotation : annotations) {
+            for (AnnotationInstance annotation : modified() ? annotations : originalAnnotations) {
                 if (annotation.name().equals(annotationName)) {
                     return true;
                 }
@@ -309,7 +351,7 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
         @Override
         public boolean hasAnnotation(Predicate<AnnotationInstance> predicate) {
             Objects.requireNonNull(predicate);
-            for (AnnotationInstance annotation : annotations) {
+            for (AnnotationInstance annotation : modified() ? annotations : originalAnnotations) {
                 if (predicate.test(annotation)) {
                     return true;
                 }
@@ -319,20 +361,27 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
 
         @Override
         public void add(Class<? extends Annotation> annotationClass) {
+            initializeIfNecessary();
+
             Objects.requireNonNull(annotationClass);
             annotations.add(AnnotationInstance.builder(annotationClass).buildWithTarget(declaration));
         }
 
         @Override
         public void add(AnnotationInstance annotation) {
+            initializeIfNecessary();
+
+            Objects.requireNonNull(annotation);
             if (annotation.target() == null) {
                 annotation = AnnotationInstance.create(annotation, declaration);
             }
-            annotations.add(Objects.requireNonNull(annotation));
+            annotations.add(annotation);
         }
 
         @Override
         public void addAll(AnnotationInstance... annotations) {
+            initializeIfNecessary();
+
             Objects.requireNonNull(annotations);
             for (int i = 0; i < annotations.length; i++) {
                 if (annotations[i].target() == null) {
@@ -344,8 +393,17 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
 
         @Override
         public void addAll(Collection<AnnotationInstance> annotations) {
+            initializeIfNecessary();
+
             Objects.requireNonNull(annotations);
-            if (annotations.stream().anyMatch(it -> it.target() == null)) {
+            boolean hasNullTarget = false;
+            for (AnnotationInstance annotation : annotations) {
+                if (annotation.target() == null) {
+                    hasNullTarget = true;
+                    break;
+                }
+            }
+            if (hasNullTarget) {
                 List<AnnotationInstance> fixed = new ArrayList<>();
                 for (AnnotationInstance annotation : annotations) {
                     if (annotation.target() == null) {
@@ -361,12 +419,20 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
 
         @Override
         public void remove(Predicate<AnnotationInstance> predicate) {
-            annotations.removeIf(Objects.requireNonNull(predicate));
+            initializeIfNecessary();
+
+            Objects.requireNonNull(predicate);
+            annotations.removeIf(predicate);
         }
 
         @Override
         public void removeAll() {
-            annotations.clear();
+            // skipping `initializeIfNecessary()` here, because that would do useless work
+            if (modified()) {
+                annotations.clear();
+            } else {
+                annotations = new HashSet<>();
+            }
         }
     }
 }

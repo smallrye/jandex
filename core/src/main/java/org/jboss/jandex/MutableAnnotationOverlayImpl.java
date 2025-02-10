@@ -10,7 +10,7 @@ final class MutableAnnotationOverlayImpl extends AnnotationOverlayImpl implement
 
     MutableAnnotationOverlayImpl(IndexView index, boolean compatibleMode, boolean runtimeAnnotationsOnly,
             boolean inheritedAnnotations) {
-        super(index, compatibleMode, runtimeAnnotationsOnly, inheritedAnnotations, Collections.emptyList());
+        super(index, compatibleMode, runtimeAnnotationsOnly, inheritedAnnotations, false, Collections.emptyList());
     }
 
     @Override

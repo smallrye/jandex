@@ -22,7 +22,7 @@ import java.util.StringJoiner;
  * <ul>
  * <li>{@code equals()}: when two Jandex objects are equivalent, their equivalence keys are equal</li>
  * <li>{@code hashCode()}: consistent with {@code equals()} described above</li>
- * <li>{@code toString()}: human readable representation of the equivalence key;
+ * <li>{@code toString()}: human-readable representation of the equivalence key;
  * format of the value is not guaranteed and may change without notice</li>
  * </ul>
  * In addition, equivalence keys are structured in an inheritance hierarchy that corresponds
@@ -34,9 +34,9 @@ import java.util.StringJoiner;
  * <li>{@code DeclarationEquivalenceKey}
  * <ul>
  * <li>{@code ClassEquivalenceKey}</li>
+ * <li>{@code FieldEquivalenceKey}</li>
  * <li>{@code MethodEquivalenceKey}</li>
  * <li>{@code MethodParameterEquivalenceKey}</li>
- * <li>{@code FieldEquivalenceKey}</li>
  * <li>{@code RecordComponentEquivalenceKey}</li>
  * </ul>
  * </li>
@@ -59,10 +59,10 @@ import java.util.StringJoiner;
  */
 public abstract class EquivalenceKey {
     /**
-     * Returns an equivalence key for given {@link AnnotationTarget annotation target}.
+     * Returns an equivalence key for given {@linkplain AnnotationTarget annotation target}.
      *
      * @param annotationTarget the annotation target, may be {@code null}
-     * @return equvalence key for given annotation target, only {@code null} if {@code annotationTarget == null}
+     * @return equivalence key for given annotation target, only {@code null} if {@code annotationTarget == null}
      */
     public static EquivalenceKey of(AnnotationTarget annotationTarget) {
         if (annotationTarget == null) {
@@ -80,10 +80,10 @@ public abstract class EquivalenceKey {
     }
 
     /**
-     * Returns an equivalence key for given {@link Declaration declaration}.
+     * Returns an equivalence key for given {@linkplain Declaration declaration}.
      *
      * @param declaration the declaration, may be {@code null}
-     * @return equvalence key for given declaration, only {@code null} if {@code declaration == null}
+     * @return equivalence key for given declaration, only {@code null} if {@code declaration == null}
      * @since 3.1.0
      */
     public static DeclarationEquivalenceKey of(Declaration declaration) {
@@ -108,10 +108,10 @@ public abstract class EquivalenceKey {
     }
 
     /**
-     * Returns an equivalence key for given class.
+     * Returns an equivalence key for given {@linkplain ClassInfo class}.
      *
      * @param clazz the class, may be {@code null}
-     * @return equvalence key for given class, only {@code null} if {@code clazz == null}
+     * @return equivalence key for given class, only {@code null} if {@code clazz == null}
      */
     public static ClassEquivalenceKey of(ClassInfo clazz) {
         if (clazz == null) {
@@ -121,10 +121,10 @@ public abstract class EquivalenceKey {
     }
 
     /**
-     * Returns an equivalence key for given method.
+     * Returns an equivalence key for given {@linkplain MethodInfo method}.
      *
      * @param method the method, may be {@code null}
-     * @return equvalence key for given method, only {@code null} if {@code method == null}
+     * @return equivalence key for given method, only {@code null} if {@code method == null}
      */
     public static MethodEquivalenceKey of(MethodInfo method) {
         if (method == null) {
@@ -135,10 +135,10 @@ public abstract class EquivalenceKey {
     }
 
     /**
-     * Returns an equivalence key for given method parameter.
+     * Returns an equivalence key for given {@linkplain MethodParameterInfo method parameter}.
      *
      * @param parameter the method parameter, may be {@code null}
-     * @return equvalence key for given method parameter, only {@code null} if {@code parameter == null}
+     * @return equivalence key for given method parameter, only {@code null} if {@code parameter == null}
      */
     public static MethodParameterEquivalenceKey of(MethodParameterInfo parameter) {
         if (parameter == null) {
@@ -148,10 +148,10 @@ public abstract class EquivalenceKey {
     }
 
     /**
-     * Returns an equivalence key for given field.
+     * Returns an equivalence key for given {@linkplain FieldInfo field}.
      *
      * @param field the field, may be {@code null}
-     * @return equvalence key for given field, only {@code null} if {@code field == null}
+     * @return equivalence key for given field, only {@code null} if {@code field == null}
      */
     public static FieldEquivalenceKey of(FieldInfo field) {
         if (field == null) {
@@ -161,10 +161,10 @@ public abstract class EquivalenceKey {
     }
 
     /**
-     * Returns an equivalence key for given record component.
+     * Returns an equivalence key for given {@linkplain RecordComponentInfo record component}.
      *
      * @param recordComponent the record component, may be {@code null}
-     * @return equvalence key for given record component, only {@code null} if {@code recordComponent == null}
+     * @return equivalence key for given record component, only {@code null} if {@code recordComponent == null}
      */
     public static RecordComponentEquivalenceKey of(RecordComponentInfo recordComponent) {
         if (recordComponent == null) {
@@ -175,11 +175,11 @@ public abstract class EquivalenceKey {
     }
 
     /**
-     * Returns an equivalence key for given type annotation target.
+     * Returns an equivalence key for given {@linkplain TypeTarget type annotation target}.
      * It is the equivalence key of the annotated type.
      *
      * @param typeTarget the type target, may be {@code null}
-     * @return equvalence key for given type target, only {@code null} if {@code typeTarget == null}
+     * @return equivalence key for given type target, only {@code null} if {@code typeTarget == null}
      */
     public static TypeEquivalenceKey of(TypeTarget typeTarget) {
         if (typeTarget == null) {
@@ -189,10 +189,10 @@ public abstract class EquivalenceKey {
     }
 
     /**
-     * Returns an equivalence key for given type.
+     * Returns an equivalence key for given {@linkplain Type type}.
      *
      * @param type the type, may be {@code null}
-     * @return equvalence key for given type, only {@code null} if {@code type == null}
+     * @return equivalence key for given type, only {@code null} if {@code type == null}
      */
     public static TypeEquivalenceKey of(Type type) {
         if (type == null) {

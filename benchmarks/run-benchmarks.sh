@@ -4,7 +4,7 @@ VERSIONS="HEAD"
 BENCHMARKS=".*"
 
 help() {
-  echo "Usage: run-benchmarks.sh [--versions <versions>] [--benchmars <benchmarks>] [--help]"
+  echo "Usage: run-benchmarks.sh [--versions <versions>] [--benchmarks <benchmarks>] [--help]"
   echo
   echo "  --versions <versions>: comma-separated list of Jandex versions (Git commits) to benchmark"
   echo "                         defaults to 'HEAD'"

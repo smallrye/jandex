@@ -64,7 +64,7 @@ public class ChartGenerator {
                     .build();
             chart.getStyler()
                     .setXAxisTicksVisible(true)
-                    .setXAxisLabelRotation(90);
+                    .setXAxisLabelRotation(45);
 
             for (BenchmarksForVersion benchmarksForVersion : allVersions) {
                 List<String> names = new ArrayList<>();

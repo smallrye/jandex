@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Indexing Classes :: Jandex documentation</title>
+    <link rel="prev" href="browsing.html">
+    <link rel="next" href="../maven/basic.html">
+    <meta name="generator" content="Antora 3.0.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <button class="nav-toggle"></button>
+
+      <a class="navbar-item title" href="../index.html">Jandex</a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <span class="navbar-link">3.2.6</span>
+        <div class="navbar-dropdown navbar-menu">
+            <a class="navbar-item  is-current" href="../index.html">3.2.6</a>
+            <a class="navbar-item " href="../../3.2.5/index.html">3.2.5</a>
+            <a class="navbar-item " href="../../3.2.4/index.html">3.2.4</a>
+            <a class="navbar-item " href="../../3.2.3/index.html">3.2.3</a>
+            <a class="navbar-item " href="../../3.2.2/index.html">3.2.2</a>
+            <a class="navbar-item " href="../../3.2.1/index.html">3.2.1</a>
+            <a class="navbar-item " href="../../3.2.0/index.html">3.2.0</a>
+            <a class="navbar-item " href="../../3.1.8/index.html">3.1.8</a>
+            <a class="navbar-item " href="../../3.1.7/index.html">3.1.7</a>
+            <a class="navbar-item " href="../../3.1.6/index.html">3.1.6</a>
+            <a class="navbar-item " href="../../3.1.5/index.html">3.1.5</a>
+            <a class="navbar-item " href="../../3.1.3/index.html">3.1.3</a>
+            <a class="navbar-item " href="../../3.1.2/index.html">3.1.2</a>
+            <a class="navbar-item " href="../../3.1.1/index.html">3.1.1</a>
+            <a class="navbar-item " href="../../3.1.0/index.html">3.1.0</a>
+            <a class="navbar-item " href="../../3.0.8/index.html">3.0.8</a>
+            <a class="navbar-item " href="../../3.0.7/index.html">3.0.7</a>
+            <a class="navbar-item " href="../../3.0.6/index.html">3.0.6</a>
+            <a class="navbar-item " href="../../3.0.5/index.html">3.0.5</a>
+            <a class="navbar-item " href="../../3.0.4/index.html">3.0.4</a>
+            <a class="navbar-item " href="../../3.0.3/index.html">3.0.3</a>
+            <a class="navbar-item " href="../../3.0.2/index.html">3.0.2</a>
+            <a class="navbar-item " href="../../3.0.1/index.html">3.0.1</a>
+            <a class="navbar-item " href="../../3.0.0/index.html">3.0.0</a>
+        </div>
+      </div>
+
+
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+
+        <a class="navbar-item" href="https://smallrye.io/">SmallRye.io main website</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="jandex" data-version="3.2.6">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+<ul class="nav-list nav-list-level-0">
+  <li class="nav-item nav-item-level-0">
+<ul class="nav-list nav-list-level-1">
+  <li class="nav-item nav-item-level-1">
+    <a class="nav-link" href="../index.html">Introduction</a>
+  </li>
+  <li class="nav-item nav-item-level-1">
+    <span class="nav-text">Jandex</span>
+<ul class="nav-list nav-list-level-2">
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="getting.html">Getting Jandex</a>
+  </li>
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="browsing.html">Browsing Declarations and Types</a>
+  </li>
+  <li class="nav-item nav-item-level-2 is-current-page">
+    <a class="nav-link" href="indexing.html">Indexing Classes</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item nav-item-level-1">
+    <span class="nav-text">Jandex Maven Plugin</span>
+<ul class="nav-list nav-list-level-2">
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="../maven/basic.html">Basic Usage</a>
+  </li>
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="../maven/advanced.html">Advanced Usage</a>
+  </li>
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="../maven/shading.html">Usage with Shading</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+  <div class="content">
+<aside class="toc sidebar" data-title="Table of contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+  <a href="https://github.com/smallrye/jandex/blob/3.2.6/doc/modules/ROOT/pages/core/indexing.adoc" class="edit-this-page" title="Edit this page">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+<h1 class="page">Indexing Classes</h1>
+<div class="sect1">
+<h2 id="_creating_a_persistent_index_using_the_api"><a class="anchor" href="#_creating_a_persistent_index_using_the_api"></a>Creating a Persistent Index Using the API</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The following example demonstrates indexing a class and persisting the index to disk.
+The resulting file can later be loaded and used.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Indexer indexer = new Indexer();
+indexer.indexClass(Map.class);
+Index index = indexer.complete();
+
+try (FileOutputStream out = new FileOutputStream("/tmp/index.idx")) {
+    IndexWriter writer = new IndexWriter(out);
+    writer.write(index);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_loading_a_persistent_index"><a class="anchor" href="#_loading_a_persistent_index"></a>Loading a Persistent Index</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The following example demonstrates loading the index from the previous example and using that index to print all methods on <code>java.util.Map</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Index index;
+try (FileInputStream input = new FileInputStream("/tmp/index.idx")) {
+    IndexReader reader = new IndexReader(input);
+    index = reader.read();
+}
+
+ClassInfo clazz = index.getClassByName(DotName.createSimple("java.util.Map"));
+
+for (MethodInfo method : clazz.methods()) {
+    System.out.println(method);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_creating_a_persistent_index_using_the_cli"><a class="anchor" href="#_creating_a_persistent_index_using_the_cli"></a>Creating a Persistent Index Using the CLI</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The following example demonstrates indexing hibernate core, followed by the entire Java
+JDK 8 using Jandex on the CLI:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ java -jar jandex-2.4.2.Final.jar hibernate-core-6.0.0.Final.jar
+   Wrote hibernate-core-6.0.0.Final-jar.idx in 0.9170 seconds
+         (5746 classes, 50 annotations, 2995 instances, 61729 class usages, 1737428 bytes)
+$ java -jar jandex-2.4.2.Final.jar rt.jar
+   Wrote rt-jar.idx in 1.7310 seconds
+         (20226 classes, 57 annotations, 2476 instances, 246298 class usages, 5890787 bytes)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The above summary output tells us that this version of Hibernate ORM has 5,746 classes, and those classes contained 2,995 annotation declarations, using 50 different annotation types.
+The resulting index is 1.7 MB uncompressed, which is only 19% of the 9.0MB compressed jar size, or 4% of the uncompressed class file data.
+If the index is stored in the jar (using the -m option) it can be compressed an additional 43%, leading to a jar growth of only 11%.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_using_the_ant_task_to_index_your_project"><a class="anchor" href="#_using_the_ant_task_to_index_your_project"></a>Using the Ant Task to Index Your Project</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The following Ant task can be used with either the <code>maven-antrun-plugin</code> or an Ant build to build an index for your project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;taskdef name="jandex" classname="org.jboss.jandex.JandexAntTask"/&gt;
+&lt;jandex run="@{jandex}"&gt;
+    &lt;fileset dir="${location.to.index.dir}"/&gt;
+&lt;/jandex&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_using_the_maven_plugin_to_index_your_project"><a class="anchor" href="#_using_the_maven_plugin_to_index_your_project"></a>Using the Maven Plugin to Index Your Project</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>See <a href="../maven/basic.html" class="xref page">Basic Maven Plugin Usage</a>.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="browsing.html">Browsing Declarations and Types</a></span>
+  <span class="next"><a href="../maven/basic.html">Basic Usage</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>
+    Sponsored by <a href="https://www.redhat.com"><img style="vertical-align: middle; height: 2.5em;" src="../../../_/img/redhat.svg" alt="Red Hat"></a>
+  </p>
+  <p>
+    Made with <a href="https://github.com/smallrye/smallrye-antora-ui">SmallRye Antora UI</a>, which is licensed under the MPL-2.0 license.
+    Includes portions of <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a>, which is licensed under the MIT license.
+  </p>
+</footer>
+<script src="../../../_/js/site.js"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

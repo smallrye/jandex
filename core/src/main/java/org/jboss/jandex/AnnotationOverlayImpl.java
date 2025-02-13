@@ -65,7 +65,8 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
             }
         }
 
-        if (inheritedAnnotations && declaration.kind() == AnnotationTarget.Kind.CLASS) {
+        if (inheritedAnnotations && declaration.kind() == AnnotationTarget.Kind.CLASS
+                && declaration.asClass().superName() != null) {
             ClassInfo clazz = index.getClassByName(declaration.asClass().superName());
             while (clazz != null && !DotName.OBJECT_NAME.equals(clazz.name())) {
                 for (AnnotationInstance annotation : getAnnotationsFor(clazz)) {
@@ -98,7 +99,8 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
             }
         }
 
-        if (inheritedAnnotations && declaration.kind() == AnnotationTarget.Kind.CLASS) {
+        if (inheritedAnnotations && declaration.kind() == AnnotationTarget.Kind.CLASS
+                && declaration.asClass().superName() != null) {
             ClassInfo clazz = index.getClassByName(declaration.asClass().superName());
             while (clazz != null && !DotName.OBJECT_NAME.equals(clazz.name())) {
                 for (AnnotationInstance annotation : getAnnotationsFor(clazz)) {
@@ -131,7 +133,8 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
             }
         }
 
-        if (inheritedAnnotations && declaration.kind() == AnnotationTarget.Kind.CLASS) {
+        if (inheritedAnnotations && declaration.kind() == AnnotationTarget.Kind.CLASS
+                && declaration.asClass().superName() != null) {
             ClassInfo clazz = index.getClassByName(declaration.asClass().superName());
             while (clazz != null && !DotName.OBJECT_NAME.equals(clazz.name())) {
                 for (AnnotationInstance annotation : getAnnotationsFor(clazz)) {
@@ -178,7 +181,8 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
             }
         }
 
-        if (inheritedAnnotations && declaration.kind() == AnnotationTarget.Kind.CLASS) {
+        if (inheritedAnnotations && declaration.kind() == AnnotationTarget.Kind.CLASS
+                && declaration.asClass().superName() != null) {
             ClassInfo clazz = index.getClassByName(declaration.asClass().superName());
             while (result.isEmpty() && clazz != null && !DotName.OBJECT_NAME.equals(clazz.name())) {
                 for (AnnotationInstance annotation : getAnnotationsFor(clazz)) {
@@ -209,7 +213,8 @@ class AnnotationOverlayImpl implements AnnotationOverlay {
 
         Collection<AnnotationInstance> result = getAnnotationsFor(declaration);
 
-        if (inheritedAnnotations && declaration.kind() == AnnotationTarget.Kind.CLASS) {
+        if (inheritedAnnotations && declaration.kind() == AnnotationTarget.Kind.CLASS
+                && declaration.asClass().superName() != null) {
             result = new ArrayList<>(result);
             ClassInfo clazz = index.getClassByName(declaration.asClass().superName());
             while (clazz != null && !DotName.OBJECT_NAME.equals(clazz.name())) {

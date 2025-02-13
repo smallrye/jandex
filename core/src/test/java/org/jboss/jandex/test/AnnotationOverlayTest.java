@@ -5,14 +5,18 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationOverlay;
@@ -23,8 +27,10 @@ import org.jboss.jandex.Declaration;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
+import org.jboss.jandex.ModuleInfo;
 import org.junit.jupiter.api.Test;
 
 public class AnnotationOverlayTest {
@@ -325,6 +331,114 @@ public class AnnotationOverlayTest {
 
                 assertEquals(expectedValues, values.toString());
             }
+        }
+    }
+
+    /**
+     * Tests that accessing annotations on the {@code Object} class does not attempt
+     * to retrieve the (non-existing) superclass.
+     */
+    @Test
+    public void accessAnnotationsOnTheObjectClass() throws IOException {
+        // create a trivial index and an overlay with inherited annotations
+        Index index = Index.of(Object.class);
+        ClassInfo clazz = index.getClassByName(Object.class);
+
+        AnnotationOverlay overlay = AnnotationOverlay.builder(new MyIndexWrapper(index), Collections.emptyList())
+                .inheritedAnnotations()
+                .build();
+
+        // Note that if there was a failure, it would be an assertion error from MyIndexWrapper
+        assertFalse(overlay.hasAnnotation(clazz, MyInheritedAnnotation.class));
+        assertFalse(overlay.hasAnyAnnotation(clazz, MyInheritedAnnotation.class));
+        assertNull(overlay.annotation(clazz, MyInheritedAnnotation.class));
+        assertEquals(0, overlay.annotationsWithRepeatable(clazz, MyRepeatableAnnotation.class).size());
+        assertEquals(0, overlay.annotations(clazz).size());
+    }
+
+    static class MyIndexWrapper implements IndexView {
+        private final IndexView delegate;
+
+        public MyIndexWrapper(IndexView delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public Collection<ClassInfo> getKnownClasses() {
+            return delegate.getKnownClasses();
+        }
+
+        @Override
+        public ClassInfo getClassByName(DotName className) {
+            if (className == null) {
+                fail("IndexView#getClassByName should never be invoked with null parameter!");
+            }
+            return delegate.getClassByName(className);
+        }
+
+        @Override
+        public Collection<ClassInfo> getKnownDirectSubclasses(DotName className) {
+            return delegate.getKnownDirectSubclasses(className);
+        }
+
+        @Override
+        public Collection<ClassInfo> getAllKnownSubclasses(DotName className) {
+            return delegate.getAllKnownSubclasses(className);
+        }
+
+        @Override
+        public Collection<ClassInfo> getKnownDirectSubinterfaces(DotName interfaceName) {
+            return delegate.getKnownDirectSubinterfaces(interfaceName);
+        }
+
+        @Override
+        public Collection<ClassInfo> getAllKnownSubinterfaces(DotName interfaceName) {
+            return delegate.getAllKnownSubinterfaces(interfaceName);
+        }
+
+        @Override
+        public Collection<ClassInfo> getKnownDirectImplementors(DotName interfaceName) {
+            return delegate.getKnownDirectImplementors(interfaceName);
+        }
+
+        @Override
+        public Collection<ClassInfo> getAllKnownImplementors(DotName interfaceName) {
+            return delegate.getAllKnownImplementors(interfaceName);
+        }
+
+        @Override
+        public Collection<AnnotationInstance> getAnnotations(DotName annotationName) {
+            return delegate.getAnnotations(annotationName);
+        }
+
+        @Override
+        public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, IndexView index) {
+            return delegate.getAnnotationsWithRepeatable(annotationName, this);
+        }
+
+        @Override
+        public Collection<ModuleInfo> getKnownModules() {
+            return delegate.getKnownModules();
+        }
+
+        @Override
+        public ModuleInfo getModuleByName(DotName moduleName) {
+            return delegate.getModuleByName(moduleName);
+        }
+
+        @Override
+        public Collection<ClassInfo> getKnownUsers(DotName className) {
+            return delegate.getKnownUsers(className);
+        }
+
+        @Override
+        public Collection<ClassInfo> getClassesInPackage(DotName packageName) {
+            return delegate.getClassesInPackage(packageName);
+        }
+
+        @Override
+        public Set<DotName> getSubpackages(DotName packageName) {
+            return delegate.getSubpackages(packageName);
         }
     }
 }

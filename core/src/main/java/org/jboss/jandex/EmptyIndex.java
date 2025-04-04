@@ -47,6 +47,16 @@ public final class EmptyIndex implements IndexView {
     }
 
     @Override
+    public Collection<ClassInfo> getKnownDirectImplementations(DotName interfaceName) {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Collection<ClassInfo> getAllKnownImplementations(DotName interfaceName) {
+        return Collections.emptySet();
+    }
+
+    @Override
     public Collection<ClassInfo> getKnownDirectImplementors(DotName interfaceName) {
         return Collections.emptySet();
     }

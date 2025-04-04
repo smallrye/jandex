@@ -183,6 +183,26 @@ public final class StackedIndex implements IndexView {
     }
 
     @Override
+    public Collection<ClassInfo> getKnownDirectImplementations(DotName interfaceName) {
+        List<ClassInfo> result = new ArrayList<>();
+        Set<DotName> seen = new HashSet<>();
+        for (IndexView idx : stack) {
+            for (ClassInfo clazz : idx.getKnownDirectImplementations(interfaceName)) {
+                if (seen.add(clazz.name())) {
+                    result.add(clazz);
+                }
+            }
+        }
+        return Collections.unmodifiableList(result);
+    }
+
+    @Override
+    public Collection<ClassInfo> getAllKnownImplementations(DotName interfaceName) {
+        // no difference here
+        return getAllKnownImplementors(interfaceName);
+    }
+
+    @Override
     public Collection<ClassInfo> getKnownDirectImplementors(DotName interfaceName) {
         List<ClassInfo> result = new ArrayList<>();
         Set<DotName> seen = new HashSet<>();

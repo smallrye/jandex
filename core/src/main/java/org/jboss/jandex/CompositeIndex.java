@@ -165,12 +165,12 @@ public class CompositeIndex implements IndexView {
     public Collection<ClassInfo> getAllKnownSubinterfaces(DotName interfaceName) {
         Set<ClassInfo> result = new HashSet<>();
 
-        Queue<DotName> workQueue = new ArrayDeque<>();
+        Queue<DotName> worklist = new ArrayDeque<>();
         Set<DotName> alreadyProcessed = new HashSet<>();
 
-        workQueue.add(interfaceName);
-        while (!workQueue.isEmpty()) {
-            DotName iface = workQueue.remove();
+        worklist.add(interfaceName);
+        while (!worklist.isEmpty()) {
+            DotName iface = worklist.remove();
             if (!alreadyProcessed.add(iface)) {
                 continue;
             }
@@ -178,12 +178,30 @@ public class CompositeIndex implements IndexView {
             for (IndexView index : indexes) {
                 for (ClassInfo directSubinterface : index.getKnownDirectSubinterfaces(iface)) {
                     result.add(directSubinterface);
-                    workQueue.add(directSubinterface.name());
+                    worklist.add(directSubinterface.name());
                 }
             }
         }
 
         return result;
+    }
+
+    @Override
+    public Collection<ClassInfo> getKnownDirectImplementations(DotName interfaceName) {
+        Set<ClassInfo> allKnown = new HashSet<>();
+        for (IndexView index : indexes) {
+            Collection<ClassInfo> list = index.getKnownDirectImplementations(interfaceName);
+            if (list != null) {
+                allKnown.addAll(list);
+            }
+        }
+        return Collections.unmodifiableSet(allKnown);
+    }
+
+    @Override
+    public Collection<ClassInfo> getAllKnownImplementations(DotName interfaceName) {
+        // no difference here
+        return getAllKnownImplementors(interfaceName);
     }
 
     /**

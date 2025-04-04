@@ -41,163 +41,125 @@ public interface IndexView {
     /**
      * Gets all known classes by this index (those which were scanned).
      *
-     * @return a collection of known classes
+     * @return immutable collection of known classes, never {@code null}
      */
     Collection<ClassInfo> getKnownClasses();
 
     /**
-     * Gets the class (or interface, or annotation) that was scanned during the
-     * indexing phase.
+     * Returns the class (or enum, record, interface, annotation) with given name.
+     * Returns {@code null} if class with given name is not present in the index.
      *
      * @param className the name of the class
-     * @return information about the class or null if it is not known
+     * @return information about the class or {@code null} if it is not known
      */
     ClassInfo getClassByName(DotName className);
 
     /**
-     * Gets the class (or interface, or annotation) that was scanned during the
-     * indexing phase.
+     * Returns the class (or enum, record, interface, annotation) with given name.
+     * Returns {@code null} if class with given name is not present in the index.
      *
      * @param className the name of the class
-     * @return information about the class or null if it is not known
+     * @return information about the class or {@code null} if it is not known
      */
     default ClassInfo getClassByName(String className) {
         return getClassByName(DotName.createSimple(className));
     }
 
     /**
-     * Gets the class (or interface, or annotation) that was scanned during the
-     * indexing phase.
+     * Returns the class (or enum, record, interface, annotation) with given name ({@code clazz.getName()}).
+     * Returns {@code null} if class with given name is not present in the index.
      *
      * @param clazz the class
-     * @return information about the class or null if it is not known
+     * @return information about the class or {@code null} if it is not known
      */
     default ClassInfo getClassByName(Class<?> clazz) {
         return getClassByName(DotName.createSimple(clazz.getName()));
     }
 
     /**
-     * Gets all known direct subclasses of the specified class. A known direct
-     * subclass is one which was found during the scanning process; however, this is
-     * often not the complete universe of subclasses, since typically indexes are
-     * constructed per jar. It is expected that several indexes will need to be searched
-     * when analyzing a jar that is a part of a complex multi-module/classloader
-     * environment (like an EE application server).
+     * Returns all known direct subclasses of the given class. Indirect subclasses
+     * are <em>not</em> returned.
      * <p>
-     * Note that this will only pick up direct subclasses of the class. It will not
-     * pick up subclasses of subclasses.
-     * <p>
-     * Also note that interfaces are considered direct subclasses of {@code java.lang.Object}.
+     * Note that interfaces are considered direct subclasses of {@code java.lang.Object}.
      *
-     * @param className the super class of the desired subclasses
-     * @return a non-null list of all known subclasses of className
+     * @param className the class
+     * @return an immutable collection of known direct subclasses of given class, never {@code null}
      */
     Collection<ClassInfo> getKnownDirectSubclasses(DotName className);
 
     /**
-     * Gets all known direct subclasses of the specified class. A known direct
-     * subclass is one which was found during the scanning process; however, this is
-     * often not the complete universe of subclasses, since typically indexes are
-     * constructed per jar. It is expected that several indexes will need to be searched
-     * when analyzing a jar that is a part of a complex multi-module/classloader
-     * environment (like an EE application server).
+     * Returns all known direct subclasses of the given class. Indirect subclasses
+     * are <em>not</em> returned.
      * <p>
-     * Note that this will only pick up direct subclasses of the class. It will not
-     * pick up subclasses of subclasses.
-     * <p>
-     * Also note that interfaces are considered direct subclasses of {@code java.lang.Object}.
+     * Note that interfaces are considered direct subclasses of {@code java.lang.Object}.
      *
-     * @param className the super class of the desired subclasses
-     * @return a non-null list of all known subclasses of className
+     * @param className the class
+     * @return an immutable collection of known direct subclasses of given class, never {@code null}
      */
     default Collection<ClassInfo> getKnownDirectSubclasses(String className) {
         return getKnownDirectSubclasses(DotName.createSimple(className));
     }
 
     /**
-     * Gets all known direct subclasses of the specified class. A known direct
-     * subclass is one which was found during the scanning process; however, this is
-     * often not the complete universe of subclasses, since typically indexes are
-     * constructed per jar. It is expected that several indexes will need to be searched
-     * when analyzing a jar that is a part of a complex multi-module/classloader
-     * environment (like an EE application server).
+     * Returns all known direct subclasses of the given class. Indirect subclasses
+     * are <em>not</em> returned.
      * <p>
-     * Note that this will only pick up direct subclasses of the class. It will not
-     * pick up subclasses of subclasses.
-     * <p>
-     * Also note that interfaces are considered direct subclasses of {@code java.lang.Object}.
+     * Note that interfaces are considered direct subclasses of {@code java.lang.Object}.
      *
-     * @param clazz the super class of the desired subclasses
-     * @return a non-null list of all known subclasses of className
+     * @param clazz the class
+     * @return an immutable collection of known direct subclasses of given class, never {@code null}
      */
     default Collection<ClassInfo> getKnownDirectSubclasses(Class<?> clazz) {
         return getKnownDirectSubclasses(DotName.createSimple(clazz.getName()));
     }
 
     /**
-     * Returns all known (including non-direct) subclasses of the given class.
-     * I.e., returns all known classes that are assignable to the given class.
+     * Returns all known subclasses of the given class, direct and indirect.
+     * In other words, all classes that are assignable to the given class.
      *
-     * @param className The class
-     *
-     * @return All known subclasses
+     * @param className the class
+     * @return immutable collection of all known subclasses of given class, never {@code null}
      */
     Collection<ClassInfo> getAllKnownSubclasses(final DotName className);
 
     /**
-     * Returns all known (including non-direct) subclasses of the given class.
-     * I.e., returns all known classes that are assignable to the given class.
+     * Returns all known subclasses of the given class, direct and indirect.
+     * In other words, all classes that are assignable to the given class.
      *
-     * @param className The class
-     *
-     * @return All known subclasses
+     * @param className the class
+     * @return immutable collection of all known subclasses of given class, never {@code null}
      */
     default Collection<ClassInfo> getAllKnownSubclasses(final String className) {
         return getAllKnownSubclasses(DotName.createSimple(className));
     }
 
     /**
-     * Returns all known (including non-direct) subclasses of the given class.
-     * I.e., returns all known classes that are assignable to the given class.
+     * Returns all known subclasses of the given class, direct and indirect.
+     * In other words, all classes that are assignable to the given class.
      *
-     * @param clazz The class
-     *
-     * @return All known subclasses
+     * @param clazz the class
+     * @return immutable collection of all known subclasses of given class, never {@code null}
      */
     default Collection<ClassInfo> getAllKnownSubclasses(final Class<?> clazz) {
         return getAllKnownSubclasses(DotName.createSimple(clazz.getName()));
     }
 
     /**
-     * Gets all known direct subinterfaces of the specified interface. A known direct
-     * subinterface is one which was found during the scanning process; however, this is
-     * often not the complete universe of subinterfaces, since typically indexes are
-     * constructed per jar. It is expected that several indexes will need to be searched
-     * when analyzing a jar that is a part of a complex multi-module/classloader
-     * environment (like an EE application server).
-     * <p>
-     * Note that this will only pick up direct subinterfaces of the interface. It will not
-     * pick up subinterfaces of subinterfaces.
+     * Returns all known direct subinterfaces of the given interface. Indirect subinterfaces
+     * are <em>not</em> returned.
      *
-     * @param interfaceName the super interface of the desired subinterfaces
-     * @return a non-null list of all known subinterfaces of interfaceName
+     * @param interfaceName the interface
+     * @return immutable collection of all known subinterfaces of given interface, never {@code null}
      * @since 3.0
      */
     Collection<ClassInfo> getKnownDirectSubinterfaces(DotName interfaceName);
 
     /**
-     * Gets all known direct subinterfaces of the specified interface. A known direct
-     * subinterface is one which was found during the scanning process; however, this is
-     * often not the complete universe of subinterfaces, since typically indexes are
-     * constructed per jar. It is expected that several indexes will need to be searched
-     * when analyzing a jar that is a part of a complex multi-module/classloader
-     * environment (like an EE application server).
-     * <p>
-     * Note that this will only pick up direct subinterfaces of the interface. It will not
-     * pick up subinterfaces of subinterfaces.
+     * Returns all known direct subinterfaces of the given interface. Indirect subinterfaces
+     * are <em>not</em> returned.
      *
-     * @param interfaceName the super interface of the desired subinterfaces
-     * @return a non-null list of all known subinterfaces of interfaceName
+     * @param interfaceName the interface
+     * @return immutable collection of all known subinterfaces of given interface, never {@code null}
      * @since 3.0
      */
     default Collection<ClassInfo> getKnownDirectSubinterfaces(String interfaceName) {
@@ -205,18 +167,11 @@ public interface IndexView {
     }
 
     /**
-     * Gets all known direct subinterfaces of the specified interface. A known direct
-     * subinterface is one which was found during the scanning process; however, this is
-     * often not the complete universe of subinterfaces, since typically indexes are
-     * constructed per jar. It is expected that several indexes will need to be searched
-     * when analyzing a jar that is a part of a complex multi-module/classloader
-     * environment (like an EE application server).
-     * <p>
-     * Note that this will only pick up direct subinterfaces of the interface. It will not
-     * pick up subinterfaces of subinterfaces.
+     * Returns all known direct subinterfaces of the given interface. Indirect subinterfaces
+     * are <em>not</em> returned.
      *
-     * @param interfaceClass the super interface of the desired subinterfaces
-     * @return a non-null list of all known subinterfaces of interfaceClass
+     * @param interfaceClass the interface
+     * @return immutable collection of all known subinterfaces of given interface, never {@code null}
      * @since 3.0
      */
     default Collection<ClassInfo> getKnownDirectSubinterfaces(Class<?> interfaceClass) {
@@ -224,18 +179,18 @@ public interface IndexView {
     }
 
     /**
-     * Returns all known interfaces that extend the given interface, directly and indirectly.
-     * I.e., returns every interface in the index that is assignable to the given interface.
+     * Returns all known subinterfaces of the given interface, direct and indirect.
+     * In other words, all interfaces that are assignable to the given interface.
      *
-     * @param interfaceName The interface
-     * @return all known subinterfaces
+     * @param interfaceName the interface
+     * @return immutable collection of all known subinterfaces of given interface, never {@code null}
      * @since 3.0
      */
     Collection<ClassInfo> getAllKnownSubinterfaces(DotName interfaceName);
 
     /**
      * Returns all known interfaces that extend the given interface, directly and indirectly.
-     * I.e., returns every interface in the index that is assignable to the given interface.
+     * In other words, all interfaces in the index that are assignable to the given interface.
      *
      * @param interfaceName The interface
      * @return all known subinterfaces
@@ -246,15 +201,98 @@ public interface IndexView {
     }
 
     /**
-     * Returns all known interfaces that extend the given interface, directly and indirectly.
-     * I.e., returns every interface in the index that is assignable to the given interface.
+     * Returns all known subinterfaces of the given interface, direct and indirect.
+     * In other words, all interfaces that are assignable to the given interface.
      *
-     * @param interfaceClass The interface
-     * @return all known subinterfaces
+     * @param interfaceClass the interface
+     * @return immutable collection of all known subinterfaces of given interface, never {@code null}
      * @since 3.0
      */
     default Collection<ClassInfo> getAllKnownSubinterfaces(Class<?> interfaceClass) {
         return getAllKnownSubinterfaces(DotName.createSimple(interfaceClass.getName()));
+    }
+
+    /**
+     * Returns all known classes that directly implement the given interface. Classes that
+     * do not directly implement the given interface but do directly implement subinterfaces
+     * are <em>not</em> returned. Subclasses of classes that directly implement the given
+     * interface are <em>not</em> returned either.
+     * <p>
+     * Note that unlike {@link #getKnownDirectImplementors(DotName)}, this method
+     * does <em>NOT</em> return direct subinterfaces of the given interface, which
+     * is typically what you expect when you call this method.
+     *
+     * @param interfaceName the interface
+     * @return immutable collection of all known direct implementations of the interface, never {@code null}
+     */
+    Collection<ClassInfo> getKnownDirectImplementations(DotName interfaceName);
+
+    /**
+     * Returns all known classes that directly implement the given interface. Classes that
+     * do not directly implement the given interface but do directly implement subinterfaces
+     * are <em>not</em> returned. Subclasses of classes that directly implement the given
+     * interface are <em>not</em> returned either.
+     * <p>
+     * Note that unlike {@link #getKnownDirectImplementors(DotName)}, this method
+     * does <em>NOT</em> return direct subinterfaces of the given interface, which
+     * is typically what you expect when you call this method.
+     *
+     * @param interfaceName the interface
+     * @return immutable collection of all known direct implementations of the interface, never {@code null}
+     */
+    default Collection<ClassInfo> getKnownDirectImplementations(String interfaceName) {
+        return getKnownDirectImplementations(DotName.createSimple(interfaceName));
+    }
+
+    /**
+     * Returns all known classes that directly implement the given interface. Classes that
+     * do not directly implement the given interface but do directly implement subinterfaces
+     * are <em>not</em> returned. Subclasses of classes that directly implement the given
+     * interface are <em>not</em> returned either.
+     * <p>
+     * Note that unlike {@link #getKnownDirectImplementors(DotName)}, this method
+     * does <em>NOT</em> return direct subinterfaces of the given interface, which
+     * is typically what you expect when you call this method.
+     *
+     * @param interfaceClass the interface
+     * @return immutable collection of all known direct implementations of the interface, never {@code null}
+     */
+    default Collection<ClassInfo> getKnownDirectImplementations(Class<?> interfaceClass) {
+        return getKnownDirectImplementations(DotName.createSimple(interfaceClass.getName()));
+    }
+
+    /**
+     * Returns all known classes that implement the given interface, directly and indirectly.
+     * That is, all classes that implement the interface and its subinterfaces, as well as
+     * all their subclasses. In other words, all classes that are assignable to the interface.
+     *
+     * @param interfaceName the interface
+     * @return immutable collection of all known implementations of the interface, never {@code null}
+     */
+    Collection<ClassInfo> getAllKnownImplementations(DotName interfaceName);
+
+    /**
+     * Returns all known classes that implement the given interface, directly and indirectly.
+     * That is, all classes that implement the interface and its subinterfaces, as well as
+     * all their subclasses. In other words, all classes that are assignable to the interface.
+     *
+     * @param interfaceName the interface
+     * @return immutable collection of all known implementations of the interface, never {@code null}
+     */
+    default Collection<ClassInfo> getAllKnownImplementations(String interfaceName) {
+        return getAllKnownImplementations(DotName.createSimple(interfaceName));
+    }
+
+    /**
+     * Returns all known classes that implement the given interface, directly and indirectly.
+     * That is, all classes that implement the interface and its subinterfaces, as well as
+     * all their subclasses. In other words, all classes that are assignable to the interface.
+     *
+     * @param interfaceClass the interface
+     * @return immutable collection of all known implementations of the interface, never {@code null}
+     */
+    default Collection<ClassInfo> getAllKnownImplementations(Class<?> interfaceClass) {
+        return getAllKnownImplementations(DotName.createSimple(interfaceClass.getName()));
     }
 
     /**
@@ -274,6 +312,7 @@ public interface IndexView {
      * @param interfaceName The interface
      * @return All known direct implementors of the interface
      */
+    @Deprecated
     Collection<ClassInfo> getKnownDirectImplementors(DotName interfaceName);
 
     /**
@@ -293,6 +332,7 @@ public interface IndexView {
      * @param interfaceName The interface
      * @return All known direct implementors of the interface
      */
+    @Deprecated
     default Collection<ClassInfo> getKnownDirectImplementors(String interfaceName) {
         return getKnownDirectImplementors(DotName.createSimple(interfaceName));
     }
@@ -314,6 +354,7 @@ public interface IndexView {
      * @param interfaceClass The interface
      * @return All known direct implementors of the interface
      */
+    @Deprecated
     default Collection<ClassInfo> getKnownDirectImplementors(Class<?> interfaceClass) {
         return getKnownDirectImplementors(DotName.createSimple(interfaceClass.getName()));
     }
@@ -330,6 +371,7 @@ public interface IndexView {
      * @param interfaceName The interface
      * @return All known implementors of the interface
      */
+    @Deprecated
     Collection<ClassInfo> getAllKnownImplementors(final DotName interfaceName);
 
     /**
@@ -344,6 +386,7 @@ public interface IndexView {
      * @param interfaceName The interface
      * @return All known implementors of the interface
      */
+    @Deprecated
     default Collection<ClassInfo> getAllKnownImplementors(final String interfaceName) {
         return getAllKnownImplementors(DotName.createSimple(interfaceName));
     }
@@ -360,6 +403,7 @@ public interface IndexView {
      * @param interfaceClass The interface
      * @return All known implementors of the interface
      */
+    @Deprecated
     default Collection<ClassInfo> getAllKnownImplementors(final Class<?> interfaceClass) {
         return getAllKnownImplementors(DotName.createSimple(interfaceClass.getName()));
     }
@@ -370,7 +414,7 @@ public interface IndexView {
      * field, method, parameter, and class.
      *
      * @param annotationName the name of the annotation to look for
-     * @return a non-null list of annotation instances
+     * @return immutable collection of annotation instances, never {@code null}
      */
     Collection<AnnotationInstance> getAnnotations(DotName annotationName);
 
@@ -380,7 +424,7 @@ public interface IndexView {
      * field, method, parameter, and class.
      *
      * @param annotationName the name of the annotation to look for
-     * @return a non-null list of annotation instances
+     * @return immutable collection of annotation instances, never {@code null}
      */
     default Collection<AnnotationInstance> getAnnotations(String annotationName) {
         return getAnnotations(DotName.createSimple(annotationName));
@@ -392,7 +436,7 @@ public interface IndexView {
      * field, method, parameter, and class.
      *
      * @param annotationType the type of the annotation to look for
-     * @return a non-null list of annotation instances
+     * @return immutable collection of annotation instances, never {@code null}
      */
     default Collection<AnnotationInstance> getAnnotations(Class<?> annotationType) {
         return getAnnotations(DotName.createSimple(annotationType.getName()));
@@ -405,7 +449,7 @@ public interface IndexView {
      *
      * @param annotationName the name of the repeatable annotation
      * @param index the index containing the annotation class
-     * @return a non-null list of annotation instances
+     * @return immutable collection of annotation instances, never {@code null}
      * @throws IllegalArgumentException If the index does not contain the annotation definition or if it does not represent
      *         an annotation type
      */
@@ -418,7 +462,7 @@ public interface IndexView {
      *
      * @param annotationName the name of the repeatable annotation
      * @param index the index containing the annotation class
-     * @return a non-null list of annotation instances
+     * @return immutable collection of annotation instances, never {@code null}
      * @throws IllegalArgumentException If the index does not contain the annotation definition or if it does not represent
      *         an annotation type
      */
@@ -433,7 +477,7 @@ public interface IndexView {
      *
      * @param annotationType the name of the repeatable annotation
      * @param index the index containing the annotation class
-     * @return a non-null list of annotation instances
+     * @return immutable collection of annotation instances, never {@code null}
      * @throws IllegalArgumentException If the index does not contain the annotation definition or if it does not represent
      *         an annotation type
      */
@@ -444,7 +488,7 @@ public interface IndexView {
     /**
      * Gets all known modules by this index (those which were scanned).
      *
-     * @return a collection of known modules
+     * @return immutable collection of known modules, never {@code null}
      */
     Collection<ModuleInfo> getKnownModules();
 
@@ -452,7 +496,7 @@ public interface IndexView {
      * Gets the module that was scanned during the indexing phase.
      *
      * @param moduleName the name of the module
-     * @return information about the module or null if it is not known
+     * @return information about the module or {@code null} if it is not known
      */
     ModuleInfo getModuleByName(DotName moduleName);
 
@@ -460,7 +504,7 @@ public interface IndexView {
      * Gets the module that was scanned during the indexing phase.
      *
      * @param moduleName the name of the module
-     * @return information about the module or null if it is not known
+     * @return information about the module or {@code null} if it is not known
      */
     default ModuleInfo getModuleByName(String moduleName) {
         return getModuleByName(DotName.createSimple(moduleName));
@@ -481,7 +525,7 @@ public interface IndexView {
      * </ul>
      *
      * @param className the name of the class to look for
-     * @return a non-null list of classes that use the specified class
+     * @return immutable collection of classes that use the specified class, never {@code null}
      */
     Collection<ClassInfo> getKnownUsers(DotName className);
 
@@ -500,7 +544,7 @@ public interface IndexView {
      * </ul>
      *
      * @param className the name of the class to look for
-     * @return a non-null list of classes that use the specified class
+     * @return immutable collection of classes that use the specified class, never {@code null}
      */
     default Collection<ClassInfo> getKnownUsers(String className) {
         return getKnownUsers(DotName.createSimple(className));
@@ -521,7 +565,7 @@ public interface IndexView {
      * </ul>
      *
      * @param clazz the class to look for
-     * @return a non-null list of classes that use the specified class
+     * @return immutable collection of classes that use the specified class, never {@code null}
      */
     default Collection<ClassInfo> getKnownUsers(Class<?> clazz) {
         return getKnownUsers(DotName.createSimple(clazz.getName()));

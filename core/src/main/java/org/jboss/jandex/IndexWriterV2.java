@@ -54,7 +54,7 @@ import java.util.TreeMap;
  */
 final class IndexWriterV2 extends IndexWriterImpl {
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 12;
+    static final int MAX_VERSION = 13;
 
     // babelfish (no h)
     private static final int MAGIC = 0xBABE1F15;
@@ -160,6 +160,7 @@ final class IndexWriterV2 extends IndexWriterImpl {
      * Constructs an IndexWriter using the specified stream
      *
      * @param out a stream to write an index to
+     * @param version the index file version
      */
     IndexWriterV2(OutputStream out, int version) {
         this.out = out;
@@ -171,7 +172,6 @@ final class IndexWriterV2 extends IndexWriterImpl {
      * to write multiple indexes.
      *
      * @param index the index to write to the stream
-     * @param version the index file version
      * @return the number of bytes written to the stream
      * @throws java.io.IOException if any i/o error occurs
      */
@@ -580,9 +580,13 @@ final class IndexWriterV2 extends IndexWriterImpl {
         if (hasNesting || version < 9) {
             DotName enclosingClass = clazz.enclosingClass();
             String simpleName = clazz.nestingSimpleName();
+            DotName enclosingClassInInitializer = clazz.enclosingClassInInitializer();
 
             stream.writePackedU32(enclosingClass == null ? 0 : positionOf(enclosingClass));
             stream.writePackedU32(simpleName == null ? 0 : positionOf(simpleName));
+            if (version >= 13) {
+                stream.writePackedU32(enclosingClassInInitializer == null ? 0 : positionOf(enclosingClassInInitializer));
+            }
 
             if (enclosingMethod == null) {
                 if (version < 9) {
@@ -942,6 +946,10 @@ final class IndexWriterV2 extends IndexWriterImpl {
         String name = clazz.nestingSimpleName();
         if (name != null) {
             addString(name);
+        }
+        DotName enclosingClassInInitializer = clazz.enclosingClassInInitializer();
+        if (enclosingClassInInitializer != null) {
+            addClassName(enclosingClassInInitializer);
         }
         addEnclosingMethod(clazz.enclosingMethod());
 

@@ -869,11 +869,15 @@ public final class Indexer {
     private void processEnclosingMethod(DataInputStream data, ClassInfo target) throws IOException {
         int classIndex = data.readUnsignedShort();
         int index = data.readUnsignedShort();
-        if (index == 0) {
-            return; // Enclosed in a static or an instance variable
-        }
 
         DotName enclosingClass = decodeClassEntry(classIndex);
+
+        if (index == 0) {
+            // enclosed in a static/instance/field initializer
+            target.setEnclosingClassInInitializer(enclosingClass);
+            return;
+        }
+
         NameAndType nameAndType = decodeNameAndTypeEntry(index);
 
         IntegerHolder pos = new IntegerHolder();

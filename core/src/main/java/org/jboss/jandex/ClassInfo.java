@@ -32,8 +32,8 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * Represents a class entry in an index. A ClassInfo is only a partial view of a
- * Java class, it is not intended as a complete replacement for Java reflection.
+ * Represents a class entry in an index. A {@code ClassInfo} is only a partial view
+ * of a Java class, it is not intended as a complete replacement for Java reflection.
  * <p>
  * Global information including the parent class, implemented interfaces, and
  * access flags are also provided since this information is often necessary.
@@ -75,18 +75,23 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
 
     /** Describes the form of nesting used by a class */
     public enum NestingType {
-        /** A standard class declared within its own source unit */
+        /** A standard class declared within its own source unit. */
         TOP_LEVEL,
 
-        /** A named class directly enclosed within another class */
-        // better name would be MEMBER, because this includes static nested classes (which are _not_ inner)
-        // and doesn't include local/anonymous classes (which _are_ inner)
+        /**
+         * A named class directly enclosed within another class.
+         * <p>
+         * This would ideally be named {@code MEMBER}, because it includes static nested
+         * classes (which are <em>not</em> inner) and doesn't include local/anonymous
+         * classes (which <em>are</em> inner), but we keep the name {@code INNER}
+         * to not break compatibility.
+         */
         INNER,
 
-        /** A named class enclosed within a code block */
+        /** A named class enclosed within a code block. */
         LOCAL,
 
-        /** An unnamed class enclosed within a code block */
+        /** An unnamed class enclosed within a code block. */
         ANONYMOUS
     }
 
@@ -104,6 +109,10 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         private DotName enclosingClass;
         private String simpleName;
         private EnclosingMethodInfo enclosingMethod;
+
+        // only set if this class is local/anonymous class declared in static/instance/field initializer
+        // this is different from `enclosingClass` for backward compatibility reasons
+        private DotName enclosingClassInInitializer;
     }
 
     /**
@@ -117,7 +126,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         private DotName enclosingClass;
 
         /**
-         * The name of the method or constructor
+         * Returns the name of the method or constructor.
          *
          * @return the name of the method or constructor
          */
@@ -126,7 +135,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         }
 
         /**
-         * Returns the return type of the method.
+         * Returns the return type of the enclosing method.
          *
          * @return the return type
          */
@@ -135,10 +144,11 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         }
 
         /**
-         * Returns the list of parameters declared by this method or constructor.
-         * This may be empty, but never null.
+         * Returns the list of parameter types declared by the enclosing method or constructor.
+         * <p>
+         * The list may be empty, but never {@code null}.
          *
-         * @return the list of parameters.
+         * @return the list of parameter types
          */
         public List<Type> parameters() {
             return new ImmutableArrayList<>(parameters);
@@ -149,9 +159,9 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         }
 
         /**
-         * Returns the class name which declares this method or constructor.
+         * Returns the name of the class which declares the enclosing method or constructor.
          *
-         * @return the name of the class which declared this method or constructor
+         * @return the name of the class which declares the enclosing method or constructor
          */
         public DotName enclosingClass() {
             return enclosingClass;
@@ -1197,8 +1207,8 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
     }
 
     /**
-     * Returns the enclosing class if this is a member class, or {@code null} if this is a top-level,
-     * local or anonymous class.
+     * Returns the name of the enclosing class if this class is a member class.
+     * Returns {@code null} if this class is a top-level, local or anonymous class.
      *
      * @return the enclosing class if this class is a member class
      */
@@ -1206,16 +1216,42 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         return nestingInfo != null ? nestingInfo.enclosingClass : null;
     }
 
+    DotName enclosingClassInInitializer() {
+        return nestingInfo != null ? nestingInfo.enclosingClassInInitializer : null;
+    }
+
     /**
      * Returns the enclosing method of this class if it is a local or anonymous class declared
-     * within the body of a method or constructor. Returns {@code null} if this class is a top level or a member class
-     * or if the local or anonymous class is declared within a class or instance initializer.
+     * within the body of a method or constructor. Returns {@code null} if this class is a top level
+     * or member class or if the local or anonymous class is declared within a class initializer,
+     * instance initializer or field initializer.
      *
      * @return the enclosing method/constructor, if this class is a local or anonymous class
      *         declared within a method or constructor, otherwise {@code null}
      */
     public EnclosingMethodInfo enclosingMethod() {
         return nestingInfo != null ? nestingInfo.enclosingMethod : null;
+    }
+
+    /**
+     * Returns the name of the enclosing class if this class is a member, local
+     * or anonymous class. Returns {@code null} if this class is a top-level class.
+     *
+     * @return the enclosing class
+     */
+    public DotName enclosingClassAlways() {
+        if (nestingInfo != null) {
+            if (nestingInfo.enclosingClass != null) {
+                return nestingInfo.enclosingClass;
+            }
+            if (nestingInfo.enclosingMethod != null) {
+                return nestingInfo.enclosingMethod.enclosingClass();
+            }
+            if (nestingInfo.enclosingClassInInitializer != null) {
+                return nestingInfo.enclosingClassInInitializer;
+            }
+        }
+        return null;
     }
 
     /**
@@ -1528,6 +1564,18 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
 
         nestingInfo.enclosingClass = enclosingClass;
         nestingInfo.simpleName = simpleName;
+    }
+
+    void setEnclosingClassInInitializer(DotName enclosingClass) {
+        if (enclosingClass == null) {
+            return;
+        }
+
+        if (nestingInfo == null) {
+            nestingInfo = new NestingInfo();
+        }
+
+        nestingInfo.enclosingClassInInitializer = enclosingClass;
     }
 
     void setMemberClasses(Set<DotName> memberClasses) {

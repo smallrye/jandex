@@ -58,9 +58,11 @@ Updating to a newer minor or major version may require consumers of the Jandex i
 For reference, this table shows which Jandex version produces which persistent format version by default.
 It is also a maximum persistent index format version the given Jandex version can read.
 
-
 |===
 |Jandex version |Persistent format version
+
+|Jandex 3.3.x
+|13
 
 |Jandex 3.2.x
 |12

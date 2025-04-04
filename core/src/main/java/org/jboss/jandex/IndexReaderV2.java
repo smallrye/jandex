@@ -50,7 +50,7 @@ import java.util.Set;
  */
 final class IndexReaderV2 extends IndexReaderImpl {
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 12;
+    static final int MAX_VERSION = 13;
     private static final byte NULL_TARGET_TAG = 0;
     private static final byte FIELD_TAG = 1;
     private static final byte METHOD_TAG = 2;
@@ -613,12 +613,16 @@ final class IndexReaderV2 extends IndexReaderImpl {
         }
 
         DotName enclosingClass = null;
-        ClassInfo.EnclosingMethodInfo enclosingMethod = null;
         String simpleName = null;
+        DotName enclosingClassInInitializer = null;
+        ClassInfo.EnclosingMethodInfo enclosingMethod = null;
 
         if (hasNesting) {
             enclosingClass = nameTable[stream.readPackedU32()];
             simpleName = stringTable[stream.readPackedU32()];
+            if (version >= 13) {
+                enclosingClassInInitializer = nameTable[stream.readPackedU32()];
+            }
             enclosingMethod = hasEnclosingMethod ? readEnclosingMethod(stream) : null;
         }
 
@@ -658,6 +662,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             // Version 8 and earlier records inner type info regardless of
             // whether or not it is an inner type
             clazz.setInnerClassInfo(enclosingClass, simpleName, version >= 9);
+            clazz.setEnclosingClassInInitializer(enclosingClassInInitializer);
         }
         if (memberClasses != null) {
             clazz.setMemberClasses(memberClasses);

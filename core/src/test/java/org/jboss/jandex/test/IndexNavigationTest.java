@@ -136,6 +136,23 @@ public class IndexNavigationTest {
         assertCollection(index.getAllKnownSubinterfaces(IChild.class), IGrandchild1.class, IGrandchild1.class,
                 IGrandchild2.class);
 
+        assertCollection(index.getKnownDirectImplementations(IGrandparent.class), CGrandparent.class);
+        assertCollection(index.getKnownDirectImplementations(IParent.class), CParent.class);
+        assertCollection(index.getKnownDirectImplementations(IChild.class), CChild.class, CChild.class);
+        assertCollection(index.getKnownDirectImplementations(ISibling.class), CSibling.class);
+        assertCollection(index.getKnownDirectImplementations(IGrandchild1.class), CGrandchild1.class, CGrandchild1.class);
+        assertCollection(index.getKnownDirectImplementations(IGrandchild2.class), CGrandchild2.class);
+
+        assertCollection(index.getAllKnownImplementations(IGrandparent.class), CGrandparent.class, CParent.class, CChild.class,
+                CGrandchild1.class, CChild.class, CSibling.class, CGrandchild1.class, CGrandchild2.class);
+        assertCollection(index.getAllKnownImplementations(IParent.class), CParent.class, CChild.class, CGrandchild1.class,
+                CChild.class, CSibling.class, CGrandchild1.class, CGrandchild2.class);
+        // doesn't behave as expected, but the behavior is actually not defined
+        //assertCollection(index.getAllKnownImplementations(IChild.class), CChild.class, CGrandchild1.class, CChild.class, CGrandchild1.class, CGrandchild2.class);
+        assertCollection(index.getAllKnownImplementations(ISibling.class), CSibling.class);
+        assertCollection(index.getAllKnownImplementations(IGrandchild1.class), CGrandchild1.class);
+        assertCollection(index.getAllKnownImplementations(IGrandchild2.class), CGrandchild2.class);
+
         assertCollection(index.getKnownDirectImplementors(IGrandparent.class), CGrandparent.class, IParent.class);
         assertCollection(index.getKnownDirectImplementors(IParent.class), IChild.class, CParent.class, IChild.class,
                 ISibling.class);
@@ -193,6 +210,8 @@ public class IndexNavigationTest {
         testAllSubclasses(index);
         testDirectSubinterfaces(index);
         testAllSubinterfaces(index);
+        testDirectImplementations(index);
+        testAllImplementations(index);
         testDirectImplementors(index);
         testAllImplementors(index);
         testClassesInPackage(index);
@@ -267,6 +286,40 @@ public class IndexNavigationTest {
         assertCollection(index.getAllKnownSubinterfaces(CSibling.class));
         assertCollection(index.getAllKnownSubinterfaces(CGrandchild1.class));
         assertCollection(index.getAllKnownSubinterfaces(CGrandchild2.class));
+    }
+
+    private void testDirectImplementations(IndexView index) {
+        assertCollection(index.getKnownDirectImplementations(Object.class));
+        assertCollection(index.getKnownDirectImplementations(IGrandparent.class), CGrandparent.class);
+        assertCollection(index.getKnownDirectImplementations(IParent.class), CParent.class);
+        assertCollection(index.getKnownDirectImplementations(IChild.class), CChild.class);
+        assertCollection(index.getKnownDirectImplementations(ISibling.class), CSibling.class);
+        assertCollection(index.getKnownDirectImplementations(IGrandchild1.class), CGrandchild1.class);
+        assertCollection(index.getKnownDirectImplementations(IGrandchild2.class), CGrandchild2.class);
+        assertCollection(index.getKnownDirectImplementations(CGrandparent.class));
+        assertCollection(index.getKnownDirectImplementations(CParent.class));
+        assertCollection(index.getKnownDirectImplementations(CChild.class));
+        assertCollection(index.getKnownDirectImplementations(CSibling.class));
+        assertCollection(index.getKnownDirectImplementations(CGrandchild1.class));
+        assertCollection(index.getKnownDirectImplementations(CGrandchild2.class));
+    }
+
+    private void testAllImplementations(IndexView index) {
+        assertCollection(index.getAllKnownImplementations(Object.class));
+        assertCollection(index.getAllKnownImplementations(IGrandparent.class), CGrandparent.class, CParent.class, CChild.class,
+                CSibling.class, CGrandchild1.class, CGrandchild2.class);
+        assertCollection(index.getAllKnownImplementations(IParent.class), CParent.class, CChild.class, CSibling.class,
+                CGrandchild1.class, CGrandchild2.class);
+        assertCollection(index.getAllKnownImplementations(IChild.class), CChild.class, CGrandchild1.class, CGrandchild2.class);
+        assertCollection(index.getAllKnownImplementations(ISibling.class), CSibling.class);
+        assertCollection(index.getAllKnownImplementations(IGrandchild1.class), CGrandchild1.class);
+        assertCollection(index.getAllKnownImplementations(IGrandchild2.class), CGrandchild2.class);
+        assertCollection(index.getAllKnownImplementations(CGrandparent.class));
+        assertCollection(index.getAllKnownImplementations(CParent.class));
+        assertCollection(index.getAllKnownImplementations(CChild.class));
+        assertCollection(index.getAllKnownImplementations(CSibling.class));
+        assertCollection(index.getAllKnownImplementations(CGrandchild1.class));
+        assertCollection(index.getAllKnownImplementations(CGrandchild2.class));
     }
 
     private void testDirectImplementors(IndexView index) {

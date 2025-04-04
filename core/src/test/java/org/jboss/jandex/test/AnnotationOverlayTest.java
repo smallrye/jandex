@@ -397,6 +397,16 @@ public class AnnotationOverlayTest {
         }
 
         @Override
+        public Collection<ClassInfo> getKnownDirectImplementations(DotName interfaceName) {
+            return delegate.getKnownDirectImplementations(interfaceName);
+        }
+
+        @Override
+        public Collection<ClassInfo> getAllKnownImplementations(DotName interfaceName) {
+            return delegate.getAllKnownImplementations(interfaceName);
+        }
+
+        @Override
         public Collection<ClassInfo> getKnownDirectImplementors(DotName interfaceName) {
             return delegate.getKnownDirectImplementors(interfaceName);
         }

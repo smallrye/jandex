@@ -70,7 +70,7 @@ public final class Index implements IndexView {
     final Map<DotName, AnnotationInstance[]> annotations;
     final Map<DotName, ClassInfo[]> subclasses;
     final Map<DotName, ClassInfo[]> subinterfaces;
-    final Map<DotName, ClassInfo[]> implementors;
+    final Map<DotName, ClassInfo[]> implementors; // note this also includes direct subinterfaces!
     final Map<DotName, ClassInfo> classes;
     final Map<DotName, ModuleInfo> modules;
     final Map<DotName, ClassInfo[]> users;
@@ -442,6 +442,37 @@ public final class Index implements IndexView {
         }
 
         return result;
+    }
+
+    @Override
+    public Collection<ClassInfo> getKnownDirectImplementations(DotName interfaceName) {
+        ClassInfo[] list = implementors.get(interfaceName);
+        if (list == null) {
+            return EMPTY_CLASSINFO_LIST;
+        }
+        List<ClassInfo> result = null;
+        for (int i = 0; i < list.length; i++) {
+            ClassInfo clazz = list[i];
+            if (clazz.isInterface()) {
+                if (result == null) {
+                    result = new ArrayList<>();
+                    for (int j = 0; j < i; j++) {
+                        result.add(list[j]);
+                    }
+                }
+            } else {
+                if (result != null) {
+                    result.add(clazz);
+                }
+            }
+        }
+        return result != null ? Collections.unmodifiableList(result) : new ImmutableArrayList<>(list);
+    }
+
+    @Override
+    public Collection<ClassInfo> getAllKnownImplementations(DotName interfaceName) {
+        // no difference here
+        return getAllKnownImplementors(interfaceName);
     }
 
     /**

@@ -344,6 +344,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      * performs a defensive copy, so {@link #interfaceNames()} should be used instead.
      *
      * @return an array of interface names implemented by this class
+     * @deprecated use {@link #interfaceNames()}
      */
     @Deprecated
     public final DotName[] interfaces() {

@@ -74,6 +74,7 @@ public final class IndexWriter {
      * @param version the index file version
      * @return the number of bytes written to the stream
      * @throws IOException if any i/o error occurs
+     * @deprecated use {@link #write(Index, int)}
      */
     @Deprecated
     public int write(Index index, byte version) throws IOException {

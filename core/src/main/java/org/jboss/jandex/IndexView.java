@@ -311,6 +311,7 @@ public interface IndexView {
      *
      * @param interfaceName The interface
      * @return All known direct implementors of the interface
+     * @deprecated use {@link #getKnownDirectImplementations(DotName)}
      */
     @Deprecated
     Collection<ClassInfo> getKnownDirectImplementors(DotName interfaceName);
@@ -331,6 +332,7 @@ public interface IndexView {
      *
      * @param interfaceName The interface
      * @return All known direct implementors of the interface
+     * @deprecated use {@link #getKnownDirectImplementations(String)}
      */
     @Deprecated
     default Collection<ClassInfo> getKnownDirectImplementors(String interfaceName) {
@@ -353,6 +355,7 @@ public interface IndexView {
      *
      * @param interfaceClass The interface
      * @return All known direct implementors of the interface
+     * @deprecated use {@link #getKnownDirectImplementations(Class)}
      */
     @Deprecated
     default Collection<ClassInfo> getKnownDirectImplementors(Class<?> interfaceClass) {
@@ -370,6 +373,7 @@ public interface IndexView {
      *
      * @param interfaceName The interface
      * @return All known implementors of the interface
+     * @deprecated use {@link #getAllKnownImplementations(DotName)}
      */
     @Deprecated
     Collection<ClassInfo> getAllKnownImplementors(final DotName interfaceName);
@@ -385,6 +389,7 @@ public interface IndexView {
      *
      * @param interfaceName The interface
      * @return All known implementors of the interface
+     * @deprecated use {@link #getAllKnownImplementations(String)}
      */
     @Deprecated
     default Collection<ClassInfo> getAllKnownImplementors(final String interfaceName) {
@@ -402,6 +407,7 @@ public interface IndexView {
      *
      * @param interfaceClass The interface
      * @return All known implementors of the interface
+     * @deprecated use {@link #getAllKnownImplementations(Class)}
      */
     @Deprecated
     default Collection<ClassInfo> getAllKnownImplementors(final Class<?> interfaceClass) {

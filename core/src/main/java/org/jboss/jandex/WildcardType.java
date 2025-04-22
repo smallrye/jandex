@@ -42,7 +42,7 @@ public class WildcardType extends Type {
      * @return the new instance
      *
      * @since 2.1
-     * @deprecated use {@link #createUpperBound(Type)} or {@link #createLowerBound(Type)} instead
+     * @deprecated use {@link #createUpperBound(Type)} or {@link #createLowerBound(Type)}
      */
     @Deprecated
     public static WildcardType create(Type bound, boolean isExtends) {

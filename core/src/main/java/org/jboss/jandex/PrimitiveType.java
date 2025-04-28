@@ -140,6 +140,21 @@ public final class PrimitiveType extends Type {
     }
 
     /**
+     * Returns whether the given {@code type} is a wrapper class for any primitive type
+     * (or, in other words, whether the {@code type} may be a result of a boxing conversion
+     * of any primitive type.)
+     * <p>
+     * Returns {@code false} if {@code type} is not a {@link Type.Kind#CLASS} or when
+     * {@code type} is {@code null}.
+     *
+     * @param type the type to check, may be {@code null}
+     * @return whether the given {@code type} is a wrapper class for a primitive type
+     */
+    public static boolean isBox(Type type) {
+        return type != null && type.kind() == Kind.CLASS && unboxingMap.containsKey(type.name());
+    }
+
+    /**
      * Returns a primitive type that is the result of an unboxing conversion of the given {@code classType}.
      * <p>
      * Returns {@code null} if no unboxing conversion exists for given class type

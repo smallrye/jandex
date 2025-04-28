@@ -1,11 +1,15 @@
 package org.jboss.jandex.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.PrimitiveType;
+import org.jboss.jandex.TypeVariable;
+import org.jboss.jandex.WildcardType;
 import org.junit.jupiter.api.Test;
 
 public class PrimitiveTypeTest {
@@ -21,6 +25,32 @@ public class PrimitiveTypeTest {
         assertEquals(ClassType.create(Character.class), PrimitiveType.box(PrimitiveType.CHAR));
 
         assertNull(PrimitiveType.box(null));
+    }
+
+    @Test
+    public void isBox() {
+        assertTrue(PrimitiveType.isBox(ClassType.BOOLEAN_CLASS));
+        assertTrue(PrimitiveType.isBox(ClassType.BYTE_CLASS));
+        assertTrue(PrimitiveType.isBox(ClassType.SHORT_CLASS));
+        assertTrue(PrimitiveType.isBox(ClassType.INTEGER_CLASS));
+        assertTrue(PrimitiveType.isBox(ClassType.LONG_CLASS));
+        assertTrue(PrimitiveType.isBox(ClassType.FLOAT_CLASS));
+        assertTrue(PrimitiveType.isBox(ClassType.DOUBLE_CLASS));
+        assertTrue(PrimitiveType.isBox(ClassType.CHARACTER_CLASS));
+
+        assertFalse(PrimitiveType.isBox(PrimitiveType.BOOLEAN));
+        assertFalse(PrimitiveType.isBox(PrimitiveType.BYTE));
+        assertFalse(PrimitiveType.isBox(PrimitiveType.SHORT));
+        assertFalse(PrimitiveType.isBox(PrimitiveType.INT));
+        assertFalse(PrimitiveType.isBox(PrimitiveType.LONG));
+        assertFalse(PrimitiveType.isBox(PrimitiveType.FLOAT));
+        assertFalse(PrimitiveType.isBox(PrimitiveType.DOUBLE));
+        assertFalse(PrimitiveType.isBox(PrimitiveType.CHAR));
+
+        assertFalse(PrimitiveType.isBox(ClassType.OBJECT_TYPE));
+        assertFalse(PrimitiveType.isBox(TypeVariable.builder("T").addBound(ClassType.BOOLEAN_CLASS).build()));
+        assertFalse(PrimitiveType.isBox(WildcardType.createUpperBound(ClassType.INTEGER_CLASS)));
+        assertFalse(PrimitiveType.isBox(null));
     }
 
     @Test

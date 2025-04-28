@@ -89,7 +89,6 @@
                             <mainClass>org.jboss.jandex.Main</mainClass>
                         </manifest>
                         <manifestEntries>
-                            <Automatic-Module-Name>org.jboss.jandex</Automatic-Module-Name>
                             <Multi-Release>true</Multi-Release>
                         </manifestEntries>
                     </archive>
@@ -109,6 +108,24 @@
                         <_nouses>true</_nouses>
                     </instructions>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-info</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <module>
+                                <moduleInfoFile>src/main/module/module-info.java</moduleInfoFile>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jboss.bridger</groupId>

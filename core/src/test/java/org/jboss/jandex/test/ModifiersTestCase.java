@@ -26,12 +26,19 @@ public class ModifiersTestCase {
 
     @Test
     public void testClassIsAnnotation() throws IOException {
-        assertTrue(BasicTestCase.getClassInfo(BasicTestCase.TestAnnotation.class).isAnnotation());
+        assertTrue(Index.singleClass(BasicTestCase.TestAnnotation.class).isAnnotation());
     }
 
     @Test
     public void testClassIsEnum() throws IOException {
-        assertTrue(BasicTestCase.getClassInfo(FieldInfoTestCase.FieldInfoTestEnum.class).isEnum());
+        assertTrue(Index.singleClass(FieldInfoTestCase.FieldInfoTestEnum.class).isEnum());
+    }
+
+    @Test
+    public void testClassIsAbstract() throws IOException {
+        assertTrue(Index.singleClass(MyAbstractClass.class).isAbstract());
+        assertTrue(Index.singleClass(MyInterface.class).isAbstract());
+        assertFalse(Index.singleClass(DummyTopLevel.class).isAbstract());
     }
 
     @Test
@@ -65,17 +72,33 @@ public class ModifiersTestCase {
 
     @Test
     public void testMethodIsDefault() throws Exception {
-        ClassInfo clazz = BasicTestCase.getClassInfo(MyInterface.class);
+        ClassInfo clazz = Index.singleClass(MyInterface.class);
         assertTrue(clazz.method("defaultVal").isDefault());
         assertFalse(clazz.method("val").isDefault());
         assertFalse(clazz.method("age").isDefault());
-        MethodInfo constructor = BasicTestCase.getClassInfo(DummyTopLevel.class).method("<init>");
-        assertFalse(constructor.isDefault());
+
+        clazz = Index.singleClass(DummyTopLevel.class);
+        assertFalse(clazz.method("<init>").isDefault());
+    }
+
+    @Test
+    public void testMethodIsAbstract() throws Exception {
+        ClassInfo clazz = Index.singleClass(MyInterface.class);
+        assertFalse(clazz.method("defaultVal").isAbstract());
+        assertTrue(clazz.method("val").isAbstract());
+        assertFalse(clazz.method("age").isAbstract());
+
+        clazz = Index.singleClass(MyAbstractClass.class);
+        assertTrue(clazz.method("hello").isAbstract());
+        assertFalse(clazz.method("answer").isAbstract());
+
+        clazz = Index.singleClass(DummyTopLevel.class);
+        assertFalse(clazz.method("<init>").isAbstract());
     }
 
     @Test
     public void testMethodIsBridge() throws Exception {
-        ClassInfo clazz = BasicTestCase.getClassInfo(FooWithBridge.class);
+        ClassInfo clazz = Index.singleClass(FooWithBridge.class);
         List<MethodInfo> acceptMethods = clazz.methods().stream().filter(m -> m.name().equals("accept"))
                 .collect(Collectors.toList());
         assertEquals(2, acceptMethods.size());
@@ -123,6 +146,14 @@ public class ModifiersTestCase {
             return true;
         }
 
+    }
+
+    abstract class MyAbstractClass {
+        abstract void hello();
+
+        int answer() {
+            return 42;
+        }
     }
 
     public static class FooWithBridge implements Consumer<String> {

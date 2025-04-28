@@ -623,6 +623,13 @@ public final class MethodInfo implements Declaration, Descriptor, GenericSignatu
     }
 
     /**
+     * @return {@code true} if this method is {@code abstract}
+     */
+    public boolean isAbstract() {
+        return Modifier.isAbstract(methodInternal.flags());
+    }
+
+    /**
      * Returns whether this method must have a generic signature. That is, whether the Java compiler
      * when compiling this method had to emit the {@code Signature} bytecode attribute.
      *

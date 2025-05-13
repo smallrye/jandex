@@ -1200,7 +1200,14 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
      * @return the simple name of a top-level, member or local class, or {@code null} if this is an anonymous class
      */
     public String simpleName() {
-        return nestingInfo != null ? nestingInfo.simpleName : name.local();
+        // it would be enough to always call `name.withoutPackagePrefix()`, but we want to avoid needless allocations
+        if (nestingInfo != null) {
+            return nestingInfo.simpleName;
+        } else if (name.isComponentized() && !name.isInner()) {
+            return name.local();
+        } else {
+            return name.withoutPackagePrefix();
+        }
     }
 
     String nestingSimpleName() {

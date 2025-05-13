@@ -74,6 +74,9 @@ import org.jboss.jandex.Type;
 import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
+class Top$Level {
+}
+
 public class BasicTestCase {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface FieldAnnotation {
@@ -219,6 +222,9 @@ public class BasicTestCase {
     }
 
     public class NestedD implements Serializable {
+    }
+
+    public static class Nested$E {
     }
 
     public static class NoEnclosureAnonTest {
@@ -456,18 +462,17 @@ public class BasicTestCase {
     public void testSimpleName() throws IOException {
         class MyLocal {
         }
-        assertEquals("NestedC", getIndexForClasses(NestedC.class)
-                .getClassByName(DotName.createSimple(NestedC.class.getName())).simpleName());
-        assertEquals("BasicTestCase", getIndexForClasses(BasicTestCase.class)
-                .getClassByName(DotName.createSimple(BasicTestCase.class.getName())).simpleName());
-        assertEquals("MyLocal", getIndexForClasses(MyLocal.class)
-                .getClassByName(DotName.createSimple(MyLocal.class.getName())).simpleName());
-        assertEquals("String", getIndexForClasses(String.class)
-                .getClassByName(DotName.createSimple(String.class.getName())).simpleName());
+        assertEquals("Top$Level", Index.singleClass(Top$Level.class).simpleName());
+        assertEquals("BasicTestCase", Index.singleClass(BasicTestCase.class).simpleName());
+        assertEquals("String", Index.singleClass(String.class).simpleName());
+        assertEquals("NestedC", Index.singleClass(NestedC.class).simpleName());
+        assertEquals("NestedD", Index.singleClass(NestedD.class).simpleName());
+        assertEquals("Nested$E", Index.singleClass(Nested$E.class).simpleName());
+        assertEquals("MyLocal", Index.singleClass(MyLocal.class).simpleName());
         // @formatter:off
         Class<?> anon = new Object() {}.getClass();
         // @formatter:on
-        assertNull(getIndexForClasses(anon).getClassByName(DotName.createSimple(anon.getName())).simpleName());
+        assertNull(Index.singleClass(anon).simpleName());
     }
 
     @Test
@@ -716,19 +721,19 @@ public class BasicTestCase {
     }
 
     private void assertHasNoArgsConstructor(Class<?> clazz, boolean result) throws IOException {
-        ClassInfo classInfo = getIndexForClasses(clazz).getClassByName(DotName.createSimple(clazz.getName()));
+        ClassInfo classInfo = Index.singleClass(clazz);
         assertNotNull(classInfo);
         assertEquals(result, classInfo.hasNoArgsConstructor());
     }
 
     private void assertFlagSet(Class<?> clazz, int flag, boolean result) throws IOException {
-        ClassInfo classInfo = getIndexForClasses(clazz).getClassByName(DotName.createSimple(clazz.getName()));
+        ClassInfo classInfo = Index.singleClass(clazz);
         assertNotNull(classInfo);
-        assertTrue((classInfo.flags() & flag) == (result ? flag : 0));
+        assertEquals(result ? flag : 0, classInfo.flags() & flag);
     }
 
     private void assertNesting(Class<?> clazz, ClassInfo.NestingType nesting, boolean result) throws IOException {
-        ClassInfo classInfo = getIndexForClasses(clazz).getClassByName(DotName.createSimple(clazz.getName()));
+        ClassInfo classInfo = Index.singleClass(clazz);
         assertNotNull(classInfo);
         if (result) {
             assertEquals(nesting, classInfo.nestingType());
@@ -737,17 +742,9 @@ public class BasicTestCase {
         }
     }
 
-    static Index getIndexForClasses(Class<?>... classes) throws IOException {
-        return Index.of(classes);
-    }
-
-    static ClassInfo getClassInfo(Class<?> clazz) throws IOException {
-        return getIndexForClasses(clazz).getClassByName(DotName.createSimple(clazz.getName()));
-    }
-
     @Test
     public void testClassConstantIndexing() throws IOException, URISyntaxException {
-        Index index = getIndexForClasses(DummyClass.class, ApiClass.class, ApiUser.class);
+        Index index = Index.of(DummyClass.class, ApiClass.class, ApiUser.class);
         DotName apiClassDotName = DotName.createSimple(ApiClass.class.getName());
         List<ClassInfo> users = index.getKnownUsers(apiClassDotName);
         assertEquals(2, users.size());

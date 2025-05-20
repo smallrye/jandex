@@ -10,7 +10,7 @@
 
     <groupId>org.jboss</groupId>
     <artifactId>jandex</artifactId>
-    <version>3.3.0</version>
+    <version>3.3.1</version>
     <packaging>pom</packaging>
 
     <distributionManagement>

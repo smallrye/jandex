@@ -1,13 +1,14 @@
 package org.jboss.jandex;
 
-import org.jboss.jandex.PrimitiveType.Primitive;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.jboss.jandex.PrimitiveType.Primitive;
 
 /**
  * Establishes a notion of <em>equivalence</em> of Jandex objects. Two Jandex objects are equivalent if and only if
@@ -504,31 +505,20 @@ public abstract class EquivalenceKey {
 
     public static final class ClassTypeEquivalenceKey extends TypeEquivalenceKey {
 
-        // static instances for some usual suspects
-        private static final ClassTypeEquivalenceKey OBJECT_EQUIVALENCE_KEY = new ClassTypeEquivalenceKey(DotName.OBJECT_NAME);
-        private static final ClassTypeEquivalenceKey STRING_EQUIVALENCE_KEY = new ClassTypeEquivalenceKey(DotName.STRING_NAME);
-        private static final ClassTypeEquivalenceKey LONG_EQUIVALENCE_KEY = new ClassTypeEquivalenceKey(DotName.LONG_NAME);
-        private static final ClassTypeEquivalenceKey INTEGER_EQUIVALENCE_KEY = new ClassTypeEquivalenceKey(
-                DotName.INTEGER_NAME);
-        private static final ClassTypeEquivalenceKey VOID_EQUIVALENCE_KEY = new ClassTypeEquivalenceKey(DotName.VOID_NAME);
+        // These keys are especially used so we have a cache for them
+        private static final ConcurrentHashMap<DotName, ClassTypeEquivalenceKey> CACHE = new ConcurrentHashMap<>();
 
         private final DotName name;
         private final int hashCode;
 
         private static ClassTypeEquivalenceKey of(DotName name) {
-            if (DotName.OBJECT_NAME.equals(name)) {
-                return OBJECT_EQUIVALENCE_KEY;
-            } else if (DotName.STRING_NAME.equals(name)) {
-                return STRING_EQUIVALENCE_KEY;
-            } else if (DotName.LONG_NAME.equals(name)) {
-                return LONG_EQUIVALENCE_KEY;
-            } else if (DotName.INTEGER_NAME.equals(name)) {
-                return INTEGER_EQUIVALENCE_KEY;
-            } else if (DotName.VOID_NAME.equals(name)) {
-                return VOID_EQUIVALENCE_KEY;
+            ClassTypeEquivalenceKey equivalenceKey = CACHE.get(name);
+
+            if (equivalenceKey != null) {
+                return equivalenceKey;
             }
 
-            return new ClassTypeEquivalenceKey(name);
+            return CACHE.computeIfAbsent(name, ClassTypeEquivalenceKey::new);
         }
 
         private ClassTypeEquivalenceKey(DotName name) {

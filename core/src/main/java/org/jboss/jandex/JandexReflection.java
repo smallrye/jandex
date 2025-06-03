@@ -185,7 +185,9 @@ public class JandexReflection {
         public int hashCode() {
             // this `hashCode()` is not compatible with the JDK, but that doesn't really matter,
             // because it's not possible to implement a compatible `equals()` anyway
-            return Objects.hash(name, Arrays.hashCode(bounds));
+            int result = Objects.hashCode(name);
+            result = 31 * result + Arrays.hashCode(bounds);
+            return result;
         }
 
         @Override

@@ -29,6 +29,8 @@ package org.jboss.jandex;
 public final class ClassType extends Type {
 
     public static final ClassType OBJECT_TYPE = new ClassType(DotName.OBJECT_NAME);
+    public static final ClassType STRING_TYPE = new ClassType(DotName.STRING_NAME);
+    public static final ClassType CLASS_TYPE = new ClassType(DotName.CLASS_NAME);
 
     public static final ClassType BYTE_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Byte"));
     public static final ClassType CHARACTER_CLASS = new ClassType(

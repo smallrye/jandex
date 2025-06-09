@@ -24,8 +24,8 @@ import java.util.Objects;
 
 /**
  * Represents a resolved type parameter or type argument. The {@code name()} of this type variable
- * corresponds to the raw type name. For type variables, the raw type name is the first upper bound. The
- * {@code identifier()} is the name of the type variable as present in the source code.
+ * corresponds to the raw type name. For type variables, the raw type name is the first declared bound.
+ * The {@code identifier()} is the name of the type variable as present in the source code.
  * <p>
  * For example:
  *
@@ -34,6 +34,16 @@ import java.util.Objects;
  * </pre>
  *
  * In this case, the identifier is {@code T}, while the name is {@code java.lang.Number}.
+ * <p>
+ * Type variables may have bounds. There are three possibilities:
+ * <ol>
+ * <li>no bounds</li>
+ * <li>one bound, which is a type variable</li>
+ * <li>multiple bounds, where the first may be a class type, and the rest must be interface types</li>
+ * </ol>
+ *
+ * In the last case, the {@link #hasImplicitObjectBound()} method may be used to discover
+ * whether the first class bound was declared or not.
  *
  * @since 2.0
  * @author Jason T. Greene
@@ -128,7 +138,13 @@ public final class TypeVariable extends Type {
         return bounds;
     }
 
-    boolean hasImplicitObjectBound() {
+    /**
+     * Returns whether this type variable has an implicit (undeclared) bound of type {@code Object}.
+     * If so, all {@link #bounds()} are interface types.
+     *
+     * @return whether this type variable has an implicit (undeclared) bound of type {@code Object}
+     */
+    public boolean hasImplicitObjectBound() {
         return (hash & IMPLICIT_MASK) != 0;
     }
 
@@ -248,15 +264,36 @@ public final class TypeVariable extends Type {
 
         private final String identifier;
         private final List<Type> bounds;
+        private boolean hasImplicitObjectBound;
 
         Builder(String identifier) {
             super(DotName.OBJECT_NAME);
             this.identifier = identifier;
             this.bounds = new ArrayList<>();
+            this.hasImplicitObjectBound = false;
         }
 
         /**
-         * Adds a bound.
+         * Marks the built type variable as having an implicit (not declared) bound of {@code Object}.
+         * It follows that all bounds added via {@link #addBound(Type)}, if any, are interface types.
+         * The erasure of the type variable is <em>not</em> necessarily {@code Object} though; if any
+         * interface bounds are added via {@link #addBound(Type)}, the first such interface type
+         * is the erasure.
+         *
+         * @return this builder
+         * @since 3.3.2
+         */
+        public Builder implicitObjectBound() {
+            this.hasImplicitObjectBound = true;
+            return this;
+        }
+
+        /**
+         * Adds a bound. The first bound may be a class type or a type variable.
+         * If the first bound is a class type (or if the type variable has
+         * an {@link #implicitObjectBound()}), the subsequent bounds must be
+         * interface types. If the first bound is a type variable, there may be
+         * no subsequent bounds.
          *
          * @param bound the bound, must not be {@code null}
          * @return this builder
@@ -267,7 +304,11 @@ public final class TypeVariable extends Type {
         }
 
         /**
-         * Adds a bound.
+         * Adds a bound. The first bound may be a class type or a type variable.
+         * If the first bound is a class type (or if the type variable has
+         * an {@link #implicitObjectBound()}), the subsequent bounds must be
+         * interface types. If the first bound is a type variable, there may be
+         * no subsequent bounds.
          *
          * @param clazz the class whose type is added as a bound, must not be {@code null}
          * @return this builder
@@ -284,7 +325,7 @@ public final class TypeVariable extends Type {
         public TypeVariable build() {
             return new TypeVariable(identifier,
                     bounds.isEmpty() ? new Type[] { ClassType.OBJECT_TYPE } : bounds.toArray(EMPTY_ARRAY),
-                    annotationsArray());
+                    annotationsArray(), hasImplicitObjectBound);
         }
 
     }

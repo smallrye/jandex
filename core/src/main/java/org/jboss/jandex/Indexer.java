@@ -2102,7 +2102,7 @@ public final class Indexer {
                 return new AnnotationValue.NestedAnnotation(name, processAnnotation(data, null, true));
             case '[': {
                 int numValues = data.readUnsignedShort();
-                AnnotationValue values[] = new AnnotationValue[numValues];
+                AnnotationValue[] values = new AnnotationValue[numValues];
                 for (int i = 0; i < numValues; i++)
                     values[i] = processAnnotationElementValue("", data);
                 return new AnnotationValue.ArrayValue(name, values);

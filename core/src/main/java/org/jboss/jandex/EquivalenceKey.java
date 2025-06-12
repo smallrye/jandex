@@ -6,6 +6,9 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.jboss.jandex.PrimitiveType.Primitive;
 
 /**
  * Establishes a notion of <em>equivalence</em> of Jandex objects. Two Jandex objects are equivalent if and only if
@@ -204,12 +207,12 @@ public abstract class EquivalenceKey {
                 return new ArrayTypeEquivalenceKey(of(type.asArrayType().constituent()),
                         type.asArrayType().dimensions());
             case CLASS:
-                return new ClassTypeEquivalenceKey(type.asClassType().name());
+                return ClassTypeEquivalenceKey.of(type.asClassType().name());
             case PARAMETERIZED_TYPE:
                 return new ParameterizedTypeEquivalenceKey(type.asParameterizedType().name(),
                         of(type.asParameterizedType().argumentsArray()));
             case PRIMITIVE:
-                return new PrimitiveTypeEquivalenceKey(type.asPrimitiveType().primitive());
+                return PrimitiveTypeEquivalenceKey.of(type.asPrimitiveType().primitive());
             case TYPE_VARIABLE:
                 return new TypeVariableEquivalenceKey(type.asTypeVariable().identifier(),
                         of(type.asTypeVariable().boundArray()));
@@ -282,7 +285,7 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            return Objects.hash(className);
+            return Objects.hashCode(className);
         }
 
         @Override
@@ -320,7 +323,8 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            int result = Objects.hash(className, returnType);
+            int result = Objects.hashCode(className);
+            result = 31 * result + Objects.hashCode(returnType);
             result = 31 * result + Arrays.hashCode(methodName);
             result = 31 * result + Arrays.hashCode(parameterTypes);
             return result;
@@ -359,7 +363,9 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            return Objects.hash(method, position);
+            int result = Objects.hashCode(method);
+            result = 31 * result + Objects.hashCode(position);
+            return result;
         }
 
         @Override
@@ -392,7 +398,8 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            int result = Objects.hash(className, type);
+            int result = Objects.hashCode(className);
+            result = 31 * result + Objects.hashCode(type);
             result = 31 * result + Arrays.hashCode(fieldName);
             return result;
         }
@@ -429,7 +436,8 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            int result = Objects.hash(className, type);
+            int result = Objects.hashCode(className);
+            result = 31 * result + Objects.hashCode(type);
             result = 31 * result + Arrays.hashCode(recordComponentName);
             return result;
         }
@@ -468,7 +476,9 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            return Objects.hash(constituent, dimensions);
+            int result = Objects.hashCode(constituent);
+            result = 31 * result + Integer.hashCode(dimensions);
+            return result;
         }
 
         @Override
@@ -494,10 +504,26 @@ public abstract class EquivalenceKey {
     }
 
     public static final class ClassTypeEquivalenceKey extends TypeEquivalenceKey {
+
+        // These keys are especially used so we have a cache for them
+        private static final ConcurrentHashMap<DotName, ClassTypeEquivalenceKey> CACHE = new ConcurrentHashMap<>();
+
         private final DotName name;
+        private final int hashCode;
+
+        private static ClassTypeEquivalenceKey of(DotName name) {
+            ClassTypeEquivalenceKey equivalenceKey = CACHE.get(name);
+
+            if (equivalenceKey != null) {
+                return equivalenceKey;
+            }
+
+            return CACHE.computeIfAbsent(name, ClassTypeEquivalenceKey::new);
+        }
 
         private ClassTypeEquivalenceKey(DotName name) {
             this.name = name;
+            this.hashCode = buildHashCode(name);
         }
 
         @Override
@@ -512,7 +538,11 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            return Objects.hash(name);
+            return hashCode;
+        }
+
+        private static int buildHashCode(DotName name) {
+            return Objects.hashCode(name);
         }
 
         @Override
@@ -542,7 +572,7 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            int result = Objects.hash(genericClass);
+            int result = Objects.hashCode(genericClass);
             result = 31 * result + Arrays.hashCode(typeArguments);
             return result;
         }
@@ -568,10 +598,54 @@ public abstract class EquivalenceKey {
     }
 
     public static final class PrimitiveTypeEquivalenceKey extends TypeEquivalenceKey {
+
+        private static final PrimitiveTypeEquivalenceKey BOOLEAN_EQUIVALENCE_KEY = new PrimitiveTypeEquivalenceKey(
+                Primitive.BOOLEAN);
+        private static final PrimitiveTypeEquivalenceKey BYTE_EQUIVALENCE_KEY = new PrimitiveTypeEquivalenceKey(
+                Primitive.BYTE);
+        private static final PrimitiveTypeEquivalenceKey CHAR_EQUIVALENCE_KEY = new PrimitiveTypeEquivalenceKey(
+                Primitive.CHAR);
+        private static final PrimitiveTypeEquivalenceKey DOUBLE_EQUIVALENCE_KEY = new PrimitiveTypeEquivalenceKey(
+                Primitive.DOUBLE);
+        private static final PrimitiveTypeEquivalenceKey FLOAT_EQUIVALENCE_KEY = new PrimitiveTypeEquivalenceKey(
+                Primitive.FLOAT);
+        private static final PrimitiveTypeEquivalenceKey INT_EQUIVALENCE_KEY = new PrimitiveTypeEquivalenceKey(
+                Primitive.INT);
+        private static final PrimitiveTypeEquivalenceKey LONG_EQUIVALENCE_KEY = new PrimitiveTypeEquivalenceKey(
+                Primitive.LONG);
+        private static final PrimitiveTypeEquivalenceKey SHORT_EQUIVALENCE_KEY = new PrimitiveTypeEquivalenceKey(
+                Primitive.SHORT);
+
         private final PrimitiveType.Primitive kind;
+        private final int hashCode;
 
         private PrimitiveTypeEquivalenceKey(PrimitiveType.Primitive kind) {
             this.kind = kind;
+            this.hashCode = buildHashCode(kind);
+        }
+
+        public static TypeEquivalenceKey of(PrimitiveType.Primitive kind) {
+            switch (kind) {
+                case BOOLEAN:
+                    return BOOLEAN_EQUIVALENCE_KEY;
+                case BYTE:
+                    return BYTE_EQUIVALENCE_KEY;
+                case CHAR:
+                    return CHAR_EQUIVALENCE_KEY;
+                case DOUBLE:
+                    return DOUBLE_EQUIVALENCE_KEY;
+                case FLOAT:
+                    return FLOAT_EQUIVALENCE_KEY;
+                case INT:
+                    return INT_EQUIVALENCE_KEY;
+                case LONG:
+                    return LONG_EQUIVALENCE_KEY;
+                case SHORT:
+                    return SHORT_EQUIVALENCE_KEY;
+                default:
+                    // should never happen but let's be safe
+                    return new PrimitiveTypeEquivalenceKey(kind);
+            }
         }
 
         @Override
@@ -586,7 +660,11 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            return Objects.hash(kind);
+            return hashCode;
+        }
+
+        private static int buildHashCode(PrimitiveType.Primitive kind) {
+            return kind.hashCode();
         }
 
         @Override
@@ -616,7 +694,7 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            int result = Objects.hash(name);
+            int result = Objects.hashCode(name);
             result = 31 * result + Arrays.hashCode(bounds);
             return result;
         }
@@ -658,7 +736,7 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            return Objects.hash(name);
+            return Objects.hashCode(name);
         }
 
         @Override
@@ -686,7 +764,7 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            return Objects.hash(name);
+            return Objects.hashCode(name);
         }
 
         @Override
@@ -731,7 +809,10 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            return Objects.hash(bound, isExtends, hasImplicitObjectBound);
+            int result = Objects.hashCode(bound);
+            result = 31 * result + Boolean.hashCode(isExtends);
+            result = 31 * result + Boolean.hashCode(hasImplicitObjectBound);
+            return result;
         }
 
         @Override

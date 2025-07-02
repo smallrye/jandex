@@ -32,15 +32,15 @@ public final class ClassType extends Type {
     public static final ClassType STRING_TYPE = new ClassType(DotName.STRING_NAME);
     public static final ClassType CLASS_TYPE = new ClassType(DotName.CLASS_NAME);
 
-    public static final ClassType BYTE_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Byte"));
-    public static final ClassType CHARACTER_CLASS = new ClassType(
-            DotName.createComponentized(DotName.JAVA_LANG_NAME, "Character"));
-    public static final ClassType DOUBLE_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Double"));
-    public static final ClassType FLOAT_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Float"));
-    public static final ClassType INTEGER_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Integer"));
-    public static final ClassType LONG_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Long"));
-    public static final ClassType SHORT_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Short"));
-    public static final ClassType BOOLEAN_CLASS = new ClassType(DotName.createComponentized(DotName.JAVA_LANG_NAME, "Boolean"));
+    public static final ClassType BYTE_CLASS = new ClassType(DotName.BYTE_CLASS_NAME);
+    public static final ClassType CHARACTER_CLASS = new ClassType(DotName.CHARACTER_CLASS_NAME);
+    public static final ClassType DOUBLE_CLASS = new ClassType(DotName.DOUBLE_CLASS_NAME);
+    public static final ClassType FLOAT_CLASS = new ClassType(DotName.FLOAT_CLASS_NAME);
+    public static final ClassType INTEGER_CLASS = new ClassType(DotName.INTEGER_CLASS_NAME);
+    public static final ClassType LONG_CLASS = new ClassType(DotName.LONG_CLASS_NAME);
+    public static final ClassType SHORT_CLASS = new ClassType(DotName.SHORT_CLASS_NAME);
+    public static final ClassType BOOLEAN_CLASS = new ClassType(DotName.BOOLEAN_CLASS_NAME);
+    public static final ClassType VOID_CLASS = new ClassType(DotName.VOID_CLASS_NAME);
 
     /**
      * Create an instance of a class type with given {@code name}.

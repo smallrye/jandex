@@ -45,11 +45,23 @@ public final class DotName implements Comparable<DotName> {
     static final DotName JAVA_NAME;
     static final DotName JAVA_LANG_NAME;
     static final DotName JAVA_LANG_ANNOTATION_NAME;
+
     public static final DotName OBJECT_NAME;
+    public static final DotName CLASS_NAME;
     public static final DotName ENUM_NAME;
     public static final DotName RECORD_NAME;
     public static final DotName STRING_NAME;
-    public static final DotName CLASS_NAME;
+
+    public static final DotName BOOLEAN_CLASS_NAME;
+    public static final DotName BYTE_CLASS_NAME;
+    public static final DotName SHORT_CLASS_NAME;
+    public static final DotName INTEGER_CLASS_NAME;
+    public static final DotName LONG_CLASS_NAME;
+    public static final DotName FLOAT_CLASS_NAME;
+    public static final DotName DOUBLE_CLASS_NAME;
+    public static final DotName CHARACTER_CLASS_NAME;
+    public static final DotName VOID_CLASS_NAME;
+
     public static final DotName INHERITED_NAME;
     public static final DotName REPEATABLE_NAME;
     public static final DotName RETENTION_NAME;
@@ -61,17 +73,29 @@ public final class DotName implements Comparable<DotName> {
     private final boolean innerClass;
 
     static {
-        JAVA_NAME = new DotName(null, "java", true, false);
-        JAVA_LANG_NAME = new DotName(JAVA_NAME, "lang", true, false);
-        JAVA_LANG_ANNOTATION_NAME = new DotName(JAVA_LANG_NAME, "annotation", true, false);
-        OBJECT_NAME = new DotName(JAVA_LANG_NAME, "Object", true, false);
-        ENUM_NAME = new DotName(JAVA_LANG_NAME, "Enum", true, false);
-        RECORD_NAME = new DotName(JAVA_LANG_NAME, "Record", true, false);
-        STRING_NAME = new DotName(JAVA_LANG_NAME, "String", true, false);
-        CLASS_NAME = new DotName(JAVA_LANG_NAME, "Class", true, false);
-        INHERITED_NAME = new DotName(JAVA_LANG_ANNOTATION_NAME, "Inherited", true, false);
-        REPEATABLE_NAME = new DotName(JAVA_LANG_ANNOTATION_NAME, "Repeatable", true, false);
-        RETENTION_NAME = new DotName(DotName.JAVA_LANG_ANNOTATION_NAME, "Retention", true, false);
+        JAVA_NAME = createComponentized(null, "java");
+        JAVA_LANG_NAME = createComponentized(JAVA_NAME, "lang");
+        JAVA_LANG_ANNOTATION_NAME = createComponentized(JAVA_LANG_NAME, "annotation");
+
+        OBJECT_NAME = createComponentized(JAVA_LANG_NAME, "Object");
+        CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Class");
+        ENUM_NAME = createComponentized(JAVA_LANG_NAME, "Enum");
+        RECORD_NAME = createComponentized(JAVA_LANG_NAME, "Record");
+        STRING_NAME = createComponentized(JAVA_LANG_NAME, "String");
+
+        BOOLEAN_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Boolean");
+        BYTE_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Byte");
+        SHORT_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Short");
+        INTEGER_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Integer");
+        LONG_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Long");
+        FLOAT_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Float");
+        DOUBLE_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Double");
+        CHARACTER_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Character");
+        VOID_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Void");
+
+        INHERITED_NAME = createComponentized(JAVA_LANG_ANNOTATION_NAME, "Inherited");
+        REPEATABLE_NAME = createComponentized(JAVA_LANG_ANNOTATION_NAME, "Repeatable");
+        RETENTION_NAME = createComponentized(JAVA_LANG_ANNOTATION_NAME, "Retention");
     }
 
     /**

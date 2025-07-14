@@ -1365,28 +1365,13 @@ public final class Indexer {
         return (methodInfo.flags() & bridgeModifiers) == bridgeModifiers;
     }
 
-    private boolean targetsArray(TypeAnnotationState typeAnnotationState) {
-        if (typeAnnotationState.pathElements.size() == 0) {
-            return false;
-        }
-        PathElement pathElement = typeAnnotationState.pathElements.peek();
-        return pathElement != null && pathElement.kind == PathElement.Kind.ARRAY;
-    }
-
     private Type resolveTypePath(Type type, TypeAnnotationState typeAnnotationState) {
         PathElementStack elements = typeAnnotationState.pathElements;
         PathElement element = elements.pop();
         if (element == null) {
-            // need to check:
-            // 1. if the type path is empty (and since `rebuildNestedType` calls `resolveTypePath`
-            // with the path element stack depleted, `element == null` is not enough);
-            // 2. and if so, if the type can possibly be nested;
-            // 3. and if so, if the type is nested or not
-            boolean isTypePathEmpty = elements.pathElements.isEmpty();
-            boolean canBeNested = type.kind() == Type.Kind.CLASS
-                    || type.kind() == Type.Kind.PARAMETERIZED_TYPE;
+            boolean canBeNested = type.kind() == Type.Kind.CLASS || type.kind() == Type.Kind.PARAMETERIZED_TYPE;
             boolean isNestedType = canBeNested && innerClasses != null && innerClasses.containsKey(type.name());
-            if (isTypePathEmpty && isNestedType) {
+            if (isNestedType && elements.emptyOrNoNestedAfterLastParameterized()) {
                 // the annotation targets the outermost type where type annotations are admissible
                 ArrayDeque<InnerClassInfo> innerClasses = buildClassesQueue(type);
                 InnerClassInfo outermostInfo = innerClasses.getFirst();
@@ -1453,6 +1438,12 @@ public final class Indexer {
                 }
 
                 ParameterizedType parameterizedType = type.asParameterizedType();
+
+                if (elements.noNestedBeforeThisParameterizedAfterPreviousParameterized()) {
+                    // we need the _outermost_ parameterized type
+                    return rebuildOutermostParameterized(parameterizedType, typeAnnotationState, element.pos);
+                }
+
                 Type[] arguments = parameterizedType.argumentsArray().clone();
                 int pos = element.pos;
                 if (pos >= arguments.length) {
@@ -1593,6 +1584,12 @@ public final class Indexer {
                 }
 
                 ParameterizedType parameterizedType = type.asParameterizedType();
+                if (elements.noNestedBeforeThisParameterizedAfterPreviousParameterized()) {
+                    // we need the _outermost_ parameterized type
+                    while (parameterizedType.owner() instanceof ParameterizedType) {
+                        parameterizedType = parameterizedType.owner().asParameterizedType();
+                    }
+                }
                 return searchTypePath(parameterizedType.argumentsArray()[element.pos], typeAnnotationState);
             }
             case WILDCARD_BOUND: {
@@ -1658,6 +1655,22 @@ public final class Indexer {
         }
 
         return last;
+    }
+
+    private ParameterizedType rebuildOutermostParameterized(ParameterizedType type, TypeAnnotationState typeAnnotationState,
+            int typeArgIndex) {
+        if (type.owner() == null || type.owner().kind() != Type.Kind.PARAMETERIZED_TYPE) {
+            Type[] arguments = type.argumentsArray().clone();
+            if (typeArgIndex >= arguments.length) {
+                throw new IllegalStateException("Type annotation referred to a type argument that does not exist");
+            }
+
+            arguments[typeArgIndex] = resolveTypePath(arguments[typeArgIndex], typeAnnotationState);
+            return (ParameterizedType) intern(type.copyType(arguments));
+        }
+
+        return (ParameterizedType) intern(type.copyType(rebuildOutermostParameterized(type.owner().asParameterizedType(),
+                typeAnnotationState, typeArgIndex)));
     }
 
     private ParameterizedType convertParameterized(Type oType) {
@@ -1801,9 +1814,9 @@ public final class Indexer {
             PARAMETERIZED
         }
 
-        private static Kind[] KINDS = Kind.values();
-        private Kind kind;
-        private int pos;
+        private static final Kind[] KINDS = Kind.values();
+        private final Kind kind;
+        private final int pos;
 
         private PathElement(Kind kind, int pos) {
             this.kind = kind;
@@ -1837,6 +1850,44 @@ public final class Indexer {
 
         void reset() {
             elementPos = 0;
+        }
+
+        boolean noNestedBeforeThisParameterizedAfterPreviousParameterized() {
+            // `elementPos` is after the last seen element
+            // `elementPos - 1` is the last seen element, which is `PARAMETERIZED`
+            assert pathElements.get(elementPos - 1).kind == PathElement.Kind.PARAMETERIZED;
+            // `elementPos - 2` is where we start searching
+            for (int i = elementPos - 2; i >= 0; i--) {
+                if (pathElements.get(i).kind == PathElement.Kind.NESTED) {
+                    return false;
+                }
+                if (pathElements.get(i).kind == PathElement.Kind.PARAMETERIZED) {
+                    return true;
+                }
+            }
+            return true;
+        }
+
+        boolean emptyOrNoNestedAfterLastParameterized() {
+            if (pathElements.isEmpty()) {
+                return true;
+            }
+
+            // "last" is used in an absolute sense, but since this method is only called after
+            // the element stack is depleted, we could start from `elementPos - 1` too
+            int idx = pathElements.size() - 1;
+            while (idx >= 0) {
+                if (pathElements.get(idx).kind == PathElement.Kind.NESTED) {
+                    return false;
+                }
+                if (pathElements.get(idx).kind == PathElement.Kind.PARAMETERIZED) {
+                    return true;
+                }
+                idx--;
+            }
+
+            // no `NESTED`, but also no `PARAMETERIZED`
+            return false;
         }
     }
 

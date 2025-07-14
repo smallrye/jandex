@@ -100,7 +100,7 @@ public class ClassInfoMemberPositionTestCase {
         assertEquals("a", methods.get(m++).name());
         assertEquals("<init>", methods.get(m++).name());
         assertEquals("b", methods.get(m++).name());
-        assertEquals("_", methods.get(m++).name());
+        assertEquals("__", methods.get(m++).name());
     }
 
     static class TestEntity {
@@ -127,7 +127,7 @@ public class ClassInfoMemberPositionTestCase {
 
         static long alpha;
 
-        void _() {
+        void __() {
         }
     }
 

@@ -69,15 +69,10 @@ public class TypeAnnotationOnParameterizedBoundTest {
                 "@TypeAnn(\"param:1\") T extends org.jboss.jandex.test.@TypeAnn(\"param:2\") TypeAnnotationOnParameterizedBoundTest$ParameterizedClass<org.jboss.jandex.test.@TypeAnn(\"param:3\") TypeAnnotationOnParameterizedBoundTest$ParameterizedClass<java.lang.@TypeAnn(\"param:4\") String>>",
                 classWithParameterizedBound.typeParameters().get(0).toString());
 
-        // this shows an interesting bug that I'm not sure how to fix at the moment
-        // @formatter:off
-/*
         ClassInfo classWithInnerParameterizedBound = index.getClassByName(ClassWithInnerParameterizedTypeParameterBound.class);
         assertEquals(
                 "@TypeAnn(\"inner:1\") T extends org.jboss.jandex.test.@TypeAnn(\"inner:2\") TypeAnnotationOnParameterizedBoundTest$ParameterizedClass<java.lang.@TypeAnn(\"inner:3\") Number>.@TypeAnn(\"inner:4\") InnerParameterizedClass<java.lang.@TypeAnn(\"inner:5\") Integer>",
                 classWithInnerParameterizedBound.typeParameters().get(0).toString());
-*/
-        // @formatter:on
 
         ClassInfo a = index.getClassByName(A.class);
         assertEquals(

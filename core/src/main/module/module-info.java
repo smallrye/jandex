@@ -1,3 +1,6 @@
+/**
+ * Java class file indexer and offline reflection library.
+ */
 module org.jboss.jandex {
     exports org.jboss.jandex;
 

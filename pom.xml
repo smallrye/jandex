@@ -26,6 +26,7 @@
         <version.bridger>1.6.Final</version.bridger>
         <version.bytebuddy>1.17.6</version.bytebuddy>
         <version.exec-maven-plugin>3.5.1</version.exec-maven-plugin>
+        <version.gizmo2>2.0.0.Beta2</version.gizmo2>
         <version.groovy>4.0.27</version.groovy>
         <version.junit>5.13.3</version.junit>
         <version.maven>3.9.11</version.maven>
@@ -75,6 +76,11 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>io.quarkus.gizmo</groupId>
+                <artifactId>gizmo2</artifactId>
+                <version>${version.gizmo2}</version>
+            </dependency>
             <dependency>
                 <groupId>net.bytebuddy</groupId>
                 <artifactId>byte-buddy</artifactId>
@@ -179,6 +185,16 @@
                 <!-- setting this in a profile because the Java 8 compiler doesn't know the `release` option -->
                 <maven.compiler.release>8</maven.compiler.release>
             </properties>
+        </profile>
+
+        <profile>
+            <id>gizmo2-module</id>
+            <activation>
+                <jdk>[17,)</jdk>
+            </activation>
+            <modules>
+                <module>gizmo2</module>
+            </modules>
         </profile>
 
         <profile>

@@ -26,6 +26,7 @@ import org.jboss.jandex.Type;
 import org.jboss.jandex.TypeVariable;
 import org.jboss.jandex.WildcardType;
 
+import io.quarkus.gizmo2.Const;
 import io.quarkus.gizmo2.GenericType;
 import io.quarkus.gizmo2.TypeArgument;
 import io.quarkus.gizmo2.creator.AnnotatableCreator;
@@ -647,5 +648,18 @@ public class Jandex2Gizmo {
                 }
             }
         };
+    }
+
+    /**
+     * {@return an enum constant corresponding to the given Jandex {@link FieldInfo}}
+     *
+     * @param enumConstant the Jandex enum constant (must not be {@code null})
+     * @throws IllegalArgumentException if the {@code enumConstant} is not an actual enum constant
+     */
+    public static Const constOfEnum(FieldInfo enumConstant) {
+        if (!enumConstant.isEnumConstant()) {
+            throw new IllegalArgumentException("Not an enum constant: " + enumConstant);
+        }
+        return Const.of(Enum.EnumDesc.of(classDescOf(enumConstant.declaringClass()), enumConstant.name()));
     }
 }

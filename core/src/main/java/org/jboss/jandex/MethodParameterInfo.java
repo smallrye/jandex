@@ -80,6 +80,17 @@ public final class MethodParameterInfo implements Declaration {
     }
 
     /**
+     * Returns the name of this parameter, or synthetic name of the form {@code argN},
+     * where {@code N} is zero-based parameter position in the method declaration, if not known.
+     *
+     * @return the name of this parameter, or {@code argN} if not known
+     */
+    public String nameOrDefault() {
+        String name = method.parameterName(position);
+        return name != null ? name : "arg" + position;
+    }
+
+    /**
      * Returns the type of this parameter.
      *
      * @return the type of this parameter

@@ -26,7 +26,7 @@
         <version.bridger>1.6.Final</version.bridger>
         <version.bytebuddy>1.17.6</version.bytebuddy>
         <version.exec-maven-plugin>3.5.1</version.exec-maven-plugin>
-        <version.gizmo2>2.0.0.Beta5</version.gizmo2>
+        <version.gizmo2>2.0.0.Beta6</version.gizmo2>
         <version.groovy>4.0.28</version.groovy>
         <version.junit>5.13.4</version.junit>
         <version.maven>3.9.11</version.maven>

@@ -608,6 +608,7 @@ public abstract class Type implements Descriptor {
      *
      * @return the bytecode descriptor of this type (or its erasure in case of generic types)
      */
+    @Override
     public String descriptor(Function<String, Type> typeVariableSubstitution) {
         StringBuilder result = new StringBuilder();
         DescriptorReconstruction.typeDescriptor(this, typeVariableSubstitution, result);

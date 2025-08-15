@@ -31,6 +31,7 @@ public final class ClassType extends Type {
     public static final ClassType OBJECT_TYPE = new ClassType(DotName.OBJECT_NAME);
     public static final ClassType STRING_TYPE = new ClassType(DotName.STRING_NAME);
     public static final ClassType CLASS_TYPE = new ClassType(DotName.CLASS_NAME);
+    public static final ClassType ANNOTATION_TYPE = new ClassType(DotName.ANNOTATION_NAME);
 
     public static final ClassType BYTE_CLASS = new ClassType(DotName.BYTE_CLASS_NAME);
     public static final ClassType CHARACTER_CLASS = new ClassType(DotName.CHARACTER_CLASS_NAME);

@@ -17,6 +17,10 @@
  */
 package org.jboss.jandex;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Represents a Java array type. Note that this representation of array types is different
  * from the Java language representation.
@@ -49,6 +53,39 @@ package org.jboss.jandex;
  * @author Jason T. Greene
  */
 public final class ArrayType extends Type {
+    // these `Map`s are only used in `precomputeName()`
+    private static final Map<PrimitiveType.Primitive, DotName> PRIMITIVE_ARRAY_NAMES = primitiveArrayNames();
+    private static final Map<DotName, DotName> COMMON_CLASS_ARRAY_NAMES = commonClassArrayNames();
+
+    private static Map<PrimitiveType.Primitive, DotName> primitiveArrayNames() {
+        Map<PrimitiveType.Primitive, DotName> map = new HashMap<>();
+        map.put(PrimitiveType.Primitive.BOOLEAN, DotName.createSimple("[" + PrimitiveType.BOOLEAN.toCode()));
+        map.put(PrimitiveType.Primitive.BYTE, DotName.createSimple("[" + PrimitiveType.BYTE.toCode()));
+        map.put(PrimitiveType.Primitive.SHORT, DotName.createSimple("[" + PrimitiveType.SHORT.toCode()));
+        map.put(PrimitiveType.Primitive.INT, DotName.createSimple("[" + PrimitiveType.INT.toCode()));
+        map.put(PrimitiveType.Primitive.LONG, DotName.createSimple("[" + PrimitiveType.LONG.toCode()));
+        map.put(PrimitiveType.Primitive.FLOAT, DotName.createSimple("[" + PrimitiveType.FLOAT.toCode()));
+        map.put(PrimitiveType.Primitive.DOUBLE, DotName.createSimple("[" + PrimitiveType.DOUBLE.toCode()));
+        map.put(PrimitiveType.Primitive.CHAR, DotName.createSimple("[" + PrimitiveType.CHAR.toCode()));
+        return Collections.unmodifiableMap(map);
+    }
+
+    private static Map<DotName, DotName> commonClassArrayNames() {
+        Map<DotName, DotName> map = new HashMap<>();
+        map.put(DotName.OBJECT_NAME, DotName.createSimple("[L" + DotName.OBJECT_NAME + ";"));
+        map.put(DotName.STRING_NAME, DotName.createSimple("[L" + DotName.STRING_NAME + ";"));
+        map.put(DotName.CLASS_NAME, DotName.createSimple("[L" + DotName.CLASS_NAME + ";"));
+        map.put(DotName.ANNOTATION_NAME, DotName.createSimple("[L" + DotName.ANNOTATION_NAME + ";"));
+        map.put(DotName.BOOLEAN_CLASS_NAME, DotName.createSimple("[L" + DotName.BOOLEAN_CLASS_NAME + ";"));
+        map.put(DotName.BYTE_CLASS_NAME, DotName.createSimple("[L" + DotName.BYTE_CLASS_NAME + ";"));
+        map.put(DotName.SHORT_CLASS_NAME, DotName.createSimple("[L" + DotName.SHORT_CLASS_NAME + ";"));
+        map.put(DotName.INTEGER_CLASS_NAME, DotName.createSimple("[L" + DotName.INTEGER_CLASS_NAME + ";"));
+        map.put(DotName.LONG_CLASS_NAME, DotName.createSimple("[L" + DotName.LONG_CLASS_NAME + ";"));
+        map.put(DotName.FLOAT_CLASS_NAME, DotName.createSimple("[L" + DotName.FLOAT_CLASS_NAME + ";"));
+        map.put(DotName.DOUBLE_CLASS_NAME, DotName.createSimple("[L" + DotName.DOUBLE_CLASS_NAME + ";"));
+        map.put(DotName.CHARACTER_CLASS_NAME, DotName.createSimple("[L" + DotName.CHARACTER_CLASS_NAME + ";"));
+        return Collections.unmodifiableMap(map);
+    }
 
     /**
      * Create a new array type instance with the specified number of dimensions
@@ -88,12 +125,44 @@ public final class ArrayType extends Type {
     }
 
     ArrayType(Type constituent, int dimensions, AnnotationInstance[] annotations) {
-        super(DotName.OBJECT_NAME, annotations);
+        super(precomputeName(constituent, dimensions), annotations);
         this.dimensions = dimensions;
         this.constituent = constituent;
         if (dimensions < 1) {
             throw new IllegalArgumentException("Number of dimensions of an array type must be >= 1");
         }
+    }
+
+    // precomputes the array type name for single-dimensional arrays of primitive types and `java.*` class types
+    // the names of arrays of primitive types and a few common `java.*` class types are cached
+    // if the array type is not common, this method returns `DotName.OBJECT_NAME`, which is later checked by `name()`
+    // this method is guaranteed to not allocate in case it decides to not precompute the array type name
+    private static DotName precomputeName(Type constituent, int dimensions) {
+        if (dimensions == 1) {
+            if (constituent.kind() == Kind.PRIMITIVE) {
+                return PRIMITIVE_ARRAY_NAMES.get(constituent.asPrimitiveType().primitive());
+            } else if (constituent.kind() == Kind.CLASS) {
+                DotName name = constituent.name();
+                DotName known = COMMON_CLASS_ARRAY_NAMES.get(name);
+                if (known != null) {
+                    return known;
+                }
+                boolean isJava;
+                if (name.isComponentized()) {
+                    DotName first = name;
+                    while (first.prefix() != null) {
+                        first = first.prefix();
+                    }
+                    isJava = first.equals(DotName.JAVA_NAME);
+                } else {
+                    isJava = name.local().startsWith("java.");
+                }
+                if (isJava) {
+                    return DotName.createSimple("[L" + name + ";");
+                }
+            }
+        }
+        return DotName.OBJECT_NAME;
     }
 
     /**
@@ -202,6 +271,12 @@ public final class ArrayType extends Type {
 
     @Override
     public DotName name() {
+        DotName name = super.name();
+        if (name != DotName.OBJECT_NAME) {
+            // name was precomputed
+            return name;
+        }
+
         StringBuilder builder = new StringBuilder();
 
         Type type = this;

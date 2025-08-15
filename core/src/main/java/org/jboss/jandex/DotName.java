@@ -51,6 +51,7 @@ public final class DotName implements Comparable<DotName> {
     public static final DotName ENUM_NAME;
     public static final DotName RECORD_NAME;
     public static final DotName STRING_NAME;
+    public static final DotName ANNOTATION_NAME;
 
     public static final DotName BOOLEAN_CLASS_NAME;
     public static final DotName BYTE_CLASS_NAME;
@@ -82,6 +83,7 @@ public final class DotName implements Comparable<DotName> {
         ENUM_NAME = createComponentized(JAVA_LANG_NAME, "Enum");
         RECORD_NAME = createComponentized(JAVA_LANG_NAME, "Record");
         STRING_NAME = createComponentized(JAVA_LANG_NAME, "String");
+        ANNOTATION_NAME = createComponentized(JAVA_LANG_ANNOTATION_NAME, "Annotation");
 
         BOOLEAN_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Boolean");
         BYTE_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Byte");

@@ -92,4 +92,29 @@ public class ArrayTypeTest {
         assertEquals(kkkType, ArrayType.builder(PrimitiveType.BOOLEAN, 2).build());
     }
 
+    @Test
+    public void testPrecomputedNames() {
+        assertEquals("[Z", ArrayType.create(PrimitiveType.BOOLEAN, 1).name().toString());
+        assertEquals("[B", ArrayType.create(PrimitiveType.BYTE, 1).name().toString());
+        assertEquals("[S", ArrayType.create(PrimitiveType.SHORT, 1).name().toString());
+        assertEquals("[I", ArrayType.create(PrimitiveType.INT, 1).name().toString());
+        assertEquals("[J", ArrayType.create(PrimitiveType.LONG, 1).name().toString());
+        assertEquals("[F", ArrayType.create(PrimitiveType.FLOAT, 1).name().toString());
+        assertEquals("[D", ArrayType.create(PrimitiveType.DOUBLE, 1).name().toString());
+        assertEquals("[C", ArrayType.create(PrimitiveType.CHAR, 1).name().toString());
+
+        assertEquals("[Ljava.lang.Boolean;", ArrayType.create(ClassType.BOOLEAN_CLASS, 1).name().toString());
+        assertEquals("[Ljava.lang.Byte;", ArrayType.create(ClassType.BYTE_CLASS, 1).name().toString());
+        assertEquals("[Ljava.lang.Short;", ArrayType.create(ClassType.SHORT_CLASS, 1).name().toString());
+        assertEquals("[Ljava.lang.Integer;", ArrayType.create(ClassType.INTEGER_CLASS, 1).name().toString());
+        assertEquals("[Ljava.lang.Long;", ArrayType.create(ClassType.LONG_CLASS, 1).name().toString());
+        assertEquals("[Ljava.lang.Float;", ArrayType.create(ClassType.FLOAT_CLASS, 1).name().toString());
+        assertEquals("[Ljava.lang.Double;", ArrayType.create(ClassType.DOUBLE_CLASS, 1).name().toString());
+        assertEquals("[Ljava.lang.Character;", ArrayType.create(ClassType.CHARACTER_CLASS, 1).name().toString());
+
+        assertEquals("[Ljava.lang.Object;", ArrayType.create(ClassType.OBJECT_TYPE, 1).name().toString());
+        assertEquals("[Ljava.lang.String;", ArrayType.create(ClassType.STRING_TYPE, 1).name().toString());
+        assertEquals("[Ljava.lang.Class;", ArrayType.create(ClassType.CLASS_TYPE, 1).name().toString());
+        assertEquals("[Ljava.lang.annotation.Annotation;", ArrayType.create(ClassType.ANNOTATION_TYPE, 1).name().toString());
+    }
 }

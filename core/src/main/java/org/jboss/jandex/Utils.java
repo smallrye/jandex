@@ -40,6 +40,10 @@ class Utils {
 
     static final byte[] CLINIT_METHOD_NAME = Utils.toUTF8("<clinit>");
 
+    static final byte[] EQUALS_METHOD_NAME = Utils.toUTF8("equals");
+    static final byte[] HASH_CODE_METHOD_NAME = Utils.toUTF8("hashCode");
+    static final byte[] TO_STRING_METHOD_NAME = Utils.toUTF8("toString");
+
     static byte[] toUTF8(String string) {
         return string.getBytes(StandardCharsets.UTF_8);
     }

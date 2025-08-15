@@ -428,6 +428,7 @@ public final class FieldInfo implements Declaration, Descriptor, GenericSignatur
      *
      * @return the bytecode descriptor of this field
      */
+    @Override
     public String descriptor(Function<String, Type> typeVariableSubstitution) {
         return DescriptorReconstruction.fieldDescriptor(this, typeVariableSubstitution);
     }

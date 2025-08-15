@@ -25,10 +25,12 @@ package org.jboss.jandex;
  * @author Jason T. Greene
  */
 public class VoidType extends Type {
+    private static final DotName VOID_NAME = new DotName(null, "void", true, false);
+
     public static final VoidType VOID = new VoidType(null);
 
     private VoidType(AnnotationInstance[] annotations) {
-        super(new DotName(null, "void", true, false), annotations);
+        super(VOID_NAME, annotations);
     }
 
     @Override

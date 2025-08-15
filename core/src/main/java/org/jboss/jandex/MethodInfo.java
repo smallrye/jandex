@@ -674,8 +674,18 @@ public final class MethodInfo implements Declaration, Descriptor, GenericSignatu
      *
      * @return the bytecode descriptor of this method
      */
+    @Override
     public String descriptor(Function<String, Type> typeVariableSubstitution) {
         return DescriptorReconstruction.methodDescriptor(this, typeVariableSubstitution);
+    }
+
+    /**
+     * Returns a {@linkplain MethodSignatureKey signature key} for this method.
+     *
+     * @return {@link MethodSignatureKey} for this method, never {@code null}
+     */
+    public MethodSignatureKey signatureKey() {
+        return new MethodSignatureKey(this);
     }
 
     /**

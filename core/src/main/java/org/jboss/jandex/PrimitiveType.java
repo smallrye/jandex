@@ -18,7 +18,6 @@
 package org.jboss.jandex;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -82,21 +81,28 @@ public final class PrimitiveType extends Type {
      */
     public enum Primitive {
         /** Indicates a primitive byte type */
-        BYTE,
+        BYTE("byte"),
         /** Indicates a primitive character type */
-        CHAR,
+        CHAR("char"),
         /** Indicates a primitive double type */
-        DOUBLE,
+        DOUBLE("double"),
         /** Indicates a primitive float type */
-        FLOAT,
+        FLOAT("float"),
         /** Indicates a primitive integer type */
-        INT,
+        INT("int"),
         /** Indicates a primitive long type */
-        LONG,
+        LONG("long"),
         /** Indicates a primitive short type */
-        SHORT,
+        SHORT("short"),
         /** Indicates a primitive boolean type */
-        BOOLEAN,
+        BOOLEAN("boolean"),
+        ;
+
+        private final DotName dotName;
+
+        Primitive(String keyword) {
+            this.dotName = new DotName(null, keyword, true, false);
+        }
     }
 
     private final Primitive primitive;
@@ -106,7 +112,7 @@ public final class PrimitiveType extends Type {
     }
 
     private PrimitiveType(Primitive primitive, AnnotationInstance[] annotations) {
-        super(new DotName(null, primitive.name().toLowerCase(Locale.ENGLISH), true, false), annotations);
+        super(primitive.dotName, annotations);
         this.primitive = primitive;
     }
 

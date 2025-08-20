@@ -135,13 +135,15 @@ public final class ArrayType extends Type {
 
     // precomputes the array type name for single-dimensional arrays of primitive types and `java.*` class types
     // the names of arrays of primitive types and a few common `java.*` class types are cached
-    // if the array type is not common, this method returns `DotName.OBJECT_NAME`, which is later checked by `name()`
+    // if the name is not precomputed, this method returns `DotName.OBJECT_NAME`, which is later checked by `name()`
     // this method is guaranteed to not allocate in case it decides to not precompute the array type name
     private static DotName precomputeName(Type constituent, int dimensions) {
         if (dimensions == 1) {
             if (constituent.kind() == Kind.PRIMITIVE) {
                 return PRIMITIVE_ARRAY_NAMES.get(constituent.asPrimitiveType().primitive());
-            } else if (constituent.kind() == Kind.CLASS) {
+            } else if (constituent.kind() == Kind.CLASS
+                    || constituent.kind() == Kind.PARAMETERIZED_TYPE
+                    || constituent.kind() == Kind.TYPE_VARIABLE) {
                 DotName name = constituent.name();
                 DotName known = COMMON_CLASS_ARRAY_NAMES.get(name);
                 if (known != null) {

@@ -685,7 +685,7 @@ public final class MethodInfo implements Declaration, Descriptor, GenericSignatu
      * @return {@link MethodSignatureKey} for this method, never {@code null}
      */
     public MethodSignatureKey signatureKey() {
-        return new MethodSignatureKey(this);
+        return MethodSignatureKey.of(this);
     }
 
     /**

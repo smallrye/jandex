@@ -3,13 +3,16 @@ package org.jboss.jandex.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.jboss.jandex.ArrayType;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.Index;
+import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.PrimitiveType;
 import org.jboss.jandex.Type;
+import org.jboss.jandex.TypeVariable;
 import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
 
@@ -116,5 +119,12 @@ public class ArrayTypeTest {
         assertEquals("[Ljava.lang.String;", ArrayType.create(ClassType.STRING_TYPE, 1).name().toString());
         assertEquals("[Ljava.lang.Class;", ArrayType.create(ClassType.CLASS_TYPE, 1).name().toString());
         assertEquals("[Ljava.lang.annotation.Annotation;", ArrayType.create(ClassType.ANNOTATION_TYPE, 1).name().toString());
+
+        assertEquals("[Ljava.util.List;",
+                ArrayType.create(ParameterizedType.create(List.class, ClassType.create(String.class)), 1).name().toString());
+
+        assertEquals("[Ljava.lang.Object;", ArrayType.create(TypeVariable.create("T"), 1).name().toString());
+        assertEquals("[Ljava.lang.Number;",
+                ArrayType.create(TypeVariable.builder("T").addBound(Number.class).build(), 1).name().toString());
     }
 }

@@ -17,6 +17,9 @@ import java.util.Arrays;
  * publication.
  */
 public final class MethodSignatureKey {
+
+    private static final DotName[] NO_PARAMS = new DotName[0];
+
     private final byte[] name;
     private final DotName[] paramTypes;
     private final DotName returnType;
@@ -24,13 +27,18 @@ public final class MethodSignatureKey {
 
     MethodSignatureKey(MethodInfo method) {
         MethodInternal internal = method.methodInternal();
+
         this.name = internal.nameBytes();
         Type[] arr = internal.parameterTypesArray();
-        DotName[] paramTypes = new DotName[arr.length];
-        for (int i = 0; i < paramTypes.length; i++) {
-            paramTypes[i] = arr[i].name();
+        if (arr.length > 0) {
+            DotName[] paramTypes = new DotName[arr.length];
+            for (int i = 0; i < paramTypes.length; i++) {
+                paramTypes[i] = arr[i].name();
+            }
+            this.paramTypes = paramTypes;
+        } else {
+            this.paramTypes = NO_PARAMS;
         }
-        this.paramTypes = paramTypes;
         this.returnType = internal.returnType().name();
         this.hashCode = computeHashCode(name, paramTypes, returnType);
     }

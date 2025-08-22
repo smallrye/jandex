@@ -74,30 +74,30 @@ public final class DotName implements Comparable<DotName> {
     private final boolean innerClass;
 
     static {
-        JAVA_NAME = createComponentized(null, "java");
-        JAVA_LANG_NAME = createComponentized(JAVA_NAME, "lang");
-        JAVA_LANG_ANNOTATION_NAME = createComponentized(JAVA_LANG_NAME, "annotation");
+        JAVA_NAME = createSimple("java");
+        JAVA_LANG_NAME = createSimple("java.lang");
+        JAVA_LANG_ANNOTATION_NAME = createSimple("annotation");
 
-        OBJECT_NAME = createComponentized(JAVA_LANG_NAME, "Object");
-        CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Class");
-        ENUM_NAME = createComponentized(JAVA_LANG_NAME, "Enum");
-        RECORD_NAME = createComponentized(JAVA_LANG_NAME, "Record");
-        STRING_NAME = createComponentized(JAVA_LANG_NAME, "String");
-        ANNOTATION_NAME = createComponentized(JAVA_LANG_ANNOTATION_NAME, "Annotation");
+        OBJECT_NAME = createSimple("java.lang.Object");
+        CLASS_NAME = createSimple("java.lang.Class");
+        ENUM_NAME = createSimple("java.lang.Enum");
+        RECORD_NAME = createSimple("java.lang.Record");
+        STRING_NAME = createSimple("java.lang.String");
+        ANNOTATION_NAME = createSimple("java.lang.annotation.Annotation");
 
-        BOOLEAN_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Boolean");
-        BYTE_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Byte");
-        SHORT_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Short");
-        INTEGER_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Integer");
-        LONG_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Long");
-        FLOAT_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Float");
-        DOUBLE_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Double");
-        CHARACTER_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Character");
-        VOID_CLASS_NAME = createComponentized(JAVA_LANG_NAME, "Void");
+        BOOLEAN_CLASS_NAME = createSimple("java.lang.Boolean");
+        BYTE_CLASS_NAME = createSimple("java.lang.Byte");
+        SHORT_CLASS_NAME = createSimple("java.lang.Short");
+        INTEGER_CLASS_NAME = createSimple("java.lang.Integer");
+        LONG_CLASS_NAME = createSimple("java.lang.Long");
+        FLOAT_CLASS_NAME = createSimple("java.lang.Float");
+        DOUBLE_CLASS_NAME = createSimple("java.lang.Double");
+        CHARACTER_CLASS_NAME = createSimple("java.lang.Character");
+        VOID_CLASS_NAME = createSimple("java.lang.Void");
 
-        INHERITED_NAME = createComponentized(JAVA_LANG_ANNOTATION_NAME, "Inherited");
-        REPEATABLE_NAME = createComponentized(JAVA_LANG_ANNOTATION_NAME, "Repeatable");
-        RETENTION_NAME = createComponentized(JAVA_LANG_ANNOTATION_NAME, "Retention");
+        INHERITED_NAME = createSimple("java.lang.annotation.Inherited");
+        REPEATABLE_NAME = createSimple("java.lang.annotation.Repeatable");
+        RETENTION_NAME = createSimple("java.lang.annotation.Retention");
     }
 
     /**
@@ -326,7 +326,7 @@ public final class DotName implements Comparable<DotName> {
      */
     public String toString(char delim) {
         if (componentized) {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new StringBuilder(stringLength());
             buildString(delim, builder);
             return builder.toString();
         } else {
@@ -340,6 +340,13 @@ public final class DotName implements Comparable<DotName> {
             builder.append(innerClass ? '$' : delim);
         }
         builder.append(local);
+    }
+
+    private int stringLength() {
+        if (componentized && prefix != null) {
+            return prefix.stringLength() + 1 + local.length();
+        }
+        return local.length();
     }
 
     /**

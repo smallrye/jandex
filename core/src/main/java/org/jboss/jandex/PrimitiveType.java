@@ -106,7 +106,7 @@ public final class PrimitiveType extends Type {
     }
 
     private PrimitiveType(Primitive primitive, AnnotationInstance[] annotations) {
-        super(new DotName(null, primitive.name().toLowerCase(Locale.ENGLISH), true, false), annotations);
+        super(DotName.createSimple(primitive.name().toLowerCase(Locale.ENGLISH)), annotations);
         this.primitive = primitive;
     }
 

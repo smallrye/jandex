@@ -36,6 +36,28 @@ class NameTable {
     private StrongInternPool<RecordComponentInternal> recordComponentPool = StrongInternPool.forRecordComponents();
     private Map<String, DotName> names = new HashMap<String, DotName>();
 
+    NameTable() {
+        // prepopulate with common entries
+        names.put("java.lang.Object", DotName.OBJECT_NAME);
+        names.put("java.lang.Class", DotName.CLASS_NAME);
+        names.put("java.lang.Enum", DotName.ENUM_NAME);
+        names.put("java.lang.Record", DotName.RECORD_NAME);
+        names.put("java.lang.String", DotName.STRING_NAME);
+        names.put("java.lang.annotation.Annotation", DotName.ANNOTATION_NAME);
+        names.put("java.lang.Boolean", DotName.BOOLEAN_CLASS_NAME);
+        names.put("java.lang.Byte", DotName.BYTE_CLASS_NAME);
+        names.put("java.lang.Short", DotName.SHORT_CLASS_NAME);
+        names.put("java.lang.Integer", DotName.INTEGER_CLASS_NAME);
+        names.put("java.lang.Long", DotName.LONG_CLASS_NAME);
+        names.put("java.lang.Float", DotName.FLOAT_CLASS_NAME);
+        names.put("java.lang.Double", DotName.DOUBLE_CLASS_NAME);
+        names.put("java.lang.Character", DotName.CHARACTER_CLASS_NAME);
+        names.put("java.lang.Void", DotName.VOID_CLASS_NAME);
+        names.put("java.lang.annotation.Inherited", DotName.INHERITED_NAME);
+        names.put("java.lang.annotation.Repeatable", DotName.REPEATABLE_NAME);
+        names.put("java.lang.annotation.Retention", DotName.RETENTION_NAME);
+    }
+
     DotName convertToName(String name) {
         return convertToName(name, '.');
     }

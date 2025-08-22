@@ -23,11 +23,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
@@ -176,6 +176,10 @@ final class IndexWriterV2 extends IndexWriterImpl {
      * @throws java.io.IOException if any i/o error occurs
      */
     int write(Index index) throws IOException {
+        return write(new IndexWriteView(index));
+    }
+
+    int write(IndexWriteView index) throws IOException {
 
         if (version < MIN_VERSION || version > MAX_VERSION) {
             throw new UnsupportedVersion("Can't write index version " + version
@@ -186,12 +190,12 @@ final class IndexWriterV2 extends IndexWriterImpl {
         PackedDataOutputStream stream = new PackedDataOutputStream(new BufferedOutputStream(out));
         stream.writeInt(MAGIC);
         stream.writeByte(version);
-        stream.writePackedU32(index.annotations.size());
-        stream.writePackedU32(index.implementors.size());
+        stream.writePackedU32(index.annotationCount);
+        stream.writePackedU32(index.implementorCount);
         if (version >= 11) {
-            stream.writePackedU32(index.subinterfaces.size());
+            stream.writePackedU32(index.subinterfaceCount);
         }
-        stream.writePackedU32(index.subclasses.size());
+        stream.writePackedU32(index.subclassCount);
         if (version >= 10) {
             stream.writePackedU32(index.users.size());
         }
@@ -226,9 +230,10 @@ final class IndexWriterV2 extends IndexWriterImpl {
         return stream.size();
     }
 
-    private void writeUsersTable(PackedDataOutputStream stream, Map<DotName, ClassInfo[]> users) throws IOException {
-        for (Entry<DotName, ClassInfo[]> entry : users.entrySet()) {
-            writeUsersSet(stream, entry.getKey(), entry.getValue());
+    private void writeUsersTable(PackedDataOutputStream stream, List<IndexWriteView.User> users)
+            throws IOException {
+        for (IndexWriteView.User user : users) {
+            writeUsersSet(stream, user.name, user.uses);
         }
     }
 
@@ -536,16 +541,16 @@ final class IndexWriterV2 extends IndexWriterImpl {
         return annotationTable.markWritten(annotation);
     }
 
-    private void writeClasses(PackedDataOutputStream stream, Index index) throws IOException {
-        Collection<ClassInfo> classes = index.getKnownClasses();
+    private void writeClasses(PackedDataOutputStream stream, IndexWriteView index) throws IOException {
+        List<ClassInfo> classes = index.classes;
         stream.writePackedU32(classes.size());
         for (ClassInfo clazz : classes) {
             writeClassEntry(stream, clazz);
         }
     }
 
-    private void writeModules(PackedDataOutputStream stream, Index index) throws IOException {
-        Collection<ModuleInfo> modules = index.getKnownModules();
+    private void writeModules(PackedDataOutputStream stream, IndexWriteView index) throws IOException {
+        List<ModuleInfo> modules = index.modules;
         stream.writePackedU32(modules.size());
         addClassName(DotName.createSimple("module-info"));
 
@@ -898,7 +903,7 @@ final class IndexWriterV2 extends IndexWriterImpl {
         writeAnnotations(stream, type.annotationArray());
     }
 
-    private void buildTables(Index index) {
+    private void buildTables(IndexWriteView index) {
         nameTable = new HashMap<DotName, Integer>();
         sortedNameTable = new TreeMap<String, DotName>();
 
@@ -908,22 +913,20 @@ final class IndexWriterV2 extends IndexWriterImpl {
         names = new NameTable();
 
         // Build the stringPool for all strings
-        for (ClassInfo clazz : index.getKnownClasses()) {
+        for (ClassInfo clazz : index.classes) {
             addClass(clazz);
         }
 
         if (version >= 10) {
-            for (ModuleInfo module : index.getKnownModules()) {
+            for (ModuleInfo module : index.modules) {
                 addClass(module.moduleInfoClass());
                 addModule(module);
             }
 
-            if (index.users != null) {
-                for (Entry<DotName, ClassInfo[]> entry : index.users.entrySet()) {
-                    addClassName(entry.getKey());
-                    for (ClassInfo classInfo : entry.getValue()) {
-                        addClassName(classInfo.name());
-                    }
+            for (IndexWriteView.User user : index.users) {
+                addClassName(user.name);
+                for (ClassInfo classInfo : user.uses) {
+                    addClassName(classInfo.name());
                 }
             }
         }

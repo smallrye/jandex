@@ -11,9 +11,11 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
@@ -178,8 +180,13 @@ public class MutableAnnotationOverlayTest {
                             }
                         }
                     } else { // just to test `annotationsWithRepeatable`, no other reason
-                        for (AnnotationInstance annotation : overlay.annotationsWithRepeatable(declaration,
-                                MyRepeatableAnnotation.DOT_NAME)) {
+                        List<AnnotationInstance> annotations = overlay
+                                .annotationsWithRepeatable(declaration, MyRepeatableAnnotation.DOT_NAME)
+                                .stream()
+                                // need to make sure the order is deterministic
+                                .sorted(Comparator.comparing(a -> a.value().asString()))
+                                .collect(Collectors.toList());
+                        for (AnnotationInstance annotation : annotations) {
                             assertNotNull(annotation.target());
                             values.append(annotation.value().asString()).append("_");
                         }

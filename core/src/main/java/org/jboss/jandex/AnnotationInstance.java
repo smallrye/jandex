@@ -468,20 +468,20 @@ public final class AnnotationInstance {
                     break;
                 case METHOD:
                     result = 31 * result + target.asMethod().declaringClass().name().hashCode();
-                    result = 31 * result + target.asMethod().name().hashCode();
+                    result = 31 * result + Arrays.hashCode(target.asMethod().methodInternal().nameBytes());
                     break;
                 case FIELD:
                     result = 31 * result + target.asField().declaringClass().name().hashCode();
-                    result = 31 * result + target.asField().name().hashCode();
+                    result = 31 * result + Arrays.hashCode(target.asField().fieldInternal().nameBytes());
                     break;
                 case METHOD_PARAMETER:
                     result = 31 * result + target.asMethodParameter().method().declaringClass().name().hashCode();
-                    result = 31 * result + target.asMethodParameter().method().name().hashCode();
+                    result = 31 * result + Arrays.hashCode(target.asMethodParameter().method().methodInternal().nameBytes());
                     result = 31 * result + target.asMethodParameter().position();
                     break;
                 case RECORD_COMPONENT:
                     result = 31 * result + target.asRecordComponent().declaringClass().name().hashCode();
-                    result = 31 * result + target.asRecordComponent().name().hashCode();
+                    result = 31 * result + Arrays.hashCode(target.asRecordComponent().recordComponentInternal().nameBytes());
                     break;
                 case TYPE:
                     if (target.asType().target() != null) {

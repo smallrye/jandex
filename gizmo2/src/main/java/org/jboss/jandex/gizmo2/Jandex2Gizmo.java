@@ -29,8 +29,14 @@ import org.jboss.jandex.WildcardType;
 import io.quarkus.gizmo2.Const;
 import io.quarkus.gizmo2.GenericType;
 import io.quarkus.gizmo2.TypeArgument;
+import io.quarkus.gizmo2.creator.AccessLevel;
 import io.quarkus.gizmo2.creator.AnnotatableCreator;
 import io.quarkus.gizmo2.creator.AnnotationCreator;
+import io.quarkus.gizmo2.creator.ClassCreator;
+import io.quarkus.gizmo2.creator.FieldCreator;
+import io.quarkus.gizmo2.creator.MethodCreator;
+import io.quarkus.gizmo2.creator.ModifiableCreator;
+import io.quarkus.gizmo2.creator.ModifierFlag;
 import io.quarkus.gizmo2.creator.TypeParameterizedCreator;
 import io.quarkus.gizmo2.desc.ClassMethodDesc;
 import io.quarkus.gizmo2.desc.ConstructorDesc;
@@ -661,5 +667,47 @@ public class Jandex2Gizmo {
             throw new IllegalArgumentException("Not an enum constant: " + enumConstant);
         }
         return Const.of(Enum.EnumDesc.of(classDescOf(enumConstant.declaringClass()), enumConstant.name()));
+    }
+
+    /**
+     * Copies all modifiers (including the access level) from the given Jandex {@code clazz}
+     * to the given {@link ClassCreator creator}.
+     *
+     * @param clazz the Jandex class (must not be {@code null})
+     * @param creator the Gizmo class creator (must not be {@code null})
+     */
+    public static void copyModifiers(ClassInfo clazz, ClassCreator creator) {
+        copyModifiers(clazz.flags(), creator);
+    }
+
+    /**
+     * Copies all modifiers (including the access level) from the given Jandex {@code method}
+     * to the given {@link MethodCreator creator}.
+     *
+     * @param method the Jandex method (must not be {@code null})
+     * @param creator the Gizmo method creator (must not be {@code null})
+     */
+    public static void copyModifiers(MethodInfo method, MethodCreator creator) {
+        copyModifiers(method.flags(), creator);
+    }
+
+    /**
+     * Copies all modifiers (including the access level) from the given Jandex {@code field}
+     * to the given {@link FieldCreator creator}.
+     *
+     * @param field the Jandex field (must not be {@code null})
+     * @param creator the Gizmo field creator (must not be {@code null})
+     */
+    public static void copyModifiers(FieldInfo field, FieldCreator creator) {
+        copyModifiers(field.flags(), creator);
+    }
+
+    private static void copyModifiers(int flags, ModifiableCreator creator) {
+        for (ModifierFlag flag : ModifierFlag.values()) {
+            if (creator.supports(flag) && (flags & flag.mask()) == flag.mask()) {
+                creator.addFlag(flag);
+            }
+        }
+        creator.setAccess(AccessLevel.of(flags));
     }
 }

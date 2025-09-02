@@ -18,6 +18,10 @@
 
 package org.jboss.jandex;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+
 /**
  * A {@code DotName} represents a dot separated name, typically a Java package or a Java class.
  * It has two possible variants. A simple wrapper based variant allows for fast construction
@@ -66,6 +70,8 @@ public final class DotName implements Comparable<DotName> {
     public static final DotName INHERITED_NAME;
     public static final DotName REPEATABLE_NAME;
     public static final DotName RETENTION_NAME;
+
+    private static final Map<DotName, String> JAVA_STRINGS = new ConcurrentHashMap<>();
 
     private final DotName prefix;
     private final String local;
@@ -329,6 +335,15 @@ public final class DotName implements Comparable<DotName> {
         return toString('.');
     }
 
+    private static final Function<DotName, String> COMPONENTIZED_TO_STRING = new Function<DotName, String>() {
+        @Override
+        public String apply(DotName name) {
+            StringBuilder builder = new StringBuilder(name.stringLength());
+            name.buildString('.', builder);
+            return builder.toString();
+        }
+    };
+
     /**
      * Returns the regular binary class name where {@code delim} is used as a package separator.
      *
@@ -338,12 +353,25 @@ public final class DotName implements Comparable<DotName> {
      */
     public String toString(char delim) {
         if (componentized) {
-            StringBuilder builder = new StringBuilder();
+            if (delim == '.' && startsWithJava()) {
+                return JAVA_STRINGS.computeIfAbsent(this, COMPONENTIZED_TO_STRING);
+            }
+            StringBuilder builder = new StringBuilder(stringLength());
             buildString(delim, builder);
             return builder.toString();
         } else {
             return delim == '.' ? local : local.replace('.', delim);
         }
+    }
+
+    private int stringLength() {
+        int length = local.length();
+        DotName prefix = this.prefix;
+        while (prefix != null) {
+            length += 1 + prefix.local.length();
+            prefix = prefix.prefix;
+        }
+        return length;
     }
 
     private void buildString(char delim, StringBuilder builder) {

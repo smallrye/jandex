@@ -59,6 +59,12 @@ public class Jandex2Gizmo {
      * @param name the Jandex {@code DotName} (must not be {@code null})
      */
     public static ClassDesc classDescOf(DotName name) {
+        // optimistic get to avoid computeIfAbsent for most calls
+        ClassDesc classDesc = CLASS_DESC_CACHE.get(name);
+        if (classDesc != null) {
+            return classDesc;
+        }
+
         return CLASS_DESC_CACHE.computeIfAbsent(name, nameParam -> {
             if (nameParam.prefix() == null) {
                 String local = nameParam.local();

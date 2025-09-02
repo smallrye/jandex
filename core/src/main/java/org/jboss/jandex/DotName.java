@@ -354,6 +354,12 @@ public final class DotName implements Comparable<DotName> {
     public String toString(char delim) {
         if (componentized) {
             if (delim == '.' && startsWithJava()) {
+                // optimistic get to avoid computeIfAbsent for most calls
+                String name = JAVA_STRINGS.get(this);
+                if (name != null) {
+                    return name;
+                }
+
                 return JAVA_STRINGS.computeIfAbsent(this, COMPONENTIZED_TO_STRING);
             }
             StringBuilder builder = new StringBuilder(stringLength());

@@ -203,7 +203,6 @@ final class MethodInternal {
         result = 31 * result + Arrays.hashCode(exceptions);
         result = 31 * result + (extra != null && extra.receiverType != null ? extra.receiverType.hashCode() : 0);
         result = 31 * result + (extra != null ? Arrays.hashCode(extra.typeParameters) : 0);
-        result = 31 * result + (extra != null ? Arrays.hashCode(extra.annotations) : 0);
         result = 31 * result + (extra != null && extra.defaultValue != null ? extra.defaultValue.hashCode() : 0);
         result = 31 * result + (int) flags;
         return result;

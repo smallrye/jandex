@@ -10,6 +10,8 @@ import java.lang.constant.ConstantDescs;
 import java.lang.constant.MethodTypeDesc;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -48,6 +50,8 @@ import io.quarkus.gizmo2.desc.MethodDesc;
  * Bridge methods from {@code org.jboss.jandex} types to the Gizmo 2 API.
  */
 public class Jandex2Gizmo {
+    private static final Map<DotName, ClassDesc> CLASS_DESC_CACHE = new ConcurrentHashMap<>();
+
     /**
      * {@return the {@link ClassDesc} corresponding to the given Jandex {@link DotName}}
      * See {@link Type#name()} for the description of the format this method recognizes.
@@ -55,22 +59,24 @@ public class Jandex2Gizmo {
      * @param name the Jandex {@code DotName} (must not be {@code null})
      */
     public static ClassDesc classDescOf(DotName name) {
-        if (name.prefix() == null) {
-            String local = name.local();
-            return switch (local) {
-                case "void" -> ConstantDescs.CD_void;
-                case "boolean" -> ConstantDescs.CD_boolean;
-                case "byte" -> ConstantDescs.CD_byte;
-                case "short" -> ConstantDescs.CD_short;
-                case "int" -> ConstantDescs.CD_int;
-                case "long" -> ConstantDescs.CD_long;
-                case "float" -> ConstantDescs.CD_float;
-                case "double" -> ConstantDescs.CD_double;
-                case "char" -> ConstantDescs.CD_char;
-                default -> ofClassOrArray(local);
-            };
-        }
-        return ofClassOrArray(name.toString());
+        return CLASS_DESC_CACHE.computeIfAbsent(name, nameParam -> {
+            if (nameParam.prefix() == null) {
+                String local = nameParam.local();
+                return switch (local) {
+                    case "void" -> ConstantDescs.CD_void;
+                    case "boolean" -> ConstantDescs.CD_boolean;
+                    case "byte" -> ConstantDescs.CD_byte;
+                    case "short" -> ConstantDescs.CD_short;
+                    case "int" -> ConstantDescs.CD_int;
+                    case "long" -> ConstantDescs.CD_long;
+                    case "float" -> ConstantDescs.CD_float;
+                    case "double" -> ConstantDescs.CD_double;
+                    case "char" -> ConstantDescs.CD_char;
+                    default -> ofClassOrArray(local);
+                };
+            }
+            return ofClassOrArray(nameParam.toString());
+        });
     }
 
     private static ClassDesc ofClassOrArray(String name) {

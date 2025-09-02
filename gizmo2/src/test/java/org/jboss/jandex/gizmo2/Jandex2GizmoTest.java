@@ -29,6 +29,7 @@ import static org.jboss.jandex.gizmo2.Jandex2Gizmo.genericTypeOf;
 import static org.jboss.jandex.gizmo2.Jandex2Gizmo.methodDescOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.io.IOException;
 import java.lang.annotation.ElementType;
@@ -174,6 +175,10 @@ public class Jandex2GizmoTest {
 
         assertEquals(CD_String.arrayType(), classDescOf(DotName.createSimple("[Ljava.lang.String;")));
         assertEquals(CD_Object.arrayType(2), classDescOf(DotName.createSimple("[[Ljava.lang.Object;")));
+
+        // test caching
+        assertSame(classDescOf(DotName.STRING_NAME), classDescOf(DotName.createSimple("java.lang.String")));
+        assertSame(classDescOf(DotName.OBJECT_NAME), classDescOf(DotName.createSimple("java.lang.Object")));
     }
 
     @Test
@@ -219,6 +224,10 @@ public class Jandex2GizmoTest {
 
         assertEquals(CD_String, classDescOf(TypeVariable.builder("T").addBound(String.class).build()));
         assertEquals(CD_Object, classDescOf(TypeVariable.create("T")));
+
+        // test caching
+        assertSame(classDescOf(ClassType.STRING_TYPE), classDescOf(ClassType.create(String.class)));
+        assertSame(classDescOf(ClassType.OBJECT_TYPE), classDescOf(ClassType.create(Object.class)));
     }
 
     @Test
@@ -226,6 +235,9 @@ public class Jandex2GizmoTest {
         ClassInfo clazz = Index.singleClass(FooBar.class);
         assertNotNull(clazz);
         assertEquals(FOO_BAR_DESC, classDescOf(clazz));
+
+        // test caching
+        assertSame(classDescOf(clazz), classDescOf(clazz));
     }
 
     @Test

@@ -308,6 +308,18 @@ public final class DotName implements Comparable<DotName> {
         return innerClass;
     }
 
+    boolean startsWithJava() {
+        if (componentized) {
+            DotName name = this;
+            while (name.prefix != null) {
+                name = name.prefix;
+            }
+            return name.local.equals("java");
+        } else {
+            return local.startsWith("java.");
+        }
+    }
+
     /**
      * Returns the regular binary class name.
      *

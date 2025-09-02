@@ -519,6 +519,12 @@ public abstract class EquivalenceKey {
 
         private static ClassTypeEquivalenceKey of(DotName name) {
             if (name.startsWithJava()) {
+                // optimistic get to avoid computeIfAbsent for most calls
+                ClassTypeEquivalenceKey equivalenceKey = JAVA_INSTANCES.get(name);
+                if (equivalenceKey != null) {
+                    return equivalenceKey;
+                }
+
                 return JAVA_INSTANCES.computeIfAbsent(name, FACTORY);
             }
             return new ClassTypeEquivalenceKey(name);

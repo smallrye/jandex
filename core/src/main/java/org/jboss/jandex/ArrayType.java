@@ -149,17 +149,7 @@ public final class ArrayType extends Type {
                 if (known != null) {
                     return known;
                 }
-                boolean isJava;
-                if (name.isComponentized()) {
-                    DotName first = name;
-                    while (first.prefix() != null) {
-                        first = first.prefix();
-                    }
-                    isJava = first.equals(DotName.JAVA_NAME);
-                } else {
-                    isJava = name.local().startsWith("java.");
-                }
-                if (isJava) {
+                if (name.startsWithJava()) {
                     return DotName.createSimple("[L" + name + ";");
                 }
             }

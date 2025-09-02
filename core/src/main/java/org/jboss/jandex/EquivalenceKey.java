@@ -261,17 +261,6 @@ public abstract class EquivalenceKey {
         return " where " + typeVariablesJoiner;
     }
 
-    private static boolean startsWithJava(DotName name) {
-        if (name.isComponentized()) {
-            while (name.prefix() != null) {
-                name = name.prefix();
-            }
-            return name.local().equals("java");
-        } else {
-            return name.local().startsWith("java.");
-        }
-    }
-
     // ---
 
     public static abstract class DeclarationEquivalenceKey extends EquivalenceKey {
@@ -529,7 +518,7 @@ public abstract class EquivalenceKey {
         private final DotName name;
 
         private static ClassTypeEquivalenceKey of(DotName name) {
-            if (startsWithJava(name)) {
+            if (name.startsWithJava()) {
                 return JAVA_INSTANCES.computeIfAbsent(name, FACTORY);
             }
             return new ClassTypeEquivalenceKey(name);

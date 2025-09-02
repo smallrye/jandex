@@ -88,7 +88,6 @@ final class RecordComponentInternal {
     public int hashCode() {
         int result = Arrays.hashCode(name);
         result = 31 * result + type.hashCode();
-        result = 31 * result + Arrays.hashCode(annotations);
         return result;
     }
 

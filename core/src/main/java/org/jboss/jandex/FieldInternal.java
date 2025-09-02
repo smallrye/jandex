@@ -97,7 +97,6 @@ final class FieldInternal {
         int result = Arrays.hashCode(name);
         result = 31 * result + type.hashCode();
         result = 31 * result + (int) flags;
-        result = 31 * result + Arrays.hashCode(annotations);
         return result;
     }
 

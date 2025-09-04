@@ -18,6 +18,11 @@ final class MutableAnnotationOverlayImpl extends AnnotationOverlayImpl implement
     @Override
     Collection<AnnotationInstance> getAnnotationsFor(Declaration declaration) {
         EquivalenceKey key = EquivalenceKey.of(declaration);
+        // optimistic `get` to avoid `computeIfAbsent` for most calls
+        Collection<AnnotationInstance> result = overlay.get(key);
+        if (result != null) {
+            return result;
+        }
         return overlay.computeIfAbsent(key, new Function<EquivalenceKey, Collection<AnnotationInstance>>() {
             @Override
             public Collection<AnnotationInstance> apply(EquivalenceKey ignored) {

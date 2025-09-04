@@ -65,6 +65,11 @@ public final class MethodSignatureKey {
 
     static MethodSignatureKey of(MethodInfo method) {
         if (method.declaringClass().name().startsWithJava()) {
+            // optimistic `get` to avoid `computeIfAbsent` for most calls
+            MethodSignatureKey key = JAVA_METHOD_SIGNATURES.get(method);
+            if (key != null) {
+                return key;
+            }
             return JAVA_METHOD_SIGNATURES.computeIfAbsent(method, CREATE_METHOD_SIGNATURE);
         }
         return CREATE_METHOD_SIGNATURE.apply(method);

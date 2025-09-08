@@ -18,36 +18,21 @@
 
 package org.jboss.jandex;
 
+import static org.jboss.jandex.IndexReader.MAGIC;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.Consumer;
 
-/**
- * Reads a Jandex index file and returns the saved index. See {@link Indexer}
- * for a thorough description of how the Index data is produced.
- *
- * <p>
- * An IndexReader loads the stream passed to it's constructor and applies the
- * appropriate buffering. The Jandex index format is designed for efficient
- * reading and low final memory storage.
- *
- * <p>
- * <b>Thread-Safety</b>
- * </p>
- * IndexReader is not thread-safe and can not be shared between concurrent
- * threads. The resulting index, however, is.
- *
- * @author Jason T. Greene
- */
-public final class IndexReader {
+public final class SerializedIndexScanner {
 
     /**
      * The latest index version supported by this version of Jandex.
      */
-    static final int MAGIC = 0xBABE1F15;
     private PackedDataInputStream input;
     private int version = -1;
-    private IndexReaderImpl reader;
+    private SerializedIndexScannerV2 scanner;
 
     /**
      * Constructs a new IndedReader using the passed stream. The stream is not
@@ -55,7 +40,7 @@ public final class IndexReader {
      *
      * @param input a stream which points to a jandex index file
      */
-    public IndexReader(InputStream input) {
+    public SerializedIndexScanner(InputStream input) {
         this.input = new PackedDataInputStream(new BufferedInputStream(input));
     }
 
@@ -68,45 +53,26 @@ public final class IndexReader {
      * @throws IllegalArgumentException if the stream does not point to Jandex index data
      * @throws UnsupportedVersion if the index data is tagged with a version not known to this reader
      */
-    public Index read() throws IOException {
+    public void scan(Consumer<String> messageConsumer) throws IOException {
         if (version == -1) {
             readVersion();
         }
 
-        return reader.read();
+        scanner.read(messageConsumer);
     }
 
-    private void initReader(int version) throws IOException {
-        IndexReaderImpl reader;
-        if (version >= IndexReaderV1.MIN_VERSION && version <= IndexReaderV1.MAX_VERSION) {
-            reader = new IndexReaderV1(input, version);
-        } else if (version >= IndexReaderV2.MIN_VERSION && version <= IndexReaderV2.MAX_VERSION) {
-            reader = new IndexReaderV2(input, version);
+    private void initScanner(int version) throws IOException {
+        SerializedIndexScannerV2 reader;
+        if (version >= IndexReaderV2.MIN_VERSION && version <= IndexReaderV2.MAX_VERSION) {
+            reader = new SerializedIndexScannerV2(input, version);
         } else {
             input.close();
             throw new UnsupportedVersion("Can't read index version " + version
                     + "; this IndexReader only supports index versions "
-                    + IndexReaderV1.MIN_VERSION + "-" + IndexReaderV1.MAX_VERSION + ","
                     + IndexReaderV2.MIN_VERSION + "-" + IndexReaderV2.MAX_VERSION);
         }
 
-        this.reader = reader;
-    }
-
-    /**
-     * Returns the index file version. This version number marks the internal storage format and also implies
-     * the version of data contract of the index. It is incremented whenever more information are added
-     * to the index format, so it may be used to determine whether an index file contains necessary information.
-     *
-     * @return the index file version
-     * @throws IOException If the index could not be read
-     */
-    public int getIndexVersion() throws IOException {
-        if (version == -1) {
-            readVersion();
-        }
-
-        return version;
+        this.scanner = reader;
     }
 
     private void readVersion() throws IOException {
@@ -116,6 +82,6 @@ public final class IndexReader {
         }
 
         version = input.readUnsignedByte();
-        initReader(version);
+        initScanner(version);
     }
 }

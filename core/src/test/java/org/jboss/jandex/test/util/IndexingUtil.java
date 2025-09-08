@@ -9,9 +9,17 @@ import org.jboss.jandex.IndexReader;
 import org.jboss.jandex.IndexWriter;
 
 public class IndexingUtil {
+
+    public static byte[] serializeIndex(Index index) throws IOException {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            new IndexWriter(output).write(index);
+            return output.toByteArray();
+        }
+    }
+
     public static Index roundtrip(Index index) throws IOException {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         new IndexWriter(bytes).write(index);
-        return new IndexReader(new ByteArrayInputStream(bytes.toByteArray())).read();
+        return new IndexReader(new ByteArrayInputStream(serializeIndex(index))).read();
     }
 }

@@ -423,7 +423,7 @@ final class SerializedIndexScannerV2 {
                 DotName name = nameTable[nameIndex];
                 messageConsumer.accept(prefix + ".nameIndex=" + nameIndex + ":" + name);
                 AnnotationInstance[] annotations = readAnnotations(stream, null, prefix, messageConsumer);
-                return new ClassType(name, annotations);
+                return ClassType.create(name, annotations);
             }
             case ARRAY: {
                 int dimensions = stream.readPackedU32();

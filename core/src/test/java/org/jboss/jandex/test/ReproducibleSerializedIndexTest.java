@@ -28,8 +28,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.RepeatedTest;
 
-import test.BridgeMethods;
-
 public class ReproducibleSerializedIndexTest {
     static List<String> testDataClassNames;
     static Map<String, byte[]> classData;
@@ -37,9 +35,9 @@ public class ReproducibleSerializedIndexTest {
 
     @BeforeAll
     public static void setup() throws Exception {
-        Class<?> c = BridgeMethods.class;
-        URL referenceClassResourceUrl = c.getClassLoader().getResource(c.getName().replace('.', '/') + ".class");
-        Assertions.assertNotNull(referenceClassResourceUrl, "jandex-test-data is missing class " + c.getName());
+        URL referenceClassResourceUrl = ReproducibleSerializedIndexTest.class.getClassLoader()
+                .getResource("test/BridgeMethods.class");
+        Assertions.assertNotNull(referenceClassResourceUrl, "jandex-test-data is missing test-data reference class");
         URI classUri = referenceClassResourceUrl.toURI();
         classData = new HashMap<>();
 

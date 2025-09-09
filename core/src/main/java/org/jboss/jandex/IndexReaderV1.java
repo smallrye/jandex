@@ -122,13 +122,13 @@ final class IndexReaderV1 extends IndexReaderImpl {
             int numIntfs = stream.readPackedU32();
             List<Type> interfaces = new ArrayList<Type>(numIntfs);
             for (int j = 0; j < numIntfs; j++) {
-                interfaces.add(new ClassType(classTable[stream.readPackedU32()]));
+                interfaces.add(ClassType.create(classTable[stream.readPackedU32()]));
             }
 
             Type[] interfaceTypes = interfaces.toArray(new Type[interfaces.size()]);
 
             Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
-            Type superClassType = superName == null ? null : new ClassType(superName);
+            Type superClassType = superName == null ? null : ClassType.create(superName);
             ClassInfo clazz = new ClassInfo(name, superClassType, flags, interfaceTypes, hasNoArgsConstructor);
             classes.put(name, clazz);
             addClassToMap(subclasses, superName, clazz);

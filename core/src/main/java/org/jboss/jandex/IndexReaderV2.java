@@ -384,7 +384,7 @@ final class IndexReaderV2 extends IndexReaderImpl {
             case CLASS: {
                 DotName name = nameTable[stream.readPackedU32()];
                 AnnotationInstance[] annotations = readAnnotations(stream, null);
-                return new ClassType(name, annotations);
+                return ClassType.create(name, annotations);
             }
             case ARRAY: {
                 int dimensions = stream.readPackedU32();

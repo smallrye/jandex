@@ -22,10 +22,10 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -95,10 +95,10 @@ final class IndexWriterV2 extends IndexWriterImpl {
     private HashMap<DotName, Integer> nameTable;
     private TreeMap<String, DotName> sortedNameTable;
     private AnnotationInstanceReferenceTable annotationTable;
-    private ReferenceTable<Type> typeTable;
-    private ReferenceTable<Type[]> typeListTable;
+    private TypeReferenceTable typeTable;
+    private TypeListReferenceTable typeListTable;
 
-    static class ReferenceEntry {
+    static final class ReferenceEntry {
         private final int index;
         private boolean written;
 
@@ -192,36 +192,39 @@ final class IndexWriterV2 extends IndexWriterImpl {
         }
     }
 
-    static class ReferenceTable<T> {
-        private IdentityHashMap<T, ReferenceEntry> references = new IdentityHashMap<T, ReferenceEntry>();
-        private List<T> table = new ArrayList<T>();
+    /** {@link Type}-interning type-list reference table. */
+    static final class TypeListReferenceTable {
+        private final Map<TypeListKey, ReferenceEntry> references = new HashMap<>();
+        private final List<Type[]> table = new ArrayList<>();
         private int counter = 1;
 
-        void addReference(T reference) {
-            if (references.containsKey(reference)) {
+        void addReference(Type[] reference) {
+            TypeListKey key = new TypeListKey(reference);
+            if (references.containsKey(key)) {
                 return;
             }
 
             int index = counter++;
-            references.put(reference, new ReferenceEntry(index));
+            references.put(key, new ReferenceEntry(index));
             table.add(reference);
         }
 
-        private ReferenceEntry getReferenceEntry(T reference) {
-            ReferenceEntry entry = references.get(reference);
+        private ReferenceEntry getReferenceEntry(Type[] reference) {
+            TypeListKey key = new TypeListKey(reference);
+            ReferenceEntry entry = references.get(key);
             if (entry == null) {
-                throw new IllegalStateException("Missing in reference table: " + reference);
+                throw new IllegalStateException("Missing in reference table: " + Arrays.toString(reference));
             }
             return entry;
         }
 
-        int positionOf(T reference) {
+        int positionOf(Type[] reference) {
             ReferenceEntry entry = getReferenceEntry(reference);
 
             return entry.index;
         }
 
-        boolean markWritten(T reference) {
+        boolean markWritten(Type[] reference) {
             ReferenceEntry entry = getReferenceEntry(reference);
 
             boolean ret = entry.written;
@@ -232,12 +235,114 @@ final class IndexWriterV2 extends IndexWriterImpl {
             return !ret;
         }
 
-        List<T> list() {
+        List<Type[]> list() {
             return table;
         }
 
         int size() {
             return references.size();
+        }
+
+        /** Intern-key for {@link Type} lists, eagerly calculates the hash code. */
+        static final class TypeListKey {
+            private final Type[] types;
+            private final int hashCode;
+
+            TypeListKey(Type[] types) {
+                this.types = types;
+                this.hashCode = TypeInterning.arrayHashCode(types);
+            }
+
+            @Override
+            public int hashCode() {
+                return hashCode;
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if (obj == null || !obj.getClass().equals(TypeListKey.class)) {
+                    return false;
+                }
+                TypeListKey other = (TypeListKey) obj;
+                return TypeInterning.arrayEquals(types, other.types);
+            }
+
+            @Override
+            public String toString() {
+                return Arrays.toString(types);
+            }
+        }
+    }
+
+    /** Interning {@link Type} reference table. */
+    static final class TypeReferenceTable {
+        private final Map<TypeKey, ReferenceEntry> references = new HashMap<>();
+        private final List<Type> table = new ArrayList<>();
+        private int counter = 1;
+
+        Type addReference(Type reference) {
+            TypeKey key = new TypeKey(reference);
+            ReferenceEntry entry = references.get(key);
+            if (entry != null) {
+                return table.get(entry.index - 1);
+            }
+
+            int index = counter++;
+            references.put(key, new ReferenceEntry(index));
+            table.add(reference);
+            return reference;
+        }
+
+        private ReferenceEntry getReferenceEntry(Type reference) {
+            TypeKey key = new TypeKey(reference);
+            ReferenceEntry entry = references.get(key);
+            if (entry == null) {
+                throw new IllegalStateException("Missing in reference table: " + reference);
+            }
+            return entry;
+        }
+
+        int positionOf(Type reference) {
+            ReferenceEntry entry = getReferenceEntry(reference);
+
+            return entry.index;
+        }
+
+        List<Type> list() {
+            return table;
+        }
+
+        int size() {
+            return references.size();
+        }
+
+        static final class TypeKey {
+            private final Type type;
+            private final int hashCode;
+
+            TypeKey(Type type) {
+                this.type = type;
+                this.hashCode = type.internHashCode();
+            }
+
+            @Override
+            public int hashCode() {
+                return hashCode;
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if (obj == null || obj.getClass() != TypeKey.class) {
+                    return false;
+                }
+                TypeKey other = (TypeKey) obj;
+                return type.internEquals(other.type);
+            }
+
+            @Override
+            public String toString() {
+                return type.toString();
+            }
         }
     }
 
@@ -994,8 +1099,8 @@ final class IndexWriterV2 extends IndexWriterImpl {
         sortedNameTable = new TreeMap<String, DotName>();
 
         annotationTable = new AnnotationInstanceReferenceTable();
-        typeTable = new ReferenceTable<Type>();
-        typeListTable = new ReferenceTable<Type[]>();
+        typeTable = new TypeReferenceTable();
+        typeListTable = new TypeListReferenceTable();
         names = new NameTable();
 
         // Build the stringPool for all strings
@@ -1186,16 +1291,18 @@ final class IndexWriterV2 extends IndexWriterImpl {
     }
 
     private void addTypeList(Type[] types) {
-        for (Type type : types) {
-            addType(type);
+        // "intern" the type-list elements first
+        Type[] copy = new Type[types.length];
+        for (int i = 0; i < types.length; i++) {
+            copy[i] = addType(types[i]);
         }
 
-        typeListTable.addReference(types);
+        typeListTable.addReference(copy);
     }
 
-    private void addType(Type type) {
+    private Type addType(Type type) {
         if (type == null) {
-            return;
+            return null;
         }
 
         switch (type.kind()) {
@@ -1242,7 +1349,7 @@ final class IndexWriterV2 extends IndexWriterImpl {
         // so that types are written (and then read) in topological order; for recursive types,
         // this means that the reference is written _before_ the type variable it refers to,
         // which then requires a patching pass when reading (see IndexReaderV2#readTypeTable)
-        typeTable.addReference(type);
+        return typeTable.addReference(type);
     }
 
     private void buildAValueEntries(AnnotationValue value) {

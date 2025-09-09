@@ -177,7 +177,7 @@ public abstract class Type implements Descriptor {
                         while (string.charAt(++end) != ';')
                             ;
 
-                        type = new ClassType(DotName.createSimple(string.substring(start + 1, end)));
+                        type = ClassType.create(DotName.createSimple(string.substring(start + 1, end)));
                         break;
                     default:
                         type = PrimitiveType.decode(string.charAt(start));
@@ -188,7 +188,7 @@ public abstract class Type implements Descriptor {
 
                 return new ArrayType(type, depth);
             case CLASS:
-                return new ClassType(name);
+                return ClassType.create(name);
             case PRIMITIVE:
                 return PrimitiveType.decode(name.toString());
             case VOID:

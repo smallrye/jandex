@@ -219,10 +219,10 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
             Map<DotName, List<AnnotationInstance>> annotations, boolean hasNoArgsConstructor) {
         Type[] interfaceTypes = new Type[interfaces.length];
         for (int i = 0; i < interfaces.length; i++) {
-            interfaceTypes[i] = new ClassType(interfaces[i]);
+            interfaceTypes[i] = ClassType.create(interfaces[i]);
         }
 
-        ClassType superClassType = superName == null ? null : new ClassType(superName);
+        ClassType superClassType = superName == null ? null : ClassType.create(superName);
         ClassInfo clazz = new ClassInfo(name, superClassType, flags, interfaceTypes, hasNoArgsConstructor);
         clazz.setAnnotations(annotations);
         return clazz;

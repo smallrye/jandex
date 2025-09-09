@@ -340,7 +340,7 @@ final class MethodInternal {
             }
             return new ParameterizedType(clazz.name(), receiverTypeArguments, null);
         }
-        return new ClassType(clazz.name());
+        return ClassType.create(clazz.name());
     }
 
     final Type receiverTypeField() {

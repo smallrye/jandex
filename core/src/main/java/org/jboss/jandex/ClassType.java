@@ -17,6 +17,11 @@
  */
 package org.jboss.jandex;
 
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 /**
  * Represents a class type. Class types also include erasures of parameterized types.
  * <p>
@@ -43,6 +48,11 @@ public final class ClassType extends Type {
     public static final ClassType BOOLEAN_CLASS = new ClassType(DotName.BOOLEAN_CLASS_NAME);
     public static final ClassType VOID_CLASS = new ClassType(DotName.VOID_CLASS_NAME);
 
+    private static final Map<DotName, ClassType> JAVA_LANG_TYPES = Stream
+            .of(OBJECT_TYPE, STRING_TYPE, CLASS_TYPE, ANNOTATION_TYPE, BYTE_CLASS, CHARACTER_CLASS, DOUBLE_CLASS, FLOAT_CLASS,
+                    INTEGER_CLASS, LONG_CLASS, SHORT_CLASS, BOOLEAN_CLASS, VOID_CLASS)
+            .collect(Collectors.toMap(Type::name, Function.identity()));
+
     /**
      * Create an instance of a class type with given {@code name}.
      * <p>
@@ -55,7 +65,18 @@ public final class ClassType extends Type {
      * @since 3.0.4
      */
     public static ClassType create(DotName name) {
+        ClassType jlang = JAVA_LANG_TYPES.get(name);
+        if (jlang != null) {
+            return jlang;
+        }
         return new ClassType(name);
+    }
+
+    static ClassType create(DotName name, AnnotationInstance[] annotations) {
+        if (annotations == null || annotations.length == 0) {
+            return create(name);
+        }
+        return new ClassType(name, annotations);
     }
 
     /**
@@ -110,11 +131,11 @@ public final class ClassType extends Type {
         return builder(DotName.createSimple(clazz.getName()));
     }
 
-    ClassType(DotName name) {
+    private ClassType(DotName name) {
         this(name, null);
     }
 
-    ClassType(DotName name, AnnotationInstance[] annotations) {
+    private ClassType(DotName name, AnnotationInstance[] annotations) {
         super(name, annotations);
     }
 
@@ -130,7 +151,7 @@ public final class ClassType extends Type {
 
     @Override
     Type copyType(AnnotationInstance[] newAnnotations) {
-        return new ClassType(name(), newAnnotations);
+        return create(name(), newAnnotations);
     }
 
     ParameterizedType toParameterizedType() {
@@ -154,7 +175,7 @@ public final class ClassType extends Type {
          * @return the built class type
          */
         public ClassType build() {
-            return new ClassType(name, annotationsArray());
+            return create(name, annotationsArray());
         }
 
     }

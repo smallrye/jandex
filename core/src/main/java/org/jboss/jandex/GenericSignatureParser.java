@@ -350,7 +350,7 @@ class GenericSignatureParser {
             // A suffix is a parameterized type if it has typeParameters or it's owner is a parameterized type
             // The first parameterized type needs a standard class type for the owner
             if (type == null && types.length > 0) {
-                type = names.intern(new ClassType(name.prefix()));
+                type = names.intern(ClassType.create(name.prefix()));
             }
 
             if (type != null) {
@@ -358,7 +358,7 @@ class GenericSignatureParser {
             }
         }
         this.pos++; // ;
-        return type != null ? type : names.intern(new ClassType(name));
+        return type != null ? type : names.intern(ClassType.create(name));
     }
 
     private Type[] parseTypeArguments() {

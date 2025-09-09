@@ -1334,7 +1334,7 @@ public final class Indexer {
                     // create a synthetic `ClassType` for the purpose of resolving the type path,
                     // which would fail on a `VoidType` if the path points to a nested type
                     // (this happens on inner class constructors with type annotations)
-                    Type newType = new ClassType(method.declaringClass().name());
+                    Type newType = ClassType.create(method.declaringClass().name());
                     newType = resolveTypePath(newType, typeAnnotationState);
                     returnType = returnType.copyType(newType.annotationArray());
                     // fixup, `resolveTypePath` sets `typeAnnotationState.target` to the synthetic `ClassType`
@@ -1411,7 +1411,7 @@ public final class Indexer {
                     }
                 }
                 if (outermost == null) {
-                    outermost = outermostName.equals(type.name()) ? type : intern(new ClassType(outermostName));
+                    outermost = outermostName.equals(type.name()) ? type : intern(ClassType.create(outermostName));
                 }
 
                 outermost = intern(outermost.addAnnotation(AnnotationInstance.create(typeAnnotationState.annotation, null)));
@@ -1637,7 +1637,7 @@ public final class Indexer {
 
             if (depth == 0) {
                 if (last == null) {
-                    last = intern(new ClassType(currentName));
+                    last = intern(ClassType.create(currentName));
                 }
 
                 last = resolveTypePath(last, typeAnnotationState);
@@ -1952,7 +1952,7 @@ public final class Indexer {
 
         Type[] exceptions = numExceptions <= 0 ? Type.EMPTY_ARRAY : new Type[numExceptions];
         for (int i = 0; i < numExceptions; i++) {
-            exceptions[i] = intern(new ClassType(decodeClassEntry(data.readUnsignedShort())));
+            exceptions[i] = intern(ClassType.create(decodeClassEntry(data.readUnsignedShort())));
         }
 
         // Do not overwrite a signature exception
@@ -2184,10 +2184,10 @@ public final class Indexer {
         List<Type> interfaces = new ArrayList<Type>(numInterfaces);
 
         for (int i = 0; i < numInterfaces; i++) {
-            interfaces.add(intern(new ClassType(decodeClassEntry(data.readUnsignedShort()))));
+            interfaces.add(intern(ClassType.create(decodeClassEntry(data.readUnsignedShort()))));
         }
         Type[] interfaceTypes = intern(interfaces.toArray(new Type[interfaces.size()]));
-        Type superClassType = superName == null ? null : intern(new ClassType(superName));
+        Type superClassType = superName == null ? null : intern(ClassType.create(superName));
 
         this.currentClass = new ClassInfo(thisName, superClassType, flags, interfaceTypes);
 
@@ -2453,7 +2453,7 @@ public final class Indexer {
                     ;
                 name = names.convertToName(descriptor.substring(start + 1, end), '/');
                 pos.i = end;
-                return names.intern(new ClassType(name));
+                return names.intern(ClassType.create(name));
             }
             case '[': {
                 int end = start;

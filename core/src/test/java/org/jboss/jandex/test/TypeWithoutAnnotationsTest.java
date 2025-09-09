@@ -106,7 +106,7 @@ public class TypeWithoutAnnotationsTest {
                 withoutAnnotations(clazz, "typeParameterWithMultipleBoundsFirstParameterized"));
         assertEquals("Y extends java.io.Serializable & java.lang.Comparable<Y>",
                 withoutAnnotations(clazz, "typeParameterWithMultipleBoundsSecondParameterized"));
-        assertEquals("? extends java.lang.Object",
+        assertEquals("?",
                 firstTypeArgumentWithoutAnnotations(clazz, "unboundedWildcard"));
         assertEquals("? extends java.lang.Number",
                 firstTypeArgumentWithoutAnnotations(clazz, "wildcardWithUpperBound"));

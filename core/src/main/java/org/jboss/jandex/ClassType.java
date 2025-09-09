@@ -17,6 +17,10 @@
  */
 package org.jboss.jandex;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Represents a class type. Class types also include erasures of parameterized types.
  * <p>
@@ -43,6 +47,26 @@ public final class ClassType extends Type {
     public static final ClassType BOOLEAN_CLASS = new ClassType(DotName.BOOLEAN_CLASS_NAME);
     public static final ClassType VOID_CLASS = new ClassType(DotName.VOID_CLASS_NAME);
 
+    private static final Map<DotName, ClassType> KNOWN_TYPES;
+
+    static {
+        Map<DotName, ClassType> map = new HashMap<>();
+        map.put(DotName.OBJECT_NAME, OBJECT_TYPE);
+        map.put(DotName.STRING_NAME, STRING_TYPE);
+        map.put(DotName.CLASS_NAME, CLASS_TYPE);
+        map.put(DotName.ANNOTATION_NAME, ANNOTATION_TYPE);
+        map.put(DotName.BYTE_CLASS_NAME, BYTE_CLASS);
+        map.put(DotName.CHARACTER_CLASS_NAME, CHARACTER_CLASS);
+        map.put(DotName.DOUBLE_CLASS_NAME, DOUBLE_CLASS);
+        map.put(DotName.FLOAT_CLASS_NAME, FLOAT_CLASS);
+        map.put(DotName.INTEGER_CLASS_NAME, INTEGER_CLASS);
+        map.put(DotName.LONG_CLASS_NAME, LONG_CLASS);
+        map.put(DotName.SHORT_CLASS_NAME, SHORT_CLASS);
+        map.put(DotName.BOOLEAN_CLASS_NAME, BOOLEAN_CLASS);
+        map.put(DotName.VOID_CLASS_NAME, VOID_CLASS);
+        KNOWN_TYPES = Collections.unmodifiableMap(map);
+    }
+
     /**
      * Create an instance of a class type with given {@code name}.
      * <p>
@@ -55,7 +79,15 @@ public final class ClassType extends Type {
      * @since 3.0.4
      */
     public static ClassType create(DotName name) {
-        return new ClassType(name);
+        ClassType known = KNOWN_TYPES.get(name);
+        return known != null ? known : new ClassType(name);
+    }
+
+    static ClassType create(DotName name, AnnotationInstance[] annotations) {
+        if (annotations == null || annotations.length == 0) {
+            return create(name);
+        }
+        return new ClassType(name, annotations);
     }
 
     /**
@@ -110,11 +142,11 @@ public final class ClassType extends Type {
         return builder(DotName.createSimple(clazz.getName()));
     }
 
-    ClassType(DotName name) {
+    private ClassType(DotName name) {
         this(name, null);
     }
 
-    ClassType(DotName name, AnnotationInstance[] annotations) {
+    private ClassType(DotName name, AnnotationInstance[] annotations) {
         super(name, annotations);
     }
 
@@ -130,7 +162,7 @@ public final class ClassType extends Type {
 
     @Override
     Type copyType(AnnotationInstance[] newAnnotations) {
-        return new ClassType(name(), newAnnotations);
+        return create(name(), newAnnotations);
     }
 
     ParameterizedType toParameterizedType() {
@@ -154,7 +186,7 @@ public final class ClassType extends Type {
          * @return the built class type
          */
         public ClassType build() {
-            return new ClassType(name, annotationsArray());
+            return create(name, annotationsArray());
         }
 
     }

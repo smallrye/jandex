@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
@@ -93,16 +94,101 @@ final class IndexWriterV2 extends IndexWriterImpl {
     private NameTable names;
     private HashMap<DotName, Integer> nameTable;
     private TreeMap<String, DotName> sortedNameTable;
-    private ReferenceTable<AnnotationInstance> annotationTable;
+    private AnnotationInstanceReferenceTable annotationTable;
     private ReferenceTable<Type> typeTable;
     private ReferenceTable<Type[]> typeListTable;
 
     static class ReferenceEntry {
-        private int index;
+        private final int index;
         private boolean written;
 
         ReferenceEntry(int index) {
             this.index = index;
+        }
+    }
+
+    /**
+     * Interning {@link AnnotationInstance} reference table, respecting only the serialized {@link AnnotationInstance}
+     * attributes.
+     */
+    static final class AnnotationInstanceReferenceTable {
+        private final Map<AnnotationInstanceKey, ReferenceEntry> references = new HashMap<>();
+        private int counter = 1;
+
+        void addReference(AnnotationInstance reference) {
+            AnnotationInstanceKey key = new AnnotationInstanceKey(reference);
+            if (references.containsKey(key)) {
+                return;
+            }
+
+            int index = counter++;
+            references.put(key, new ReferenceEntry(index));
+        }
+
+        private ReferenceEntry getReferenceEntry(AnnotationInstance reference) {
+            AnnotationInstanceKey key = new AnnotationInstanceKey(reference);
+            ReferenceEntry entry = references.get(key);
+            if (entry == null) {
+                throw new IllegalStateException("Missing in reference table: " + reference);
+            }
+            return entry;
+        }
+
+        int positionOf(AnnotationInstance reference) {
+            ReferenceEntry entry = getReferenceEntry(reference);
+
+            return entry.index;
+        }
+
+        boolean markWritten(AnnotationInstance reference) {
+            ReferenceEntry entry = getReferenceEntry(reference);
+
+            boolean ret = entry.written;
+            if (!ret) {
+                entry.written = true;
+            }
+
+            return !ret;
+        }
+
+        int size() {
+            return references.size();
+        }
+
+        /** Annotation-instance reference key specialized on the subset of serialized {@link AnnotationInstance} attributes. */
+        static final class AnnotationInstanceKey {
+            private final AnnotationInstance annotationInstance;
+
+            AnnotationInstanceKey(AnnotationInstance annotationInstance) {
+                this.annotationInstance = annotationInstance;
+            }
+
+            @Override
+            public int hashCode() {
+                int h = annotationInstance.name().hashCode();
+                AnnotationTarget target = annotationInstance.target();
+                h = 31 * h + (target != null ? target.hashCode() : 0);
+                h = 31 * h + annotationInstance.values().hashCode();
+                h = 31 * h + (annotationInstance.runtimeVisible() ? 1 : 0);
+                return h;
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if (obj == null || !obj.getClass().equals(AnnotationInstanceKey.class)) {
+                    return false;
+                }
+                AnnotationInstanceKey other = (AnnotationInstanceKey) obj;
+                return annotationInstance.name().equals(other.annotationInstance.name()) &&
+                        annotationInstance.target() == other.annotationInstance.target() &&
+                        annotationInstance.values().equals(other.annotationInstance.values()) &&
+                        annotationInstance.runtimeVisible() == other.annotationInstance.runtimeVisible();
+            }
+
+            @Override
+            public String toString() {
+                return annotationInstance.toString();
+            }
         }
     }
 
@@ -907,7 +993,7 @@ final class IndexWriterV2 extends IndexWriterImpl {
         nameTable = new HashMap<DotName, Integer>();
         sortedNameTable = new TreeMap<String, DotName>();
 
-        annotationTable = new ReferenceTable<AnnotationInstance>();
+        annotationTable = new AnnotationInstanceReferenceTable();
         typeTable = new ReferenceTable<Type>();
         typeListTable = new ReferenceTable<Type[]>();
         names = new NameTable();

@@ -396,6 +396,11 @@ public final class Indexer {
     private int[] constantPoolOffsets;
     private byte[] constantPoolAnnoAttrributes;
 
+    // note that for reproducibility, we have to establish a predictable iteration order for all `Map`s
+    // below that we iterate upon (fortunately, that's not too many)
+    // this is either by using keys with predictable `equals`/`hashCode` (such as `DotName`),
+    // or by storing the keys on the side in a list and iterate on that (needed for `IdentityHashMap`s)
+
     private ClassInfo currentClass;
     private HashMap<DotName, List<AnnotationInstance>> classAnnotations;
     private ArrayList<AnnotationInstance> elementAnnotations;
@@ -403,7 +408,9 @@ public final class Indexer {
     private List<Object> signatures;
     private int classSignatureIndex = -1;
     private Map<DotName, InnerClassInfo> innerClasses;
+    // iteration: `typeAnnotationsKeys` is used for predictable iteration order, we never iterate on `typeAnnotations`
     private IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>> typeAnnotations;
+    private List<AnnotationTarget> typeAnnotationsKeys;
     private List<MethodInfo> methods;
     private List<FieldInfo> fields;
     private List<RecordComponentInfo> recordComponents;
@@ -416,9 +423,12 @@ public final class Indexer {
     private Map<DotName, List<ClassInfo>> subclasses;
     private Map<DotName, List<ClassInfo>> subinterfaces;
     private Map<DotName, List<ClassInfo>> implementors;
+    // iteration: `DotName` has predictable `equals`/`hashCode`, which implies predictable iteration order
     private Map<DotName, ClassInfo> classes;
     private Map<DotName, ModuleInfo> modules;
-    private Map<DotName, Set<ClassInfo>> users; // must be a linked set for reproducibility
+    // iteration: `DotName` has predictable `equals`/`hashCode`, which implies predictable iteration order
+    // iteration: the `Set`s in map values must be linked sets for predictable iteration order
+    private Map<DotName, Set<ClassInfo>> users;
     private NameTable names;
     private GenericSignatureParser signatureParser;
     private final TmpObjects tmpObjects = new TmpObjects();
@@ -459,6 +469,7 @@ public final class Indexer {
         signaturePresent = new IdentityHashMap<AnnotationTarget, Object>();
         signatures = new ArrayList<Object>();
         typeAnnotations = new IdentityHashMap<AnnotationTarget, List<TypeAnnotationState>>();
+        typeAnnotationsKeys = new ArrayList<>();
 
         // in bytecode, record components are stored as class attributes,
         // and if the attribute is missing, processRecordComponents isn't called at all
@@ -903,6 +914,7 @@ public final class Indexer {
             typeAnnotations.get(target).addAll(annotations);
         } else {
             typeAnnotations.put(target, annotations);
+            typeAnnotationsKeys.add(target);
         }
     }
 
@@ -1104,9 +1116,8 @@ public final class Indexer {
     }
 
     private void resolveTypeAnnotations() {
-        for (Map.Entry<AnnotationTarget, List<TypeAnnotationState>> entry : typeAnnotations.entrySet()) {
-            AnnotationTarget key = entry.getKey();
-            List<TypeAnnotationState> annotations = entry.getValue();
+        for (AnnotationTarget key : typeAnnotationsKeys) {
+            List<TypeAnnotationState> annotations = typeAnnotations.get(key);
 
             for (TypeAnnotationState annotation : annotations) {
                 resolveTypeAnnotation(key, annotation);
@@ -1202,9 +1213,8 @@ public final class Indexer {
     }
 
     private void updateTypeTargets() {
-        for (Map.Entry<AnnotationTarget, List<TypeAnnotationState>> entry : typeAnnotations.entrySet()) {
-            AnnotationTarget key = entry.getKey();
-            List<TypeAnnotationState> annotations = entry.getValue();
+        for (AnnotationTarget key : typeAnnotationsKeys) {
+            List<TypeAnnotationState> annotations = typeAnnotations.get(key);
 
             for (TypeAnnotationState annotation : annotations) {
                 updateTypeTarget(key, annotation);
@@ -2686,6 +2696,7 @@ public final class Indexer {
             classSignatureIndex = -1;
             innerClasses = null;
             typeAnnotations = null;
+            typeAnnotationsKeys = null;
             methods = null;
             fields = null;
             recordComponents = null;

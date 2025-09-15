@@ -2,88 +2,137 @@ package org.jboss.jandex.test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
 
 import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
+import org.jboss.jandex.test.util.IndexingUtil;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.RepeatedTest;
 
-// asserts that the indexing process is reproducible (that is, always produces the same output)
-// on the same JVM version with the same sequence of input files, using the test classes from
-// packages `org.jboss.jandex.test` (the `core` module) and `test` (the `test-data` module)
-//
-// there's also a reproducibility integration test in the `maven-plugin` module, which uses
-// a different set of inputs
 public class ReproducibilityTest {
-    static byte[] firstIndex;
-
-    static byte[] index() throws IOException, URISyntaxException {
-        Indexer indexer = new Indexer();
-        ClassLoader cl = ReproducibilityTest.class.getClassLoader();
-        for (String pkg : Arrays.asList("org/jboss/jandex/test/", "test/")) {
-            URI uri = cl.getResources(pkg).nextElement().toURI();
-            String scheme = uri.getScheme();
-            if ("file".equals(scheme)) {
-                try (Stream<Path> stream = Files.walk(Paths.get(uri))) {
-                    List<Path> classes = stream
-                            .filter(it -> Files.isRegularFile(it) && it.getFileName().toString().endsWith(".class"))
-                            .sorted()
-                            .collect(Collectors.toList());
-                    for (Path path : classes) {
-                        try (InputStream in = Files.newInputStream(path)) {
-                            indexer.index(in);
-                        }
-                    }
-                }
-            }
-            if ("jar".equals(scheme)) {
-                // opaque URI of the form `jar:<file URI>!/pkg/`
-                String part = uri.getSchemeSpecificPart();
-                uri = new URI(part.substring(0, part.indexOf("!")));
-                try (JarFile jar = new JarFile(new File(uri))) {
-                    List<JarEntry> classes = jar.stream()
-                            .filter(it -> it.getName().endsWith(".class"))
-                            .sorted(Comparator.comparing(ZipEntry::getName))
-                            .collect(Collectors.toList());
-                    for (JarEntry entry : classes) {
-                        try (InputStream in = jar.getInputStream(entry)) {
-                            indexer.index(in);
-                        }
-                    }
-                }
-            }
-        }
-        Index index = indexer.complete();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        new IndexWriter(out).write(index);
-        return out.toByteArray();
-    }
+    static List<String> testDataClassNames;
+    static Map<String, byte[]> classData;
+    static byte[] referenceSerializedIndex;
 
     @BeforeAll
-    public static void setup() throws IOException, URISyntaxException {
-        firstIndex = index();
+    public static void setup() throws Exception {
+        URL referenceClassResourceUrl = ReproducibilityTest.class.getClassLoader()
+                .getResource("test/BridgeMethods.class");
+        Assertions.assertNotNull(referenceClassResourceUrl, "jandex-test-data is missing test-data reference class");
+        URI classUri = referenceClassResourceUrl.toURI();
+        classData = new HashMap<>();
+
+        switch (classUri.getScheme()) {
+            case "jar": {
+                URI jarUri = URI
+                        .create(classUri.getSchemeSpecificPart().substring(0, classUri.getSchemeSpecificPart().indexOf('!')));
+                try (FileInputStream fileInputStream = new FileInputStream(Paths.get(jarUri).toFile());
+                        JarInputStream jarFile = new JarInputStream(new BufferedInputStream(fileInputStream))) {
+                    JarEntry entry;
+                    while ((entry = jarFile.getNextJarEntry()) != null) {
+                        if (!entry.getName().endsWith(".class")) {
+                            continue;
+                        }
+                        String className = entry.getName().replace('/', '.').substring(0, entry.getName().length() - 6);
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        int rd;
+                        byte[] buffer = new byte[1024];
+                        while ((rd = jarFile.read(buffer)) != -1) {
+                            baos.write(buffer, 0, rd);
+                        }
+                        byte[] bytecode = baos.toByteArray();
+                        classData.put(className, bytecode);
+                    }
+                }
+                testDataClassNames = classData.keySet().stream().sorted().collect(Collectors.toList());
+                break;
+            }
+            case "file": {
+                URI testDataClassesUri = classUri.resolve("..");
+                Path testDataClassesDir = Paths.get(testDataClassesUri);
+
+                try (Stream<Path> classesContent = Files.walk(testDataClassesDir)) {
+                    testDataClassNames = Collections.unmodifiableList(classesContent.filter(Files::isRegularFile)
+                            .filter(path -> path.toString().endsWith(".class"))
+                            .map(path -> {
+                                String relativePath = testDataClassesDir.relativize(path).toString();
+                                String className = relativePath.replace('/', '.').substring(0, relativePath.length() - 6);
+                                try {
+                                    classData.put(className, Files.readAllBytes(path));
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                return className;
+                            })
+                            .sorted()
+                            .collect(Collectors.toList()));
+                }
+
+                break;
+            }
+            default:
+                throw new RuntimeException("Unsupported URI scheme: " + classUri);
+        }
+
+        referenceSerializedIndex = serializedIndex(testDataClassNames);
     }
 
-    @RepeatedTest(50)
-    public void test() throws IOException, URISyntaxException {
-        assertArrayEquals(firstIndex, index());
+    @RepeatedTest(5)
+    public void sameClassesOrder() throws Exception {
+        byte[] actual = serializedIndex(testDataClassNames);
+
+        assertArrayEquals(referenceSerializedIndex, actual);
+    }
+
+    @RepeatedTest(5)
+    public void reversedClassesOrder() throws Exception {
+        List<String> classes = new ArrayList<>(testDataClassNames);
+        Collections.reverse(classes);
+
+        byte[] actual = serializedIndex(classes);
+
+        assertArrayEquals(referenceSerializedIndex, actual);
+    }
+
+    @RepeatedTest(25)
+    public void randomClassesOrder() throws Exception {
+        List<String> classes = new ArrayList<>(testDataClassNames);
+        Collections.shuffle(classes);
+
+        byte[] actual = serializedIndex(classes);
+
+        assertArrayEquals(referenceSerializedIndex, actual);
+    }
+
+    static byte[] serializedIndex(List<String> classNames) throws IOException {
+        return IndexingUtil.serializeIndex(buildIndex(classNames));
+    }
+
+    static Index buildIndex(List<String> classNames) throws IOException {
+        Indexer indexer = new Indexer();
+        for (String className : classNames) {
+            indexer.index(new ByteArrayInputStream(classData.get(className)));
+        }
+        return indexer.complete();
     }
 }

@@ -82,6 +82,12 @@
                 <version>${version.gizmo2}</version>
             </dependency>
             <dependency>
+                <groupId>io.quarkus.gizmo</groupId>
+                <artifactId>gizmo2</artifactId>
+                <type>test-jar</type>
+                <version>${version.gizmo2}</version>
+            </dependency>
+            <dependency>
                 <groupId>net.bytebuddy</groupId>
                 <artifactId>byte-buddy</artifactId>
                 <version>${version.bytebuddy}</version>

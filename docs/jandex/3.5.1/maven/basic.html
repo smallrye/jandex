@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Basic Maven Plugin Usage :: Jandex documentation</title>
+    <link rel="prev" href="../core/indexing.html">
+    <link rel="next" href="advanced.html">
+    <meta name="generator" content="Antora 3.0.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <button class="nav-toggle"></button>
+
+      <a class="navbar-item title" href="../index.html">Jandex</a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <span class="navbar-link">3.5.1</span>
+        <div class="navbar-dropdown navbar-menu">
+            <a class="navbar-item  is-current" href="../index.html">3.5.1</a>
+            <a class="navbar-item " href="../../3.5.0/index.html">3.5.0</a>
+            <a class="navbar-item " href="../../3.4.0/index.html">3.4.0</a>
+            <a class="navbar-item " href="../../3.3.2/index.html">3.3.2</a>
+            <a class="navbar-item " href="../../3.3.1/index.html">3.3.1</a>
+            <a class="navbar-item " href="../../3.3.0/index.html">3.3.0</a>
+            <a class="navbar-item " href="../../3.2.7/index.html">3.2.7</a>
+            <a class="navbar-item " href="../../3.2.6/index.html">3.2.6</a>
+            <a class="navbar-item " href="../../3.2.5/index.html">3.2.5</a>
+            <a class="navbar-item " href="../../3.2.4/index.html">3.2.4</a>
+            <a class="navbar-item " href="../../3.2.3/index.html">3.2.3</a>
+            <a class="navbar-item " href="../../3.2.2/index.html">3.2.2</a>
+            <a class="navbar-item " href="../../3.2.1/index.html">3.2.1</a>
+            <a class="navbar-item " href="../../3.2.0/index.html">3.2.0</a>
+            <a class="navbar-item " href="../../3.1.8/index.html">3.1.8</a>
+            <a class="navbar-item " href="../../3.1.7/index.html">3.1.7</a>
+            <a class="navbar-item " href="../../3.1.6/index.html">3.1.6</a>
+            <a class="navbar-item " href="../../3.1.5/index.html">3.1.5</a>
+            <a class="navbar-item " href="../../3.1.3/index.html">3.1.3</a>
+            <a class="navbar-item " href="../../3.1.2/index.html">3.1.2</a>
+            <a class="navbar-item " href="../../3.1.1/index.html">3.1.1</a>
+            <a class="navbar-item " href="../../3.1.0/index.html">3.1.0</a>
+            <a class="navbar-item " href="../../3.0.8/index.html">3.0.8</a>
+            <a class="navbar-item " href="../../3.0.7/index.html">3.0.7</a>
+            <a class="navbar-item " href="../../3.0.6/index.html">3.0.6</a>
+            <a class="navbar-item " href="../../3.0.5/index.html">3.0.5</a>
+            <a class="navbar-item " href="../../3.0.4/index.html">3.0.4</a>
+            <a class="navbar-item " href="../../3.0.3/index.html">3.0.3</a>
+            <a class="navbar-item " href="../../3.0.2/index.html">3.0.2</a>
+            <a class="navbar-item " href="../../3.0.1/index.html">3.0.1</a>
+            <a class="navbar-item " href="../../3.0.0/index.html">3.0.0</a>
+        </div>
+      </div>
+
+
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+
+        <a class="navbar-item" href="https://smallrye.io/">SmallRye.io main website</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="jandex" data-version="3.5.1">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+<ul class="nav-list nav-list-level-0">
+  <li class="nav-item nav-item-level-0">
+<ul class="nav-list nav-list-level-1">
+  <li class="nav-item nav-item-level-1">
+    <a class="nav-link" href="../index.html">Introduction</a>
+  </li>
+  <li class="nav-item nav-item-level-1">
+    <span class="nav-text">Jandex</span>
+<ul class="nav-list nav-list-level-2">
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="../core/getting.html">Getting Jandex</a>
+  </li>
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="../core/browsing.html">Browsing Declarations and Types</a>
+  </li>
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="../core/indexing.html">Indexing Classes</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item nav-item-level-1">
+    <span class="nav-text">Jandex Maven Plugin</span>
+<ul class="nav-list nav-list-level-2">
+  <li class="nav-item nav-item-level-2 is-current-page">
+    <a class="nav-link" href="basic.html">Basic Usage</a>
+  </li>
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="advanced.html">Advanced Usage</a>
+  </li>
+  <li class="nav-item nav-item-level-2">
+    <a class="nav-link" href="shading.html">Usage with Shading</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+  <div class="content">
+<aside class="toc sidebar" data-title="Table of contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+  <a href="https://github.com/smallrye/jandex/blob/3.5.1/doc/modules/ROOT/pages/maven/basic.adoc" class="edit-this-page" title="Edit this page">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+<h1 class="page">Basic Maven Plugin Usage</h1>
+<div class="paragraph">
+<p>This is how you add a persistent Jandex index to your Maven project:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;build&gt;
+    &lt;plugins&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;io.smallrye&lt;/groupId&gt;
+            &lt;artifactId&gt;jandex-maven-plugin&lt;/artifactId&gt;
+            &lt;version&gt;${version.jandex}&lt;/version&gt;
+            &lt;executions&gt;
+                &lt;execution&gt;
+                    &lt;id&gt;make-index&lt;/id&gt;
+                    &lt;goals&gt;
+                        &lt;goal&gt;jandex&lt;/goal&gt;
+                    &lt;/goals&gt;
+                &lt;/execution&gt;
+            &lt;/executions&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/build&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>jandex</code> goal is bound to the <code>process-classes</code> phase by default.</p>
+</div>
+<div class="paragraph">
+<p>This configuration will index all <code>.class</code> files in your <code>target/classes</code> directory, and write the index to <code>target/classes/META-INF/jandex.idx</code>.</p>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="../core/indexing.html">Indexing Classes</a></span>
+  <span class="next"><a href="advanced.html">Advanced Usage</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>
+    Sponsored by <a href="https://www.redhat.com"><img style="vertical-align: middle; height: 2.5em;" src="../../../_/img/redhat.svg" alt="Red Hat"></a>
+  </p>
+  <p>
+    Made with <a href="https://github.com/smallrye/smallrye-antora-ui">SmallRye Antora UI</a>, which is licensed under the MPL-2.0 license.
+    Includes portions of <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a>, which is licensed under the MIT license.
+  </p>
+</footer>
+<script src="../../../_/js/site.js"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

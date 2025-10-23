@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.smallrye</groupId>
         <artifactId>jandex-parent</artifactId>
-        <version>3.5.1</version>
+        <version>3.5.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>jandex-gizmo2</artifactId>

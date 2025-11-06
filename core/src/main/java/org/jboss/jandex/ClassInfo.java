@@ -832,6 +832,35 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         return methodPositions;
     }
 
+    final MethodInfo method(MethodInternal key) {
+        int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
+        return i >= 0 ? new MethodInfo(this, methods[i]) : null;
+    }
+
+    /**
+     * Retrieves a method that has the same signature as the given {@code other} method. The signature includes
+     * method name and parameter types; it does <em>not</em> include return type, type parameters or anything else.
+     * The parameter types are compared based on the underlying raw types. For example, an unbounded type parameter
+     * {@code T} is considered equal to {@code java.lang.Object}, since the raw form of a type variable is
+     * its upper bound.
+     * <p>
+     * Eligible methods include constructors and static initializers, which have the special names
+     * of {@code <init>} and {@code <clinit>}, respectively. Eligible methods do <em>not</em> include
+     * inherited methods. These must be discovered by traversing the class hierarchy.
+     * <p>
+     * This method may be useful for retrieving overridden or overriding methods, but note that the definition
+     * of method override is more complex; notably, it includes method visibility. For example, a {@code private}
+     * method in a superclass is not overridden by a method with the same signature in a subclass.
+     *
+     * @param other method instance having the same signature to retrieve from this ClassInfo
+     * @return the located method or {@code null} if not found
+     *
+     * @since 3.5.2
+     */
+    public final MethodInfo method(MethodInfo other) {
+        return method(other.methodInternal());
+    }
+
     /**
      * Retrieves a method based on its signature, which includes a method name and a parameter type list.
      * The parameter type list is compared based on the underlying raw types. As an example,
@@ -849,8 +878,7 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
     public final MethodInfo method(String name, Type... parameters) {
         MethodInternal key = new MethodInternal(Utils.toUTF8(name), MethodInternal.EMPTY_PARAMETER_NAMES, parameters, null,
                 (short) 0);
-        int i = Arrays.binarySearch(methods, key, MethodInternal.NAME_AND_PARAMETER_COMPONENT_COMPARATOR);
-        return i >= 0 ? new MethodInfo(this, methods[i]) : null;
+        return method(key);
     }
 
     /**

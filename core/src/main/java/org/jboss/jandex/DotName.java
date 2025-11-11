@@ -314,6 +314,76 @@ public final class DotName implements Comparable<DotName> {
         return innerClass;
     }
 
+    /**
+     * Returns whether the dotted name structure represented by this {@link DotName}
+     * starts with the dotted name structure represented by given {@code prefix}. For
+     * example, {@code com.example.FooBar} starts with {@code com}, {@code com.example}
+     * and {@code com.example.FooBar}, but it <em>does not</em> start with {@code com.exam}
+     * or {@code com.example.Foo}.
+     * <p>
+     * Note that this method <em>only</em> determines package prefixing and does
+     * <em>not</em> support inner class prefixing. This is because it is impossible
+     * to know whether the {@code $} char is part of a class name or an inner class
+     * delimiter. Notably, when either this {@code DotName} or the {@code prefix} are
+     * {@linkplain #isComponentized() componentized} and have at least one component
+     * with the {@linkplain #isInner() inner} flag set, the result is not defined.
+     *
+     * @param prefix the prefix to search for, must not be {@code null}
+     * @return whether this {@link DotName} starts with the given prefix
+     * @since 3.5.2
+     */
+    public boolean startsWith(DotName prefix) {
+        int thisLength = this.stringLength();
+        int prefixLength = prefix.stringLength();
+
+        if (thisLength < prefixLength) {
+            return false;
+        }
+
+        if (componentized) {
+            if (prefix.componentized) {
+                DotName current = this;
+                while (current != null) {
+                    if (current.equals(prefix)) {
+                        return true;
+                    }
+                    current = current.prefix;
+                }
+                return false;
+            } else {
+                return commonPrefixLength(prefix.local, this) == prefixLength + 1;
+            }
+        } else {
+            if (prefix.componentized) {
+                return commonPrefixLength(this.local, prefix) == prefixLength + 1;
+            } else {
+                if (thisLength == prefixLength) {
+                    return this.local.equals(prefix.local);
+                } else {
+                    return this.local.startsWith(prefix.local) && this.local.charAt(prefixLength) == '.';
+                }
+            }
+        }
+    }
+
+    private int commonPrefixLength(String simple, DotName componentized) {
+        if (componentized == null) {
+            return 0;
+        }
+
+        int index = commonPrefixLength(simple, componentized.prefix);
+        if (index >= simple.length()) {
+            return index;
+        }
+        if (index >= 0 && simple.startsWith(componentized.local, index)) {
+            index += componentized.local.length();
+            if (index >= simple.length() || simple.charAt(index) == '.') {
+                return index + 1;
+            }
+        }
+        return -1;
+    }
+
     boolean startsWithJava() {
         if (componentized) {
             DotName name = this;

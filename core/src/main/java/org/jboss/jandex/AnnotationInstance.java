@@ -44,15 +44,22 @@ import java.util.List;
 public final class AnnotationInstance {
     static final NameComparator NAME_COMPARATOR = new NameComparator();
     static final AnnotationInstance[] EMPTY_ARRAY = new AnnotationInstance[0];
+    private static final ValueNameComparator VALUE_NAME_COMPARATOR = new ValueNameComparator();
 
     private final DotName name;
     private final AnnotationTarget target;
     private final AnnotationValue[] values;
     private final boolean runtimeVisible;
 
-    static class NameComparator implements Comparator<AnnotationInstance> {
+    private static class NameComparator implements Comparator<AnnotationInstance> {
         public int compare(AnnotationInstance instance1, AnnotationInstance instance2) {
             return instance1.name().compareTo(instance2.name());
+        }
+    }
+
+    private static class ValueNameComparator implements Comparator<AnnotationValue> {
+        public int compare(AnnotationValue value1, AnnotationValue value2) {
+            return value1.name().compareTo(value2.name());
         }
     }
 
@@ -162,11 +169,7 @@ public final class AnnotationInstance {
         values = values.clone();
 
         // Sort entries so they can be binary searched
-        Arrays.sort(values, new Comparator<AnnotationValue>() {
-            public int compare(AnnotationValue o1, AnnotationValue o2) {
-                return o1.name().compareTo(o2.name());
-            }
-        });
+        Arrays.sort(values, VALUE_NAME_COMPARATOR);
 
         return new AnnotationInstance(name, target, values, visible);
     }
@@ -205,6 +208,15 @@ public final class AnnotationInstance {
     }
 
     static AnnotationInstance binarySearch(AnnotationInstance[] annotations, DotName name) {
+        if (annotations.length == 0) {
+            return null;
+        }
+
+        if (annotations.length == 1) {
+            AnnotationInstance annotation = annotations[0];
+            return annotation.name().equals(name) ? annotation : null;
+        }
+
         // only `name` is significant in `key`, the rest can be arbitrary
         AnnotationInstance key = new AnnotationInstance(name, null, null, false);
         int i = Arrays.binarySearch(annotations, key, AnnotationInstance.NAME_COMPARATOR);
@@ -242,6 +254,17 @@ public final class AnnotationInstance {
      * @return the annotation member with specified name, or {@code null}
      */
     public AnnotationValue value(final String name) {
+        AnnotationValue[] values = this.values;
+
+        if (values.length == 0) {
+            return null;
+        }
+
+        if (values.length == 1) {
+            AnnotationValue value = values[0];
+            return value.name().equals(name) ? value : null;
+        }
+
         int result = Arrays.binarySearch(values, name, new Comparator<Object>() {
             public int compare(Object o1, Object o2) {
                 return ((AnnotationValue) o1).name().compareTo(name);

@@ -364,6 +364,103 @@ public class DotNameTestCase {
     }
 
     @Test
+    public void startsWith() {
+        DotName componentizedCom = DotName.createComponentized(null, "com");
+        assertTrue(componentizedCom.startsWith(componentizedCom));
+
+        DotName componentizedComExample = DotName.createComponentized(componentizedCom, "example");
+        assertTrue(componentizedComExample.startsWith(componentizedCom));
+        assertTrue(componentizedComExample.startsWith(componentizedComExample));
+
+        DotName componentizedComExampleFooBar = DotName.createComponentized(componentizedComExample, "FooBar");
+        assertTrue(componentizedComExampleFooBar.startsWith(componentizedCom));
+        assertTrue(componentizedComExampleFooBar.startsWith(componentizedComExample));
+        assertTrue(componentizedComExampleFooBar.startsWith(componentizedComExampleFooBar));
+
+        DotName componentizedComEx = DotName.createComponentized(componentizedCom, "ex");
+        assertFalse(componentizedComExampleFooBar.startsWith(componentizedComEx));
+
+        DotName componentizedComExampleFoo = DotName.createComponentized(componentizedComExample, "Foo");
+        assertFalse(componentizedComExampleFooBar.startsWith(componentizedComExampleFoo));
+
+        DotName simpleCom = DotName.createSimple("com");
+        assertTrue(simpleCom.startsWith(simpleCom));
+
+        assertTrue(simpleCom.startsWith(componentizedCom));
+        assertTrue(componentizedCom.startsWith(simpleCom));
+
+        DotName simpleComExample = DotName.createSimple("com.example");
+        assertTrue(simpleComExample.startsWith(simpleCom));
+        assertTrue(simpleComExample.startsWith(simpleComExample));
+
+        assertTrue(simpleComExample.startsWith(componentizedCom));
+        assertTrue(simpleComExample.startsWith(componentizedComExample));
+        assertTrue(componentizedComExample.startsWith(simpleCom));
+        assertTrue(componentizedComExample.startsWith(simpleComExample));
+
+        DotName simpleComExampleFooBar = DotName.createSimple("com.example.FooBar");
+        assertTrue(simpleComExampleFooBar.startsWith(simpleCom));
+        assertTrue(simpleComExampleFooBar.startsWith(simpleComExample));
+        assertTrue(simpleComExampleFooBar.startsWith(simpleComExampleFooBar));
+
+        assertTrue(simpleComExampleFooBar.startsWith(componentizedCom));
+        assertTrue(simpleComExampleFooBar.startsWith(componentizedComExample));
+        assertTrue(simpleComExampleFooBar.startsWith(componentizedComExampleFooBar));
+        assertTrue(componentizedComExampleFooBar.startsWith(simpleCom));
+        assertTrue(componentizedComExampleFooBar.startsWith(simpleComExample));
+        assertTrue(componentizedComExampleFooBar.startsWith(simpleComExampleFooBar));
+
+        DotName simpleComEx = DotName.createSimple("com.ex");
+        assertFalse(simpleComExampleFooBar.startsWith(simpleComEx));
+        assertFalse(simpleComExampleFooBar.startsWith(componentizedComEx));
+        assertFalse(componentizedComExampleFooBar.startsWith(simpleComEx));
+
+        DotName simpleComExampleFoo = DotName.createSimple("com.example.Foo");
+        assertFalse(simpleComExampleFooBar.startsWith(simpleComExampleFoo));
+        assertFalse(simpleComExampleFooBar.startsWith(componentizedComExampleFoo));
+        assertFalse(componentizedComExampleFooBar.startsWith(simpleComExampleFoo));
+    }
+
+    @Test
+    public void startsWith_random() {
+        for (int i = 0; i < 2_000_000; i++) {
+            DotName name1 = createRandomDotName();
+            DotName name2 = createRandomDotName();
+
+            // `createRandomComponentised()` only flags the last component as inner
+            if (name1.isInner() ^ name2.isInner()) {
+                continue;
+            }
+
+            assertEquals(naiveStartsWith(name1, name2), name1.startsWith(name2));
+
+            if (name1.isComponentized()) {
+                DotName name1Prefix = name1.prefix();
+                if (name1Prefix != null) {
+                    assertTrue(name1.startsWith(name1Prefix));
+                }
+            } else {
+                if (name1.local().indexOf('.') >= 0) {
+                    DotName name1Prefix = DotName.createSimple(name1.local().substring(0, name1.local().lastIndexOf('.')));
+                    assertTrue(name1.startsWith(name1Prefix));
+                }
+            }
+        }
+    }
+
+    private boolean naiveStartsWith(DotName this_, DotName prefix) {
+        String thisStr = this_.toString();
+        String prefixStr = prefix.toString();
+        if (thisStr.length() < prefixStr.length()) {
+            return false;
+        } else if (thisStr.length() == prefixStr.length()) {
+            return thisStr.equals(prefixStr);
+        } else {
+            return thisStr.startsWith(prefixStr) && thisStr.charAt(prefixStr.length()) == '.';
+        }
+    }
+
+    @Test
     public void scalaAnonfunCurriedCase1() {
         DotName a;
         DotName b;

@@ -27,7 +27,8 @@ jobs:
         - 11
         - 17
         - 21
-        - 24
+        - 25
+        - 26-ea
         compiler:
         - javac
         - ecj

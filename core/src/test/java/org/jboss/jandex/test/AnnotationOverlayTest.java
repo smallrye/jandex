@@ -353,7 +353,7 @@ public class AnnotationOverlayTest {
         assertFalse(overlay.hasAnyAnnotation(clazz, MyInheritedAnnotation.class));
         assertNull(overlay.annotation(clazz, MyInheritedAnnotation.class));
         assertEquals(0, overlay.annotationsWithRepeatable(clazz, MyRepeatableAnnotation.class).size());
-        assertEquals(0, overlay.annotations(clazz).size());
+        assertNotNull(overlay.annotations(clazz)); // usually empty, but there's `@AOTSafeClassInitializer` on JDK 26-ea
     }
 
     static class MyIndexWrapper implements IndexView {

@@ -1,5 +1,7 @@
 package org.jboss.jandex.gizmo2;
 
+import static io.quarkus.gizmo2.desc.Descs.MD_StringBuilder;
+
 import io.quarkus.gizmo2.Const;
 import io.quarkus.gizmo2.Expr;
 import io.quarkus.gizmo2.Var;
@@ -85,7 +87,7 @@ public final class StringBuilderGen extends ObjectOps implements ComparableOps {
     }
 
     private StringBuilderGen(final BlockCreator bc, final Var obj) {
-        super(StringBuilder.class, bc, obj);
+        super(bc, obj);
     }
 
     /**
@@ -95,18 +97,7 @@ public final class StringBuilderGen extends ObjectOps implements ComparableOps {
      * @return this instance
      */
     public StringBuilderGen append(final Expr expr) {
-        switch (expr.type().descriptorString()) {
-            case "Z" -> invokeInstance(StringBuilder.class, "append", boolean.class, expr);
-            case "B", "S", "I" -> invokeInstance(StringBuilder.class, "append", int.class, expr);
-            case "J" -> invokeInstance(StringBuilder.class, "append", long.class, expr);
-            case "F" -> invokeInstance(StringBuilder.class, "append", float.class, expr);
-            case "D" -> invokeInstance(StringBuilder.class, "append", double.class, expr);
-            case "C" -> invokeInstance(StringBuilder.class, "append", char.class, expr);
-            case "[C" -> invokeInstance(StringBuilder.class, "append", char[].class, expr);
-            case "Ljava/lang/String;" -> invokeInstance(StringBuilder.class, "append", String.class, expr);
-            case "Ljava/lang/CharSequence;" -> invokeInstance(StringBuilder.class, "append", CharSequence.class, expr);
-            default -> invokeInstance(StringBuilder.class, "append", Object.class, expr);
-        }
+        bc.invokeVirtual(MD_StringBuilder.append(expr.type()), obj, expr);
         return this;
     }
 
@@ -137,7 +128,7 @@ public final class StringBuilderGen extends ObjectOps implements ComparableOps {
      * @return this instance
      */
     public StringBuilderGen appendCodePoint(final Expr codePoint) {
-        invokeInstance(StringBuilder.class, "appendCodePoint", int.class, codePoint);
+        bc.invokeVirtual(MD_StringBuilder.appendCodePoint, obj, codePoint);
         return this;
     }
 
@@ -157,7 +148,7 @@ public final class StringBuilderGen extends ObjectOps implements ComparableOps {
      * @param length the length expression (must not be {@code null})
      */
     public void setLength(Expr length) {
-        invokeInstance(void.class, "setLength", int.class, length);
+        bc.invokeVirtual(MD_StringBuilder.setLength, obj, length);
     }
 
     /**
@@ -171,6 +162,6 @@ public final class StringBuilderGen extends ObjectOps implements ComparableOps {
 
     @Override
     public Expr compareTo(Expr other) {
-        return invokeInstance(int.class, "compareTo", StringBuilder.class, other);
+        return bc.invokeVirtual(MD_StringBuilder.compareTo, obj, other);
     }
 }

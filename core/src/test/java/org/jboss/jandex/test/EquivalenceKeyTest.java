@@ -3,9 +3,13 @@ package org.jboss.jandex.test;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+import java.io.IOException;
+
+import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.EquivalenceKey;
+import org.jboss.jandex.Index;
 import org.jboss.jandex.PrimitiveType;
 import org.junit.jupiter.api.Test;
 
@@ -47,5 +51,18 @@ public class EquivalenceKeyTest {
         assertNotSame(EquivalenceKey.of(stringType), EquivalenceKey.of(ClassType.OBJECT_TYPE));
         assertNotSame(EquivalenceKey.of(ClassType.create(stringName)),
                 EquivalenceKey.of(ClassType.create(DotName.OBJECT_NAME)));
+    }
+
+    // relies on no collisions between hashes of `"java.lang.String"` and `"java.lang.Object"` modulo cache size
+    @Test
+    public void internedClasses() throws IOException {
+        Index index = Index.of(String.class, Object.class);
+        ClassInfo string = index.getClassByName(String.class);
+        ClassInfo object = index.getClassByName(Object.class);
+
+        assertSame(EquivalenceKey.of(string), EquivalenceKey.of(string));
+        assertSame(EquivalenceKey.of(object), EquivalenceKey.of(object));
+
+        assertNotSame(EquivalenceKey.of(string), EquivalenceKey.of(object));
     }
 }

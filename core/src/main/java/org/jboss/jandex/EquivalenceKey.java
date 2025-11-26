@@ -616,14 +616,15 @@ public abstract class EquivalenceKey {
     }
 
     public static final class PrimitiveTypeEquivalenceKey extends TypeEquivalenceKey {
-        private static final PrimitiveTypeEquivalenceKey BOOLEAN = new PrimitiveTypeEquivalenceKey(Primitive.BOOLEAN);
-        private static final PrimitiveTypeEquivalenceKey BYTE = new PrimitiveTypeEquivalenceKey(Primitive.BYTE);
-        private static final PrimitiveTypeEquivalenceKey SHORT = new PrimitiveTypeEquivalenceKey(Primitive.SHORT);
-        private static final PrimitiveTypeEquivalenceKey INT = new PrimitiveTypeEquivalenceKey(Primitive.INT);
-        private static final PrimitiveTypeEquivalenceKey LONG = new PrimitiveTypeEquivalenceKey(Primitive.LONG);
-        private static final PrimitiveTypeEquivalenceKey FLOAT = new PrimitiveTypeEquivalenceKey(Primitive.FLOAT);
-        private static final PrimitiveTypeEquivalenceKey DOUBLE = new PrimitiveTypeEquivalenceKey(Primitive.DOUBLE);
-        private static final PrimitiveTypeEquivalenceKey CHAR = new PrimitiveTypeEquivalenceKey(Primitive.CHAR);
+        private static final PrimitiveTypeEquivalenceKey[] INSTANCES = instances();
+
+        private static PrimitiveTypeEquivalenceKey[] instances() {
+            PrimitiveTypeEquivalenceKey[] instances = new PrimitiveTypeEquivalenceKey[Primitive.values().length];
+            for (Primitive value : Primitive.values()) {
+                instances[value.ordinal()] = new PrimitiveTypeEquivalenceKey(value);
+            }
+            return instances;
+        }
 
         private final PrimitiveType.Primitive kind;
 
@@ -632,26 +633,7 @@ public abstract class EquivalenceKey {
         }
 
         public static TypeEquivalenceKey of(PrimitiveType.Primitive kind) {
-            switch (kind) {
-                case BOOLEAN:
-                    return BOOLEAN;
-                case BYTE:
-                    return BYTE;
-                case SHORT:
-                    return SHORT;
-                case INT:
-                    return INT;
-                case LONG:
-                    return LONG;
-                case FLOAT:
-                    return FLOAT;
-                case DOUBLE:
-                    return DOUBLE;
-                case CHAR:
-                    return CHAR;
-                default:
-                    throw new IllegalArgumentException("Unknown primitive type: " + kind);
-            }
+            return INSTANCES[kind.ordinal()];
         }
 
         @Override

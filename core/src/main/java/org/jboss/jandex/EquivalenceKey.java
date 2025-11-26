@@ -3,8 +3,11 @@ package org.jboss.jandex;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import org.jboss.jandex.PrimitiveType.Primitive;
 
@@ -118,7 +121,7 @@ public abstract class EquivalenceKey {
         if (clazz == null) {
             return null;
         }
-        return new ClassEquivalenceKey(clazz.name());
+        return ClassEquivalenceKey.of(clazz.name());
     }
 
     /**
@@ -265,10 +268,50 @@ public abstract class EquivalenceKey {
     }
 
     public static final class ClassEquivalenceKey extends DeclarationEquivalenceKey {
-        private final DotName className;
+        // cache for `java.*` classes
+        private static final Map<DotName, ClassEquivalenceKey> JAVA_INSTANCES = new ConcurrentHashMap<>();
+        private static final Function<DotName, ClassEquivalenceKey> FACTORY = new Function<DotName, ClassEquivalenceKey>() {
+            @Override
+            public ClassEquivalenceKey apply(DotName name) {
+                return new ClassEquivalenceKey(name);
+            }
+        };
 
-        private ClassEquivalenceKey(DotName className) {
-            this.className = className;
+        // cache for non-`java.*` classes
+        private static final int CACHE_SIZE = 1024; // must be power of 2
+        private static final int CACHE_MASK = CACHE_SIZE - 1;
+        private static final ClassEquivalenceKey[] CACHE = new ClassEquivalenceKey[CACHE_SIZE];
+
+        private static ClassEquivalenceKey of(DotName name) {
+            if (name.startsWithJava()) {
+                // optimistic `get` to avoid `computeIfAbsent` for most calls
+                ClassEquivalenceKey equivalenceKey = JAVA_INSTANCES.get(name);
+                if (equivalenceKey != null) {
+                    return equivalenceKey;
+                }
+                return JAVA_INSTANCES.computeIfAbsent(name, FACTORY);
+            }
+
+            // code below is thread-safe even without synchronization or volatile access
+            // due to `ClassEquivalenceKey` immutability and JMM guarantees
+
+            // `x & (SIZE - 1) is the same as `x % SIZE` iff `SIZE` is a power of 2
+            int index = name.hashCode() & CACHE_MASK;
+
+            ClassEquivalenceKey key = CACHE[index];
+            if (key != null && key.name.equals(name)) {
+                return key;
+            }
+
+            ClassEquivalenceKey newKey = new ClassEquivalenceKey(name);
+            CACHE[index] = newKey;
+            return newKey;
+        }
+
+        private final DotName name;
+
+        private ClassEquivalenceKey(DotName name) {
+            this.name = name;
         }
 
         @Override
@@ -278,17 +321,17 @@ public abstract class EquivalenceKey {
             if (!(o instanceof ClassEquivalenceKey))
                 return false;
             ClassEquivalenceKey that = (ClassEquivalenceKey) o;
-            return className.equals(that.className);
+            return name.equals(that.name);
         }
 
         @Override
         public int hashCode() {
-            return className.hashCode();
+            return name.hashCode();
         }
 
         @Override
         public String toString() {
-            return "class " + className.toString();
+            return "class " + name.toString();
         }
     }
 
@@ -504,43 +547,47 @@ public abstract class EquivalenceKey {
     }
 
     public static final class ClassTypeEquivalenceKey extends TypeEquivalenceKey {
-        // `CACHE_SIZE` must be power of 2
+        // cache for `java.*` classes
+        private static final Map<DotName, ClassTypeEquivalenceKey> JAVA_INSTANCES = new ConcurrentHashMap<>();
+        private static final Function<DotName, ClassTypeEquivalenceKey> FACTORY = new Function<DotName, ClassTypeEquivalenceKey>() {
+            @Override
+            public ClassTypeEquivalenceKey apply(DotName name) {
+                return new ClassTypeEquivalenceKey(name);
+            }
+        };
 
-        private static final int JAVA_CACHE_SIZE = 128;
-        private static final int JAVA_CACHE_MASK = JAVA_CACHE_SIZE - 1;
-        private static final ClassTypeEquivalenceKey[] JAVA_CACHE = new ClassTypeEquivalenceKey[JAVA_CACHE_SIZE];
+        // cache for non-`java.*` classes
+        private static final int CACHE_SIZE = 1024; // must be power of 2
+        private static final int CACHE_MASK = CACHE_SIZE - 1;
+        private static final ClassTypeEquivalenceKey[] CACHE = new ClassTypeEquivalenceKey[CACHE_SIZE];
 
-        private static final int OTHER_CACHE_SIZE = 1024;
-        private static final int OTHER_CACHE_MASK = OTHER_CACHE_SIZE - 1;
-        private static final ClassTypeEquivalenceKey[] OTHER_CACHE = new ClassTypeEquivalenceKey[OTHER_CACHE_SIZE];
-
-        private final DotName name;
-
-        // this is thread-safe even without synchronization or volatile access
-        // due to `ClassTypeEquivalenceKey` immutability and JMM guarantees
         private static ClassTypeEquivalenceKey of(DotName name) {
-            int mask;
-            ClassTypeEquivalenceKey[] cache;
             if (name.startsWithJava()) {
-                mask = JAVA_CACHE_MASK;
-                cache = JAVA_CACHE;
-            } else {
-                mask = OTHER_CACHE_MASK;
-                cache = OTHER_CACHE;
+                // optimistic `get` to avoid `computeIfAbsent` for most calls
+                ClassTypeEquivalenceKey equivalenceKey = JAVA_INSTANCES.get(name);
+                if (equivalenceKey != null) {
+                    return equivalenceKey;
+                }
+                return JAVA_INSTANCES.computeIfAbsent(name, FACTORY);
             }
 
-            // `x & (SIZE - 1) is the same as `x % SIZE` iff `SIZE` is a power of 2
-            int index = name.hashCode() & mask;
+            // code below is thread-safe even without synchronization or volatile access
+            // due to `ClassTypeEquivalenceKey` immutability and JMM guarantees
 
-            ClassTypeEquivalenceKey key = cache[index];
+            // `x & (SIZE - 1) is the same as `x % SIZE` iff `SIZE` is a power of 2
+            int index = name.hashCode() & CACHE_MASK;
+
+            ClassTypeEquivalenceKey key = CACHE[index];
             if (key != null && key.name.equals(name)) {
                 return key;
             }
 
             ClassTypeEquivalenceKey newKey = new ClassTypeEquivalenceKey(name);
-            cache[index] = newKey;
+            CACHE[index] = newKey;
             return newKey;
         }
+
+        private final DotName name;
 
         private ClassTypeEquivalenceKey(DotName name) {
             this.name = name;

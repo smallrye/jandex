@@ -3,12 +3,9 @@ package org.jboss.jandex;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 import org.jboss.jandex.PrimitiveType.Primitive;
 
@@ -506,27 +503,45 @@ public abstract class EquivalenceKey {
     }
 
     public static final class ClassTypeEquivalenceKey extends TypeEquivalenceKey {
-        private static final Map<DotName, ClassTypeEquivalenceKey> JAVA_INSTANCES = new ConcurrentHashMap<>();
+        // CACHE_SIZE must be power of 2
+        // CACHE_SHIFT must be `32 - x`, where 32 is the size of `int` and `x` is such that `2^x == CACHE_SIZE`
 
-        private static final Function<DotName, ClassTypeEquivalenceKey> FACTORY = new Function<DotName, ClassTypeEquivalenceKey>() {
-            @Override
-            public ClassTypeEquivalenceKey apply(DotName name) {
-                return new ClassTypeEquivalenceKey(name);
-            }
-        };
+        private static final int JAVA_CACHE_SIZE = 64;
+        private static final int JAVA_CACHE_SHIFT = 32 - 6;
+        private static final ClassTypeEquivalenceKey[] JAVA_CACHE = new ClassTypeEquivalenceKey[JAVA_CACHE_SIZE];
+
+        private static final int OTHER_CACHE_SIZE = 1024;
+        private static final int OTHER_CACHE_SHIFT = 32 - 10;
+        private static final ClassTypeEquivalenceKey[] OTHER_CACHE = new ClassTypeEquivalenceKey[OTHER_CACHE_SIZE];
+
+        private static final int GOLDEN_RATIO_MULTIPLIER = 0x9E_37_79_B9;
 
         private final DotName name;
 
+        // this is thread-safe even without synchronization or volatile access
+        // due to `ClassTypeEquivalenceKey` immutability and JMM guarantees
         private static ClassTypeEquivalenceKey of(DotName name) {
+            int shift;
+            ClassTypeEquivalenceKey[] cache;
             if (name.startsWithJava()) {
-                // optimistic `get` to avoid `computeIfAbsent` for most calls
-                ClassTypeEquivalenceKey equivalenceKey = JAVA_INSTANCES.get(name);
-                if (equivalenceKey != null) {
-                    return equivalenceKey;
-                }
-                return JAVA_INSTANCES.computeIfAbsent(name, FACTORY);
+                shift = JAVA_CACHE_SHIFT;
+                cache = JAVA_CACHE;
+            } else {
+                shift = OTHER_CACHE_SHIFT;
+                cache = OTHER_CACHE;
             }
-            return new ClassTypeEquivalenceKey(name);
+
+            // Fibonacci hashing
+            int index = (name.hashCode() * GOLDEN_RATIO_MULTIPLIER) >>> shift;
+
+            ClassTypeEquivalenceKey key = cache[index];
+            if (key != null && key.name.equals(name)) {
+                return key;
+            }
+
+            ClassTypeEquivalenceKey newKey = new ClassTypeEquivalenceKey(name);
+            cache[index] = newKey;
+            return newKey;
         }
 
         private ClassTypeEquivalenceKey(DotName name) {

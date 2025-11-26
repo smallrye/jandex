@@ -16,6 +16,7 @@ public class EquivalenceKeyTest {
         assertNotSame(EquivalenceKey.of(PrimitiveType.INT), EquivalenceKey.of(PrimitiveType.LONG));
     }
 
+    // relies on no collisions between hashes of `DotName.STRING_NAME` and `DotName.OBJECT_NAME` modulo cache size
     @Test
     public void internedClassTypes() {
         // componentized names
@@ -46,13 +47,5 @@ public class EquivalenceKeyTest {
         assertNotSame(EquivalenceKey.of(stringType), EquivalenceKey.of(ClassType.OBJECT_TYPE));
         assertNotSame(EquivalenceKey.of(ClassType.create(stringName)),
                 EquivalenceKey.of(ClassType.create(DotName.OBJECT_NAME)));
-    }
-
-    @Test
-    public void notInternedClassTypes() {
-        DotName name = DotName.createSimple(EquivalenceKeyTest.class);
-        ClassType type = ClassType.create(name);
-        assertNotSame(EquivalenceKey.of(type), EquivalenceKey.of(type));
-        assertNotSame(EquivalenceKey.of(ClassType.create(name)), EquivalenceKey.of(ClassType.create(name)));
     }
 }

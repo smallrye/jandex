@@ -503,36 +503,33 @@ public abstract class EquivalenceKey {
     }
 
     public static final class ClassTypeEquivalenceKey extends TypeEquivalenceKey {
-        // CACHE_SIZE must be power of 2
-        // CACHE_SHIFT must be `32 - x`, where 32 is the size of `int` and `x` is such that `2^x == CACHE_SIZE`
+        // `CACHE_SIZE` must be power of 2
 
-        private static final int JAVA_CACHE_SIZE = 64;
-        private static final int JAVA_CACHE_SHIFT = 32 - 6;
+        private static final int JAVA_CACHE_SIZE = 128;
+        private static final int JAVA_CACHE_MASK = JAVA_CACHE_SIZE - 1;
         private static final ClassTypeEquivalenceKey[] JAVA_CACHE = new ClassTypeEquivalenceKey[JAVA_CACHE_SIZE];
 
         private static final int OTHER_CACHE_SIZE = 1024;
-        private static final int OTHER_CACHE_SHIFT = 32 - 10;
+        private static final int OTHER_CACHE_MASK = OTHER_CACHE_SIZE - 1;
         private static final ClassTypeEquivalenceKey[] OTHER_CACHE = new ClassTypeEquivalenceKey[OTHER_CACHE_SIZE];
-
-        private static final int GOLDEN_RATIO_MULTIPLIER = 0x9E_37_79_B9;
 
         private final DotName name;
 
         // this is thread-safe even without synchronization or volatile access
         // due to `ClassTypeEquivalenceKey` immutability and JMM guarantees
         private static ClassTypeEquivalenceKey of(DotName name) {
-            int shift;
+            int mask;
             ClassTypeEquivalenceKey[] cache;
             if (name.startsWithJava()) {
-                shift = JAVA_CACHE_SHIFT;
+                mask = JAVA_CACHE_MASK;
                 cache = JAVA_CACHE;
             } else {
-                shift = OTHER_CACHE_SHIFT;
+                mask = OTHER_CACHE_MASK;
                 cache = OTHER_CACHE;
             }
 
-            // Fibonacci hashing
-            int index = (name.hashCode() * GOLDEN_RATIO_MULTIPLIER) >>> shift;
+            // `x & (SIZE - 1) is the same as `x % SIZE` iff `SIZE` is a power of 2
+            int index = name.hashCode() & mask;
 
             ClassTypeEquivalenceKey key = cache[index];
             if (key != null && key.name.equals(name)) {

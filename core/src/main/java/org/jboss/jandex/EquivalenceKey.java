@@ -3,7 +3,6 @@ package org.jboss.jandex;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -279,12 +278,12 @@ public abstract class EquivalenceKey {
             if (!(o instanceof ClassEquivalenceKey))
                 return false;
             ClassEquivalenceKey that = (ClassEquivalenceKey) o;
-            return Objects.equals(className, that.className);
+            return className.equals(that.className);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(className);
+            return className.hashCode();
         }
 
         @Override
@@ -314,16 +313,16 @@ public abstract class EquivalenceKey {
             if (!(o instanceof MethodEquivalenceKey))
                 return false;
             MethodEquivalenceKey that = (MethodEquivalenceKey) o;
-            return Objects.equals(className, that.className)
+            return className.equals(that.className)
+                    && returnType.equals(that.returnType)
                     && Arrays.equals(methodName, that.methodName)
-                    && Arrays.equals(parameterTypes, that.parameterTypes)
-                    && Objects.equals(returnType, that.returnType);
+                    && Arrays.equals(parameterTypes, that.parameterTypes);
         }
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(className);
-            result = 31 * result + Objects.hashCode(returnType);
+            int result = className.hashCode();
+            result = 31 * result + returnType.hashCode();
             result = 31 * result + Arrays.hashCode(methodName);
             result = 31 * result + Arrays.hashCode(parameterTypes);
             return result;
@@ -357,13 +356,13 @@ public abstract class EquivalenceKey {
             if (!(o instanceof MethodParameterEquivalenceKey))
                 return false;
             MethodParameterEquivalenceKey that = (MethodParameterEquivalenceKey) o;
-            return position == that.position && Objects.equals(method, that.method);
+            return method.equals(that.method) && position == that.position;
         }
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(method);
-            result = 31 * result + Short.hashCode(position);
+            int result = method.hashCode();
+            result = 31 * result + position;
             return result;
         }
 
@@ -391,14 +390,15 @@ public abstract class EquivalenceKey {
             if (!(o instanceof FieldEquivalenceKey))
                 return false;
             FieldEquivalenceKey that = (FieldEquivalenceKey) o;
-            return Objects.equals(className, that.className) && Arrays.equals(fieldName, that.fieldName)
-                    && Objects.equals(type, that.type);
+            return className.equals(that.className)
+                    && type.equals(that.type)
+                    && Arrays.equals(fieldName, that.fieldName);
         }
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(className);
-            result = 31 * result + Objects.hashCode(type);
+            int result = className.hashCode();
+            result = 31 * result + type.hashCode();
             result = 31 * result + Arrays.hashCode(fieldName);
             return result;
         }
@@ -429,14 +429,15 @@ public abstract class EquivalenceKey {
             if (!(o instanceof RecordComponentEquivalenceKey))
                 return false;
             RecordComponentEquivalenceKey that = (RecordComponentEquivalenceKey) o;
-            return Objects.equals(className, that.className) && Arrays.equals(recordComponentName, that.recordComponentName)
-                    && Objects.equals(type, that.type);
+            return className.equals(that.className)
+                    && type.equals(that.type)
+                    && Arrays.equals(recordComponentName, that.recordComponentName);
         }
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(className);
-            result = 31 * result + Objects.hashCode(type);
+            int result = className.hashCode();
+            result = 31 * result + type.hashCode();
             result = 31 * result + Arrays.hashCode(recordComponentName);
             return result;
         }
@@ -470,13 +471,13 @@ public abstract class EquivalenceKey {
             if (!(o instanceof ArrayTypeEquivalenceKey))
                 return false;
             ArrayTypeEquivalenceKey that = (ArrayTypeEquivalenceKey) o;
-            return dimensions == that.dimensions && Objects.equals(constituent, that.constituent);
+            return dimensions == that.dimensions && constituent.equals(that.constituent);
         }
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(constituent);
-            result = 31 * result + Integer.hashCode(dimensions);
+            int result = constituent.hashCode();
+            result = 31 * result + dimensions;
             return result;
         }
 
@@ -552,12 +553,12 @@ public abstract class EquivalenceKey {
             if (!(o instanceof ClassTypeEquivalenceKey))
                 return false;
             ClassTypeEquivalenceKey that = (ClassTypeEquivalenceKey) o;
-            return Objects.equals(name, that.name);
+            return name.equals(that.name);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(name);
+            return name.hashCode();
         }
 
         @Override
@@ -582,12 +583,12 @@ public abstract class EquivalenceKey {
             if (!(o instanceof ParameterizedTypeEquivalenceKey))
                 return false;
             ParameterizedTypeEquivalenceKey that = (ParameterizedTypeEquivalenceKey) o;
-            return Objects.equals(genericClass, that.genericClass) && Arrays.equals(typeArguments, that.typeArguments);
+            return genericClass.equals(that.genericClass) && Arrays.equals(typeArguments, that.typeArguments);
         }
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(genericClass);
+            int result = genericClass.hashCode();
             result = 31 * result + Arrays.hashCode(typeArguments);
             return result;
         }
@@ -645,7 +646,7 @@ public abstract class EquivalenceKey {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(kind);
+            return kind.hashCode();
         }
 
         @Override
@@ -670,12 +671,12 @@ public abstract class EquivalenceKey {
             if (!(o instanceof TypeVariableEquivalenceKey))
                 return false;
             TypeVariableEquivalenceKey that = (TypeVariableEquivalenceKey) o;
-            return Objects.equals(name, that.name) && Arrays.equals(bounds, that.bounds);
+            return name.equals(that.name) && Arrays.equals(bounds, that.bounds);
         }
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(name);
+            int result = name.hashCode();
             result = 31 * result + Arrays.hashCode(bounds);
             return result;
         }
@@ -712,12 +713,12 @@ public abstract class EquivalenceKey {
             if (!(o instanceof TypeVariableReferenceEquivalenceKey))
                 return false;
             TypeVariableReferenceEquivalenceKey that = (TypeVariableReferenceEquivalenceKey) o;
-            return Objects.equals(name, that.name);
+            return name.equals(that.name);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(name);
+            return name.hashCode();
         }
 
         @Override
@@ -740,12 +741,12 @@ public abstract class EquivalenceKey {
             if (!(o instanceof UnresolvedTypeVariableEquivalenceKey))
                 return false;
             UnresolvedTypeVariableEquivalenceKey that = (UnresolvedTypeVariableEquivalenceKey) o;
-            return Objects.equals(name, that.name);
+            return name.equals(that.name);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(name);
+            return name.hashCode();
         }
 
         @Override
@@ -784,13 +785,14 @@ public abstract class EquivalenceKey {
             if (!(o instanceof WildcardTypeEquivalenceKey))
                 return false;
             WildcardTypeEquivalenceKey that = (WildcardTypeEquivalenceKey) o;
-            return isExtends == that.isExtends && hasImplicitObjectBound == that.hasImplicitObjectBound
-                    && Objects.equals(bound, that.bound);
+            return bound.equals(that.bound)
+                    && isExtends == that.isExtends
+                    && hasImplicitObjectBound == that.hasImplicitObjectBound;
         }
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(bound);
+            int result = bound.hashCode();
             result = 31 * result + Boolean.hashCode(isExtends);
             result = 31 * result + Boolean.hashCode(hasImplicitObjectBound);
             return result;

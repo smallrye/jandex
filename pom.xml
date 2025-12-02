@@ -9,7 +9,7 @@
 
     <groupId>io.smallrye</groupId>
     <artifactId>jandex-parent</artifactId>
-    <version>3.5.3</version>
+    <version>3.5.4-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Jandex: Parent</name>
@@ -17,7 +17,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <project.build.outputTimestamp>2025-12-02T17:48:03Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2025-12-02T17:49:37Z</project.build.outputTimestamp>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -52,7 +52,7 @@
         <connection>scm:git:git@github.com:smallrye/jandex.git</connection>
         <developerConnection>scm:git:git@github.com:smallrye/jandex.git</developerConnection>
         <url>https://github.com/smallrye/jandex/</url>
-        <tag>3.5.3</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <modules>

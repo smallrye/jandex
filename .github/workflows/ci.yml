@@ -96,6 +96,7 @@ jobs:
         # Set 1.0.0-dev version to ensure it will be used when building Calcite later
         mvn -s .github/maven-ci-settings.xml -B versions:set -DnewVersion=1.0.0-dev-SNAPSHOT
         mvn -s .github/maven-ci-settings.xml -B versions:commit
+        sed -i -e "s|<version.jandex>.*</version.jandex>|<version.jandex>1.0.0-dev-SNAPSHOT</version.jandex>|" benchmarks/pom.xml
         mvn -s .github/maven-ci-settings.xml -B install -DskipTests --file pom.xml
 
     - name: Clone Calcite

@@ -1439,12 +1439,27 @@ public final class Indexer {
                 return intern(arrayType.copyType(nested, arrayType.dimensions() - dimensions));
             }
             case PARAMETERIZED: {
-                // hack for Kotlin which emits a wrong type annotation path
-                // (see KotlinTypeAnnotationWrongTypePathTest)
+                // hacks for Kotlin which emits a wrong type annotation path
+                // see KotlinTypeAnnotationWrongTypePathTest.test1()
                 if (type.kind() == Type.Kind.WILDCARD_TYPE
                         && type.asWildcardType().bound() != null
                         && type.asWildcardType().bound().kind() == Type.Kind.PARAMETERIZED_TYPE) {
                     return type;
+                }
+                // see KotlinTypeAnnotationWrongTypePathTest.test2()
+                if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+                    ParameterizedType toCheck = type.asParameterizedType();
+                    if (elements.noNestedBeforeThisParameterizedAfterPreviousParameterized()) {
+                        // we need the _outermost_ parameterized type
+                        while (toCheck.owner() != null && toCheck.owner().kind() == Type.Kind.PARAMETERIZED_TYPE) {
+                            toCheck = toCheck.owner().asParameterizedType();
+                        }
+                    }
+                    if (element.pos >= toCheck.argumentsArray().length) {
+                        return type;
+                    }
+                    // checks below for type argument position are no longer necessary,
+                    // but we keep them in case this hack is deleted in the future
                 }
 
                 ParameterizedType parameterizedType = type.asParameterizedType();
@@ -1585,12 +1600,25 @@ public final class Indexer {
                 return searchTypePath(arrayType.component(), typeAnnotationState);
             }
             case PARAMETERIZED: {
-                // hack for Kotlin which emits a wrong type annotation path
-                // (see KotlinTypeAnnotationWrongTypePathTest)
+                // hacks for Kotlin which emits a wrong type annotation path
+                // see KotlinTypeAnnotationWrongTypePathTest.test1()
                 if (type.kind() == Type.Kind.WILDCARD_TYPE
                         && type.asWildcardType().bound() != null
                         && type.asWildcardType().bound().kind() == Type.Kind.PARAMETERIZED_TYPE) {
                     return type;
+                }
+                // see KotlinTypeAnnotationWrongTypePathTest.test2()
+                if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+                    ParameterizedType toCheck = type.asParameterizedType();
+                    if (elements.noNestedBeforeThisParameterizedAfterPreviousParameterized()) {
+                        // we need the _outermost_ parameterized type
+                        while (toCheck.owner() != null && toCheck.owner().kind() == Type.Kind.PARAMETERIZED_TYPE) {
+                            toCheck = toCheck.owner().asParameterizedType();
+                        }
+                    }
+                    if (element.pos >= toCheck.argumentsArray().length) {
+                        return type;
+                    }
                 }
 
                 ParameterizedType parameterizedType = type.asParameterizedType();

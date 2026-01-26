@@ -39,7 +39,7 @@
         <version.moditect>1.3.0.Final</version.moditect>
         <version.nexus-staging-maven-plugin>1.7.0</version.nexus-staging-maven-plugin>
         <version.mvn-jlink-wrapper>1.2.5</version.mvn-jlink-wrapper>
-        <version.plexus-compiler-eclipse>2.15.0</version.plexus-compiler-eclipse>
+        <version.plexus-compiler-eclipse>2.16.2</version.plexus-compiler-eclipse>
         <version.plexus-utils>4.0.2</version.plexus-utils>
     </properties>
 

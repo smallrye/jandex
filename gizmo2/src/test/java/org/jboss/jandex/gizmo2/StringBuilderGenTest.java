@@ -2,6 +2,7 @@ package org.jboss.jandex.gizmo2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.lang.constant.ClassDesc;
 import java.util.function.Supplier;
 
 import org.junit.jupiter.api.Test;
@@ -9,15 +10,15 @@ import org.junit.jupiter.api.Test;
 import io.quarkus.gizmo2.Const;
 import io.quarkus.gizmo2.Gizmo;
 import io.quarkus.gizmo2.LocalVar;
-import io.quarkus.gizmo2.TestClassMaker;
 import io.quarkus.gizmo2.desc.MethodDesc;
+import io.quarkus.gizmo2.testing.TestClassMaker;
 
 public class StringBuilderGenTest {
     @Test
     public void testStringBuilder() {
-        TestClassMaker tcm = new TestClassMaker();
-        Gizmo g = Gizmo.create(tcm);
-        g.class_("io.quarkus.gizmo2.TestStringBuilder", cc -> {
+        TestClassMaker tcm = TestClassMaker.create();
+        Gizmo g = tcm.gizmo();
+        ClassDesc desc = g.class_("io.quarkus.gizmo2.TestStringBuilder", cc -> {
             MethodDesc charSeq = cc.staticMethod("createCharSequence", mc -> {
                 mc.returning(CharSequence.class);
                 mc.body(bc -> {
@@ -50,7 +51,7 @@ public class StringBuilderGenTest {
                 });
             });
         });
-        assertEquals("true12345.06.0abcdefghijklmnull...!", tcm.staticMethod("createString", Supplier.class).get());
+        assertEquals("true12345.06.0abcdefghijklmnull...!", tcm.staticMethod(desc, "createString", Supplier.class).get());
     }
 
     public static class MyObject {
@@ -62,9 +63,9 @@ public class StringBuilderGenTest {
 
     @Test
     public void testStringBuilderWithControlFlow() {
-        TestClassMaker tcm = new TestClassMaker();
-        Gizmo g = Gizmo.create(tcm);
-        g.class_("io.quarkus.gizmo2.TestStringBuilder", cc -> {
+        TestClassMaker tcm = TestClassMaker.create();
+        Gizmo g = tcm.gizmo();
+        ClassDesc desc = g.class_("io.quarkus.gizmo2.TestStringBuilder", cc -> {
             cc.staticMethod("createString", mc -> {
                 mc.returning(Object.class); // always `String`
                 mc.body(b0 -> {
@@ -80,6 +81,6 @@ public class StringBuilderGenTest {
                 });
             });
         });
-        assertEquals("FooBarBaz0Baz1Baz2Baz3Baz4Quux", tcm.staticMethod("createString", Supplier.class).get());
+        assertEquals("FooBarBaz0Baz1Baz2Baz3Baz4Quux", tcm.staticMethod(desc, "createString", Supplier.class).get());
     }
 }

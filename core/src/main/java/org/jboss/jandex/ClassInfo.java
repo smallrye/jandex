@@ -328,12 +328,13 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
     }
 
     /**
-     * Returns the name of the super class declared by the extends clause of this class. This
-     * information is also available from the {@link #superClassType} method. For all classes,
-     * with the one exception of <code>java.lang.Object</code>, which is the one class in the
-     * Java language without a super-type, this method will always return a non-null value.
+     * Returns the name of direct superclass of this class (as present in the {@code extends} clause of this class).
+     * If this class is in fact an interface, returns {@code java.lang.Object}. This method only returns {@code null}
+     * in one case: when this class is {@code java.lang.Object}, the single class without a superclass.
+     * <p>
+     * Note that this information is also available on the {@code Type} instance returned by {@link #superClassType()}.
      *
-     * @return the name of the super class of this class, or null if this class is <code>java.lang.Object</code>
+     * @return name of the direct superclass of this class
      */
     public final DotName superName() {
         return superClassType == null ? null : superClassType.name();
@@ -1110,12 +1111,13 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
     }
 
     /**
-     * Returns a list of names for all interfaces this class implements. This list may be empty, but never null.
+     * Returns a list of names of all direct superinterfaces of this class (as present in the {@code implements}
+     * clause of this class, or in the {@code extends} clause if this class is in fact an interface). This list
+     * may be empty, but is never {@code null}.
      * <p>
-     * Note that this information is also available on the <code>Type</code> instances returned by
-     * {@link #interfaceTypes}
+     * Note that this information is also available on the {@code Type} instances returned by {@link #interfaceTypes()}
      *
-     * @return immutable list of names of interfaces implemented by this class
+     * @return immutable list of names of direct superinterfaces of this class
      */
     public final List<DotName> interfaceNames() {
         return new AbstractList<DotName>() {
@@ -1132,10 +1134,11 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
     }
 
     /**
-     * Returns the list of types in the {@code implements} clause of this class. These types may be generic types.
-     * This list may be empty, but is never {@code null}.
+     * Returns a list of direct superinterface types of this class (as present in the {@code implements} clause
+     * of this class, or in the {@code extends} clause if this class is in fact an interface). This list may be empty,
+     * but is never {@code null}.
      *
-     * @return immutable list of types declared in the {@code implements} clause of this class
+     * @return immutable list of direct superinterface types of this class
      */
     public final List<Type> interfaceTypes() {
         return new ImmutableArrayList<>(interfaceTypes);
@@ -1150,9 +1153,11 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
     }
 
     /**
-     * Returns a super type represented by the extends clause of this class. This type might be a generic type.
+     * Returns the direct superclass type of this class (as present in the {@code extends} clause of this class).
+     * If this class is in fact an interface, returns {@code java.lang.Object}. This method only returns {@code null}
+     * in one case: when this class is {@code java.lang.Object}, the single class without a superclass.
      *
-     * @return the super class type definition in the extends clause
+     * @return the direct superclass type
      */
     public final Type superClassType() {
         return superClassType;

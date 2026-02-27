@@ -30,7 +30,7 @@
         <version.groovy>4.0.29</version.groovy>
         <version.junit>5.13.4</version.junit>
         <version.maven>3.9.12</version.maven>
-        <version.maven-bundle-plugin>5.1.9</version.maven-bundle-plugin>
+        <version.maven-bundle-plugin>6.0.2</version.maven-bundle-plugin>
         <version.maven-compiler-plugin>3.15.0</version.maven-compiler-plugin>
         <version.maven-dependency-plugin>3.6.1</version.maven-dependency-plugin>
         <version.maven-invoker-plugin>3.9.1</version.maven-invoker-plugin>

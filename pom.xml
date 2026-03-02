@@ -24,7 +24,7 @@
 
         <version.ant>1.10.15</version.ant>
         <version.bridger>1.6.Final</version.bridger>
-        <version.bytebuddy>1.18.5</version.bytebuddy>
+        <version.bytebuddy>1.18.7</version.bytebuddy>
         <version.exec-maven-plugin>3.6.3</version.exec-maven-plugin>
         <version.gizmo2>2.1.1</version.gizmo2>
         <version.groovy>4.0.29</version.groovy>

@@ -228,7 +228,7 @@ public class ParameterizedType extends Type {
      * This example will return a parameterized type for {@code Y} when {@code X}'s {@code owner()} method
      * is called.
      *
-     * @return the owner type if the owner is parameterized or annotated, otherwise null
+     * @return the owner type if the owner is parameterized or annotated, otherwise {@code null}
      */
     public Type owner() {
         return owner;
@@ -255,7 +255,8 @@ public class ParameterizedType extends Type {
         for (int i = 0; i < arguments.length; i++) {
             newArguments[i] = arguments[i].withoutAnnotations();
         }
-        return new ParameterizedType(name(), newArguments, owner, null);
+        Type newOwner = owner != null ? owner.withoutAnnotations() : null;
+        return new ParameterizedType(name(), newArguments, newOwner, null);
     }
 
     ParameterizedType copyType(Type[] arguments) {

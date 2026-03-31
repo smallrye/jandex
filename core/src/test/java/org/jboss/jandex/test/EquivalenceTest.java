@@ -121,11 +121,29 @@ public class EquivalenceTest {
         }
     }
 
+    static class ArrayTypes {
+        String[][] noAnnotation() {
+            return null;
+        }
+
+        String[] @MyAnnotation("1") [] annotationOnComponent() {
+            return null;
+        }
+
+        @MyAnnotation("2") String[][] annotationOnElement() {
+            return null;
+        }
+
+        @MyAnnotation("3") String[] @MyAnnotation("4") [] annotationsOnBoth() {
+            return null;
+        }
+    }
+
     private Index index;
 
     @BeforeEach
     public void setUp() throws IOException {
-        index = Index.of(A.class, B.class, B.A.class, Types.class);
+        index = Index.of(A.class, B.class, B.A.class, Types.class, ArrayTypes.class);
     }
 
     @Test
@@ -385,7 +403,26 @@ public class EquivalenceTest {
                 .returnType().asParameterizedType().arguments().get(0)).toString());
     }
 
-    private static String equivalenceKeyStringOf(ClassInfo typesClass, String methodName) {
-        return EquivalenceKey.of(typesClass.firstMethod(methodName).returnType()).toString();
+    @Test
+    public void arrayTypes() {
+        ClassInfo arrayTypes = index.getClassByName(DotName.createSimple(ArrayTypes.class));
+
+        EquivalenceKey noAnnotation = equivalenceKeyOf(arrayTypes, "noAnnotation");
+        EquivalenceKey annotationOnComponent = equivalenceKeyOf(arrayTypes, "annotationOnComponent");
+        EquivalenceKey annotationOnElement = equivalenceKeyOf(arrayTypes, "annotationOnElement");
+        EquivalenceKey annotationsOnBoth = equivalenceKeyOf(arrayTypes, "annotationsOnBoth");
+
+        assertEquals(noAnnotation, annotationOnComponent);
+        assertEquals(annotationOnComponent, annotationOnElement);
+        assertEquals(annotationOnElement, annotationsOnBoth);
+        assertEquals(annotationsOnBoth, noAnnotation);
+    }
+
+    private static EquivalenceKey equivalenceKeyOf(ClassInfo clazz, String methodName) {
+        return EquivalenceKey.of(clazz.firstMethod(methodName).returnType());
+    }
+
+    private static String equivalenceKeyStringOf(ClassInfo clazz, String methodName) {
+        return equivalenceKeyOf(clazz, methodName).toString();
     }
 }

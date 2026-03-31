@@ -205,8 +205,8 @@ public abstract class EquivalenceKey {
 
         switch (type.kind()) {
             case ARRAY:
-                return new ArrayTypeEquivalenceKey(of(type.asArrayType().constituent()),
-                        type.asArrayType().dimensions());
+                return new ArrayTypeEquivalenceKey(of(type.asArrayType().elementType()),
+                        type.asArrayType().deepDimensions());
             case CLASS:
                 return ClassTypeEquivalenceKey.of(type.asClassType().name());
             case PARAMETERIZED_TYPE:
@@ -499,11 +499,11 @@ public abstract class EquivalenceKey {
     }
 
     public static final class ArrayTypeEquivalenceKey extends TypeEquivalenceKey {
-        private final TypeEquivalenceKey constituent;
+        private final TypeEquivalenceKey element;
         private final int dimensions;
 
-        private ArrayTypeEquivalenceKey(TypeEquivalenceKey constituent, int dimensions) {
-            this.constituent = constituent;
+        private ArrayTypeEquivalenceKey(TypeEquivalenceKey element, int dimensions) {
+            this.element = element;
             this.dimensions = dimensions;
         }
 
@@ -514,12 +514,12 @@ public abstract class EquivalenceKey {
             if (!(o instanceof ArrayTypeEquivalenceKey))
                 return false;
             ArrayTypeEquivalenceKey that = (ArrayTypeEquivalenceKey) o;
-            return dimensions == that.dimensions && constituent.equals(that.constituent);
+            return dimensions == that.dimensions && element.equals(that.element);
         }
 
         @Override
         public int hashCode() {
-            int result = constituent.hashCode();
+            int result = element.hashCode();
             result = 31 * result + dimensions;
             return result;
         }
@@ -528,7 +528,7 @@ public abstract class EquivalenceKey {
         public String toString() {
             Set<TypeVariableEquivalenceKey> typeVariables = new HashSet<>();
             StringBuilder result = new StringBuilder();
-            result.append(constituent.toStringWithWhere(typeVariables));
+            result.append(element.toStringWithWhere(typeVariables));
             for (int i = 0; i < dimensions; i++) {
                 result.append("[]");
             }
@@ -538,7 +538,7 @@ public abstract class EquivalenceKey {
         @Override
         String toStringWithWhere(Set<TypeVariableEquivalenceKey> typeVariables) {
             StringBuilder result = new StringBuilder();
-            result.append(constituent.toStringWithWhere(typeVariables));
+            result.append(element.toStringWithWhere(typeVariables));
             for (int i = 0; i < dimensions; i++) {
                 result.append("[]");
             }

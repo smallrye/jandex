@@ -13,7 +13,7 @@ import org.jboss.jandex.Index;
 import org.jboss.jandex.PrimitiveType;
 import org.junit.jupiter.api.Test;
 
-public class EquivalenceKeyTest {
+public class EquivalenceKeyInterningTest {
     @Test
     public void internedPrimitiveTypes() {
         assertSame(EquivalenceKey.of(PrimitiveType.INT), EquivalenceKey.of(PrimitiveType.INT));

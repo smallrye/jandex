@@ -59,8 +59,6 @@
         <module>core</module>
         <module>maven-plugin</module>
         <module>test-data</module>
-
-        <module>benchmarks</module>
     </modules>
 
     <dependencyManagement>
@@ -185,6 +183,16 @@
                 <!-- setting this in a profile because the Java 8 compiler doesn't know the `release` option -->
                 <maven.compiler.release>8</maven.compiler.release>
             </properties>
+        </profile>
+
+        <profile>
+            <id>benchmarks-module</id>
+            <activation>
+                <jdk>[11,)</jdk>
+            </activation>
+            <modules>
+                <module>benchmarks</module>
+            </modules>
         </profile>
 
         <profile>

@@ -77,6 +77,12 @@ public final class EmptyIndex implements IndexView {
     }
 
     @Override
+    public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName,
+            DotName containerAnnotationName) {
+        return Collections.emptySet();
+    }
+
+    @Override
     public Collection<ModuleInfo> getKnownModules() {
         return Collections.emptySet();
     }

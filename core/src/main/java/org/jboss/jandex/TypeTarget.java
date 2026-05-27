@@ -17,6 +17,7 @@
  */
 package org.jboss.jandex;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -295,10 +296,34 @@ public abstract class TypeTarget implements AnnotationTarget {
      */
     @Override
     public List<AnnotationInstance> annotationsWithRepeatable(DotName name, IndexView index) {
-        if (target == null) {
-            return Collections.emptyList();
-        }
-        return target.annotationsWithRepeatable(name, index);
+        return target == null ? Collections.emptyList() : target.annotationsWithRepeatable(name, index);
+    }
+
+    /**
+     * Returns a list of instances of the specified repeatable annotation declared on this type usage.
+     * <p>
+     * The result contains all instances of the given annotation as well as all values of all instances of the given
+     * container annotation. In the latter case, the {@link AnnotationInstance#target()} returns the target
+     * of the container annotation instance.
+     * <p>
+     * Note that unlike other {@code AnnotationTarget}s, this method doesn't inspect nested annotation targets,
+     * even though array types, parameterized types, type variables and wildcard types may contain other types
+     * inside them. In other words, this method is equivalent to {@link #declaredAnnotationsWithRepeatable(DotName, DotName)}.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationName the name of the repeatable annotation, must not be {@code null}
+     * @param containerAnnotationName the name of the container of the repeatable annotation, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @since 3.6
+     * @see #annotationsWithRepeatable(DotName, IndexView)
+     */
+    @Override
+    public Collection<AnnotationInstance> annotationsWithRepeatable(DotName annotationName, DotName containerAnnotationName) {
+        return target == null
+                ? Collections.emptyList()
+                : target.annotationsWithRepeatable(annotationName, containerAnnotationName);
     }
 
     /**
@@ -363,6 +388,28 @@ public abstract class TypeTarget implements AnnotationTarget {
     @Override
     public List<AnnotationInstance> declaredAnnotationsWithRepeatable(DotName name, IndexView index) {
         return annotationsWithRepeatable(name, index);
+    }
+
+    /**
+     * Returns a list of instances of the specified repeatable annotation declared on this type usage.
+     * <p>
+     * The result contains all instances of the given annotation as well as all values of all instances of the given
+     * container annotation. In the latter case, the {@link AnnotationInstance#target()} returns the target
+     * of the container annotation instance.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationName the name of the repeatable annotation, must not be {@code null}
+     * @param containerAnnotationName the name of the container of the repeatable annotation, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @since 3.6
+     * @see #annotationsWithRepeatable(DotName, DotName)
+     */
+    @Override
+    public Collection<AnnotationInstance> declaredAnnotationsWithRepeatable(DotName annotationName,
+            DotName containerAnnotationName) {
+        return annotationsWithRepeatable(annotationName, containerAnnotationName);
     }
 
     /**

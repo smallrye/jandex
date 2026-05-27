@@ -340,6 +340,72 @@ public interface AnnotationTarget {
     }
 
     /**
+     * Returns a list of instances of the specified repeatable annotation declared on this annotation target and
+     * nested annotation targets. The {@code target()} method of the returned annotation instances may be used
+     * to determine the exact location of the respective annotation instance.
+     * <p>
+     * The result contains all instances of the given annotation as well as all values of all instances of the given
+     * container annotation. In the latter case, the {@link AnnotationInstance#target()} returns the target
+     * of the container annotation instance.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationName the name of the repeatable annotation, must not be {@code null}
+     * @param containerAnnotationName the name of the container of the repeatable annotation, must not be {@code null}
+     * @return immutable collection of annotation instances, never {@code null}
+     * @since 3.6
+     * @see #annotationsWithRepeatable(DotName, IndexView)
+     */
+    Collection<AnnotationInstance> annotationsWithRepeatable(DotName annotationName, DotName containerAnnotationName);
+
+    /**
+     * Returns a list of instances of the specified repeatable annotation declared on this annotation target and
+     * nested annotation targets. The {@code target()} method of the returned annotation instances may be used
+     * to determine the exact location of the respective annotation instance.
+     * <p>
+     * The result contains all instances of the given annotation as well as all values of all instances of the given
+     * container annotation. In the latter case, the {@link AnnotationInstance#target()} returns the target
+     * of the container annotation instance.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationName the name of the repeatable annotation, must not be {@code null}
+     * @param containerAnnotationName the name of the container of the repeatable annotation, must not be {@code null}
+     * @return immutable collection of annotation instances, never {@code null}
+     * @since 3.6
+     * @see #annotationsWithRepeatable(String, IndexView)
+     */
+    default Collection<AnnotationInstance> annotationsWithRepeatable(String annotationName, String containerAnnotationName) {
+        return annotationsWithRepeatable(DotName.createSimple(annotationName), DotName.createSimple(containerAnnotationName));
+    }
+
+    /**
+     * Returns a list of instances of the specified repeatable annotation declared on this annotation target and
+     * nested annotation targets. The {@code target()} method of the returned annotation instances may be used
+     * to determine the exact location of the respective annotation instance.
+     * <p>
+     * The result contains all instances of the given annotation as well as all values of all instances of the given
+     * container annotation. In the latter case, the {@link AnnotationInstance#target()} returns the target
+     * of the container annotation instance.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationType the type of the repeatable annotation, must not be {@code null}
+     * @param containerAnnotationType the type of the container of the repeatable annotation, must not be {@code null}
+     * @return immutable collection of annotation instances, never {@code null}
+     * @since 3.6
+     * @see #annotationsWithRepeatable(Class, IndexView)
+     */
+    default Collection<AnnotationInstance> annotationsWithRepeatable(Class<? extends Annotation> annotationType,
+            Class<? extends Annotation> containerAnnotationType) {
+        return annotationsWithRepeatable(DotName.createSimple(annotationType.getName()),
+                DotName.createSimple(containerAnnotationType.getName()));
+    }
+
+    /**
      * Returns the annotation instances declared on this annotation target and nested annotation targets.
      * The {@code target()} method of the returned annotation instances may be used to determine the exact location
      * of the respective annotation instance.
@@ -492,6 +558,77 @@ public interface AnnotationTarget {
     default Collection<AnnotationInstance> declaredAnnotationsWithRepeatable(Class<? extends Annotation> clazz,
             IndexView index) {
         return declaredAnnotationsWithRepeatable(DotName.createSimple(clazz.getName()), index);
+    }
+
+    /**
+     * Returns a list of instances of the specified repeatable annotation declared on this annotation target.
+     * <p>
+     * The result contains all instances of the given annotation as well as all values of all instances of the given
+     * container annotation. In the latter case, the {@link AnnotationInstance#target()} returns the target
+     * of the container annotation instance.
+     * <p>
+     * Unlike {@link #annotationsWithRepeatable(DotName, DotName)}, this method doesn't return annotations
+     * declared on nested annotation targets.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationName the name of the repeatable annotation, must not be {@code null}
+     * @param containerAnnotationName the name of the container of the repeatable annotation, must not be {@code null}
+     * @return immutable collection of annotation instances, never {@code null}
+     * @since 3.6
+     * @see #annotationsWithRepeatable(DotName, DotName)
+     */
+    Collection<AnnotationInstance> declaredAnnotationsWithRepeatable(DotName annotationName, DotName containerAnnotationName);
+
+    /**
+     * Returns a list of instances of the specified repeatable annotation declared on this annotation target.
+     * <p>
+     * The result contains all instances of the given annotation as well as all values of all instances of the given
+     * container annotation. In the latter case, the {@link AnnotationInstance#target()} returns the target
+     * of the container annotation instance.
+     * <p>
+     * Unlike {@link #annotationsWithRepeatable(String, String)}, this method doesn't return annotations
+     * declared on nested annotation targets.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationName the name of the repeatable annotation, must not be {@code null}
+     * @param containerAnnotationName the name of the container of the repeatable annotation, must not be {@code null}
+     * @return immutable collection of annotation instances, never {@code null}
+     * @since 3.6
+     * @see #annotationsWithRepeatable(String, String)
+     */
+    default Collection<AnnotationInstance> declaredAnnotationsWithRepeatable(String annotationName,
+            String containerAnnotationName) {
+        return declaredAnnotationsWithRepeatable(DotName.createSimple(annotationName),
+                DotName.createSimple(containerAnnotationName));
+    }
+
+    /**
+     * Returns a list of instances of the specified repeatable annotation declared on this annotation target.
+     * <p>
+     * The result contains all instances of the given annotation as well as all values of all instances of the given
+     * container annotation. In the latter case, the {@link AnnotationInstance#target()} returns the target
+     * of the container annotation instance.
+     * <p>
+     * Unlike {@link #annotationsWithRepeatable(Class, Class)}, this method doesn't return annotations
+     * declared on nested annotation targets.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationType the name of the repeatable annotation, must not be {@code null}
+     * @param containerAnnotationName the name of the container of the repeatable annotation, must not be {@code null}
+     * @return immutable collection of annotation instances, never {@code null}
+     * @since 3.6
+     * @see #annotationsWithRepeatable(Class, Class)
+     */
+    default Collection<AnnotationInstance> declaredAnnotationsWithRepeatable(Class<? extends Annotation> annotationType,
+            Class<? extends Annotation> containerAnnotationName) {
+        return declaredAnnotationsWithRepeatable(DotName.createSimple(annotationType.getName()),
+                DotName.createSimple(containerAnnotationName.getName()));
     }
 
     /**

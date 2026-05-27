@@ -89,6 +89,16 @@ public class CompositeIndex implements IndexView {
         return Collections.unmodifiableList(allInstances);
     }
 
+    @Override
+    public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName,
+            DotName containerAnnotationName) {
+        List<AnnotationInstance> allInstances = new ArrayList<>();
+        for (IndexView i : indexes) {
+            allInstances.addAll(i.getAnnotationsWithRepeatable(annotationName, containerAnnotationName));
+        }
+        return Collections.unmodifiableList(allInstances);
+    }
+
     /**
      * {@inheritDoc}
      */

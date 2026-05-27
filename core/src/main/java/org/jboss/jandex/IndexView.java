@@ -492,6 +492,58 @@ public interface IndexView {
     }
 
     /**
+     * Obtains a list of instances of the specified repeatable annotation. The result contains
+     * all instances of the given annotation as well as all values of all instances of the given
+     * container annotation. In the latter case, the {@link AnnotationInstance#target()} returns
+     * the target of the container annotation instance.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationName the name of the repeatable annotation
+     * @param containerAnnotationName the name of the container of the repeatable annotation
+     * @return immutable collection of annotation instances, never {@code null}
+     */
+    Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, DotName containerAnnotationName);
+
+    /**
+     * Obtains a list of instances of the specified repeatable annotation. The result contains
+     * all occurrences of the given annotation as well as all values of all instances of the given
+     * container annotation. In the latter case, the {@link AnnotationInstance#target()} returns
+     * the target of the container annotation instance.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationName the name of the repeatable annotation
+     * @param containerAnnotationName the name of the container of the repeatable annotation
+     * @return immutable collection of annotation instances, never {@code null}
+     */
+    default Collection<AnnotationInstance> getAnnotationsWithRepeatable(String annotationName, String containerAnnotationName) {
+        return getAnnotationsWithRepeatable(DotName.createSimple(annotationName),
+                DotName.createSimple(containerAnnotationName));
+    }
+
+    /**
+     * Obtains a list of instances of the specified repeatable annotation. The result contains
+     * all occurrences of the given annotation as well as all values of all instances of the given
+     * container annotation. In the latter case, the {@link AnnotationInstance#target()} returns
+     * the target of the container annotation instance.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationType the name of the repeatable annotation
+     * @param containerAnnotationType the name of the container of the repeatable annotation
+     * @return immutable collection of annotation instances, never {@code null}
+     */
+    default Collection<AnnotationInstance> getAnnotationsWithRepeatable(Class<?> annotationType,
+            Class<?> containerAnnotationType) {
+        return getAnnotationsWithRepeatable(DotName.createSimple(annotationType.getName()),
+                DotName.createSimple(containerAnnotationType.getName()));
+    }
+
+    /**
      * Gets all known modules by this index (those which were scanned).
      *
      * @return immutable collection of known modules, never {@code null}

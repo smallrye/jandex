@@ -190,7 +190,6 @@ public final class FieldInfo implements Declaration, Descriptor, GenericSignatur
         if (index == null) {
             throw new IllegalArgumentException("Index must not be null");
         }
-        List<AnnotationInstance> instances = new ArrayList<>(annotations(name));
         ClassInfo annotationClass = index.getClassByName(name);
         if (annotationClass == null) {
             throw new IllegalArgumentException("Index does not contain the annotation definition: " + name);
@@ -199,12 +198,35 @@ public final class FieldInfo implements Declaration, Descriptor, GenericSignatur
             throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
         }
         AnnotationInstance repeatable = annotationClass.declaredAnnotation(DotName.REPEATABLE_NAME);
-        if (repeatable != null) {
-            Type containingType = repeatable.value().asClass();
-            for (AnnotationInstance container : annotations(containingType.name())) {
-                for (AnnotationInstance nestedInstance : container.value().asNestedArray()) {
-                    instances.add(AnnotationInstance.create(nestedInstance, container.target()));
-                }
+        return repeatable != null
+                ? annotationsWithRepeatable(name, repeatable.value().asClass().name())
+                : annotations(name);
+    }
+
+    /**
+     * Returns a list of instances of the specified repeatable annotation declared on this field or any type
+     * within its signature. The {@code target()} method of the returned annotation instances may be used
+     * to determine the exact location of the respective annotation instance.
+     * <p>
+     * The result contains all instances of the given annotation as well as all values of all instances of the given
+     * container annotation. In the latter case, the {@link AnnotationInstance#target()} returns the target
+     * of the container annotation instance.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationName the name of the repeatable annotation, must not be {@code null}
+     * @param containerAnnotationName the name of the container of the repeatable annotation, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @since 3.6
+     * @see #annotationsWithRepeatable(DotName, IndexView)
+     */
+    @Override
+    public final List<AnnotationInstance> annotationsWithRepeatable(DotName annotationName, DotName containerAnnotationName) {
+        List<AnnotationInstance> instances = new ArrayList<>(annotations(annotationName));
+        for (AnnotationInstance container : annotations(containerAnnotationName)) {
+            for (AnnotationInstance nestedInstance : container.value().asNestedArray()) {
+                instances.add(AnnotationInstance.create(nestedInstance, container.target()));
             }
         }
         return Collections.unmodifiableList(instances);
@@ -290,11 +312,6 @@ public final class FieldInfo implements Declaration, Descriptor, GenericSignatur
         if (index == null) {
             throw new IllegalArgumentException("Index must not be null");
         }
-        List<AnnotationInstance> instances = new ArrayList<>();
-        AnnotationInstance declaredInstance = declaredAnnotation(name);
-        if (declaredInstance != null) {
-            instances.add(declaredInstance);
-        }
         ClassInfo annotationClass = index.getClassByName(name);
         if (annotationClass == null) {
             throw new IllegalArgumentException("Index does not contain the annotation definition: " + name);
@@ -303,13 +320,42 @@ public final class FieldInfo implements Declaration, Descriptor, GenericSignatur
             throw new IllegalArgumentException("Not an annotation type: " + annotationClass);
         }
         AnnotationInstance repeatable = annotationClass.declaredAnnotation(DotName.REPEATABLE_NAME);
-        if (repeatable != null) {
-            Type containingType = repeatable.value().asClass();
-            AnnotationInstance container = declaredAnnotation(containingType.name());
-            if (container != null) {
-                for (AnnotationInstance nestedInstance : container.value().asNestedArray()) {
-                    instances.add(AnnotationInstance.create(nestedInstance, container.target()));
-                }
+        return repeatable != null
+                ? declaredAnnotationsWithRepeatable(name, repeatable.value().asClass().name())
+                : Utils.emptyOrSingletonList(declaredAnnotation(name));
+    }
+
+    /**
+     * Returns a list of instances of the specified repeatable annotation declared on this field.
+     * <p>
+     * The result contains the given annotation as well as all values of the given container annotation.
+     * In the latter case, the {@link AnnotationInstance#target()} returns the target of the container
+     * annotation instance.
+     * <p>
+     * Unlike {@link #annotationsWithRepeatable(DotName, DotName)}, this method doesn't return annotations
+     * declared on types within the field signature.
+     * <p>
+     * WARNING: if the given {@code containerAnnotationName} doesn't name a container annotation for a repeatable
+     * annotation {@code annotationName}, the behavior of this method is <em>undefined</em>.
+     *
+     * @param annotationName the name of the repeatable annotation, must not be {@code null}
+     * @param containerAnnotationName the name of the container of the repeatable annotation, must not be {@code null}
+     * @return immutable list of annotation instances, never {@code null}
+     * @since 3.6
+     * @see #annotationsWithRepeatable(DotName, DotName)
+     */
+    @Override
+    public final List<AnnotationInstance> declaredAnnotationsWithRepeatable(DotName annotationName,
+            DotName containerAnnotationName) {
+        List<AnnotationInstance> instances = new ArrayList<>();
+        AnnotationInstance declaredInstance = declaredAnnotation(annotationName);
+        if (declaredInstance != null) {
+            instances.add(declaredInstance);
+        }
+        AnnotationInstance container = declaredAnnotation(containerAnnotationName);
+        if (container != null) {
+            for (AnnotationInstance nestedInstance : container.value().asNestedArray()) {
+                instances.add(AnnotationInstance.create(nestedInstance, container.target()));
             }
         }
         return Collections.unmodifiableList(instances);

@@ -427,6 +427,12 @@ public class AnnotationOverlayTest {
         }
 
         @Override
+        public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName,
+                DotName containerAnnotationName) {
+            return delegate.getAnnotationsWithRepeatable(annotationName, containerAnnotationName);
+        }
+
+        @Override
         public Collection<ModuleInfo> getKnownModules() {
             return delegate.getKnownModules();
         }

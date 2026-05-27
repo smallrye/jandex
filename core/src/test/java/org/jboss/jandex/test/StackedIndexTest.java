@@ -130,6 +130,12 @@ public class StackedIndexTest {
         for (AnnotationInstance annotation : annotations) {
             assertFalse(annotation.value().asString().startsWith("XXX"));
         }
+
+        annotations = index.getAnnotationsWithRepeatable(MyRepeatableAnnotation.DOT_NAME, MyRepeatableAnnotation.List.DOT_NAME);
+        assertEquals(11, annotations.size());
+        for (AnnotationInstance annotation : annotations) {
+            assertFalse(annotation.value().asString().startsWith("XXX"));
+        }
     }
 
     private static byte[] annotatedClass3AsAnnotatedClass1() throws IOException {

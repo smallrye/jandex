@@ -154,8 +154,12 @@ public final class ModuleInfo {
         return moduleInfoClass.declaredAnnotation(name);
     }
 
-    public final List<AnnotationInstance> annotationsWithRepeatable(DotName name, IndexView index) {
-        return moduleInfoClass.declaredAnnotationsWithRepeatable(name, index);
+    public final List<AnnotationInstance> annotationsWithRepeatable(DotName annotationName, IndexView index) {
+        return moduleInfoClass.declaredAnnotationsWithRepeatable(annotationName, index);
+    }
+
+    public final List<AnnotationInstance> annotationsWithRepeatable(DotName annotationName, DotName containerAnnotationName) {
+        return moduleInfoClass.declaredAnnotationsWithRepeatable(annotationName, containerAnnotationName);
     }
 
     public final Collection<AnnotationInstance> annotations() {

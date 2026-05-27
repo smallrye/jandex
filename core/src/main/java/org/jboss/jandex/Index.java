@@ -351,13 +351,18 @@ public final class Index implements IndexView {
             return getAnnotations(annotationName);
         }
         Type containing = repeatable.value().asClass();
-        return getRepeatableAnnotations(annotationName, containing.name());
+        return getAnnotationsWithRepeatable(annotationName, containing.name());
     }
 
-    private Collection<AnnotationInstance> getRepeatableAnnotations(DotName annotationName, DotName containingAnnotationName) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName,
+            DotName containerAnnotationName) {
         List<AnnotationInstance> instances = new ArrayList<AnnotationInstance>();
         instances.addAll(getAnnotations(annotationName));
-        for (AnnotationInstance containingInstance : getAnnotations(containingAnnotationName)) {
+        for (AnnotationInstance containingInstance : getAnnotations(containerAnnotationName)) {
             for (AnnotationInstance nestedInstance : containingInstance.value().asNestedArray()) {
                 // We need to set the target of the containing instance
                 instances.add(AnnotationInstance.create(nestedInstance, containingInstance.target()));

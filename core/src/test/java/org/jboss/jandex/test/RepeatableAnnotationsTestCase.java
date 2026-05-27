@@ -38,7 +38,6 @@ import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
-import org.jboss.jandex.Type;
 import org.junit.jupiter.api.Test;
 
 public class RepeatableAnnotationsTestCase {
@@ -50,23 +49,31 @@ public class RepeatableAnnotationsTestCase {
     @Test
     public void testIndexView() throws IOException {
         Index index = getIndexForClass(MY_ANNOTATED_NAME, ALPHA_NAME);
-        Collection<AnnotationInstance> instances = index.getAnnotationsWithRepeatable(ALPHA_NAME, index);
-        assertEquals(10, instances.size());
-        assertValues(find(instances, Kind.CLASS, null), 0);
-        assertValues(find(instances, Kind.METHOD, "foo"), 1);
-        assertValues(find(instances, Kind.METHOD_PARAMETER, "fooName"), 11, 12);
-        assertValues(find(instances, Kind.METHOD, "bar"), 2, 3);
-        assertValues(find(instances, Kind.METHOD_PARAMETER, "barName"), 10);
-        // MyAnnotated.myField
-        assertValues(find(instances, Kind.FIELD, "myField"), -1, -2);
-        assertValues(find(instances, Kind.FIELD, "anotherField"), -3);
+        assertIndexView(index.getAnnotationsWithRepeatable(ALPHA_NAME, index));
+        assertIndexView(index.getAnnotationsWithRepeatable(ALPHA_NAME, ALPHA_CONTAINER_NAME));
+    }
+
+    private void assertIndexView(Collection<AnnotationInstance> annotations) {
+        assertEquals(10, annotations.size());
+        assertValues(find(annotations, Kind.CLASS, null), 0);
+        assertValues(find(annotations, Kind.METHOD, "foo"), 1);
+        assertValues(find(annotations, Kind.METHOD_PARAMETER, "fooName"), 11, 12);
+        assertValues(find(annotations, Kind.METHOD, "bar"), 2, 3);
+        assertValues(find(annotations, Kind.METHOD_PARAMETER, "barName"), 10);
+        assertValues(find(annotations, Kind.FIELD, "myField"), -1, -2);
+        assertValues(find(annotations, Kind.FIELD, "anotherField"), -3);
     }
 
     @Test
     public void testClassInfo() throws IOException {
         Index index = getIndexForClass(MY_ANNOTATED_NAME, ALPHA_NAME);
         ClassInfo alpha = index.getClassByName(MY_ANNOTATED_NAME);
-        assertValues(alpha.declaredAnnotationsWithRepeatable(ALPHA_NAME, index), 0);
+        assertClassInfo(alpha.declaredAnnotationsWithRepeatable(ALPHA_NAME, index));
+        assertClassInfo(alpha.declaredAnnotationsWithRepeatable(ALPHA_NAME, ALPHA_CONTAINER_NAME));
+    }
+
+    private void assertClassInfo(Collection<AnnotationInstance> annotations) {
+        assertValues(annotations, 0);
     }
 
     @Test
@@ -74,22 +81,28 @@ public class RepeatableAnnotationsTestCase {
         Index index = getIndexForClass(MY_ANNOTATED_NAME, ALPHA_NAME);
         ClassInfo alpha = index.getClassByName(MY_ANNOTATED_NAME);
         // MyAnnotated.foo()
-        MethodInfo foo = alpha.method("foo",
-                Type.create(DotName.createSimple(String.class.getName()), org.jboss.jandex.Type.Kind.CLASS));
-        List<AnnotationInstance> fooInstances = foo.annotationsWithRepeatable(ALPHA_NAME, index);
-        assertEquals(3, fooInstances.size());
-        assertValues(find(fooInstances, Kind.METHOD, null), 1);
-        assertValues(find(fooInstances, Kind.METHOD_PARAMETER, null), 11, 12);
+        MethodInfo foo = alpha.firstMethod("foo");
+        assertMethodInfoFoo(foo.annotationsWithRepeatable(ALPHA_NAME, index));
+        assertMethodInfoFoo(foo.annotationsWithRepeatable(ALPHA_NAME, ALPHA_CONTAINER_NAME));
         // MyAnnotated.bar()
-        MethodInfo bar = alpha.method("bar",
-                Type.create(DotName.createSimple(String.class.getName()), org.jboss.jandex.Type.Kind.CLASS));
-        List<AnnotationInstance> barInstances = bar.annotationsWithRepeatable(ALPHA_NAME, index);
-        assertEquals(3, barInstances.size());
-        List<AnnotationInstance> barMethodInstance = find(barInstances, Kind.METHOD, null);
+        MethodInfo bar = alpha.firstMethod("bar");
+        assertMethodInfoBar(bar.annotationsWithRepeatable(ALPHA_NAME, index), bar);
+        assertMethodInfoBar(bar.annotationsWithRepeatable(ALPHA_NAME, ALPHA_CONTAINER_NAME), bar);
+    }
+
+    private void assertMethodInfoFoo(Collection<AnnotationInstance> annotations) {
+        assertEquals(3, annotations.size());
+        assertValues(find(annotations, Kind.METHOD, null), 1);
+        assertValues(find(annotations, Kind.METHOD_PARAMETER, null), 11, 12);
+    }
+
+    private void assertMethodInfoBar(Collection<AnnotationInstance> annotations, MethodInfo bar) {
+        assertEquals(3, annotations.size());
+        List<AnnotationInstance> barMethodInstance = find(annotations, Kind.METHOD, null);
         // Test the target of an instance coming from the container
         assertEquals(bar, barMethodInstance.get(0).target());
         assertValues(barMethodInstance, 2, 3);
-        assertValues(find(barInstances, Kind.METHOD_PARAMETER, null), 10);
+        assertValues(find(annotations, Kind.METHOD_PARAMETER, null), 10);
     }
 
     @Test
@@ -97,13 +110,23 @@ public class RepeatableAnnotationsTestCase {
         Index index = getIndexForClass(MY_ANNOTATED_NAME, ALPHA_NAME);
         ClassInfo alpha = index.getClassByName(MY_ANNOTATED_NAME);
         FieldInfo myField = alpha.field("myField");
-        assertValues(myField.annotationsWithRepeatable(ALPHA_NAME, index), -1, -2);
+        assertFieldInfoMyField(myField.annotationsWithRepeatable(ALPHA_NAME, index));
+        assertFieldInfoMyField(myField.annotationsWithRepeatable(ALPHA_NAME, ALPHA_CONTAINER_NAME));
         FieldInfo anotherField = alpha.field("anotherField");
-        assertValues(anotherField.annotationsWithRepeatable(ALPHA_NAME, index), -3);
-        // Test that it's still possible to query the contaier annotation
+        assertFieldInfoAnotherField(anotherField.annotationsWithRepeatable(ALPHA_NAME, index));
+        assertFieldInfoAnotherField(anotherField.annotationsWithRepeatable(ALPHA_NAME, ALPHA_CONTAINER_NAME));
+        // Test that it's still possible to query the container annotation
         List<AnnotationInstance> direct = myField.annotations();
         assertEquals(1, direct.size());
         assertEquals(ALPHA_CONTAINER_NAME, direct.get(0).name());
+    }
+
+    private void assertFieldInfoMyField(Collection<AnnotationInstance> annotations) {
+        assertValues(annotations, -1, -2);
+    }
+
+    private void assertFieldInfoAnotherField(Collection<AnnotationInstance> annotations) {
+        assertValues(annotations, -3);
     }
 
     @Test

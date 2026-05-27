@@ -130,11 +130,13 @@ public class EquivalenceTest {
             return null;
         }
 
-        @MyAnnotation("2") String[][] annotationOnElement() {
+        @MyAnnotation("2")
+        String[][] annotationOnElement() {
             return null;
         }
 
-        @MyAnnotation("3") String[] @MyAnnotation("4") [] annotationsOnBoth() {
+        @MyAnnotation("3")
+        String[] @MyAnnotation("4") [] annotationsOnBoth() {
             return null;
         }
     }

@@ -65,6 +65,7 @@ public class AnnotationAccessTest {
     public void test() throws IOException {
         DotName myAnn = MyAnnotation.DOT_NAME;
         DotName myRepAnn = MyRepeatableAnnotation.DOT_NAME;
+        DotName myRepAnnContainer = MyRepeatableAnnotation.List.DOT_NAME;
         DotName className = DotName.createSimple(AnnotatedClass.class.getName());
 
         Index index = Index.of(MyAnnotation.class, MyRepeatableAnnotation.class, MyRepeatableAnnotation.List.class,
@@ -86,8 +87,11 @@ public class AnnotationAccessTest {
             assertEquals(3, clazz.declaredAnnotations().size());
             verify(clazz.declaredAnnotations(), myAnn, "c1");
             assertEquals(9, clazz.annotationsWithRepeatable(myRepAnn, index).size());
+            assertEquals(9, clazz.annotationsWithRepeatable(myRepAnn, myRepAnnContainer).size());
             assertEquals(3, clazz.declaredAnnotationsWithRepeatable(myRepAnn, index).size());
+            assertEquals(3, clazz.declaredAnnotationsWithRepeatable(myRepAnn, myRepAnnContainer).size());
             verify(clazz.declaredAnnotationsWithRepeatable(myRepAnn, index), myRepAnn, "cr1", "cr2", "cr3");
+            verify(clazz.declaredAnnotationsWithRepeatable(myRepAnn, myRepAnnContainer), myRepAnn, "cr1", "cr2", "cr3");
         }
 
         {
@@ -104,8 +108,11 @@ public class AnnotationAccessTest {
             assertEquals(3, field.declaredAnnotations().size());
             verify(field.declaredAnnotations(), myAnn, "f1");
             assertEquals(3, field.annotationsWithRepeatable(myRepAnn, index).size());
+            assertEquals(3, field.annotationsWithRepeatable(myRepAnn, myRepAnnContainer).size());
             assertEquals(3, field.declaredAnnotationsWithRepeatable(myRepAnn, index).size());
+            assertEquals(3, field.declaredAnnotationsWithRepeatable(myRepAnn, myRepAnnContainer).size());
             verify(field.declaredAnnotationsWithRepeatable(myRepAnn, index), myRepAnn, "fr1", "fr2", "fr3");
+            verify(field.declaredAnnotationsWithRepeatable(myRepAnn, myRepAnnContainer), myRepAnn, "fr1", "fr2", "fr3");
         }
 
         {
@@ -133,8 +140,11 @@ public class AnnotationAccessTest {
             assertEquals(3, method.declaredAnnotations().size());
             verify(method.declaredAnnotations(), myAnn, "m1");
             assertEquals(3, method.annotationsWithRepeatable(myRepAnn, index).size());
+            assertEquals(3, method.annotationsWithRepeatable(myRepAnn, myRepAnnContainer).size());
             assertEquals(3, method.declaredAnnotationsWithRepeatable(myRepAnn, index).size());
+            assertEquals(3, method.declaredAnnotationsWithRepeatable(myRepAnn, myRepAnnContainer).size());
             verify(method.declaredAnnotationsWithRepeatable(myRepAnn, index), myRepAnn, "mr1", "mr2", "mr3");
+            verify(method.declaredAnnotationsWithRepeatable(myRepAnn, myRepAnnContainer), myRepAnn, "mr1", "mr2", "mr3");
         }
 
         {

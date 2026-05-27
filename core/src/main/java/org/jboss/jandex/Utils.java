@@ -76,6 +76,10 @@ class Utils {
         }
     }
 
+    static <T> List<T> emptyOrSingletonList(T itemOrNull) {
+        return itemOrNull != null ? Collections.singletonList(itemOrNull) : Collections.emptyList();
+    }
+
     static <T> List<T> listOfCapacity(int capacity) {
         return capacity > 0 ? new ArrayList<>(capacity) : Collections.emptyList();
     }

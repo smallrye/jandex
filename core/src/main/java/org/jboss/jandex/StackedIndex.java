@@ -284,6 +284,29 @@ public final class StackedIndex implements IndexView {
         return Collections.unmodifiableList(result);
     }
 
+    @Override
+    public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName,
+            DotName containerAnnotationName) {
+        List<AnnotationInstance> result = new ArrayList<>();
+        Set<DotName> seen = new HashSet<>();
+        Set<DotName> seenInThisIteration = new HashSet<>();
+        for (IndexView idx : stack) {
+            for (AnnotationInstance annotation : idx.getAnnotationsWithRepeatable(annotationName, containerAnnotationName)) {
+                DotName inClass = nameOfDeclaringClass(annotation.target());
+                if (inClass == null) {
+                    continue;
+                }
+                if (!seen.contains(inClass)) {
+                    result.add(annotation);
+                    seenInThisIteration.add(inClass);
+                }
+            }
+            seen.addAll(seenInThisIteration);
+            seenInThisIteration.clear();
+        }
+        return Collections.unmodifiableList(result);
+    }
+
     private static DotName nameOfDeclaringClass(AnnotationTarget target) {
         if (target == null) {
             return null;

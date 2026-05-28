@@ -29,6 +29,7 @@
         <version.gizmo2>2.2.0</version.gizmo2>
         <version.groovy>4.0.32</version.groovy>
         <version.junit>5.13.4</version.junit>
+        <version.kotlin>2.3.21</version.kotlin>
         <version.maven>3.9.16</version.maven>
         <version.maven-bundle-plugin>5.1.9</version.maven-bundle-plugin>
         <version.maven-compiler-plugin>3.15.0</version.maven-compiler-plugin>
@@ -59,6 +60,7 @@
         <module>core</module>
         <module>maven-plugin</module>
         <module>test-data</module>
+        <module>test-data-kotlin</module>
     </modules>
 
     <dependencyManagement>
@@ -71,6 +73,11 @@
             <dependency>
                 <groupId>io.smallrye</groupId>
                 <artifactId>jandex-test-data</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.smallrye</groupId>
+                <artifactId>jandex-test-data-kotlin</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

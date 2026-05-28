@@ -11,29 +11,15 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
-import org.jboss.jandex.Type;
 import org.junit.jupiter.api.Test;
-
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.asm.AsmVisitorWrapper;
-import net.bytebuddy.description.annotation.AnnotationDescription;
-import net.bytebuddy.description.field.FieldDescription;
-import net.bytebuddy.description.field.FieldList;
-import net.bytebuddy.description.method.MethodList;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.Implementation;
-import net.bytebuddy.implementation.StubMethod;
-import net.bytebuddy.jar.asm.AnnotationVisitor;
-import net.bytebuddy.jar.asm.ClassVisitor;
-import net.bytebuddy.jar.asm.MethodVisitor;
-import net.bytebuddy.jar.asm.TypePath;
-import net.bytebuddy.jar.asm.TypeReference;
-import net.bytebuddy.pool.TypePool;
-import net.bytebuddy.utility.OpenedClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.TypePath;
+import org.objectweb.asm.TypeReference;
 
 public class KotlinTypeAnnotationWrongTypePathTest {
-    private static final String TEST_CLASS = "org.jboss.jandex.test.TestClass";
-
     // the tests below emulate Kotlin bugs in emitting wrong type annotation paths
 
     // for a method declaration `fun foo(bar: List<List<@Valid String>>) {}`,
@@ -52,54 +38,33 @@ public class KotlinTypeAnnotationWrongTypePathTest {
     // `location=[TYPE_ARGUMENT(0), WILDCARD, TYPE_ARGUMENT(0)]`
     @Test
     public void test1() throws IOException {
-        // List<List<@MyAnnotation("foobar") String>>
-        TypeDescription.Generic annotatedString = TypeDescription.Generic.Builder.of(String.class)
-                .annotate(AnnotationDescription.Builder.ofType(MyAnnotation.class)
-                        .define("value", "foobar").build())
-                .build();
-        TypeDescription.Generic listOfAnnotatedString = TypeDescription.Generic.Builder.parameterizedType(
-                TypeDescription.Generic.Builder.of(List.class).build().asErasure(), annotatedString).build();
-        TypeDescription.Generic listOfListOfAnnotatedString = TypeDescription.Generic.Builder.parameterizedType(
-                TypeDescription.Generic.Builder.of(List.class).build().asErasure(), listOfAnnotatedString).build();
-
-        byte[] bytes = new ByteBuddy()
-                .subclass(Object.class)
-                .name(TEST_CLASS)
-                .defineMethod("foo", void.class)
-                .withParameter(listOfListOfAnnotatedString, "bar")
-                .intercept(StubMethod.INSTANCE)
-                .visit(new AsmVisitorWrapper.AbstractBase() {
-                    @Override
-                    public ClassVisitor wrap(TypeDescription instrumentedType, ClassVisitor classVisitor,
-                            Implementation.Context implementationContext, TypePool typePool,
-                            FieldList<FieldDescription.InDefinedShape> fields, MethodList<?> methods,
-                            int writerFlags, int readerFlags) {
-                        return new ClassVisitor(OpenedClassReader.ASM_API, classVisitor) {
-                            @Override
-                            public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
-                                    String[] exceptions) {
-                                if ("foo".equals(name)) {
-                                    // List<? extends List<String>>
-                                    signature = "(Ljava/util/List<+Ljava/util/List<Ljava/lang/String;>;>;)V";
-                                }
-                                return super.visitMethod(access, name, descriptor, signature, exceptions);
-                            }
-                        };
-                    }
-                })
-                .make()
-                .getBytes();
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        writer.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER, "Test", null,
+                Type.getInternalName(Object.class), null);
+        MethodVisitor foo = writer.visitMethod(0, "foo", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(List.class)),
+                "(Ljava/util/List<+Ljava/util/List<Ljava/lang/String;>;>;)V", null);
+        foo.visitParameter("bar", 0);
+        org.objectweb.asm.AnnotationVisitor ann = foo.visitTypeAnnotation(
+                TypeReference.newFormalParameterReference(0).getValue(), TypePath.fromString("0;0;"),
+                Type.getDescriptor(MyAnnotation.class), true);
+        ann.visit("value", "foobar");
+        ann.visitEnd();
+        foo.visitCode();
+        foo.visitInsn(Opcodes.RETURN);
+        foo.visitEnd();
+        writer.visitEnd();
+        byte[] bytes = writer.toByteArray();
 
         Indexer indexer = new Indexer();
         indexer.index(new ByteArrayInputStream(bytes));
         Index index = indexer.complete();
 
-        ClassInfo clazz = index.getClassByName(TEST_CLASS);
+        ClassInfo clazz = index.getClassByName("Test");
         assertNotNull(clazz);
         MethodInfo method = clazz.firstMethod("foo");
         assertNotNull(method);
         assertEquals(1, method.parametersCount());
-        Type type = method.parameterType(0);
+        org.jboss.jandex.Type type = method.parameterType(0);
         assertNotNull(type);
 
         assertEquals("java.util.List<? extends java.util.List<java.lang.String>>", type.toString());
@@ -131,58 +96,36 @@ public class KotlinTypeAnnotationWrongTypePathTest {
     // expect that there are 2 type arguments
     @Test
     public void test2() throws IOException {
-        // List<String>
-        TypeDescription.Generic listOfString = TypeDescription.Generic.Builder.parameterizedType(
-                TypeDescription.ForLoadedType.of(List.class), TypeDescription.ForLoadedType.of(String.class)).build();
-
-        byte[] bytes = new ByteBuddy()
-                .subclass(Object.class)
-                .name(TEST_CLASS)
-                .defineMethod("foo", listOfString)
-                .intercept(StubMethod.INSTANCE)
-                .visit(new AsmVisitorWrapper.AbstractBase() {
-                    @Override
-                    public ClassVisitor wrap(TypeDescription instrumentedType, ClassVisitor classVisitor,
-                            Implementation.Context implementationContext, TypePool typePool,
-                            FieldList<FieldDescription.InDefinedShape> fields, MethodList<?> methods,
-                            int writerFlags, int readerFlags) {
-                        return new ClassVisitor(OpenedClassReader.ASM_API, classVisitor) {
-                            @Override
-                            public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
-                                    String[] exceptions) {
-                                MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-                                if ("foo".equals(name)) {
-                                    AnnotationVisitor av = mv.visitTypeAnnotation(
-                                            TypeReference.newTypeReference(TypeReference.METHOD_RETURN).getValue(),
-                                            TypePath.fromString("0;"),
-                                            "Lorg/jboss/jandex/test/MyAnnotation;", true);
-                                    av.visit("value", "000");
-                                    av.visitEnd();
-
-                                    av = mv.visitTypeAnnotation(
-                                            TypeReference.newTypeReference(TypeReference.METHOD_RETURN).getValue(),
-                                            TypePath.fromString("1;"),
-                                            "Lorg/jboss/jandex/test/MyAnnotation;", true);
-                                    av.visit("value", "111");
-                                    av.visitEnd();
-                                }
-                                return mv;
-                            }
-                        };
-                    }
-                })
-                .make()
-                .getBytes();
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        writer.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER, "Test", null,
+                Type.getInternalName(Object.class), null);
+        MethodVisitor foo = writer.visitMethod(0, "foo", Type.getMethodDescriptor(Type.getType(List.class)),
+                "()Ljava/util/List<Ljava/lang/String;>;", null);
+        org.objectweb.asm.AnnotationVisitor ann = foo.visitTypeAnnotation(
+                TypeReference.newTypeReference(TypeReference.METHOD_RETURN).getValue(), TypePath.fromString("0;"),
+                Type.getDescriptor(MyAnnotation.class), true);
+        ann.visit("value", "000");
+        ann.visitEnd();
+        ann = foo.visitTypeAnnotation(TypeReference.newTypeReference(TypeReference.METHOD_RETURN).getValue(),
+                TypePath.fromString("1;"), Type.getDescriptor(MyAnnotation.class), true);
+        ann.visit("value", "111");
+        ann.visitEnd();
+        foo.visitCode();
+        foo.visitInsn(Opcodes.ACONST_NULL);
+        foo.visitInsn(Opcodes.ARETURN);
+        foo.visitEnd();
+        writer.visitEnd();
+        byte[] bytes = writer.toByteArray();
 
         Indexer indexer = new Indexer();
         indexer.index(new ByteArrayInputStream(bytes));
         Index index = indexer.complete();
 
-        ClassInfo clazz = index.getClassByName(TEST_CLASS);
+        ClassInfo clazz = index.getClassByName("Test");
         assertNotNull(clazz);
         MethodInfo method = clazz.firstMethod("foo");
         assertNotNull(method);
-        Type type = method.returnType();
+        org.jboss.jandex.Type type = method.returnType();
         assertNotNull(type);
         assertEquals("java.util.List<java.lang.@MyAnnotation(\"000\") String>", type.toString());
     }

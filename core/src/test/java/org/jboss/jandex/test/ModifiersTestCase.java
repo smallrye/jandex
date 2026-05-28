@@ -16,11 +16,11 @@ import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.MethodInfo;
 import org.junit.jupiter.api.Test;
-
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.asm.ModifierAdjustment;
-import net.bytebuddy.description.modifier.SyntheticState;
-import net.bytebuddy.implementation.FixedValue;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 public class ModifiersTestCase {
 
@@ -43,22 +43,31 @@ public class ModifiersTestCase {
 
     @Test
     public void testClassIsSynthetic() throws Exception {
-        final byte[] syntheticClass = new ByteBuddy().subclass(Object.class)
-                .visit(new ModifierAdjustment().withTypeModifiers(SyntheticState.SYNTHETIC))
-                .make()
-                .getBytes();
-        ClassInfo classInfo = Index.singleClass(syntheticClass);
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        writer.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER | Opcodes.ACC_SYNTHETIC, "Test", null,
+                Type.getInternalName(Object.class), null);
+        writer.visitEnd();
+        byte[] bytes = writer.toByteArray();
+
+        ClassInfo classInfo = Index.singleClass(bytes);
         assertTrue(classInfo.isSynthetic());
     }
 
     @Test
     public void testMethodIsSynthetic() throws Exception {
-        final byte[] syntheticClass = new ByteBuddy().subclass(Object.class)
-                .visit(new ModifierAdjustment().withTypeModifiers(SyntheticState.SYNTHETIC))
-                .defineMethod("ping", String.class, SyntheticState.SYNTHETIC).intercept(FixedValue.value("Hello World!"))
-                .make()
-                .getBytes();
-        ClassInfo classInfo = Index.singleClass(syntheticClass);
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        writer.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER | Opcodes.ACC_SYNTHETIC, "Test", null,
+                Type.getInternalName(Object.class), null);
+        MethodVisitor method = writer.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, "ping",
+                Type.getMethodDescriptor(Type.getType(String.class)), null, null);
+        method.visitCode();
+        method.visitLdcInsn("Hello World!");
+        method.visitInsn(Opcodes.ARETURN);
+        method.visitEnd();
+        writer.visitEnd();
+        byte[] bytes = writer.toByteArray();
+
+        ClassInfo classInfo = Index.singleClass(bytes);
         assertTrue(classInfo.isSynthetic());
         MethodInfo ping = null;
         for (MethodInfo m : classInfo.methods()) {
@@ -117,12 +126,16 @@ public class ModifiersTestCase {
 
     @Test
     public void testFieldIsSynthetic() throws Exception {
-        final byte[] syntheticClass = new ByteBuddy().subclass(Object.class)
-                .visit(new ModifierAdjustment().withTypeModifiers(SyntheticState.SYNTHETIC))
-                .defineField("ping", String.class, SyntheticState.SYNTHETIC)
-                .make()
-                .getBytes();
-        ClassInfo classInfo = Index.singleClass(syntheticClass);
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        writer.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER | Opcodes.ACC_SYNTHETIC, "Test", null,
+                Type.getInternalName(Object.class), null);
+        FieldVisitor field = writer.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, "ping",
+                Type.getDescriptor(String.class), null, null);
+        field.visitEnd();
+        writer.visitEnd();
+        byte[] bytes = writer.toByteArray();
+
+        ClassInfo classInfo = Index.singleClass(bytes);
         assertTrue(classInfo.isSynthetic());
         FieldInfo ping = null;
         for (FieldInfo f : classInfo.fields()) {

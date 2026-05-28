@@ -6,19 +6,16 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.test.util.IndexingUtil;
 import org.junit.jupiter.api.Test;
-
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.ClassFileVersion;
-import net.bytebuddy.description.annotation.AnnotationDescription;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 public class Utf8ConstantEncodingTest {
-    private static final String CLASS_NAME = "org.jboss.jandex.test.MyTestClass";
-
     private static final String LONG_STRING;
 
     static {
@@ -34,30 +31,26 @@ public class Utf8ConstantEncodingTest {
 
     @Test
     public void test() throws IOException {
-        byte[] clazz = new ByteBuddy()
-                .with(ClassFileVersion.JAVA_V8)
-                .subclass(Object.class)
-                .name(CLASS_NAME)
-                .annotateType(AnnotationDescription.Builder.ofType(MyAnnotation.class)
-                        .define("value", LONG_STRING)
-                        .build())
-                .make()
-                .getBytes();
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        writer.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER, "Test", null,
+                Type.getInternalName(Object.class), null);
+        AnnotationVisitor ann = writer.visitAnnotation(Type.getDescriptor(MyAnnotation.class), true);
+        ann.visit("value", LONG_STRING);
+        ann.visitEnd();
+        writer.visitEnd();
+        byte[] bytes = writer.toByteArray();
 
         Indexer indexer = new Indexer();
         indexer.indexClass(MyAnnotation.class);
-        indexer.index(new ByteArrayInputStream(clazz));
+        indexer.index(new ByteArrayInputStream(bytes));
         Index index = indexer.complete();
 
         verifyAnnotationValue(index);
-
-        Index index2 = IndexingUtil.roundtrip(index);
-
-        verifyAnnotationValue(index2);
+        verifyAnnotationValue(IndexingUtil.roundtrip(index));
     }
 
     private void verifyAnnotationValue(Index index) {
-        ClassInfo clazz = index.getClassByName(DotName.createSimple(CLASS_NAME));
+        ClassInfo clazz = index.getClassByName("Test");
         String annotationValue = clazz.declaredAnnotation(MyAnnotation.DOT_NAME).value().asString();
         assertEquals(LONG_STRING, annotationValue);
     }

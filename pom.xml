@@ -23,8 +23,8 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <version.ant>1.10.17</version.ant>
+        <version.asm>9.10.1</version.asm>
         <version.bridger>1.6.Final</version.bridger>
-        <version.bytebuddy>1.18.8</version.bytebuddy>
         <version.exec-maven-plugin>3.6.3</version.exec-maven-plugin>
         <version.gizmo2>2.2.0</version.gizmo2>
         <version.groovy>4.0.32</version.groovy>
@@ -80,11 +80,6 @@
                 <version>${version.gizmo2}</version>
             </dependency>
             <dependency>
-                <groupId>net.bytebuddy</groupId>
-                <artifactId>byte-buddy</artifactId>
-                <version>${version.bytebuddy}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.ant</groupId>
                 <artifactId>ant</artifactId>
                 <version>${version.ant}</version>
@@ -113,6 +108,11 @@
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter</artifactId>
                 <version>${version.junit}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>${version.asm}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

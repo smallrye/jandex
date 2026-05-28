@@ -7,27 +7,45 @@ import java.util.concurrent.Callable;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 import org.junit.jupiter.api.Test;
-
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.ClassFileVersion;
-import net.bytebuddy.implementation.FixedValue;
-import net.bytebuddy.matcher.ElementMatchers;
-import net.bytebuddy.utility.JavaConstant;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.ConstantDynamic;
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 public class ConstantDynamicTestCase {
-
     @Test
     public void testConstantDynamicSupport() throws Exception {
-        // Creating dynamic constants using Byte Buddy
-        // Inspired from https://www.javacodegeeks.com/2018/08/hands-on-java-constantdynamic.html
-        final byte[] dynamicConstantsClass = new ByteBuddy()
-                .with(ClassFileVersion.JAVA_V11)
-                .subclass(Callable.class)
-                .method(ElementMatchers.named("call"))
-                .intercept(FixedValue.value(JavaConstant.Dynamic.ofInvocation(Object.class.getConstructor())))
-                .make()
-                .getBytes();
-        ClassInfo classInfo = Index.singleClass(dynamicConstantsClass);
+        Type OBJ_TYPE = Type.getType(Object.class);
+
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        writer.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER, "Test", null,
+                OBJ_TYPE.getInternalName(), new String[] { Type.getInternalName(Callable.class) });
+        MethodVisitor method = writer.visitMethod(Opcodes.ACC_PUBLIC, "call", Type.getMethodDescriptor(OBJ_TYPE), null,
+                new String[] { Type.getInternalName(Exception.class) });
+        method.visitCode();
+        method.visitLdcInsn(new ConstantDynamic(
+                "_",
+                OBJ_TYPE.getDescriptor(),
+                new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/ConstantBootstraps", "invoke",
+                        Type.getMethodDescriptor(
+                                OBJ_TYPE,
+                                Type.getObjectType("java/lang/invoke/MethodHandles$Lookup"),
+                                Type.getType(String.class),
+                                Type.getType(Class.class),
+                                Type.getObjectType("java/lang/invoke/MethodHandle"),
+                                Type.getType(Object[].class)),
+                        false),
+                new Handle(Opcodes.H_NEWINVOKESPECIAL, OBJ_TYPE.getInternalName(), "<init>",
+                        Type.getMethodDescriptor(Type.VOID_TYPE),
+                        false)));
+        method.visitInsn(Opcodes.ARETURN);
+        method.visitEnd();
+        writer.visitEnd();
+        byte[] bytes = writer.toByteArray();
+
+        ClassInfo classInfo = Index.singleClass(bytes);
         assertNotNull(classInfo);
     }
 }

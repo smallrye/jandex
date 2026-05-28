@@ -13,7 +13,7 @@ jobs:
     steps:
     - name: Retrieve project metadata
       id: metadata
-      uses: radcortez/project-metadata-action@main
+      uses: smallrye/project-metadata-action@main
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         metadata-file-path: '.github/project.yml'
@@ -25,7 +25,7 @@ jobs:
         exit 1
 
     - name: Milestone review
-      uses: radcortez/milestone-review-action@main
+      uses: smallrye/milestone-review-action@main
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         milestone-title: ${{steps.metadata.outputs.current-version}}

@@ -2,21 +2,12 @@ package org.jboss.jandex.test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.reflect.Modifier;
 
 import org.jboss.jandex.Indexer;
 import org.junit.jupiter.api.Test;
-
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.asm.AsmVisitorWrapper;
-import net.bytebuddy.description.field.FieldDescription;
-import net.bytebuddy.description.field.FieldList;
-import net.bytebuddy.description.method.MethodList;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.Implementation;
-import net.bytebuddy.jar.asm.ClassVisitor;
-import net.bytebuddy.pool.TypePool;
-import net.bytebuddy.utility.OpenedClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 public class ClassOrderWhenPropagatingTypeParameterBoundsTest {
     // a Java compiler will never generate inner classes like this (an inner class's name
@@ -25,33 +16,24 @@ public class ClassOrderWhenPropagatingTypeParameterBoundsTest {
 
     @Test
     public void test() throws IOException {
-        byte[] a = new ByteBuddy().subclass(Object.class)
-                .name("org.jboss.jandex.test.A")
-                .visit(new AsmVisitorWrapper.AbstractBase() {
-                    @Override
-                    public ClassVisitor wrap(TypeDescription instrumentedType, ClassVisitor classVisitor,
-                            Implementation.Context implementationContext, TypePool typePool,
-                            FieldList<FieldDescription.InDefinedShape> fields, MethodList<?> methods, int writerFlags,
-                            int readerFlags) {
-                        return new ClassVisitor(OpenedClassReader.ASM_API, classVisitor) {
-                            @Override
-                            public void visitEnd() {
-                                super.visitInnerClass("org/jboss/jandex/test/A", "org/jboss/jandex/test/C", "A",
-                                        Modifier.STATIC);
-                            }
-                        };
-                    }
-                })
-                .make()
-                .getBytes();
-        byte[] b = new ByteBuddy().subclass(Object.class)
-                .name("org.jboss.jandex.test.B")
-                .make()
-                .getBytes();
-        byte[] c = new ByteBuddy().subclass(Object.class)
-                .name("org.jboss.jandex.test.C")
-                .make()
-                .getBytes();
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        writer.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER, "org/jboss/jandex/test/A", null,
+                Type.getInternalName(Object.class), null);
+        writer.visitInnerClass("org/jboss/jandex/test/A", "org/jboss/jandex/test/C", "A", Opcodes.ACC_STATIC);
+        writer.visitEnd();
+        byte[] a = writer.toByteArray();
+
+        writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        writer.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER, "org/jboss/jandex/test/B", null,
+                Type.getInternalName(Object.class), null);
+        writer.visitEnd();
+        byte[] b = writer.toByteArray();
+
+        writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        writer.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER, "org/jboss/jandex/test/C", null,
+                Type.getInternalName(Object.class), null);
+        writer.visitEnd();
+        byte[] c = writer.toByteArray();
 
         Indexer indexer = new Indexer();
         indexer.index(new ByteArrayInputStream(a));

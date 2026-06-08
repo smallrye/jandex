@@ -5,10 +5,8 @@ site:
 content:
   sources:
   - url: https://github.com/smallrye/jandex.git
-    branches: ~
-    tags:
-    - '3*'
-    - '!*-RC*'
+    branches:
+    - 'main'
     start_path: doc
 ui:
   bundle:

@@ -54,7 +54,6 @@ jobs:
         java -version
         mvn --version
         sed -i -e 's|<version.jandex>.*</version.jandex>|<version.jandex>${{steps.metadata.outputs.current-version}}</version.jandex>|' benchmarks/pom.xml
-        sed -i -e 's|^version: main|version: ${{steps.metadata.outputs.current-version}}|' doc/antora.yml
         git add -A .
         git commit -a -m 'Amendments before release'
         git push
@@ -110,7 +109,6 @@ jobs:
     - name: After release
       run: |
         sed -i -e 's|<version.jandex>.*</version.jandex>|<version.jandex>${project.version}</version.jandex>|' benchmarks/pom.xml
-        sed -i -e 's|^version: ${{steps.metadata.outputs.current-version}}|version: main|' doc/antora.yml
         git add -A .
         git commit -a -m 'Amendments after release'
         git push

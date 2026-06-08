@@ -1437,6 +1437,14 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         return result.toString();
     }
 
+    // no `equals()`, that would be a breaking change
+    // deterministic hash code doesn't change equality and helps reproducibility
+    // in case someone puts `ClassInfo` objects into hash tables
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
     @Override
     public ClassInfo asClass() {
         return this;

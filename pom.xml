@@ -28,7 +28,7 @@
         <version.exec-maven-plugin>3.6.3</version.exec-maven-plugin>
         <version.gizmo2>2.2.0</version.gizmo2>
         <version.groovy>4.0.32</version.groovy>
-        <version.junit>5.14.4</version.junit>
+        <version.junit>6.1.2</version.junit>
         <version.kotlin>2.4.0</version.kotlin>
         <version.maven>3.9.16</version.maven>
         <version.maven-bundle-plugin>5.1.9</version.maven-bundle-plugin>

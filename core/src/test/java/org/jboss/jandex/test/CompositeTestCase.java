@@ -19,12 +19,15 @@
 package org.jboss.jandex.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -41,6 +44,10 @@ public class CompositeTestCase {
             Collections.<DotName, List<AnnotationInstance>> emptyMap(), false);
     private static final DotName BAR_NAME = DotName.createSimple("foo.Bar");
     private static final DotName FOO_NAME = DotName.createSimple("foo.Foo");
+
+    private static final DotName DUP_IFACE = DotName.createSimple("foo.Iface");
+    private static final DotName DUP_SUB = DotName.createSimple("foo.Sub");
+    private static final DotName DUP_IMPL = DotName.createSimple("foo.Impl");
 
     @Test
     public void testComposite() {
@@ -95,5 +102,54 @@ public class CompositeTestCase {
         subclasses.put(BASE_NAME, Collections.singletonList(classInfo));
 
         return Index.create(annotations, subclasses, implementors, classes);
+    }
+
+    // Regression test for issue #174: a CompositeIndex must deduplicate results by class name.
+    // ClassInfo has no equals/hashCode, so the previous HashSet<ClassInfo> accumulators deduped by
+    // identity and let the same FQCN appear multiple times when merged across indexes. Here each
+    // index contributes a DISTINCT ClassInfo instance for the same FQCN, so identity dedup would
+    // have kept both.
+    @Test
+    public void testCompositeDeduplicatesByClassName() {
+        CompositeIndex index = CompositeIndex.create(createDuplicatingIndex(), createDuplicatingIndex());
+
+        assertEquals(1, index.getKnownDirectSubclasses(DotName.OBJECT_NAME).size());
+        assertEquals(1, index.getAllKnownSubclasses(DotName.OBJECT_NAME).size());
+        assertEquals(1, index.getKnownDirectImplementors(DUP_IFACE).size());
+        assertEquals(1, index.getAllKnownImplementors(DUP_IFACE).size());
+        assertEquals(1, index.getKnownDirectImplementations(DUP_IFACE).size());
+        assertEquals(1, index.getAllKnownImplementations(DUP_IFACE).size());
+
+        assertUniqueNames(index.getKnownDirectSubclasses(DotName.OBJECT_NAME));
+        assertUniqueNames(index.getAllKnownSubclasses(DotName.OBJECT_NAME));
+        assertUniqueNames(index.getKnownDirectImplementors(DUP_IFACE));
+        assertUniqueNames(index.getAllKnownImplementors(DUP_IFACE));
+    }
+
+    private void assertUniqueNames(Collection<ClassInfo> classes) {
+        Set<DotName> names = new HashSet<DotName>();
+        for (ClassInfo clazz : classes) {
+            assertTrue(names.add(clazz.name()), "duplicate class name in result: " + clazz.name());
+        }
+    }
+
+    // Each invocation produces fresh ClassInfo instances for the same FQCNs.
+    private Index createDuplicatingIndex() {
+        ClassInfo sub = ClassInfo.create(DUP_SUB, DotName.OBJECT_NAME, (short) 0, new DotName[0],
+                Collections.<DotName, List<AnnotationInstance>> emptyMap(), false);
+        ClassInfo impl = ClassInfo.create(DUP_IMPL, DotName.OBJECT_NAME, (short) 0, new DotName[] { DUP_IFACE },
+                Collections.<DotName, List<AnnotationInstance>> emptyMap(), false);
+
+        Map<DotName, List<ClassInfo>> subclasses = new HashMap<DotName, List<ClassInfo>>();
+        subclasses.put(DotName.OBJECT_NAME, Collections.singletonList(sub));
+
+        Map<DotName, List<ClassInfo>> implementors = new HashMap<DotName, List<ClassInfo>>();
+        implementors.put(DUP_IFACE, Collections.singletonList(impl));
+
+        Map<DotName, ClassInfo> classes = new HashMap<DotName, ClassInfo>();
+        classes.put(DUP_SUB, sub);
+        classes.put(DUP_IMPL, impl);
+
+        return Index.create(Collections.<DotName, List<AnnotationInstance>> emptyMap(), subclasses, implementors, classes);
     }
 }

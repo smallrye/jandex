@@ -26,7 +26,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -104,14 +107,16 @@ public class CompositeIndex implements IndexView {
      */
     @Override
     public Set<ClassInfo> getKnownDirectSubclasses(final DotName className) {
-        final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
+        final Map<DotName, ClassInfo> allKnown = new LinkedHashMap<DotName, ClassInfo>();
         for (IndexView index : indexes) {
             final Collection<ClassInfo> list = index.getKnownDirectSubclasses(className);
             if (list != null) {
-                allKnown.addAll(list);
+                for (ClassInfo clazz : list) {
+                    allKnown.putIfAbsent(clazz.name(), clazz);
+                }
             }
         }
-        return Collections.unmodifiableSet(allKnown);
+        return Collections.unmodifiableSet(new LinkedHashSet<ClassInfo>(allKnown.values()));
     }
 
     /**
@@ -119,13 +124,13 @@ public class CompositeIndex implements IndexView {
      */
     @Override
     public Set<ClassInfo> getAllKnownSubclasses(final DotName className) {
-        final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
+        final Map<DotName, ClassInfo> allKnown = new LinkedHashMap<DotName, ClassInfo>();
         final Set<DotName> processedClasses = new HashSet<DotName>();
         getAllKnownSubClasses(className, allKnown, processedClasses);
-        return allKnown;
+        return Collections.unmodifiableSet(new LinkedHashSet<ClassInfo>(allKnown.values()));
     }
 
-    private void getAllKnownSubClasses(DotName className, Set<ClassInfo> allKnown, Set<DotName> processedClasses) {
+    private void getAllKnownSubClasses(DotName className, Map<DotName, ClassInfo> allKnown, Set<DotName> processedClasses) {
         final Set<DotName> subClassesToProcess = new HashSet<DotName>();
         subClassesToProcess.add(className);
         while (!subClassesToProcess.isEmpty()) {
@@ -137,7 +142,7 @@ public class CompositeIndex implements IndexView {
         }
     }
 
-    private void getAllKnownSubClasses(DotName name, Set<ClassInfo> allKnown, Set<DotName> subClassesToProcess,
+    private void getAllKnownSubClasses(DotName name, Map<DotName, ClassInfo> allKnown, Set<DotName> subClassesToProcess,
             Set<DotName> processedClasses) {
         for (IndexView index : indexes) {
             final Collection<ClassInfo> list = index.getKnownDirectSubclasses(name);
@@ -145,7 +150,7 @@ public class CompositeIndex implements IndexView {
                 for (final ClassInfo clazz : list) {
                     final DotName className = clazz.name();
                     if (!processedClasses.contains(className)) {
-                        allKnown.add(clazz);
+                        allKnown.putIfAbsent(className, clazz);
                         subClassesToProcess.add(className);
                     }
                 }
@@ -158,14 +163,16 @@ public class CompositeIndex implements IndexView {
      */
     @Override
     public Collection<ClassInfo> getKnownDirectSubinterfaces(DotName interfaceName) {
-        Set<ClassInfo> allKnown = new HashSet<>();
+        Map<DotName, ClassInfo> allKnown = new LinkedHashMap<DotName, ClassInfo>();
         for (IndexView index : indexes) {
             Collection<ClassInfo> list = index.getKnownDirectSubinterfaces(interfaceName);
             if (list != null) {
-                allKnown.addAll(list);
+                for (ClassInfo clazz : list) {
+                    allKnown.putIfAbsent(clazz.name(), clazz);
+                }
             }
         }
-        return Collections.unmodifiableSet(allKnown);
+        return Collections.unmodifiableCollection(allKnown.values());
     }
 
     /**
@@ -173,7 +180,7 @@ public class CompositeIndex implements IndexView {
      */
     @Override
     public Collection<ClassInfo> getAllKnownSubinterfaces(DotName interfaceName) {
-        Set<ClassInfo> result = new HashSet<>();
+        Map<DotName, ClassInfo> result = new LinkedHashMap<DotName, ClassInfo>();
 
         Queue<DotName> worklist = new ArrayDeque<>();
         Set<DotName> alreadyProcessed = new HashSet<>();
@@ -187,25 +194,27 @@ public class CompositeIndex implements IndexView {
 
             for (IndexView index : indexes) {
                 for (ClassInfo directSubinterface : index.getKnownDirectSubinterfaces(iface)) {
-                    result.add(directSubinterface);
+                    result.putIfAbsent(directSubinterface.name(), directSubinterface);
                     worklist.add(directSubinterface.name());
                 }
             }
         }
 
-        return result;
+        return Collections.unmodifiableCollection(result.values());
     }
 
     @Override
     public Collection<ClassInfo> getKnownDirectImplementations(DotName interfaceName) {
-        Set<ClassInfo> allKnown = new HashSet<>();
+        Map<DotName, ClassInfo> allKnown = new LinkedHashMap<DotName, ClassInfo>();
         for (IndexView index : indexes) {
             Collection<ClassInfo> list = index.getKnownDirectImplementations(interfaceName);
             if (list != null) {
-                allKnown.addAll(list);
+                for (ClassInfo clazz : list) {
+                    allKnown.putIfAbsent(clazz.name(), clazz);
+                }
             }
         }
-        return Collections.unmodifiableSet(allKnown);
+        return Collections.unmodifiableCollection(allKnown.values());
     }
 
     @Override
@@ -219,14 +228,16 @@ public class CompositeIndex implements IndexView {
      */
     @Override
     public Collection<ClassInfo> getKnownDirectImplementors(final DotName interfaceName) {
-        final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
+        final Map<DotName, ClassInfo> allKnown = new LinkedHashMap<DotName, ClassInfo>();
         for (IndexView index : indexes) {
             final Collection<ClassInfo> list = index.getKnownDirectImplementors(interfaceName);
             if (list != null) {
-                allKnown.addAll(list);
+                for (ClassInfo clazz : list) {
+                    allKnown.putIfAbsent(clazz.name(), clazz);
+                }
             }
         }
-        return Collections.unmodifiableSet(allKnown);
+        return Collections.unmodifiableCollection(allKnown.values());
     }
 
     /**
@@ -234,7 +245,7 @@ public class CompositeIndex implements IndexView {
      */
     @Override
     public Set<ClassInfo> getAllKnownImplementors(final DotName interfaceName) {
-        final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
+        final Map<DotName, ClassInfo> allKnown = new LinkedHashMap<DotName, ClassInfo>();
         final Set<DotName> subInterfacesToProcess = new HashSet<DotName>();
         final Set<DotName> processedClasses = new HashSet<DotName>();
         subInterfacesToProcess.add(interfaceName);
@@ -245,10 +256,10 @@ public class CompositeIndex implements IndexView {
             processedClasses.add(name);
             getKnownImplementors(name, allKnown, subInterfacesToProcess, processedClasses);
         }
-        return allKnown;
+        return Collections.unmodifiableSet(new LinkedHashSet<ClassInfo>(allKnown.values()));
     }
 
-    private void getKnownImplementors(DotName name, Set<ClassInfo> allKnown, Set<DotName> subInterfacesToProcess,
+    private void getKnownImplementors(DotName name, Map<DotName, ClassInfo> allKnown, Set<DotName> subInterfacesToProcess,
             Set<DotName> processedClasses) {
         for (IndexView index : indexes) {
             final Collection<ClassInfo> list = index.getKnownDirectImplementors(name);
@@ -259,8 +270,8 @@ public class CompositeIndex implements IndexView {
                         if (Modifier.isInterface(clazz.flags())) {
                             subInterfacesToProcess.add(className);
                         } else {
-                            if (!allKnown.contains(clazz)) {
-                                allKnown.add(clazz);
+                            if (!allKnown.containsKey(className)) {
+                                allKnown.put(className, clazz);
                                 processedClasses.add(className);
                                 getAllKnownSubClasses(className, allKnown, processedClasses);
                             }

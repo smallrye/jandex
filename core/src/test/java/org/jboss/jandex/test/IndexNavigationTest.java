@@ -108,66 +108,63 @@ public class IndexNavigationTest {
     }
 
     private void doTestOverlappingCompositeIndex(IndexView index) {
+        // issue #174: an overlapping CompositeIndex now deduplicates results by class name, so
+        // classes present in more than one index appear only once (previously they appeared once per index).
         assertCollection(index.getKnownDirectSubclasses(Object.class), IGrandparent.class, IParent.class, IChild.class,
-                IGrandchild1.class, CGrandparent.class, IChild.class, ISibling.class, IGrandchild1.class, IGrandchild2.class);
-        assertCollection(index.getKnownDirectSubclasses(CParent.class), CChild.class, CChild.class, CSibling.class);
-        assertCollection(index.getKnownDirectSubclasses(CChild.class), CGrandchild1.class, CGrandchild1.class,
-                CGrandchild2.class);
+                IGrandchild1.class, CGrandparent.class, ISibling.class, IGrandchild2.class);
+        assertCollection(index.getKnownDirectSubclasses(CParent.class), CChild.class, CSibling.class);
+        assertCollection(index.getKnownDirectSubclasses(CChild.class), CGrandchild1.class, CGrandchild2.class);
 
         assertCollection(index.getAllKnownSubclasses(Object.class), IGrandparent.class, IParent.class, IChild.class,
-                IGrandchild1.class, CGrandparent.class, CParent.class, CChild.class, CGrandchild1.class, IChild.class,
-                ISibling.class, IGrandchild1.class, IGrandchild2.class, CChild.class, CSibling.class, CGrandchild1.class,
-                CGrandchild2.class);
+                IGrandchild1.class, CGrandparent.class, CParent.class, CChild.class, CGrandchild1.class,
+                ISibling.class, IGrandchild2.class, CSibling.class, CGrandchild2.class);
         assertCollection(index.getAllKnownSubclasses(CGrandparent.class), CParent.class, CChild.class, CGrandchild1.class,
-                CChild.class, CSibling.class, CGrandchild1.class, CGrandchild2.class);
-        assertCollection(index.getAllKnownSubclasses(CParent.class), CChild.class, CGrandchild1.class, CChild.class,
-                CSibling.class, CGrandchild1.class, CGrandchild2.class);
-        assertCollection(index.getAllKnownSubclasses(CChild.class), CGrandchild1.class, CGrandchild1.class, CGrandchild2.class);
+                CSibling.class, CGrandchild2.class);
+        assertCollection(index.getAllKnownSubclasses(CParent.class), CChild.class, CGrandchild1.class,
+                CSibling.class, CGrandchild2.class);
+        assertCollection(index.getAllKnownSubclasses(CChild.class), CGrandchild1.class, CGrandchild2.class);
 
         assertCollection(index.getKnownDirectSubinterfaces(IGrandparent.class), IParent.class);
-        assertCollection(index.getKnownDirectSubinterfaces(IParent.class), IChild.class, IChild.class, ISibling.class);
-        assertCollection(index.getKnownDirectSubinterfaces(IChild.class), IGrandchild1.class, IGrandchild1.class,
-                IGrandchild2.class);
+        assertCollection(index.getKnownDirectSubinterfaces(IParent.class), IChild.class, ISibling.class);
+        assertCollection(index.getKnownDirectSubinterfaces(IChild.class), IGrandchild1.class, IGrandchild2.class);
 
         assertCollection(index.getAllKnownSubinterfaces(IGrandparent.class), IParent.class, IChild.class, IGrandchild1.class,
-                IChild.class, ISibling.class, IGrandchild1.class, IGrandchild2.class);
-        assertCollection(index.getAllKnownSubinterfaces(IParent.class), IChild.class, IGrandchild1.class, IChild.class,
-                ISibling.class, IGrandchild1.class, IGrandchild2.class);
-        assertCollection(index.getAllKnownSubinterfaces(IChild.class), IGrandchild1.class, IGrandchild1.class,
-                IGrandchild2.class);
+                ISibling.class, IGrandchild2.class);
+        assertCollection(index.getAllKnownSubinterfaces(IParent.class), IChild.class, IGrandchild1.class,
+                ISibling.class, IGrandchild2.class);
+        assertCollection(index.getAllKnownSubinterfaces(IChild.class), IGrandchild1.class, IGrandchild2.class);
 
         assertCollection(index.getKnownDirectImplementations(IGrandparent.class), CGrandparent.class);
         assertCollection(index.getKnownDirectImplementations(IParent.class), CParent.class);
-        assertCollection(index.getKnownDirectImplementations(IChild.class), CChild.class, CChild.class);
+        assertCollection(index.getKnownDirectImplementations(IChild.class), CChild.class);
         assertCollection(index.getKnownDirectImplementations(ISibling.class), CSibling.class);
-        assertCollection(index.getKnownDirectImplementations(IGrandchild1.class), CGrandchild1.class, CGrandchild1.class);
+        assertCollection(index.getKnownDirectImplementations(IGrandchild1.class), CGrandchild1.class);
         assertCollection(index.getKnownDirectImplementations(IGrandchild2.class), CGrandchild2.class);
 
         assertCollection(index.getAllKnownImplementations(IGrandparent.class), CGrandparent.class, CParent.class, CChild.class,
-                CGrandchild1.class, CChild.class, CSibling.class, CGrandchild1.class, CGrandchild2.class);
+                CGrandchild1.class, CSibling.class, CGrandchild2.class);
         assertCollection(index.getAllKnownImplementations(IParent.class), CParent.class, CChild.class, CGrandchild1.class,
-                CChild.class, CSibling.class, CGrandchild1.class, CGrandchild2.class);
+                CSibling.class, CGrandchild2.class);
         // doesn't behave as expected, but the behavior is actually not defined
-        //assertCollection(index.getAllKnownImplementations(IChild.class), CChild.class, CGrandchild1.class, CChild.class, CGrandchild1.class, CGrandchild2.class);
+        //assertCollection(index.getAllKnownImplementations(IChild.class), CChild.class, CGrandchild1.class, CGrandchild2.class);
         assertCollection(index.getAllKnownImplementations(ISibling.class), CSibling.class);
         assertCollection(index.getAllKnownImplementations(IGrandchild1.class), CGrandchild1.class);
         assertCollection(index.getAllKnownImplementations(IGrandchild2.class), CGrandchild2.class);
 
         assertCollection(index.getKnownDirectImplementors(IGrandparent.class), CGrandparent.class, IParent.class);
-        assertCollection(index.getKnownDirectImplementors(IParent.class), IChild.class, CParent.class, IChild.class,
-                ISibling.class);
-        assertCollection(index.getKnownDirectImplementors(IChild.class), IGrandchild1.class, CChild.class, IGrandchild1.class,
-                IGrandchild2.class, CChild.class);
+        assertCollection(index.getKnownDirectImplementors(IParent.class), IChild.class, CParent.class, ISibling.class);
+        assertCollection(index.getKnownDirectImplementors(IChild.class), IGrandchild1.class, CChild.class,
+                IGrandchild2.class);
         assertCollection(index.getKnownDirectImplementors(ISibling.class), CSibling.class);
-        assertCollection(index.getKnownDirectImplementors(IGrandchild1.class), CGrandchild1.class, CGrandchild1.class);
+        assertCollection(index.getKnownDirectImplementors(IGrandchild1.class), CGrandchild1.class);
         assertCollection(index.getKnownDirectImplementors(IGrandchild2.class), CGrandchild2.class);
 
         assertCollection(index.getAllKnownImplementors(IGrandparent.class), CGrandparent.class, CParent.class, CChild.class,
-                CGrandchild1.class, CChild.class, CSibling.class, CGrandchild1.class, CGrandchild2.class);
+                CGrandchild1.class, CSibling.class, CGrandchild2.class);
         assertCollection(index.getAllKnownImplementors(IParent.class), CParent.class, CChild.class, CGrandchild1.class,
-                CChild.class, CSibling.class, CGrandchild1.class, CGrandchild2.class);
+                CSibling.class, CGrandchild2.class);
         // doesn't behave as expected, but the behavior is actually not defined
-        //assertCollection(index.getAllKnownImplementors(IChild.class), CChild.class, CGrandchild1.class, CChild.class, CGrandchild1.class, CGrandchild2.class);
+        //assertCollection(index.getAllKnownImplementors(IChild.class), CChild.class, CGrandchild1.class, CGrandchild2.class);
         assertCollection(index.getAllKnownImplementors(ISibling.class), CSibling.class);
         assertCollection(index.getAllKnownImplementors(IGrandchild1.class), CGrandchild1.class);
         assertCollection(index.getAllKnownImplementors(IGrandchild2.class), CGrandchild2.class);

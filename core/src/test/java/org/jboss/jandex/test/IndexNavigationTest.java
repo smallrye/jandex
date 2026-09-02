@@ -1,6 +1,7 @@
 package org.jboss.jandex.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -203,6 +204,32 @@ public class IndexNavigationTest {
 
         index = StackedIndex.create(IndexingUtil.roundtrip(index1), IndexingUtil.roundtrip(index2));
         testIndex(index);
+    }
+
+    @Test
+    public void testAllKnownCollectionsAreUnmodifiable() throws IOException {
+        Index index = Index.of(IGrandparent.class, IParent.class, IChild.class, ISibling.class, IGrandchild1.class,
+                IGrandchild2.class, CGrandparent.class, CParent.class, CChild.class, CSibling.class, CGrandchild1.class,
+                CGrandchild2.class);
+        testUnmodifiable(index);
+        testUnmodifiable(CompositeIndex.create(index));
+
+        index = IndexingUtil.roundtrip(index);
+        testUnmodifiable(index);
+        testUnmodifiable(CompositeIndex.create(index));
+        testUnmodifiable(StackedIndex.create(index));
+    }
+
+    private void testUnmodifiable(IndexView index) {
+        assertUnmodifiable(index.getAllKnownSubclasses(CGrandparent.class));
+        assertUnmodifiable(index.getAllKnownSubinterfaces(IGrandparent.class));
+        assertUnmodifiable(index.getAllKnownImplementations(IGrandparent.class));
+        assertUnmodifiable(index.getAllKnownImplementors(IGrandparent.class));
+    }
+
+    private static void assertUnmodifiable(Collection<ClassInfo> collection) {
+        assertTrue(collection.size() > 0, "Expected a non-empty collection to test");
+        assertThrows(UnsupportedOperationException.class, collection::clear);
     }
 
     private void testIndex(IndexView index) {

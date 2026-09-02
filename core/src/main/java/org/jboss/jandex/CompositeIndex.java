@@ -122,7 +122,7 @@ public class CompositeIndex implements IndexView {
         final Set<ClassInfo> allKnown = new HashSet<ClassInfo>();
         final Set<DotName> processedClasses = new HashSet<DotName>();
         getAllKnownSubClasses(className, allKnown, processedClasses);
-        return allKnown;
+        return Collections.unmodifiableSet(allKnown);
     }
 
     private void getAllKnownSubClasses(DotName className, Set<ClassInfo> allKnown, Set<DotName> processedClasses) {
@@ -193,7 +193,7 @@ public class CompositeIndex implements IndexView {
             }
         }
 
-        return result;
+        return Collections.unmodifiableSet(result);
     }
 
     @Override
@@ -245,7 +245,7 @@ public class CompositeIndex implements IndexView {
             processedClasses.add(name);
             getKnownImplementors(name, allKnown, subInterfacesToProcess, processedClasses);
         }
-        return allKnown;
+        return Collections.unmodifiableSet(allKnown);
     }
 
     private void getKnownImplementors(DotName name, Set<ClassInfo> allKnown, Set<DotName> subInterfacesToProcess,

@@ -449,6 +449,48 @@ public interface IndexView {
     }
 
     /**
+     * Returns whether this index contains at least one instance of the specified annotation.
+     * This is done using an O(1) lookup. Valid instance targets include
+     * field, method, parameter, and class.
+     *
+     * @param annotationName the name of the annotation to look for
+     * @return {@code true} if this index contains at least one instance of the annotation, {@code false} otherwise
+     * @see #getAnnotations(DotName)
+     * @since 3.7
+     */
+    default boolean containsAnnotation(DotName annotationName) {
+        return !getAnnotations(annotationName).isEmpty();
+    }
+
+    /**
+     * Returns whether this index contains at least one instance of the specified annotation.
+     * This is done using an O(1) lookup. Valid instance targets include
+     * field, method, parameter, and class.
+     *
+     * @param annotationName the name of the annotation to look for
+     * @return {@code true} if this index contains at least one instance of the annotation, {@code false} otherwise
+     * @see #getAnnotations(String)
+     * @since 3.7
+     */
+    default boolean containsAnnotation(String annotationName) {
+        return containsAnnotation(DotName.createSimple(annotationName));
+    }
+
+    /**
+     * Returns whether this index contains at least one instance of the specified annotation.
+     * This is done using an O(1) lookup. Valid instance targets include
+     * field, method, parameter, and class.
+     *
+     * @param annotationType the type of the annotation to look for
+     * @return {@code true} if this index contains at least one instance of the annotation, {@code false} otherwise
+     * @see #getAnnotations(Class)
+     * @since 3.7
+     */
+    default boolean containsAnnotation(Class<?> annotationType) {
+        return containsAnnotation(DotName.createSimple(annotationType.getName()));
+    }
+
+    /**
      * Obtains a list of instances for the specified annotation. If the specified annotation is repeatable (JLS 9.6), the result
      * also contains all values from all instances of the container annotation. In this case, the
      * {@link AnnotationInstance#target()} returns the target of the container annotation instance.

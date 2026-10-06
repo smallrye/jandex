@@ -81,6 +81,20 @@ public class CompositeIndex implements IndexView {
      * {@inheritDoc}
      */
     @Override
+    public boolean containsAnnotation(DotName annotationName) {
+        for (IndexView index : indexes) {
+            if (index.containsAnnotation(annotationName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, IndexView index) {
         List<AnnotationInstance> allInstances = new ArrayList<AnnotationInstance>();
         for (IndexView i : indexes) {

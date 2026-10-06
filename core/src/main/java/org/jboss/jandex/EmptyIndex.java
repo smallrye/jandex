@@ -72,6 +72,11 @@ public final class EmptyIndex implements IndexView {
     }
 
     @Override
+    public boolean containsAnnotation(DotName annotationName) {
+        return false;
+    }
+
+    @Override
     public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, IndexView index) {
         return Collections.emptySet();
     }

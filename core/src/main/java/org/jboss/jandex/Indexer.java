@@ -218,6 +218,22 @@ public final class Indexer {
             0x53, 0x75, 0x62, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73
     };
 
+    // "NestHost"
+    private final static byte[] NEST_HOST = new byte[] {
+            // N     e     s     t
+            0x4e, 0x65, 0x73, 0x74,
+            // H     o     s     t
+            0x48, 0x6f, 0x73, 0x74
+    };
+
+    // "NestMembers"
+    private final static byte[] NEST_MEMBERS = new byte[] {
+            // N     e     s     t
+            0x4e, 0x65, 0x73, 0x74,
+            // M     e     m     b     e     r     s
+            0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73
+    };
+
     private final static int RUNTIME_ANNOTATIONS_LEN = RUNTIME_ANNOTATIONS.length;
     private final static int RUNTIME_PARAM_ANNOTATIONS_LEN = RUNTIME_PARAM_ANNOTATIONS.length;
     private final static int RUNTIME_TYPE_ANNOTATIONS_LEN = RUNTIME_TYPE_ANNOTATIONS.length;
@@ -237,6 +253,8 @@ public final class Indexer {
     private final static int RUNTIME_INVISIBLE_PARAM_ANNOTATIONS_LEN = RUNTIME_INVISIBLE_PARAM_ANNOTATIONS.length;
     private final static int RUNTIME_INVISIBLE_TYPE_ANNOTATIONS_LEN = RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.length;
     private final static int PERMITTED_SUBCLASSES_LEN = PERMITTED_SUBCLASSES.length;
+    private final static int NEST_HOST_LEN = NEST_HOST.length;
+    private final static int NEST_MEMBERS_LEN = NEST_MEMBERS.length;
 
     private final static int HAS_RUNTIME_ANNOTATION = 1;
     private final static int HAS_RUNTIME_PARAM_ANNOTATION = 2;
@@ -257,6 +275,8 @@ public final class Indexer {
     private final static int HAS_RUNTIME_INVISIBLE_PARAM_ANNOTATION = 17;
     private final static int HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION = 18;
     private final static int HAS_PERMITTED_SUBCLASSES = 19;
+    private final static int HAS_NEST_HOST = 20;
+    private final static int HAS_NEST_MEMBERS = 21;
 
     private static class InnerClassInfo {
         private InnerClassInfo(DotName innerClass, DotName enclosingClass, String simpleName, int flags) {
@@ -562,6 +582,22 @@ public final class Indexer {
         }
     }
 
+    private void processNestHost(DataInputStream data, ClassInfo target) throws IOException {
+        target.setNestHost(decodeClassEntry(data.readUnsignedShort()));
+    }
+
+    private void processNestMembers(DataInputStream data, ClassInfo target) throws IOException {
+        int numNestMembers = data.readUnsignedShort();
+        if (numNestMembers > 0) {
+            Set<DotName> nestMembers = new HashSet<>(numNestMembers);
+            for (int i = 0; i < numNestMembers; i++) {
+                DotName name = decodeClassEntry(data.readUnsignedShort());
+                nestMembers.add(name);
+            }
+            target.setNestMembers(nestMembers);
+        }
+    }
+
     private void processAttributes(DataInputStream data, AnnotationTarget target) throws IOException {
         int numAttrs = data.readUnsignedShort();
         byte[] constantPoolAnnoAttrributes = this.constantPoolAnnoAttrributes;
@@ -619,6 +655,10 @@ public final class Indexer {
                 processRecordComponents(data);
             } else if (annotationAttribute == HAS_PERMITTED_SUBCLASSES && target instanceof ClassInfo) {
                 processPermittedSubclasses(data, (ClassInfo) target);
+            } else if (annotationAttribute == HAS_NEST_HOST && target instanceof ClassInfo) {
+                processNestHost(data, (ClassInfo) target);
+            } else if (annotationAttribute == HAS_NEST_MEMBERS && target instanceof ClassInfo) {
+                processNestMembers(data, (ClassInfo) target);
             } else {
                 skipFully(data, attributeLen);
             }
@@ -2595,6 +2635,10 @@ public final class Indexer {
                         annoAttributes[pos] = HAS_RUNTIME_INVISIBLE_TYPE_ANNOTATION;
                     } else if (len == PERMITTED_SUBCLASSES_LEN && match(buf, offset, PERMITTED_SUBCLASSES)) {
                         annoAttributes[pos] = HAS_PERMITTED_SUBCLASSES;
+                    } else if (len == NEST_HOST_LEN && match(buf, offset, NEST_HOST)) {
+                        annoAttributes[pos] = HAS_NEST_HOST;
+                    } else if (len == NEST_MEMBERS_LEN && match(buf, offset, NEST_MEMBERS)) {
+                        annoAttributes[pos] = HAS_NEST_MEMBERS;
                     }
                     offset += len;
                     break;

@@ -2,6 +2,7 @@ package org.jboss.jandex.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.StackedIndex;
@@ -135,6 +137,25 @@ public class StackedIndexTest {
         assertEquals(11, annotations.size());
         for (AnnotationInstance annotation : annotations) {
             assertFalse(annotation.value().asString().startsWith("XXX"));
+        }
+
+        assertTrue(index.containsAnnotation(MyAnnotation.DOT_NAME));
+        assertTrue(index.containsAnnotation(MyRepeatableAnnotation.DOT_NAME));
+        assertTrue(index.containsAnnotation(MyRepeatableAnnotation.List.DOT_NAME));
+        assertFalse(index.containsAnnotation(DotName.createSimple(Deprecated.class)));
+
+        // annotation only present in the bottom-most index
+        StackedIndex partialIndex = StackedIndex.create(Index.of(AnnotatedClass2.class), Index.of(MyAnnotation.class));
+        assertTrue(partialIndex.containsAnnotation(MyAnnotation.DOT_NAME));
+        assertFalse(partialIndex.containsAnnotation(MyRepeatableAnnotation.List.DOT_NAME));
+
+        // must agree with `getAnnotations()`
+        for (StackedIndex stackedIndex : new StackedIndex[] { index, partialIndex }) {
+            for (DotName name : new DotName[] { MyAnnotation.DOT_NAME, MyRepeatableAnnotation.DOT_NAME,
+                    MyRepeatableAnnotation.List.DOT_NAME, DotName.createSimple(Deprecated.class) }) {
+                assertEquals(!stackedIndex.getAnnotations(name).isEmpty(), stackedIndex.containsAnnotation(name),
+                        name.toString());
+            }
         }
     }
 

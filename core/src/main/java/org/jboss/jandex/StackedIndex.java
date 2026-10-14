@@ -262,6 +262,24 @@ public final class StackedIndex implements IndexView {
         return Collections.unmodifiableList(result);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean containsAnnotation(DotName annotationName) {
+        for (IndexView idx : stack) {
+            if (!idx.containsAnnotation(annotationName)) {
+                continue;
+            }
+            for (AnnotationInstance annotation : idx.getAnnotations(annotationName)) {
+                if (nameOfDeclaringClass(annotation.target()) != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, IndexView index) {
         List<AnnotationInstance> result = new ArrayList<>();

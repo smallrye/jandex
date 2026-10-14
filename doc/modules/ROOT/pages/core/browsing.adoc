@@ -38,6 +38,13 @@ for (AnnotationInstance annotation : annotations) {
 }
 ----
 
+[TIP]
+====
+If you only need to know if an index contains an annotation, use `index.containsAnnotation(deprecated)`.
+
+This is cheaper than  `!index.getAnnotations(deprecated).isEmpty()`, since less allocations are needed for composite indexes.
+====
+
 == Analyzing Generics
 
 The following example demonstrates indexing the `Collections` class and printing the resolved bound on the `List<T>` method parameter, which resolves to `Comparable` from the method type parameter.

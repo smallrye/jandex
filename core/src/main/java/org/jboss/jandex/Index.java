@@ -337,6 +337,15 @@ public final class Index implements IndexView {
      * {@inheritDoc}
      */
     @Override
+    public boolean containsAnnotation(DotName annotationName) {
+        AnnotationInstance[] instances = annotations.get(annotationName);
+        return instances != null && instances.length > 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Collection<AnnotationInstance> getAnnotationsWithRepeatable(DotName annotationName, IndexView index) {
         ClassInfo annotationClass = index.getClassByName(annotationName);
         if (annotationClass == null) {

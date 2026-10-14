@@ -19,6 +19,8 @@
 package org.jboss.jandex.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -31,6 +33,7 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.CompositeIndex;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.EmptyIndex;
 import org.jboss.jandex.Index;
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +65,22 @@ public class CompositeTestCase {
         assertEquals(5, verifyClasses(barIndex.getAllKnownSubclasses(DotName.OBJECT_NAME)));
         assertEquals(6, verifyClasses(fooIndex.getAllKnownSubclasses(DotName.OBJECT_NAME)));
         assertEquals(7, verifyClasses(index.getAllKnownSubclasses(DotName.OBJECT_NAME)));
+    }
+
+    @Test
+    public void testContainsAnnotation() {
+        DotName existing = DotName.createSimple("foo.BarAnno");
+        DotName missing = DotName.createSimple("foo.MissingAnno");
+
+        // present in one of the indexes
+        CompositeIndex index = CompositeIndex.create(EmptyIndex.INSTANCE, createIndex(BAR_NAME));
+        assertTrue(index.containsAnnotation(existing));
+        assertFalse(index.containsAnnotation(missing));
+
+        // not present in any of the indexes
+        index = CompositeIndex.create(EmptyIndex.INSTANCE, EmptyIndex.INSTANCE, EmptyIndex.INSTANCE);
+        assertFalse(index.containsAnnotation(existing));
+        assertFalse(index.containsAnnotation(missing));
     }
 
     private int verifyClasses(Collection<ClassInfo> allKnownSubclasses) {

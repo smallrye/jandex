@@ -1,0 +1,55 @@
+= Jandex documentation
+
+The documentation is AsciiDoc, laid out like the Quarkus guides, and published on
+https://smallrye.io/docs/jandex/latest/[smallrye.io]. The site pulls it from this repository:
+the `main` branch every night, and each release once it is tagged.
+
+== Where things are
+
+[cols="1,2"]
+|===
+|`src/main/asciidoc/**/*.adoc` |One page per file. The path is the page's address: `maven/basic.adoc` is published at `/docs/jandex/<version>/maven/basic/`.
+|`src/main/asciidoc/_nav.yml` |The sidebar: page order and sections. A new page must be added here.
+|`src/main/asciidoc/_attributes.adoc` |Attributes every page includes (ids, paths, project values).
+|===
+
+== Writing a page
+
+[source,asciidoc]
+------
+= Page title
+include::_attributes.adoc[]
+
+Text...
+
+== A section
+
+Link to another page with xref:maven/basic.adoc[Basic Maven Plugin Usage], or to a section of it
+with xref:index.adoc#compatibility_promise[].
+------
+
+* A page in a subdirectory sets `:version-root: ../` (one `../` per level) and includes
+  `+{version-root}_attributes.adoc+` instead.
+* Section ids are Quarkus-style: `== Indexing Classes` gets the id `indexing-classes`.
+* Cross-references are relative to `src/main/asciidoc`, whichever page they are in.
+* Admonitions: `NOTE:`, `TIP:`, `IMPORTANT:`, `WARNING:`, `CAUTION:`.
+
+== Previewing
+
+Pull requests that change the documentation are rendered with the smallrye.io site by the
+`Documentation` workflow, which fails on a broken include or a page that does not render. The
+rendered site is attached to the workflow run as the `docs-jandex` artifact.
+
+To see the documentation the way smallrye.io shows it while you write it, run from this repository:
+
+[source,bash]
+----
+./mvnw -Pdocs-preview
+----
+
+and open http://localhost:8080/docs/jandex/main/. Pages and included examples are published again
+when you save them; refresh the page. Only Java is needed: the profile runs the
+https://github.com/smallrye/smallrye.github.io/tree/develop/tools/docs[smallrye.io docs tools]
+with https://www.jbang.dev[JBang]. Where JBang is installed, `jbang docs-preview@smallrye/smallrye.github.io`
+does the same, and takes options such as `--port` or `--site <a smallrye.github.io checkout>`
+(see `--help`).

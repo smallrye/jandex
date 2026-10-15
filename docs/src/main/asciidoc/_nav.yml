@@ -1,0 +1,20 @@
+title: Jandex
+nav:
+- title: Introduction
+  page: index
+- title: Jandex
+  items:
+  - title: Getting Jandex
+    page: core/getting
+  - title: Browsing Declarations and Types
+    page: core/browsing
+  - title: Indexing Classes
+    page: core/indexing
+- title: Jandex Maven Plugin
+  items:
+  - title: Basic Usage
+    page: maven/basic
+  - title: Advanced Usage
+    page: maven/advanced
+  - title: Usage with Shading
+    page: maven/shading

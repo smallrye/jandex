@@ -1,4 +1,6 @@
 = Getting Jandex
+:version-root: ../
+include::{version-root}_attributes.adoc[]
 
 == Using Jandex in a Maven Project
 

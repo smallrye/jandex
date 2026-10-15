@@ -1,4 +1,6 @@
 = Advanced Maven Plugin Usage
+:version-root: ../
+include::{version-root}_attributes.adoc[]
 
 If you need to process more than one directory of classes, you can specify multiple `fileSets` like this:
 

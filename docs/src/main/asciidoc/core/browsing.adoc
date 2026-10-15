@@ -1,4 +1,6 @@
 = Browsing Declarations and Types
+:version-root: ../
+include::{version-root}_attributes.adoc[]
 
 == Browsing a Class
 

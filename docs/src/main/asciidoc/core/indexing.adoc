@@ -1,4 +1,6 @@
 = Indexing Classes
+:version-root: ../
+include::{version-root}_attributes.adoc[]
 
 == Creating a Persistent Index Using the API
 

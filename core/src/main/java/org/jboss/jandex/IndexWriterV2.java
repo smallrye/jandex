@@ -54,7 +54,7 @@ import java.util.TreeMap;
  */
 final class IndexWriterV2 extends IndexWriterImpl {
     static final int MIN_VERSION = 6;
-    static final int MAX_VERSION = 13;
+    static final int MAX_VERSION = 14;
 
     // babelfish (no h)
     private static final int MAGIC = 0xBABE1F15;
@@ -617,6 +617,15 @@ final class IndexWriterV2 extends IndexWriterImpl {
             }
         }
 
+        if (version >= 14) {
+            DotName nestHost = clazz.nestHost();
+            stream.writePackedU32(nestHost.equals(clazz.name()) ? 0 : positionOf(nestHost));
+            stream.writePackedU32(clazz.nestMembers().size());
+            for (DotName nestMember : clazz.nestMembers()) {
+                stream.writePackedU32(positionOf(nestMember));
+            }
+        }
+
         // Annotation length is early to allow eager allocation in reader.
         stream.writePackedU32(clazz.annotationsMap().size());
 
@@ -958,6 +967,10 @@ final class IndexWriterV2 extends IndexWriterImpl {
         }
         for (DotName permittedSubclass : clazz.permittedSubclasses()) {
             addClassName(permittedSubclass);
+        }
+        addClassName(clazz.nestHost());
+        for (DotName nestMember : clazz.nestMembers()) {
+            addClassName(nestMember);
         }
 
         addMethodList(clazz.methodArray());

@@ -583,35 +583,37 @@ public final class DotName implements Comparable<DotName> {
      */
     @Override
     public int compareTo(DotName other) {
-        // fast path for simple names
+        // fast path for simple names and componentized names that share a prefix
         if (this == other) {
             return 0;
         }
-        if (this.prefix == null && other.prefix == null) {
+        if (this.prefix == other.prefix) {
             if (this.innerClass != other.innerClass) {
                 return this.innerClass ? -1 : 1; // '$' is lesser than '.'
             }
             return this.local.compareTo(other.local);
         }
 
-        return componentizedCompare(flatten(this), flatten(other));
+        return componentizedCompare(this, componentsCount(this), other, componentsCount(other));
     }
 
-    // note that `a` and `b` have one extra `null` element at the end, see the `flatten` method
-    private static int componentizedCompare(DotName[] a, DotName[] b) {
-        int aPos = 0; // current position in `a`
-        DotName aCur = a[aPos]; // always `a[aPos]`
+    // this algorithm goes from the beginning towards the end, both `DotName`s in parallel, and compares
+    // chars on each position; the components are obtained by walking the `prefix` chain, which is short,
+    // so that no array needs to be allocated
+    private static int componentizedCompare(DotName a, int aDepth, DotName b, int bDepth) {
+        int aPos = 0; // current component index in `a`, from the root
+        DotName aCur = componentAt(a, aDepth, aPos);
 
-        int bPos = 0; // current position in `b`
-        DotName bCur = b[bPos]; // always `b[bPos]`
+        int bPos = 0; // current component index in `b`, from the root
+        DotName bCur = componentAt(b, bDepth, bPos);
 
         // skip shared components; after the loop, `aCur` and `bCur` may be `null`
-        while (aCur == bCur) {
+        while (aCur != null && aCur == bCur) {
             aPos++;
-            aCur = a[aPos];
+            aCur = componentAt(a, aDepth, aPos);
 
             bPos++;
-            bCur = b[bPos];
+            bCur = componentAt(b, bDepth, bPos);
         }
 
         String aCurLocal = null; // always `aCur.local`
@@ -642,7 +644,7 @@ public final class DotName implements Comparable<DotName> {
             if (aCharPos == aCurLocalLength) {
                 aPos++;
                 aCharPos = -1;
-                aCur = a[aPos];
+                aCur = componentAt(a, aDepth, aPos);
                 if (aCur != null) {
                     aCurLocal = aCur.local;
                     aCurLocalLength = aCurLocal.length();
@@ -653,7 +655,7 @@ public final class DotName implements Comparable<DotName> {
             if (bCharPos == bCurLocalLength) {
                 bPos++;
                 bCharPos = -1;
-                bCur = b[bPos];
+                bCur = componentAt(b, bDepth, bPos);
                 if (bCur != null) {
                     bCurLocal = bCur.local;
                     bCurLocalLength = bCurLocal.length();
@@ -674,29 +676,23 @@ public final class DotName implements Comparable<DotName> {
         }
     }
 
-    private static DotName[] flatten(DotName name) {
+    private static int componentsCount(DotName name) {
         int count = 0;
-        {
-            DotName tmp = name;
-            while (tmp != null) {
-                count++;
-                tmp = tmp.prefix;
-            }
+        while (name != null) {
+            count++;
+            name = name.prefix;
         }
+        return count;
+    }
 
-        DotName[] result = new DotName[count + 1];
-        {
-            result[count] = null; // sentinel to prevent reaching after the end of array
-
-            DotName tmp = name;
-            int index = count - 1;
-            while (tmp != null) {
-                result[index] = tmp;
-                index--;
-                tmp = tmp.prefix;
-            }
+    // returns `null` if the index is past the last component
+    private static DotName componentAt(DotName name, int depth, int index) {
+        if (index >= depth) {
+            return null;
         }
-
-        return result;
+        for (int i = depth - 1; i > index; i--) {
+            name = name.prefix;
+        }
+        return name;
     }
 }

@@ -70,6 +70,15 @@
                 <groupId>pw.krejci</groupId>
                 <artifactId>jmh-maven-plugin</artifactId>
                 <version>${version.jmh-maven-plugin}</version>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.openjdk.jmh</groupId>
+                            <artifactId>jmh-generator-annprocess</artifactId>
+                            <version>${version.jmh}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
             </plugin>
 
             <!-- this module shouldn't be released -->

@@ -1,4 +1,6 @@
 = Using Jandex Maven Plugin with Shading
+:version-root: ../
+include::{version-root}_attributes.adoc[]
 
 The Jandex Maven plugin has an additional goal `jandex-jar` that can be used to create an index inside an existing JAR.
 This goal is not bound to any phase by default, so you have to configure that manually.

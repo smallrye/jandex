@@ -28,8 +28,3 @@ jobs:
     secrets: inherit
     with:
       version: ${{github.event.inputs.tag || github.ref_name}}
-
-  github-pages:
-    name: GitHub Pages
-    needs: perform-release
-    uses: ./.github/workflows/pages.yml

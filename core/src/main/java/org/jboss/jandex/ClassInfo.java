@@ -102,6 +102,8 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         private byte[] recordComponentPositions = EMPTY_POSITIONS;
         private Set<DotName> memberClasses;
         private Set<DotName> permittedSubclasses;
+        private DotName nestHost;
+        private Set<DotName> nestMembers;
         private ModuleInfo module;
     }
 
@@ -1391,6 +1393,44 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
     }
 
     /**
+     * Returns the name of the nest host of this class, as declared by the {@code NestHost} attribute.
+     * If this class does not have the {@code NestHost} attribute, it is its own nest host and its own
+     * name is returned. This is consistent with {@code Class.getNestHost()}.
+     * <p>
+     * Note that class files compiled for Java 10 or earlier never contain the {@code NestHost} attribute,
+     * so for such classes, this method always returns the name of this class.
+     * <p>
+     * Two classes are nestmates if their nest hosts are equal.
+     *
+     * @return name of the nest host of this class, never {@code null}
+     * @since 3.7.0
+     */
+    public DotName nestHost() {
+        if (extra == null || extra.nestHost == null) {
+            return name;
+        }
+        return extra.nestHost;
+    }
+
+    /**
+     * Returns the set of names of nest members of this class, as declared by the {@code NestMembers} attribute.
+     * Only a nest host may have the {@code NestMembers} attribute. Returns an empty set if this class does not
+     * have the {@code NestMembers} attribute.
+     * <p>
+     * The nest host itself is not included in the returned set. Note that this differs from
+     * {@code Class.getNestMembers()}, which also includes the nest host.
+     *
+     * @return immutable set of names of this class's nest members, never {@code null}
+     * @since 3.7.0
+     */
+    public Set<DotName> nestMembers() {
+        if (extra == null || extra.nestMembers == null) {
+            return Collections.emptySet();
+        }
+        return Collections.unmodifiableSet(extra.nestMembers);
+    }
+
+    /**
      * Returns whether this class must have a generic signature. That is, whether the Java compiler
      * when compiling this class had to emit the {@code Signature} bytecode attribute.
      *
@@ -1723,5 +1763,29 @@ public final class ClassInfo implements Declaration, Descriptor, GenericSignatur
         }
 
         extra.permittedSubclasses = permittedSubclasses;
+    }
+
+    void setNestHost(DotName nestHost) {
+        if (nestHost == null) {
+            return;
+        }
+
+        if (extra == null) {
+            extra = new ExtraInfo();
+        }
+
+        extra.nestHost = nestHost;
+    }
+
+    void setNestMembers(Set<DotName> nestMembers) {
+        if (nestMembers == null || nestMembers.isEmpty()) {
+            return;
+        }
+
+        if (extra == null) {
+            extra = new ExtraInfo();
+        }
+
+        extra.nestMembers = nestMembers;
     }
 }

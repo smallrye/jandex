@@ -1,4 +1,6 @@
 = Basic Maven Plugin Usage
+:version-root: ../
+include::{version-root}_attributes.adoc[]
 
 This is how you add a persistent Jandex index to your Maven project:
 

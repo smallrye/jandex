@@ -1,4 +1,5 @@
 = Jandex
+include::_attributes.adoc[]
 
 Jandex is a space efficient Java class file indexer and offline reflection library.
 

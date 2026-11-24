@@ -18,6 +18,22 @@
             <enabled>true</enabled>
           </snapshots>
         </repository>
+        <!--
+          - prefer the Google Maven Central mirror over actual Maven central for artifacts
+          - only used by the integration test projects, which are not present in the local
+          - repository above and so have to be downloaded
+          -->
+        <repository>
+          <id>google-maven-central</id>
+          <name>GCS Maven Central mirror</name>
+          <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
       </repositories>
       <pluginRepositories>
         <pluginRepository>
@@ -28,6 +44,17 @@
           </releases>
           <snapshots>
             <enabled>true</enabled>
+          </snapshots>
+        </pluginRepository>
+        <pluginRepository>
+          <id>google-maven-central</id>
+          <name>GCS Maven Central mirror</name>
+          <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
           </snapshots>
         </pluginRepository>
       </pluginRepositories>
